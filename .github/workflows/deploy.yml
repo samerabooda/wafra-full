@@ -1,0 +1,40 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            echo "==> Navigating to project..."
+            cd ~/wafra-full
+
+            echo "==> Pulling latest changes..."
+            git pull origin main
+
+            echo "==> Installing dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            echo "==> Running migrations..."
+            php artisan migrate --force --no-interaction
+
+            echo "==> Optimizing..."
+            php artisan optimize:clear
+            php artisan optimize
+
+            echo "==> Done! Deployed successfully."
