@@ -1,0 +1,8 @@
+---
+deployment:
+  tasks:
+    - export COMPOSER_HOME=/home/ssdawqcq/.composer
+    - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1
+    - /usr/local/bin/php artisan migrate --force --no-interaction 2>&1
+    - /usr/local/bin/php artisan optimize:clear 2>&1
+    - /usr/local/bin/php artisan optimize 2>&1

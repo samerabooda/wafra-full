@@ -7,34 +7,15 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Trigger cPanel Git Pull
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            set -e
-
-            echo "==> Navigating to project..."
-            cd ~/wafra-full
-
-            echo "==> Pulling latest changes..."
-            git pull origin main
-
-            echo "==> Installing dependencies..."
-            composer install --no-dev --optimize-autoloader --no-interaction
-
-            echo "==> Running migrations..."
-            php artisan migrate --force --no-interaction
-
-            echo "==> Optimizing..."
-            php artisan optimize:clear
-            php artisan optimize
-
-            echo "==> Done! Deployed successfully."
+      - name: Trigger cPanel Deployment
+        run: |
+          curl -s --fail \
+            "https://system-marketequity.com:2083/execute/VersionControl/update" \
+            -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
+            -d "type=git&repository_root=%2Fhome%2Fssdawqcq%2Fwafra-full" \
+            && echo "Deployment triggered successfully" \
+            || echo "Deployment trigger failed"
