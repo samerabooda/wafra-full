@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{
     AuthController,
     CommissionCardController,
+    DashboardController,
     EmployeeController,
     ManagerController,
     ImportController,
@@ -21,7 +22,7 @@ use App\Http\Controllers\Api\{
 */
 
 // ── Public routes (no authentication) ────────────────────────
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('register', [AuthController::class, 'register']); // FA first-time only
     Route::post('login',    [AuthController::class, 'login']);
 });
@@ -37,7 +38,11 @@ Route::get('cards/stats', function () {
 });
 
 // ── Protected routes ──────────────────────────────────────────
-Route::middleware(['auth:sanctum', 'active.user'])->group(function () {
+Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(function () {
+
+    // Dashboard stats (pre-aggregated, no full-table scan in PHP)
+    Route::get('dashboard', [DashboardController::class, 'stats'])
+         ->middleware('permission:dashboard');
 
     // Auth
     Route::prefix('auth')->group(function () {

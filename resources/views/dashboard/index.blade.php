@@ -38,7 +38,7 @@
 </div>
 
 <!-- Charts Row -->
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px" class="dash-grid-2">
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px">
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title">📊 الإيداعات الشهرية</div>
@@ -60,7 +60,7 @@
 </div>
 
 <!-- Top Brokers & Marketers -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px" class="dash-grid-3">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
   <div class="panel">
     <div class="panel-header"><div class="panel-title">🥇 أفضل بروكر — حسابات</div></div>
     <div class="panel-body" id="top-broker-cnt" style="padding:10px 16px"></div>
@@ -76,7 +76,7 @@
 </div>
 
 <!-- Recent Tables -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="dash-grid-2">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
   <div class="panel">
     <div class="panel-header"><div class="panel-title">🔝 أعلى الإيداعات الشهرية</div></div>
     <div class="table-scroll">
@@ -101,44 +101,28 @@
 @push('scripts')
 <script>
 let barChart = null, pieChart = null;
-const MONTHS_DATA = @json($monthlyData ?? []);
 const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE'];
+const medals  = ['🥇','🥈','🥉','4️⃣','5️⃣'];
 
 async function loadDashboard() {
-  // KPIs
-  const r = await api('GET', '/cards/report');
+  // Single pre-aggregated endpoint — no full-table scan in PHP
+  const r = await api('GET', '/dashboard');
   if (!r.success) return;
-  const s = r.summary;
 
-  document.getElementById('kpi-total').textContent = r.count.toLocaleString();
-  document.getElementById('kpi-dep').textContent   = fmtK(s.total_initial_deposit);
-  document.getElementById('kpi-mon').textContent   = fmtK(s.total_monthly_deposit);
-  document.getElementById('kpi-mod').textContent   = s.modified_count;
-  document.getElementById('kpi-new').textContent   = s.new_added_count;
+  const k = r.kpi;
+  document.getElementById('kpi-total').textContent = k.total.toLocaleString();
+  document.getElementById('kpi-dep').textContent   = fmtK(k.initial_deposit);
+  document.getElementById('kpi-mon').textContent   = fmtK(k.monthly_deposit);
+  document.getElementById('kpi-mod').textContent   = k.modified;
+  document.getElementById('kpi-new').textContent   = k.new_added;
 
-  document.getElementById('sb-cards-count').textContent = r.count;
-  document.getElementById('sb-mod-count').textContent   = s.modified_count;
+  document.getElementById('sb-cards-count').textContent = k.total;
+  document.getElementById('sb-mod-count').textContent   = k.modified;
 
-  // Top deposits
-  const topData = (r.data || []).sort((a,b) => b.monthly_deposit - a.monthly_deposit).slice(0,8);
-  document.getElementById('top-deposits-tb').innerHTML = topData.map(row => `
-    <tr>
-      <td><span class="ac-num">#${row.account_number}</span></td>
-      <td>${row.broker?.name || '—'}</td>
-      <td class="mono c-green">${fmt(row.monthly_deposit)}</td>
-      <td class="c-muted">${row.month}</td>
-    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
-
-  // Charts
-  const monthly = {};
-  (r.data || []).forEach(row => {
-    if (!monthly[row.month]) monthly[row.month] = {dep:0, mon:0};
-    monthly[row.month].dep += parseFloat(row.initial_deposit || 0);
-    monthly[row.month].mon += parseFloat(row.monthly_deposit || 0);
-  });
-  const mKeys   = Object.keys(monthly).slice(-10);
-  const mDeps   = mKeys.map(m => Math.round(monthly[m].dep));
-  const mMons   = mKeys.map(m => Math.round(monthly[m].mon));
+  // ── Monthly bar chart (data already grouped server-side) ──
+  const mKeys = r.monthly.map(m => m.month);
+  const mDeps = r.monthly.map(m => Math.round(parseFloat(m.initial_deposit)));
+  const mMons = r.monthly.map(m => Math.round(parseFloat(m.monthly_deposit)));
 
   if (barChart) barChart.destroy();
   barChart = new Chart(document.getElementById('chart-bar'), {
@@ -160,16 +144,9 @@ async function loadDashboard() {
     }
   });
 
-  // Broker distribution pie
-  const brokerMap = {};
-  (r.data || []).forEach(row => {
-    const name = row.broker?.name || 'Unknown';
-    if (name !== 'IB account' && name !== 'Self') {
-      brokerMap[name] = (brokerMap[name] || 0) + parseFloat(row.monthly_deposit || 0);
-    }
-  });
-  const bNames = Object.keys(brokerMap);
-  const bVals  = bNames.map(b => brokerMap[b]);
+  // ── Broker distribution pie (top 10, already aggregated) ──
+  const bNames = r.broker_dist.map(b => b.broker_name);
+  const bVals  = r.broker_dist.map(b => parseFloat(b.monthly_deposit));
   if (pieChart) pieChart.destroy();
   pieChart = new Chart(document.getElementById('chart-pie'), {
     type: 'doughnut',
@@ -180,63 +157,57 @@ async function loadDashboard() {
     }
   });
 
-  // Top brokers by count
-  const brokerCount = {};
-  (r.data || []).forEach(row => {
-    const n = row.broker?.name || 'Unknown';
-    brokerCount[n] = (brokerCount[n] || 0) + 1;
-  });
-  const sortedCnt = Object.entries(brokerCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-  document.getElementById('top-broker-cnt').innerHTML = sortedCnt.map(([name,cnt],i) => `
+  // ── Top brokers by count ───────────────────────────────────
+  const byCount = [...r.broker_dist].sort((a,b) => b.account_count - a.account_count).slice(0,5);
+  document.getElementById('top-broker-cnt').innerHTML = byCount.map((b,i) => `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
       <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div><div style="font-size:10px;color:var(--mu)">${cnt} حساب</div></div>
-      <div class="mono c-teal" style="font-size:12px;font-weight:700">${cnt}</div>
-    </div>`).join('');
+      <div style="flex:1"><div style="font-size:12px;font-weight:700">${b.broker_name}</div><div style="font-size:10px;color:var(--mu)">${b.account_count} حساب</div></div>
+      <div class="mono c-teal" style="font-size:12px;font-weight:700">${b.account_count}</div>
+    </div>`).join('') || '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات</div>';
 
-  // Top brokers by deposit
-  const sortedDep = Object.entries(brokerMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('top-broker-dep').innerHTML = sortedDep.map(([name,dep],i) => `
+  // ── Top brokers by deposit ─────────────────────────────────
+  const byDep = [...r.broker_dist].sort((a,b) => b.monthly_deposit - a.monthly_deposit).slice(0,5);
+  document.getElementById('top-broker-dep').innerHTML = byDep.map((b,i) => `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
       <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div><div style="font-size:10px;color:var(--mu)">${fmtK(dep)}</div></div>
-      <div class="mono c-green" style="font-size:12px;font-weight:700">${fmtK(dep)}</div>
-    </div>`).join('');
+      <div style="flex:1"><div style="font-size:12px;font-weight:700">${b.broker_name}</div><div style="font-size:10px;color:var(--mu)">${fmtK(parseFloat(b.monthly_deposit))}</div></div>
+      <div class="mono c-green" style="font-size:12px;font-weight:700">${fmtK(parseFloat(b.monthly_deposit))}</div>
+    </div>`).join('') || '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات</div>';
 
-  // Top marketers
-  const mktMap = {};
-  (r.data || []).forEach(row => {
-    if (row.marketer?.name && row.marketer.name !== row.broker?.name) {
-      mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
-    }
-  });
-  const sortedMkt = Object.entries(mktMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('top-marketer').innerHTML = sortedMkt.length
-    ? sortedMkt.map(([name,cnt],i) => `
+  // ── Top marketers ──────────────────────────────────────────
+  document.getElementById('top-marketer').innerHTML = r.top_marketers.length
+    ? r.top_marketers.map((m,i) => `
       <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
         <span style="font-size:16px">${medals[i]||'·'}</span>
-        <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div></div>
-        <div class="mono c-teal" style="font-size:12px">${cnt}</div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:700">${m.marketer_name}</div></div>
+        <div class="mono c-teal" style="font-size:12px">${m.account_count}</div>
       </div>`).join('')
     : '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات مسوّق منفصل</div>';
-}
 
-// Modifications
-async function loadModifications() {
-  const r = await api('GET', '/cards/modifications');
-  if (!r.success) return;
-  const rows = (r.data?.data || []).slice(0, 8);
-  document.getElementById('modifications-tb').innerHTML = rows.map(m => `
-    <tr>
-      <td><span class="ac-num">#${m.account_number}</span></td>
-      <td style="color:var(--or);font-size:11px">${m.reason}</td>
-      <td style="color:var(--mu)">${new Date(m.modified_at).toLocaleDateString('ar')}</td>
-      <td style="color:var(--mu)">${m.modified_by?.name || '—'}</td>
-    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد تعديلات</td></tr>';
+  // ── Top deposits table ─────────────────────────────────────
+  document.getElementById('top-deposits-tb').innerHTML = r.top_deposits.length
+    ? r.top_deposits.map(row => `
+      <tr>
+        <td><span class="ac-num">#${row.account_number}</span></td>
+        <td>${row.broker?.name || '—'}</td>
+        <td class="mono c-green">${fmt(row.monthly_deposit)}</td>
+        <td class="c-muted">${row.month}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
+
+  // ── Recent modifications ───────────────────────────────────
+  document.getElementById('modifications-tb').innerHTML = r.recent_mods.length
+    ? r.recent_mods.map(m => `
+      <tr>
+        <td><span class="ac-num">#${m.account_number}</span></td>
+        <td style="color:var(--or);font-size:11px">${m.reason}</td>
+        <td style="color:var(--mu)">${new Date(m.modified_at).toLocaleDateString('ar')}</td>
+        <td style="color:var(--mu)">${m.modified_by?.name || '—'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد تعديلات</td></tr>';
 }
 
 loadDashboard();
-loadModifications();
 </script>
 @endpush
