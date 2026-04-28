@@ -44,11 +44,12 @@ return new class extends Migration
 
             // Workflow status for CC → Branch handoff
             $table->enum('cc_status', [
-                'none',       // Not a CC card
-                'cc_pending', // CC sent, branch not responded
-                'accepted',   // Branch accepted, filling data
-                'rejected',   // Branch rejected
-                'completed',  // Branch completed all fields
+                'none',           // Not a CC card
+                'cc_pending',     // CC created draft, not yet sent
+                'branch_pending', // Sent to branch, awaiting accept/reject
+                'accepted',       // Branch accepted, completing data
+                'rejected',       // Branch rejected with reason
+                'completed',      // All data complete, visible to both branches
             ])->default('none')
               ->after('cc_agent_commission');
 

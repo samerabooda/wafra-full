@@ -163,8 +163,16 @@ function renderTable(cards) {
   };
 
   document.getElementById('cards-tbody').innerHTML = cards.map(c => `
-    <tr class="${c.status === 'modified' ? 'row-modified' : ''}">
-      <td><span class="ac-num">#${c.account_number}</span></td>
+    <tr class="${c.status === 'modified' ? 'row-modified' : ''}${c.cc_branch_id ? ' row-cc' : ''}">
+      <td>
+        ${c.cc_branch_id ? `<span class="badge" style="${{
+          branch_pending:'background:rgba(186,117,23,.18);color:#EF9F27;border:1px solid rgba(186,117,23,.35)',
+          accepted:      'background:rgba(46,134,171,.15);color:var(--pri2);border:1px solid rgba(46,134,171,.3)',
+          completed:     'background:rgba(29,158,117,.15);color:#1D9E75;border:1px solid rgba(29,158,117,.3)',
+          rejected:      'background:rgba(224,80,80,.1);color:var(--re);border:1px solid rgba(224,80,80,.25)',
+        }[c.cc_status]||'background:rgba(29,158,117,.1);color:#1D9E75'};font-size:9px;padding:1px 6px;border-radius:12px;margin-left:4px">📞CC</span>` : ''}
+        <span class="ac-num">#${c.account_number}</span>
+      </td>
       <td style="color:var(--mu)">${c.month}</td>
       <td style="font-weight:600;color:var(--pri2)">${c.broker?.name || '—'}</td>
       <td class="mono c-blue">$${c.broker_commission}/lot</td>

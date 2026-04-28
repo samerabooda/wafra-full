@@ -143,7 +143,7 @@ async function loadPending() {
   }
 
   list.innerHTML = cards.map(c => `
-    <div class="cc-card-item ${c.cc_status}">
+    <div class="cc-card-item ${c.cc_status === 'branch_pending' ? 'pending' : c.cc_status}">
       <div class="cc-card-header">
         <div style="display:flex;align-items:center;gap:10px">
           <span class="ac-num">#${c.account_number}</span>
@@ -151,14 +151,19 @@ async function loadPending() {
           <span class="cc-source-tag">📞 من CC</span>
         </div>
         <div style="display:flex;gap:6px">
-          ${c.cc_status === 'accepted'
-            ? `<button class="btn btn-sm btn-primary" onclick="openComplete(${c.id},${c.cc_agent_commission})">إكمال البيانات ✓</button>`
-            : `<button class="btn btn-sm btn-primary" onclick="acceptCard(${c.id})">قبول</button>`
+          ${c.cc_status === 'branch_pending'
+            ? `<button class="btn btn-sm btn-primary" onclick="acceptCard(${c.id})">✅ قبول</button>`
+            : c.cc_status === 'accepted'
+            ? `<button class="btn btn-sm btn-primary" onclick="openComplete(${c.id},${c.cc_agent_commission})">إكمال البيانات →</button>`
+            : ''
           }
           <button class="btn btn-sm btn-danger" onclick="openReject(${c.id})">رفض</button>
         </div>
       </div>
       <div class="cc-meta">
+        <span>الحالة: <b style="color:${c.cc_status==='branch_pending'?'var(--or)':c.cc_status==='accepted'?'var(--pri2)':'var(--gr)'}">${
+          {branch_pending:'⏳ بانتظار ردك',accepted:'✅ مقبول — أكمل البيانات',rejected:'❌ مرفوض',completed:'✓ مكتمل'}[c.cc_status]||c.cc_status
+        }</b></span>
         <span>موظف CC: <b>${c.cc_agent?.name || '—'}</b></span>
         <span>عمولة CC: <b class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(2)}/lot</b></span>
         <span>تاريخ الإرسال: <b>${new Date(c.created_at).toLocaleDateString('ar-SA')}</b></span>

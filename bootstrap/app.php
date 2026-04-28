@@ -13,15 +13,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health:   '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR |
-            Request::HEADER_X_FORWARDED_HOST |
-            Request::HEADER_X_FORWARDED_PORT |
-            Request::HEADER_X_FORWARDED_PROTO);
+        // ── Trust proxies (HTTPS behind Nginx/Apache/CDN) ──────
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                     Request::HEADER_X_FORWARDED_HOST |
+                     Request::HEADER_X_FORWARDED_PORT |
+                     Request::HEADER_X_FORWARDED_PROTO |
+                     Request::HEADER_X_FORWARDED_AWS_ELB
+        );
 
+        // ── Redirect unauthenticated users to login ────────────
         $middleware->redirectGuestsTo(fn () => route('auth.login'));
 
+        // ── Sanctum stateful API (session-based auth for SPA) ──
         $middleware->statefulApi();
 
+        // ── Custom middleware aliases ───────────────────────────
         $middleware->alias([
             'role'        => \App\Http\Middleware\RoleMiddleware::class,
             'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
@@ -29,7 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'force.pwd'   => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
         ]);
 
-        $middleware->appendToGroup('web', \App\Http\Middleware\RefreshWebToken::class);
+        // ── Append CORS headers to all responses ───────────────
+        $middleware->web(append: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Throwable $e, Request $request) {

@@ -207,19 +207,23 @@ async function loadCcCards() {
       <td>${ccStatusBadge(c.cc_status)}</td>
       <td style="font-size:11px;color:var(--re)">${c.cc_rejection_reason || '—'}</td>
       <td>
-        ${c.cc_status === 'cc_pending' ? `<button class="btn btn-sm btn-primary" onclick="sendCard(${c.id})">إرسال ←</button>` : ''}
-        ${c.cc_status === 'rejected'   ? `<button class="btn btn-sm btn-ghost" onclick="resendCard(${c.id})">إعادة إرسال</button>` : ''}
+        ${c.cc_status === 'cc_pending'
+            ? `<button class="btn btn-sm btn-primary" onclick="sendCard(${c.id})">إرسال للفرع ←</button>`
+            : c.cc_status === 'rejected'
+            ? `<button class="btn btn-sm btn-ghost" onclick="resendCard(${c.id})">↺ إعادة إرسال</button>`
+            : ''}
       </td>
     </tr>`).join('');
 }
 
 function ccStatusBadge(s) {
   const map = {
-    cc_pending: ['cc-pending',  'بانتظار الفرع'],
-    accepted:   ['cc-accepted', 'مقبول'],
-    rejected:   ['cc-rejected', 'مرفوض'],
-    completed:  ['cc-completed','مكتمل'],
-    none:       ['cc-none',     '—'],
+    cc_pending:     ['cc-pending',  '📝 مسوّدة — لم تُرسَل'],
+    branch_pending: ['cc-pending',  '⏳ أُرسِل — بانتظار الفرع'],
+    accepted:       ['cc-accepted', '✅ مقبول — جاري الإكمال'],
+    rejected:       ['cc-rejected', '❌ مرفوض'],
+    completed:      ['cc-completed','✓ مكتمل'],
+    none:           ['cc-none',     '—'],
   };
   const [cls, lbl] = map[s] || ['cc-none','—'];
   return `<span class="cc-status-badge ${cls}">${lbl}</span>`;

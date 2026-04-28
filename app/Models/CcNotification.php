@@ -13,7 +13,8 @@ class CcNotification extends Model
     public function toBranch(): BelongsTo    { return $this->belongsTo(Branch::class,'to_branch_id'); }
     public function sentBy(): BelongsTo      { return $this->belongsTo(User::class,'sent_by'); }
     public function respondedBy(): BelongsTo { return $this->belongsTo(User::class,'responded_by'); }
-    public function scopeUnread($q)          { return $q->where('status','unread'); }
-    public function scopeForBranch($q,int $id){ return $q->where('to_branch_id',$id); }
-    public function markRead(): void         { $this->update(['status'=>'read','read_at'=>now()]); }
+
+    public function scopeUnread($q)             { return $q->where('status','unread'); }
+    public function scopeForBranch($q, int $id) { return $q->where('to_branch_id', $id); }
+    public function markRead(): void            { $this->update(['status'=>'read','read_at'=>now()]); }
 }

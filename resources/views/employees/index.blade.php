@@ -30,7 +30,7 @@
     </div>
   </div>
   <div class="table-scroll">
-    <table class="data-table">
+    <table class="data-table" style="min-width:620px">
       <thead>
         <tr>
           <th>الاسم</th><th>الدور</th><th>الفرع</th>

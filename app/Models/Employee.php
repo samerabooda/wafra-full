@@ -12,7 +12,7 @@ class Employee extends Model
 
     protected $fillable = [
         'name', 'email', 'role', 'branch_id',
-        'broker_commission', 'marketing_commission',
+        'broker_commission', 'marketing_commission', 'cc_commission',
         'status', 'added_by', 'approved_by',
         'approved_at', 'rejected_reason',
         'is_base', 'is_active',
@@ -21,6 +21,7 @@ class Employee extends Model
     protected $casts = [
         'broker_commission'    => 'decimal:2',
         'marketing_commission' => 'decimal:2',
+        'cc_commission'        => 'decimal:2',
         'approved_at'          => 'datetime',
         'is_base'              => 'boolean',
         'is_active'            => 'boolean',

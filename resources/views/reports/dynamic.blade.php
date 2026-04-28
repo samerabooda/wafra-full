@@ -253,6 +253,9 @@
 // ══════════════════════════════════════════════════════════
 const ALL_COLUMNS = [
   { id:'account_number',    label:'رقم الحساب',         type:'text',    width:130, frozen:true },
+  { id:'cc_source',         label:'مصدر CC',             type:'cc',      width:110 },
+  { id:'cc_agent',          label:'موظف CC',              type:'text',    width:130 },
+  { id:'cc_agent_commission',label:'ع. موظف CC',          type:'number',  width:120 },
   { id:'month',             label:'الشهر',               type:'text',    width:100 },
   { id:'branch',            label:'الفرع',               type:'text',    width:130 },
   { id:'account_kind',      label:'نوع الحساب',          type:'badge',   width:80  },
@@ -390,6 +393,9 @@ function renderSelectedZone() {
 
   zone.innerHTML = pills;
 }
+
+// Mobile: detect if touch device and disable drag, use tap instead
+const isTouchDevice = () => window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 
 function toggleCol(id) {
   if (selectedCols.includes(id)) {
@@ -641,6 +647,9 @@ function getCellRawValue(row, colId) {
     account_number:     row.account_number,
     month:              row.month,
     branch:             row.branch?.name_ar,
+    cc_source:          row.cc_branch_id ? '📞 CC' : null,
+    cc_agent:           row.cc_agent?.name,
+    cc_agent_commission:parseFloat(row.cc_agent_commission) || 0,
     account_kind:       row.account_kind,
     account_type:       row.account_type?.name_en,
     account_status:     row.account_status?.name_en,
@@ -677,6 +686,9 @@ function renderCell(row, col) {
       return `<span class="mono" style="color:var(--pri2);font-weight:600">${fmtK(v)}</span>`;
     case 'number':
       return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}/lot</span>`;
+    case 'cc':
+      if (!v) return '<span style="color:var(--mu)">—</span>';
+      return '<span style="font-size:10px;padding:2px 7px;border-radius:12px;background:rgba(29,158,117,.15);color:#1D9E75;border:1px solid rgba(29,158,117,.3)">📞 CC</span>';
     case 'badge':
       return v === 'new'
         ? '<span class="badge badge-green">NEW</span>'

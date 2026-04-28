@@ -6,24 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\{CommissionCard, CcNotification, ActivityLog, Setting, Employee};
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{DB, Validator};
-use Carbon\Carbon;
 
 /**
- * CallCenterController
+ * CallCenterController — CC ↔ Branch workflow
  *
- * Handles the full CC → Branch workflow:
- *  POST /api/cc/cards          — CC creates a card (stage 1)
- *  POST /api/cc/cards/{id}/send — CC sends card to branch
- *  PUT  /api/cc/cards/{id}/accept — Branch accepts
- *  PUT  /api/cc/cards/{id}/reject — Branch rejects + reason
- *  GET  /api/cc/pending          — Branch: pending cards from CC
- *  GET  /api/cc/notifications    — Unread notifications
- *  PUT  /api/cc/notifications/{id}/read
+ * STATUS FLOW (correct):
+ *   CC creates card  → cc_status = 'cc_pending'
+ *   CC sends card    → cc_status = 'branch_pending'  (new! branch can now see it)
+ *   Branch accepts   → cc_status = 'accepted'         (branch fills data)
+ *   Branch completes → cc_status = 'completed'        (visible in both branches)
+ *   Branch rejects   → cc_status = 'rejected'         (back to CC)
  */
 class CallCenterController extends Controller
 {
-    // ── CC creates card (stage 1: only CC fields) ──────────
-    // POST /api/cc/cards
+    // ── BUG FIX: Verify CC branch ownership ──────────────────
+    private function assertCcOwnership(CommissionCard $card, Request $request): void
+    {
+        $user = $request->user();
+        if ($user->isFinanceAdmin()) return;
+        if ($card->cc_branch_id !== $user->branch_id) {
+            abort(403, 'Only the CC branch that created this card can send it.');
+        }
+    }
+
+    private function assertBranchOwnership(CommissionCard $card, Request $request): void
+    {
+        $user = $request->user();
+        if ($user->isFinanceAdmin()) return;
+        if ($card->branch_id !== $user->branch_id) {
+            abort(403, 'This card is not assigned to your branch.');
+        }
+    }
+
+    // ── POST /api/cc/cards — CC creates card ──────────────────
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -40,12 +55,11 @@ class CallCenterController extends Controller
             'account_kind'      => 'nullable|in:new,sub',
             'notes'             => 'nullable|string|max:2000',
         ]);
-
         if ($v->fails()) {
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
         }
 
-        // Ensure agent belongs to CC branch
+        // Verify agent belongs to user's CC branch
         $agent = Employee::findOrFail($request->cc_agent_id);
         if ($user->isBranchManager() && $agent->branch_id !== $user->branch_id) {
             return response()->json(['success' => false, 'message' => 'Agent must belong to your CC branch.'], 403);
@@ -63,66 +77,63 @@ class CallCenterController extends Controller
 
         $card = DB::transaction(function () use ($request, $agent, $user) {
             $card = CommissionCard::create([
-                'account_number'     => $request->account_number,
-                'month'              => $request->month,
-                'month_date'         => $request->month_date,
-                'branch_id'          => $request->target_branch_id, // target branch
-                'cc_branch_id'       => $user->branch_id,           // CC branch
-                'cc_agent_id'        => $agent->id,
-                'cc_agent_commission'=> $agent->cc_commission,       // auto-fill from employee
-                'account_type_id'    => $request->account_type_id,
-                'account_status_id'  => $request->account_status_id,
-                'trading_type_id'    => $request->trading_type_id,
-                'account_kind'       => $request->account_kind ?? 'new',
-                'notes'              => $request->notes,
-                'cc_status'          => 'cc_pending',
-                'status'             => 'new_added',
-                'created_by'         => $user->id,
+                'account_number'      => $request->account_number,
+                'month'               => $request->month,
+                'month_date'          => $request->month_date,
+                'branch_id'           => $request->target_branch_id,
+                'cc_branch_id'        => $user->branch_id,
+                'cc_agent_id'         => $agent->id,
+                'cc_agent_commission' => $agent->cc_commission ?? 1.00,
+                'account_type_id'     => $request->account_type_id,
+                'account_status_id'   => $request->account_status_id,
+                'trading_type_id'     => $request->trading_type_id,
+                'account_kind'        => $request->account_kind ?? 'new',
+                'notes'               => $request->notes,
+                'cc_status'           => 'cc_pending',   // Draft: not yet sent to branch
+                'status'              => 'new_added',
+                'created_by'          => $user->id,
             ]);
-
             ActivityLog::record('cc_card_created', $card, [
                 'agent'         => $agent->name,
                 'target_branch' => $request->target_branch_id,
             ]);
-
             return $card;
         });
 
         return response()->json([
             'success' => true,
-            'message' => "Card #{$card->account_number} created. Ready to send to branch.",
+            'message' => "Card #{$card->account_number} created. Click 'Send' to notify the branch.",
             'data'    => $card->load(['ccBranch', 'ccAgent', 'branch']),
         ], 201);
     }
 
-    // ── CC sends card to branch (triggers notification) ────
-    // POST /api/cc/cards/{id}/send
+    // ── POST /api/cc/cards/{id}/send ──────────────────────────
+    // BUG FIX: Now correctly changes status to 'branch_pending'
     public function send(Request $request, int $id): JsonResponse
     {
         $card = CommissionCard::findOrFail($id);
-        $user = $request->user();
-
-        // Only CC branch can send
-        if ($card->cc_branch_id !== $user->branch_id && !$user->isFinanceAdmin()) {
-            return response()->json(['success' => false, 'message' => 'Only the CC branch can send this card.'], 403);
-        }
+        $this->assertCcOwnership($card, $request);
 
         if ($card->cc_status !== 'cc_pending') {
-            return response()->json(['success' => false, 'message' => "Card status is '{$card->cc_status}' — cannot send again."], 422);
+            return response()->json([
+                'success' => false,
+                'message' => "Card status is '{$card->cc_status}' — cannot send again.",
+            ], 422);
         }
 
-        DB::transaction(function () use ($card, $user) {
-            $card->update(['cc_status' => 'accepted']); // mark as sent/pending-acceptance
+        DB::transaction(function () use ($card, $request) {
+            // ✅ FIX: Change status so branch can SEE the card in their pending list
+            $card->update(['cc_status' => 'branch_pending']);
 
-            // Create notification for target branch
+            // Notify target branch
             CcNotification::create([
                 'card_id'        => $card->id,
                 'from_branch_id' => $card->cc_branch_id,
                 'to_branch_id'   => $card->branch_id,
-                'sent_by'        => $user->id,
+                'sent_by'        => $request->user()->id,
                 'type'           => 'card_sent',
                 'status'         => 'unread',
-                'message'        => "حساب جديد #{$card->account_number} ({$card->month}) وصل من فرع CC",
+                'message'        => "حساب جديد #{$card->account_number} ({$card->month}) وصل من مركز الاتصال — بانتظار قراركم",
             ]);
 
             ActivityLog::record('cc_card_sent', $card, ['to_branch' => $card->branch_id]);
@@ -130,37 +141,38 @@ class CallCenterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Card #{$card->account_number} sent to branch. Awaiting branch to complete data.",
+            'message' => "Card #{$card->account_number} sent to branch. Awaiting their response.",
         ]);
     }
 
-    // ── Branch accepts card ────────────────────────────────
-    // PUT /api/cc/cards/{id}/accept
+    // ── PUT /api/cc/cards/{id}/accept ─────────────────────────
+    // BUG FIX: Now correctly changes status to 'accepted'
     public function accept(Request $request, int $id): JsonResponse
     {
         $card = CommissionCard::findOrFail($id);
-        $user = $request->user();
+        $this->assertBranchOwnership($card, $request);
 
-        // Only the target branch manager can accept
-        if ($user->isBranchManager() && $card->branch_id !== $user->branch_id) {
-            return response()->json(['success' => false, 'message' => 'This card is not assigned to your branch.'], 403);
+        if ($card->cc_status !== 'branch_pending') {
+            return response()->json([
+                'success' => false,
+                'message' => "Card status is '{$card->cc_status}' — cannot accept.",
+            ], 422);
         }
 
-        if ($card->cc_status !== 'accepted') {
-            return response()->json(['success' => false, 'message' => "Card is '{$card->cc_status}' — cannot accept."], 422);
-        }
+        DB::transaction(function () use ($card, $request) {
+            // ✅ FIX: Change status to 'accepted' so branch can complete the card
+            $card->update(['cc_status' => 'accepted']);
 
-        DB::transaction(function () use ($card, $user) {
-            // status stays 'accepted' — branch will now fill broker/marketer/deposits
             // Notify CC branch
             CcNotification::create([
                 'card_id'        => $card->id,
                 'from_branch_id' => $card->branch_id,
                 'to_branch_id'   => $card->cc_branch_id,
-                'sent_by'        => $user->id,
+                'sent_by'        => $request->user()->id,
+                'responded_by'   => $request->user()->id,
                 'type'           => 'card_accepted',
                 'status'         => 'unread',
-                'message'        => "الفرع قَبِل الحساب #{$card->account_number} ({$card->month})",
+                'message'        => "✅ الفرع قَبِل الحساب #{$card->account_number} ({$card->month}) — جاري استكمال البيانات",
             ]);
 
             ActivityLog::record('cc_card_accepted', $card);
@@ -173,40 +185,41 @@ class CallCenterController extends Controller
         ]);
     }
 
-    // ── Branch rejects card ────────────────────────────────
-    // PUT /api/cc/cards/{id}/reject
+    // ── PUT /api/cc/cards/{id}/reject ─────────────────────────
     public function reject(Request $request, int $id): JsonResponse
     {
         $card = CommissionCard::findOrFail($id);
-        $user = $request->user();
-
-        if ($user->isBranchManager() && $card->branch_id !== $user->branch_id) {
-            return response()->json(['success' => false, 'message' => 'This card is not assigned to your branch.'], 403);
-        }
+        $this->assertBranchOwnership($card, $request);
 
         $v = Validator::make($request->all(), [
-            'reason' => 'required|string|max:500',
+            'reason' => 'required|string|min:5|max:500',
         ]);
         if ($v->fails()) {
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
         }
 
-        DB::transaction(function () use ($card, $user, $request) {
+        if (!in_array($card->cc_status, ['branch_pending', 'accepted'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Card cannot be rejected at status '{$card->cc_status}'.",
+            ], 422);
+        }
+
+        DB::transaction(function () use ($card, $request) {
             $card->update([
-                'cc_status'              => 'rejected',
-                'cc_rejection_reason'    => $request->reason,
+                'cc_status'           => 'rejected',
+                'cc_rejection_reason' => $request->reason,
             ]);
 
-            // Notify CC branch
             CcNotification::create([
                 'card_id'        => $card->id,
                 'from_branch_id' => $card->branch_id,
                 'to_branch_id'   => $card->cc_branch_id,
-                'sent_by'        => $user->id,
-                'responded_by'   => $user->id,
+                'sent_by'        => $request->user()->id,
+                'responded_by'   => $request->user()->id,
                 'type'           => 'card_rejected',
                 'status'         => 'unread',
-                'message'        => "الفرع رَفَضَ الحساب #{$card->account_number} — السبب: {$request->reason}",
+                'message'        => "❌ الفرع رَفَضَ الحساب #{$card->account_number} — السبب: {$request->reason}",
             ]);
 
             ActivityLog::record('cc_card_rejected', $card, ['reason' => $request->reason]);
@@ -218,19 +231,17 @@ class CallCenterController extends Controller
         ]);
     }
 
-    // ── Branch completes card (broker + marketer + deposits) ─
-    // PUT /api/cc/cards/{id}/complete
+    // ── PUT /api/cc/cards/{id}/complete ───────────────────────
     public function complete(Request $request, int $id): JsonResponse
     {
         $card = CommissionCard::findOrFail($id);
-        $user = $request->user();
+        $this->assertBranchOwnership($card, $request);
 
-        if ($user->isBranchManager() && $card->branch_id !== $user->branch_id) {
-            return response()->json(['success' => false, 'message' => 'This card is not assigned to your branch.'], 403);
-        }
-
-        if (!in_array($card->cc_status, ['accepted'])) {
-            return response()->json(['success' => false, 'message' => "Card must be accepted first."], 422);
+        if ($card->cc_status !== 'accepted') {
+            return response()->json([
+                'success' => false,
+                'message' => "Card must be accepted first (current: '{$card->cc_status}').",
+            ], 422);
         }
 
         $v = Validator::make($request->all(), [
@@ -246,32 +257,24 @@ class CallCenterController extends Controller
             'monthly_deposit'     => 'required|numeric|min:0',
             'forex_commission'    => 'nullable|numeric|min:0',
             'futures_commission'  => 'nullable|numeric|min:0',
-            'reason'              => 'nullable|string|max:200',
         ]);
-
         if ($v->fails()) {
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
         }
 
-        // ── Commission limit check ────────────────────────
+        // ── Commission limit check ────────────────────────────
         $limitEnabled = Setting::commissionLimitEnabled();
         $limitAmount  = Setting::commissionLimitAmount();
+        $total = (float)$request->broker_commission
+               + (float)($request->marketer_commission ?? 0)
+               + (float)($request->ext_commission1 ?? 0)
+               + (float)($request->ext_commission2 ?? 0)
+               + (float)$card->cc_agent_commission;
 
-        $total = (float) $request->broker_commission
-               + (float) ($request->marketer_commission ?? 0)
-               + (float) ($request->ext_commission1 ?? 0)
-               + (float) ($request->ext_commission2 ?? 0)
-               + (float) $card->cc_agent_commission;
+        $warningResp = $this->checkCommissionLimit($total, $limitEnabled, $limitAmount, $request);
+        if ($warningResp) return $warningResp;
 
-        $warningResponse = $this->checkCommissionLimit(
-            $total, $limitEnabled, $limitAmount, $request
-        );
-
-        if ($warningResponse) {
-            return $warningResponse;
-        }
-
-        DB::transaction(function () use ($request, $card, $user) {
+        DB::transaction(function () use ($request, $card) {
             $card->update([
                 'broker_id'           => $request->broker_id,
                 'broker_commission'   => $request->broker_commission,
@@ -289,15 +292,15 @@ class CallCenterController extends Controller
                 'status'              => 'new_added',
             ]);
 
-            // Notify CC branch that card is complete
+            // Notify CC branch
             CcNotification::create([
                 'card_id'        => $card->id,
                 'from_branch_id' => $card->branch_id,
                 'to_branch_id'   => $card->cc_branch_id,
-                'sent_by'        => $user->id,
+                'sent_by'        => request()->user()->id,
                 'type'           => 'card_completed',
                 'status'         => 'unread',
-                'message'        => "تم إكمال بيانات الحساب #{$card->account_number} ({$card->month})",
+                'message'        => "🎉 تم إكمال بيانات الحساب #{$card->account_number} ({$card->month}) — إيداع: \${$request->initial_deposit}",
             ]);
 
             ActivityLog::record('cc_card_completed', $card, [
@@ -313,16 +316,15 @@ class CallCenterController extends Controller
         ]);
     }
 
-    // ── GET pending CC cards for a branch ──────────────────
-    // GET /api/cc/pending
+    // ── GET /api/cc/pending ───────────────────────────────────
+    // BUG FIX: Now filters 'branch_pending' AND 'accepted'
     public function pending(Request $request): JsonResponse
     {
         $user  = $request->user();
         $query = CommissionCard::with(['ccBranch', 'ccAgent', 'branch'])
                                ->whereNotNull('cc_branch_id')
-                               ->where('cc_status', 'accepted'); // sent but not yet completed
+                               ->whereIn('cc_status', ['branch_pending', 'accepted']);
 
-        // Branch manager sees only their pending cards
         if ($user->isBranchManager()) {
             $query->where('branch_id', $user->branch_id);
         }
@@ -330,14 +332,13 @@ class CallCenterController extends Controller
         $cards = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json([
-            'success' => true,
-            'count'   => $cards->count(),
-            'data'    => $cards,
+            'success'  => true,
+            'count'    => $cards->count(),
+            'data'     => $cards,
         ]);
     }
 
-    // ── GET CC cards sent by CC branch ─────────────────────
-    // GET /api/cc/sent
+    // ── GET /api/cc/sent ──────────────────────────────────────
     public function sent(Request $request): JsonResponse
     {
         $user  = $request->user();
@@ -345,7 +346,6 @@ class CallCenterController extends Controller
                                ->whereNotNull('cc_branch_id');
 
         if ($user->isBranchManager()) {
-            // CC branch manager sees cards they sent
             $query->where('cc_branch_id', $user->branch_id);
         }
 
@@ -356,30 +356,27 @@ class CallCenterController extends Controller
         return response()->json(['success' => true, 'data' => $cards]);
     }
 
-    // ── GET notifications ──────────────────────────────────
-    // GET /api/cc/notifications
+    // ── GET /api/cc/notifications ─────────────────────────────
     public function notifications(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = CcNotification::with(['card', 'fromBranch', 'sentBy'])
-                               ->latest();
+        $query = CcNotification::with(['card', 'fromBranch', 'sentBy'])->latest();
 
         if ($user->isBranchManager()) {
             $query->forBranch($user->branch_id);
         }
 
-        $all    = $query->get();
+        $all    = $query->limit(50)->get();
         $unread = $all->where('status', 'unread')->count();
 
         return response()->json([
-            'success'       => true,
-            'unread_count'  => $unread,
-            'data'          => $all->take(50),
+            'success'      => true,
+            'unread_count' => $unread,
+            'data'         => $all,
         ]);
     }
 
-    // ── Mark notification as read ──────────────────────────
-    // PUT /api/cc/notifications/{id}/read
+    // ── PUT /api/cc/notifications/{id}/read ──────────────────
     public function markRead(Request $request, int $id): JsonResponse
     {
         $notif = CcNotification::findOrFail($id);
@@ -393,50 +390,45 @@ class CallCenterController extends Controller
         return response()->json(['success' => true]);
     }
 
-    // ── Commission limit validator ─────────────────────────
+    // ── Commission limit check ────────────────────────────────
     private function checkCommissionLimit(
         float $total,
         bool $limitEnabled,
         float $limitAmount,
         Request $request
     ): ?JsonResponse {
-
         if (!$limitEnabled || $total <= $limitAmount) {
-            return null; // No issue
+            return null;
         }
 
-        // Get warning counter from request (client tracks this)
         $warningCount = (int) $request->header('X-Commission-Warning-Count', 0);
-
-        $maxWarnings = Setting::commissionWarningCount();
+        $maxWarnings  = Setting::commissionWarningCount();
 
         if ($warningCount >= $maxWarnings) {
-            // Hard block — contact FA
             return response()->json([
-                'success'        => false,
-                'blocked'        => true,
-                'total'          => $total,
-                'limit'          => $limitAmount,
-                'message'        => "تجاوزت العمولات الحد المسموح ({$limitAmount}$/lot). يرجى التواصل مع المدير المالي لمراجعة هذا الحساب.",
-                'contact_fa'     => true,
+                'success'     => false,
+                'blocked'     => true,
+                'total'       => $total,
+                'limit'       => $limitAmount,
+                'message'     => "تجاوزت العمولات الحد المسموح ({$limitAmount}$/lot). يرجى التواصل مع المدير المالي لمراجعة هذا الحساب.",
+                'contact_fa'  => true,
             ], 422);
         }
 
-        // Warning (not yet blocked)
         $remaining = $maxWarnings - $warningCount;
         $levels    = ['خفيف', 'متوسط', 'قوي'];
         $level     = $levels[min($warningCount, 2)];
 
         return response()->json([
-            'success'           => false,
-            'warning'           => true,
-            'warning_level'     => $level,
-            'warning_number'    => $warningCount + 1,
-            'warnings_left'     => $remaining - 1,
-            'total'             => $total,
-            'limit'             => $limitAmount,
-            'message'           => "تحذير {$level}: إجمالي العمولات ({$total}$/lot) يتجاوز الحد ({$limitAmount}$/lot). هل تريد المتابعة؟",
-            'can_override'      => true,
+            'success'        => false,
+            'warning'        => true,
+            'warning_level'  => $level,
+            'warning_number' => $warningCount + 1,
+            'warnings_left'  => $remaining - 1,
+            'total'          => $total,
+            'limit'          => $limitAmount,
+            'message'        => "تحذير {$level}: إجمالي العمولات ({$total}$/lot) يتجاوز الحد ({$limitAmount}$/lot). هل تريد المتابعة؟",
+            'can_override'   => true,
         ], 422);
     }
 }

@@ -2,7 +2,7 @@
 @section('title','صلاحيات المدير المالي')
 @section('page-title','صلاحيات المدير المالي')
 @section('content')
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px" class="perm-outer-grid">
   <div class="panel">
     <div class="panel-header"><div class="panel-title">🔒 الصلاحيات الحصرية للمدير المالي</div></div>
     <div class="panel-body">
@@ -19,6 +19,24 @@
     <div class="panel-body" id="pending-list"><div style="text-align:center;padding:30px;color:var(--mu)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">✅</div>لا يوجد موظفون بانتظار الاعتماد</div></div>
   </div>
 </div>
+
+<div class="modal-overlay" id="modal-reject-emp">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title">❌ رفض الموظف</div><button class="modal-close" onclick="closeModal('modal-reject-emp')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--mu);margin-bottom:12px">سبب رفض: <b id="rej-name" style="color:var(--tx)"></b></p>
+      <div class="form-group">
+        <label class="form-label">السبب *</label>
+        <textarea id="rej-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض..." style="font-size:16px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-reject-emp')">إلغاء</button>
+      <button class="btn" style="background:var(--re);color:white" onclick="confirmRejectEmp()">تأكيد الرفض</button>
+    </div>
+  </div>
+</div>
+
 @endsection
 @push('scripts')
 <script>
@@ -37,7 +55,20 @@ async function loadPending(){
   :'<div style="text-align:center;padding:30px;color:var(--mu)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">✅</div>لا يوجد موظفون بانتظار الاعتماد</div>';
 }
 async function approveEmp(id,name){const r=await api('PUT',`/employees/${id}/approve`);if(r.success){toast(r.message,'success');loadPending();}else toast(r.message,'error');}
-async function rejectEmp(id,name){const reason=prompt(`سبب رفض: ${name}`);if(reason===null)return;const r=await api('PUT',`/employees/${id}/reject`,{reason});if(r.success){toast(r.message,'success');loadPending();}else toast(r.message,'error');}
+let _rejectId=null;
+async function rejectEmp(id,name){
+  _rejectId=id;
+  document.getElementById('rej-name').textContent=name;
+  document.getElementById('rej-reason').value='';
+  openModal('modal-reject-emp');
+}
+async function confirmRejectEmp(){
+  const reason=document.getElementById('rej-reason').value.trim();
+  if(!reason){toast('اكتب سبب الرفض','error');return;}
+  const r=await api('PUT',`/employees/${_rejectId}/reject`,{reason});
+  if(r.success){closeModal('modal-reject-emp');toast(r.message,'success');loadPending();}
+  else toast(r.message,'error');
+}
 loadPending();
 </script>
 @endpush

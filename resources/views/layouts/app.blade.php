@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" id="html-root">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="theme-color" content="#0A1628">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -46,7 +46,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--tx);overscroll-behavior:none;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 900px 500px at 70% -10%,rgba(46,134,171,.1),transparent 55%),
     radial-gradient(ellipse 600px 400px at -5% 80%,rgba(46,134,171,.05),transparent 50%)}
@@ -226,8 +226,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .c-orange{color:var(--or)}.c-red{color:var(--re)}.c-muted{color:var(--mu)}
 
 /* ── Scrollbar ── */
+
+/* ── iOS zoom prevention ── */
+input,select,textarea{font-size:16px!important}
+@media(max-width:768px){
+  input[type="text"],input[type="email"],input[type="password"],
+  input[type="number"],input[type="search"],select,textarea{
+    font-size:16px!important;
+  }
+}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+/* Mobile touch optimizations */
+.table-scroll{-webkit-overflow-scrolling:touch;overflow-x:auto}
+.tr-draggable{cursor:grab;touch-action:pan-y}
+.col-pill{touch-action:manipulation}
+.mob-nav-item{touch-action:manipulation}
+.btn{touch-action:manipulation}
 
 /* ══════════════════════════════════════════
    MOBILE NAVIGATION ELEMENTS
@@ -356,7 +371,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
   .modal-overlay{align-items:flex-end!important;padding:0!important}
 
-  /* Forms */
+  /* Forms — iOS zoom prevention: inputs must be ≥16px */
+  .form-control{font-size:16px!important}
+  select.form-control{font-size:16px!important}
   .form-row,.form-row-3{grid-template-columns:1fr!important}
 
   /* Reports */
@@ -394,6 +411,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .kpi-grid{gap:6px}
   .mob-sheet-grid{grid-template-columns:repeat(3,1fr)}
 }
+.row-cc{border-right:3px solid rgba(29,158,117,.5)!important}
 </style>
 
 @stack('styles')
@@ -547,13 +565,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 {{-- Shared JS --}}
 <script>
 const API = '{{ url("/api") }}';
-let API_TOKEN = localStorage.getItem('wg_token') || '{{ session("api_token","") }}';
-@php
-  $currentUser = auth()->check()
-      ? auth()->user()->only('id','name','email','role','branch_id')
-      : [];
-@endphp
-const CURRENT_USER = @json($currentUser);
+// Token: session (server) takes priority over localStorage
+let API_TOKEN = '{{ session("api_token","") }}' || localStorage.getItem('wg_token') || '';
+// Persist for this session
+if (API_TOKEN) localStorage.setItem('wg_token', API_TOKEN);
+@php $__u = auth()->user(); @endphp
+const CURRENT_USER = {!! json_encode($__u ? $__u->only('id','name','email','role','branch_id') : []) !!};
 
 // ── Theme ──────────────────────────────────────────────────
 let curTheme = localStorage.getItem('wg_theme') || 'dark';
@@ -591,14 +608,15 @@ function toast(msg, type = 'success') {
 }
 
 // ── API Helper ─────────────────────────────────────────────
-async function api(method, url, body = null) {
+async function api(method, url, body = null, extraHeaders = {}) {
   const res = await fetch(API + url, {
     method,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
       ...(API_TOKEN ? {'Authorization': 'Bearer ' + API_TOKEN} : {}),
+      ...extraHeaders,
     },
     body: body ? JSON.stringify(body) : null,
   });
@@ -707,6 +725,10 @@ function mobGo(page, btnId) {
 // Swipe to open sidebar (RTL: swipe left from right edge)
 let touchStartX = 0;
 document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+// Prevent pull-to-refresh on scrollable content areas
+document.querySelectorAll('.table-scroll,.modal-body,.mob-more-sheet').forEach(el => {
+  el.addEventListener('touchmove', e => { e.stopPropagation(); }, {passive:true});
+});
 document.addEventListener('touchend', e => {
   if (!isMob()) return;
   const dx = e.changedTouches[0].clientX - touchStartX;

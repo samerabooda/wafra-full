@@ -68,7 +68,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>رقم الحساب</th><th>البروكر</th><th>مسوّق داخلي</th>
+            <th>رقم الحساب</th><th style="color:#1D9E75">موظف CC</th><th>البروكر</th><th>مسوّق داخلي</th>
             <th>مسوّق خارجي 1</th><th>مسوّق خارجي 2</th>
             <th>إيداع أولي</th><th>إيداع شهري</th>
             <th>ع. بروكر</th><th>ع. داخلي</th><th>ع. خارجي 1</th><th>ع. خارجي 2</th>
@@ -212,7 +212,11 @@ async function generateReport() {
 
   document.getElementById('rpt-tbody').innerHTML = RD.map(c => `
     <tr class="${c.status==='modified'?'row-modified':''}">
-      <td><span class="ac-num">#${c.account_number}${c.status==='modified'?' 🟡':''}</span></td>
+      <td>
+        ${c.cc_branch_id?`<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(29,158,117,.15);color:#1D9E75;border:1px solid rgba(29,158,117,.3);margin-left:3px">📞CC</span>`:''}
+        <span class="ac-num">#${c.account_number}${c.status==='modified'?' 🟡':''}</span>
+      </td>
+      <td style="font-size:11px">${c.cc_branch_id ? `<span style="color:#1D9E75">${c.cc_agent?.name||'—'}</span><br><span class="mono" style="font-size:10px;color:var(--teal)">$${c.cc_agent_commission||0}/lot</span>` : '<span style="color:var(--mu)">—</span>'}</td>
       <td style="font-weight:600;color:var(--pri2)">${c.broker?.name||'—'}</td>
       <td style="color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?c.marketer.name:'—'}</td>
       <td style="color:var(--pu)">${c.ext_marketer1?.name||'—'}</td>
@@ -226,7 +230,7 @@ async function generateReport() {
       <td><span class="badge ${c.account_kind==='new'?'badge-green':'badge-blue'}">${c.account_kind==='new'?'NEW':'SUB'}</span></td>
       <td style="color:var(--mu)">${c.month}</td>
       <td>${c.status==='modified'?'<span class="badge badge-orange">✏️ معدّل</span>':c.status==='new_added'?'<span class="badge badge-green">🆕 جديد</span>':'<span class="badge badge-blue">عادي</span>'}</td>
-    </tr>`).join('') || '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--mu)">لا توجد نتائج</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="15" style="text-align:center;padding:30px;color:var(--mu)">لا توجد نتائج</td></tr>';
 
   document.getElementById('rpt-table-wrap').style.display = 'block';
 

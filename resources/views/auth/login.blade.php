@@ -2,11 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>تسجيل الدخول — وفرة الخليجية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
+input,select,textarea{font-size:16px!important}
 :root{--pri:#2E86AB;--pri2:#3A9DB5;--pri3:#1A5F7A;--bg:#0A1628;--bg2:#142240;--bg3:#1A2B4E;--brd1:#253A63;--tx:#EDF4F8;--mu:#5A7A9A;--gr:#22C97A;--re:#E05050;}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -138,7 +139,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
         @csrf
         <div class="form-group">
           <label class="form-label">البريد الإلكتروني</label>
-          <input class="form-input" type="email" name="email" value="{{ old('email','finance@wafragulf.com') }}" required autocomplete="email">
+          <input class="form-input" type="email" enterkeyhint="next" name="email" value="{{ old('email','finance@wafragulf.com') }}" required autocomplete="email">
           @error('email')<div style="color:var(--re);font-size:11px;margin-top:4px">{{ $message }}</div>@enderror
         </div>
         <div class="form-group">
@@ -164,7 +165,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
         </div>
         <div class="form-group">
           <label class="form-label">البريد الإلكتروني</label>
-          <input class="form-input" type="email" name="email" value="{{ old('email','finance@wafragulf.com') }}" required>
+          <input class="form-input" type="email" enterkeyhint="next" name="email" value="{{ old('email','finance@wafragulf.com') }}" required>
         </div>
         <div class="form-group">
           <label class="form-label">كلمة المرور</label>
@@ -194,16 +195,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
       <div class="info-box">سيتم إرسال رابط الاستعادة على إيميلك مباشرة</div>
       <form method="POST" action="{{ route('auth.password.email') }}">
         @csrf
-        <input type="hidden" name="_form" value="forgot">
         <div class="form-group">
           <label class="form-label">البريد الإلكتروني</label>
-          <input class="form-input" type="email" name="email" placeholder="your@wafragulf.com" value="{{ old('_form') === 'forgot' ? old('email') : '' }}" required>
+          <input class="form-input" type="email" enterkeyhint="next" name="email" placeholder="your@wafragulf.com" required>
         </div>
         @if(session('status'))
           <div class="ok-box show">✅ {{ session('status') }}</div>
-        @endif
-        @if($errors->has('email') && old('_form') === 'forgot')
-          <div class="err-box show">{{ $errors->first('email') }}</div>
         @endif
         <button type="submit" class="btn-login">إرسال رابط الاستعادة ←</button>
         <div class="link-small" onclick="switchTab('login',null)">← رجوع للدخول</div>
@@ -214,7 +211,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 
 <script>
 // Show register tab if no FA exists
-fetch('{{ url("/api/auth/fa-check") }}')
+fetch('{{ route("auth.fa-check") }}')
   .then(r => r.json())
   .then(d => {
     if (!d.exists) {
@@ -224,9 +221,7 @@ fetch('{{ url("/api/auth/fa-check") }}')
   }).catch(() => {});
 
 // Load stats for brand section (Finance Admin only — we show generic)
-fetch('{{ url("/api/cards/stats") }}', {
-  headers: { 'Accept': 'application/json' }
-}).then(r => r.json()).then(d => {
+fetch('{{ url("/api/cards/stats") }}').then(r => r.json()).then(d => {
   if (d.success) {
     document.getElementById('stat-rec').textContent  = d.total.toLocaleString();
     document.getElementById('stat-dep').textContent  = '$' + (d.initial_deposit/1000).toFixed(0) + 'K';
@@ -239,10 +234,6 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
 }
-
-@if(old('_form') === 'forgot' || session('status'))
-switchTab('forgot', null);
-@endif
 
 function togglePw(id) {
   const i = document.getElementById(id);

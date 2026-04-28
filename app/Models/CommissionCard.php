@@ -84,4 +84,9 @@ class CommissionCard extends Model
                   ->orWhereHas('marketer', fn($m) => $m->where('name', 'like', "%{$term}%"));
         });
     }
+
+    public function scopeCcDraft($q)             { return $q->where('cc_status','cc_pending'); }
+    public function scopeCcBranchPending($q)     { return $q->where('cc_status','branch_pending'); }
+    public function scopeCcAwaitingBranch($q)    { return $q->whereIn('cc_status',['branch_pending','accepted']); }
+    public function scopeCcCompleted($q)         { return $q->where('cc_status','completed'); }
 }
