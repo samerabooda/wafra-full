@@ -267,18 +267,24 @@ class DatabaseSeeder extends Seeder
                 $tradType   = $tradTypes->random();
                 $kind       = rand(0,4) === 0 ? 'sub' : 'new';
 
-                // Commission scenarios
+                // Commission scenarios (8 scenarios including rebate/referral)
                 $scenario = $i % 8;
                 [$bc, $mc, $ec1, $ec2] = match($scenario) {
-                    0 => [4.00, 3.00, 0.00, 0.00],  // Full: $7
+                    0 => [4.00, 3.00, 0.00, 0.00],  // Standard: $7
                     1 => [4.00, 0.00, 0.00, 0.00],  // Broker only: $4
-                    2 => [4.00, 3.00, 1.00, 0.00],  // With ext1: $8 (at limit)
-                    3 => [3.00, 2.00, 1.00, 0.00],  // Varied: $6
-                    4 => [5.00, 2.00, 0.00, 0.00],  // High broker: $7
-                    5 => [4.00, 2.00, 1.00, 1.00],  // All 4: $8 (at limit)
-                    6 => [4.00, 3.00, 0.00, 0.00],  // Standard: $7
+                    2 => [4.00, 3.00, 1.00, 0.00],  // With ext1: $8
+                    3 => [3.00, 2.00, 0.00, 0.00],  // Varied: $5
+                    4 => [3.00, 2.00, 0.00, 0.00],  // Rebate base: $5 (limit $7)
+                    5 => [4.00, 2.00, 1.00, 1.00],  // All 4: $8
+                    6 => [0.00, 0.00, 0.00, 0.00],  // Company only: $0
                     7 => [2.00, 1.00, 0.00, 0.00],  // Low: $3
                 };
+                // Rebate for scenario 4
+                $hasRebate   = $scenario === 4;
+                $rebateAmt   = $hasRebate ? 1.50 : 0.00;
+                // Referral for scenario 7
+                $refAcct     = $scenario === 7 ? (string)(540000 + $count) : null;
+                $refComm     = $scenario === 7 ? 1.00 : 0.00;
 
                 // Status: 80% active, 15% modified, 5% new_added
                 $status = match(true) {
@@ -314,6 +320,10 @@ class DatabaseSeeder extends Seeder
                     'ext_commission1'     => $ec1,
                     'ext_marketer2_id'    => $extMkt2?->id,
                     'ext_commission2'     => $ec2,
+                    'has_rebate'          => $hasRebate ?? false,
+                    'rebate_amount'       => $rebateAmt ?? 0,
+                    'referral_account'    => $refAcct ?? null,
+                    'referral_commission' => $refComm ?? 0,
                     'initial_deposit'     => $initialDeposit,
                     'monthly_deposit'     => $monthlyDeposit,
                     'status'              => $status,
