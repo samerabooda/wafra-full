@@ -62,6 +62,45 @@
   </div>
   @endif
 </div>
+
+<div class="panel" style="margin-bottom:14px">
+  <div class="panel-header">
+    <div class="panel-title">⚙️ حد العمولات / Commission Limit</div>
+  </div>
+  <div class="panel-body">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">تفعيل الحد / Enable Limit</label>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+          <label style="position:relative;width:38px;height:20px;cursor:pointer">
+            <input type="checkbox" id="limit-enabled" style="opacity:0;width:0;height:0"
+                   onchange="saveLimit()">
+            <span id="sw-limit" style="position:absolute;inset:0;background:rgba(255,255,255,.1);
+              border-radius:10px;transition:.2s;cursor:pointer"></span>
+          </label>
+          <span id="limit-status" style="font-size:12px;color:var(--mu)">جاري التحميل...</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الحد الأقصى للعمولة ($) / Max Commission ($)</label>
+        <input type="number" id="limit-amount" class="form-control"
+               value="8" min="1" max="50" step="0.5" onchange="saveLimit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الحد مع Rebate ($) / Rebate Limit ($)</label>
+        <input type="number" id="rebate-limit" class="form-control"
+               value="7" min="1" max="50" step="0.5" onchange="saveLimit()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">عدد التحذيرات / Warning Count</label>
+        <input type="number" id="warn-count" class="form-control"
+               value="3" min="1" max="10" step="1" onchange="saveLimit()">
+      </div>
+    </div>
+    <div id="limit-msg" style="font-size:11px;margin-top:6px;display:none"></div>
+  </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -134,5 +173,45 @@ async function addBranch() {
 }
 
 loadSettings();
+loadLimit();
+
+async function loadLimit() {
+  const r = await api('GET', '/settings');
+  if (!r.success) return;
+  const d = r.data || {};
+  const enabled = d.commission_limit_enabled != null ? !!d.commission_limit_enabled : true;
+  const amount  = d.commission_limit_amount  || 8;
+  const rebate  = d.rebate_commission_limit  || 7;
+  const warns   = d.commission_warning_count || 3;
+  document.getElementById('limit-enabled').checked = enabled;
+  document.getElementById('limit-amount').value    = amount;
+  document.getElementById('rebate-limit').value    = rebate;
+  document.getElementById('warn-count').value      = warns;
+  const sw = document.getElementById('sw-limit');
+  const st = document.getElementById('limit-status');
+  sw.style.background      = enabled ? 'var(--teal)' : 'rgba(255,255,255,.1)';
+  st.textContent           = enabled ? 'مفعّل — الحد سيُطبَّق' : 'معطّل — لا حد للعمولة';
+  st.style.color           = enabled ? 'var(--gr)' : 'var(--mu)';
+}
+
+async function saveLimit() {
+  const enabled = document.getElementById('limit-enabled').checked;
+  const amount  = parseFloat(document.getElementById('limit-amount').value) || 8;
+  const rebate  = parseFloat(document.getElementById('rebate-limit').value) || 7;
+  const warns   = parseInt(document.getElementById('warn-count').value)     || 3;
+  const sw = document.getElementById('sw-limit');
+  const st = document.getElementById('limit-status');
+  sw.style.background = enabled ? 'var(--teal)' : 'rgba(255,255,255,.1)';
+  st.textContent = enabled ? 'مفعّل' : 'معطّل';
+  st.style.color = enabled ? 'var(--gr)' : 'var(--mu)';
+  const r = await api('POST', '/settings/commission-limit', {
+    enabled, amount, rebate_limit: rebate, warning_count: warns
+  });
+  const msg = document.getElementById('limit-msg');
+  msg.style.display = 'block';
+  msg.textContent   = r.success ? '✅ تم الحفظ' : '❌ ' + (r.message||'فشل');
+  msg.style.color   = r.success ? 'var(--gr)' : 'var(--re)';
+  setTimeout(() => msg.style.display='none', 2500);
+}
 </script>
 @endpush

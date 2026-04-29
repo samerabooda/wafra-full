@@ -48,6 +48,9 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(func
     });
 
     // ── Commission Cards ──────────────────────────────────────
+    // ── Dashboard ─────────────────────────────────────────────
+    Route::get('dashboard', [DashboardController::class, 'stats']);
+
     Route::prefix('cards')->group(function () {
 
         Route::get('tree',          [CommissionCardController::class, 'tree'])
