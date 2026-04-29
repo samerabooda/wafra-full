@@ -271,3 +271,8 @@ async function loadDashboard() {
         meta: mktBranch[name] || ''
       }))
     : '<div style="padding:20px;text-align:center;color:var(--mu);font-size:12px">لا توجد بيانات</div>';
+
+}
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+@endpush
