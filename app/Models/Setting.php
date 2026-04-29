@@ -88,3 +88,5 @@ class CcNotification extends Model
         $this->update(['status' => 'read', 'read_at' => now()]);
     }
 }
+
+    /* Already has Cache::remember — just ensure invalidation on write */

@@ -11,33 +11,72 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>{{ config('app.name', 'وفرة الخليجية') }} — @yield('title','لوحة المتابعة')</title>
 
-<!-- Fonts -->
+ Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-<!-- Chart.js -->
+ Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<!-- SheetJS (Excel import/export) -->
+ SheetJS (Excel import/export) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<!-- jsPDF -->
+ jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 /* ═══ CSS VARIABLES ═══ */
 :root {
-  --pri:#2E86AB;--pri2:#3A9DB5;--pri3:#1A5F7A;
-  --bg:#0A1628;--bg1:#0F1E35;--bg2:#142240;--bg3:#1A2B4E;--bg4:#1F3257;
-  --brd1:#253A63;--brd2:#2E4A7A;
-  --tx:#EDF4F8;--mu:#5A7A9A;--m2:#7A9AB5;
-  --gr:#22C97A;--re:#E05050;--or:#F5A623;--pu:#7B68EE;
-  --card-bg:var(--bg3);--card-brd:var(--brd1);
-  --inp-bg:var(--bg4);--inp-brd:var(--brd1);
-  --sb-bg:var(--bg1);--topb-bg:rgba(10,22,40,.95);
+  /* ── Brand ── */
+  --teal:  #14B87E;
+  --teal2: #0E9469;
+  --teal3: #0B7556;
+  --pri:   #2A82A8;
+  --pri2:  #37A0CC;
+  --pri3:  #1A5F7A;
+
+  /* ── Dark backgrounds (deep navy/slate — easier on eye) ── */
+  --bg:    #0C1420;   /* page bg — very dark navy */
+  --bg1:   #111A2B;   /* sidebar bg */
+  --bg2:   #162034;   /* cards, panels */
+  --bg3:   #1C2940;   /* inputs, table rows */
+  --bg4:   #21304A;   /* hover states */
+
+  /* ── Borders (subtle) ── */
+  --brd1: rgba(255,255,255,.07);
+  --brd2: rgba(255,255,255,.13);
+
+  /* ── Text ── */
+  --tx:   #E8EEF5;    /* primary text — warm white */
+  --tx2:  #B8C8D8;    /* secondary text */
+  --mu:   #6B849E;    /* muted — readable */
+  --mu2:  #4A6480;    /* very muted */
+
+  /* ── Accents ── */
+  --gr:   #1DC87A;    /* success green */
+  --re:   #E04848;    /* danger red */
+  --or:   #F59820;    /* warning orange */
+  --pu:   #7C6EEE;    /* purple accent */
+  --gold: #D4A83A;    /* premium gold */
+
+  /* ── Semantic ── */
+  --card-bg:  var(--bg2);
+  --card-brd: var(--brd1);
+  --inp-bg:   var(--bg3);
+  --inp-brd:  var(--brd2);
+  --sb-bg:    var(--bg1);
+  --topb-bg:  rgba(12,20,32,.96);
   --shadow:0 8px 32px rgba(0,0,0,.4);
 }
 [data-theme="light"] {
-  --bg:#F2F6FA;--bg1:#FFFFFF;--bg2:#E8F1F8;--bg3:#FFFFFF;--bg4:#F2F6FA;
-  --brd1:#A8C8E0;--brd2:#5A9AC0;
-  --tx:#0A1929;--mu:#3A5A78;--m2:#1A3A58;
+  --bg:  #F0F4F8;
+  --bg1: #FFFFFF;
+  --bg2: #FAFCFE;
+  --bg3: #F4F7FB;
+  --bg4: #EAF0F7;
+  --brd1: rgba(0,0,0,.09);
+  --brd2: rgba(0,0,0,.15);
+  --tx:  #0D1E2E;
+  --tx2: #2A4A66;
+  --mu:  #5A7A96;
+  --mu2: #3A5A78;
   --card-bg:#FFFFFF;--card-brd:#A8C8E0;
   --sb-bg:#0D2B45;--topb-bg:rgba(13,43,69,.98);
   --inp-bg:#FFFFFF;--inp-brd:#5A9AC0;
@@ -64,6 +103,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ── Sidebar ── */
 .sb-header{padding:14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
 .sb-logo{width:38px;height:38px;border-radius:8px;background:white;padding:3px;object-fit:contain;flex-shrink:0}
+.sb-logo-3d{width:48px;height:48px;flex-shrink:0}
+.sb-logo-3d svg,.tb-logo-3d svg,.mob-logo-3d svg{width:100%;height:100%;display:block}
+.tb-logo-3d{width:40px;height:40px}
+.mob-logo-3d{width:36px;height:36px}
 .sb-brand{font-size:12px;font-weight:800;color:white;line-height:1.2}
 .sb-brand small{display:block;font-size:9px;color:rgba(255,255,255,.4)}
 .sb-nav{flex:1;padding:10px 8px}
@@ -72,9 +115,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   font-size:12px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;
   text-decoration:none;position:relative;margin-bottom:1px}
 .nav-item:hover{background:rgba(255,255,255,.08);color:white}
-.nav-item.active{background:rgba(46,134,171,.25);color:var(--pri2);font-weight:700}
+.nav-item.active{background:rgba(20,184,126,.12);color:var(--teal);font-weight:700;letter-spacing:.01em}
 .nav-item.active::before{content:'';position:absolute;right:0;top:22%;bottom:22%;
-  width:3px;background:var(--pri);border-radius:2px 0 0 2px}
+  width:3px;background:var(--teal);border-radius:2px 0 0 2px}
 .nav-badge{margin-right:auto;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;
   background:rgba(46,134,171,.2);color:var(--pri2);border:1px solid rgba(46,134,171,.3)}
 .nav-badge.orange{background:rgba(245,166,35,.15);color:var(--or);border-color:rgba(245,166,35,.3)}
@@ -422,8 +465,8 @@ input,select,textarea{font-size:16px!important}
   {{-- SIDEBAR --}}
   <aside class="sidebar">
     <div class="sb-header">
-      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية"
-           onerror="this.style.display='none'">
+      <div class="sb-logo-3d" aria-label="وفرة الخليجية"
+           >{!! file_get_contents(public_path("logo_3d.svg")) !!}</div>
       <div>
         <div class="sb-brand">وفرة الخليجية<small>Commission Cards</small></div>
       </div>
@@ -432,7 +475,7 @@ input,select,textarea{font-size:16px!important}
     <nav class="sb-nav">
       <div class="nav-section">الرئيسية</div>
       <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-        <span>🏠</span> لوحة المتابعة
+        <span>🏠</span> لوحة المتابعة / Dashboard
       </a>
       <a href="{{ route('cards.index') }}" class="nav-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
         <span>🗂</span> كروت العمولات
@@ -457,7 +500,8 @@ input,select,textarea{font-size:16px!important}
       </a>
       @endif
       @if(!$isCcBranch && auth()->user()?->branch_id)
-      <a href="{{ route('callcenter.pending') }}" class="nav-item {{ request()->routeIs('callcenter.pending') ? 'active' : '' }}">
+      <a href="{{ route('callcenter.pending') }}" class="nav-item {{ request()->routeIs('callcenter.pending') ? 'active' : '' }}"
+         onclick="loadCcBadge()">
         <span>📬</span> واردة من CC
         <span class="nav-badge orange" id="cc-badge" style="display:none">0</span>
       </a>
@@ -467,26 +511,32 @@ input,select,textarea{font-size:16px!important}
       </a>
 
       <div class="nav-section">إنشاء وتعديل</div>
+      @if(auth()->user()?->isFinanceAdmin() || auth()->user()?->hasPermission('create_card'))
       <a href="{{ route('cards.create') }}" class="nav-item {{ request()->routeIs('cards.create') ? 'active' : '' }}">
         <span>➕</span> كرت عمولة جديد
         <span class="nav-badge green">جديد</span>
       </a>
+      @endif
+      @if(auth()->user()?->isFinanceAdmin() || auth()->user()?->hasPermission('edit_card'))
       <a href="{{ route('cards.edit-search') }}" class="nav-item {{ request()->routeIs('cards.edit-search') ? 'active' : '' }}">
         <span>✏️</span> تعديل حساب موجود
       </a>
+      @endif
 
       <div class="nav-section">الإدارة</div>
+      @if(auth()->user()?->isFinanceAdmin() || auth()->user()?->hasPermission('employees'))
       <a href="{{ route('employees.index') }}" class="nav-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
         <span>👥</span> الموظفون
         <span class="nav-badge" id="sb-emp-count">—</span>
       </a>
+      @endif
 
       @if(auth()->user()?->isFinanceAdmin())
       <a href="{{ route('managers.index') }}" class="nav-item {{ request()->routeIs('managers.*') ? 'active' : '' }}">
         <span>👤</span> المديرون
       </a>
-      <a href="{{ route('branches.index') }}" class="nav-item {{ request()->routeIs('branches.*') ? 'active' : '' }}">
-        <span>🏢</span> الفروع
+      <a href="{{ route('settings.index') }}" class="nav-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
+        <span>📋</span> التعريفات
       </a>
       <a href="{{ route('permissions.index') }}" class="nav-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
         <span>🛡️</span> الصلاحيات
@@ -527,7 +577,7 @@ input,select,textarea{font-size:16px!important}
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
-        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="" onerror="this.style.display='none'">
+        {!! '<div class="tb-logo-3d">' . file_get_contents(public_path("logo_3d.svg")) . '</div>' !!}
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
           <div class="tb-sub">وفرة الخليجية / <span id="tb-branch">الإدارة المالية</span></div>
@@ -569,8 +619,7 @@ const API = '{{ url("/api") }}';
 let API_TOKEN = '{{ session("api_token","") }}' || localStorage.getItem('wg_token') || '';
 // Persist for this session
 if (API_TOKEN) localStorage.setItem('wg_token', API_TOKEN);
-@php $__u = auth()->user(); @endphp
-const CURRENT_USER = {!! json_encode($__u ? $__u->only('id','name','email','role','branch_id') : []) !!};
+const CURRENT_USER = @json(auth()->user()?->only('id','name','email','role','branch_id') ?? []);
 
 // ── Theme ──────────────────────────────────────────────────
 let curTheme = localStorage.getItem('wg_theme') || 'dark';
@@ -636,6 +685,73 @@ if (CURRENT_USER && CURRENT_USER.name) {
 
 // ── Helpers ────────────────────────────────────────────────
 const fmt = n => n > 0 ? '$' + Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
+
+/* ── Bilingual Month Picker (Option 3) ──────────────────────
+   Usage: mountMonthPicker(containerId, hiddenInputId, onChange?)
+   Auto-selects current month on open
+   ─────────────────────────────────────────────────────────── */
+const MONTHS_BI = [
+  {ar:'يناير',en:'January',  short:'Jan'},
+  {ar:'فبراير',en:'February', short:'Feb'},
+  {ar:'مارس',  en:'March',    short:'Mar'},
+  {ar:'أبريل', en:'April',    short:'Apr'},
+  {ar:'مايو',  en:'May',      short:'May'},
+  {ar:'يونيو', en:'June',     short:'Jun'},
+  {ar:'يوليو', en:'July',     short:'Jul'},
+  {ar:'أغسطس', en:'August',   short:'Aug'},
+  {ar:'سبتمبر',en:'September',short:'Sep'},
+  {ar:'أكتوبر',en:'October',  short:'Oct'},
+  {ar:'نوفمبر',en:'November', short:'Nov'},
+  {ar:'ديسمبر',en:'December', short:'Dec'},
+];
+
+function mountMonthPicker(containerId, hiddenId, onChangeCb) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const now   = new Date();
+  const state = { year: now.getFullYear(), month: now.getMonth() + 1 };
+
+  // Build selects
+  container.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="${containerId}-month" class="form-control" style="flex:1.4"
+              onchange="mpUpdate('${containerId}','${hiddenId}')">
+        ${MONTHS_BI.map((m,i) => `<option value="${i+1}" ${i+1===state.month?'selected':''}>
+          ${m.ar} — ${m.en}</option>`).join('')}
+      </select>
+      <select id="${containerId}-year" class="form-control" style="flex:1"
+              onchange="mpUpdate('${containerId}','${hiddenId}')">
+        ${(()=>{let opts='';for(let y=2065;y>=2010;y--)opts+=`<option value="${y}" ${y===state.year?'selected':''}>${y}</option>`;return opts;})()}
+      </select>
+    </div>
+    <div id="${containerId}-preview" style="font-size:11px;color:var(--pri2);margin-top:5px;
+         padding:4px 8px;background:rgba(46,134,171,.06);border-radius:6px;display:flex;
+         align-items:center;gap:5px">
+      <span style="color:var(--teal)">📅</span>
+      <span id="${containerId}-preview-text"></span>
+    </div>`;
+
+  mpUpdate(containerId, hiddenId, onChangeCb);
+}
+
+function mpUpdate(containerId, hiddenId, onChangeCb) {
+  const m   = parseInt(document.getElementById(containerId+'-month').value);
+  const y   = parseInt(document.getElementById(containerId+'-year').value);
+  const mon = MONTHS_BI[m-1];
+  const en  = mon.short + ' ' + y;           // "May 2026" — stored value
+  const ar  = mon.ar + ' ' + y;              // "مايو 2026"
+  const bi  = mon.ar + ' / ' + mon.en + ' ' + y; // "مايو / May 2026"
+
+  const hidden = document.getElementById(hiddenId);
+  if (hidden) hidden.value = en;
+
+  const prev = document.getElementById(containerId+'-preview-text');
+  if (prev) prev.textContent = bi;
+
+  if (typeof onChangeCb === 'function') onChangeCb(en, ar, y, m);
+}
+
 const fmtK = n => {
   if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
   if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
@@ -794,11 +910,30 @@ function updateMobTitle() {
 async function loadCcBadge() {
   try {
     const r = await api('GET', '/cc/notifications');
-    if (r?.unread_count > 0) {
-      const b = document.getElementById('cc-badge');
-      if (b) { b.textContent = r.unread_count; b.style.display = 'inline-flex'; }
-    }
+    const count = r?.unread_count || 0;
+    // Update all CC badges
+    ['cc-badge','cc-badge-mob'].forEach(id => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      if (count > 0) { b.textContent = count; b.style.display = 'inline-flex'; }
+      else           { b.style.display = 'none'; }
+    });
+    // Store notifications for dropdown
+    if (r?.data) window._ccNotifs = r.data;
   } catch(e) {}
+}
+
+async function markNotifRead(id, cardId) {
+  try {
+    await api('PUT', `/cc/notifications/${id}/read`);
+    loadCcBadge(); // refresh count
+  } catch(e) {}
+  // Navigate to pending page
+  const isCcBranch = {{ auth()->user()?->branch?->code === 'CC' ? 'true' : 'false' }};
+  const url = isCcBranch
+    ? '{{ route("callcenter.index") }}'
+    : '{{ route("callcenter.pending") }}';
+  window.location.href = url;
 }
 
 function initMobile() {
@@ -833,7 +968,7 @@ setTimeout(initMobile, 50);
 <div class="mob-header" id="mob-header">
   <button class="mob-burger" onclick="toggleMobSidebar()">☰</button>
   <div class="mob-logo-row">
-    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="" onerror="this.style.display='none'">
+    {!! '<div class="mob-logo-3d">' . file_get_contents(public_path("logo_3d.svg")) . '</div>' !!}
     <div class="mob-title">وفرة الخليجية<small id="mob-pg-title">لوحة المتابعة</small></div>
   </div>
   <button class="mob-theme-btn" onclick="toggleTheme()" id="mob-theme-btn">🌙</button>
@@ -854,11 +989,11 @@ setTimeout(initMobile, 50);
     </button>
     <button class="mob-nav-item" id="mbn-r" onclick="mobGo('r','mbn-r')">
       <span class="mob-nav-icon">📈</span>
-      <span class="mob-nav-lbl">التقارير</span>
+      <span class="mob-nav-lbl">التقارير / Reports</span>
     </button>
     <button class="mob-nav-item" id="mbn-e" onclick="mobGo('e','mbn-e')">
       <span class="mob-nav-icon">👥</span>
-      <span class="mob-nav-lbl">الموظفون</span>
+      <span class="mob-nav-lbl">الموظفون / Employees</span>
     </button>
     <button class="mob-nav-item" id="mbn-more" onclick="toggleMobMore()">
       <span class="mob-nav-icon">⋯</span>
@@ -875,30 +1010,30 @@ setTimeout(initMobile, 50);
       <div class="mob-sheet-ico">✏️</div><div class="mob-sheet-lbl">المعدّلة</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('tree');closeMobMore()">
-      <div class="mob-sheet-ico">🌳</div><div class="mob-sheet-lbl">شجرة الحسابات</div>
+      <div class="mob-sheet-ico">🌳</div><div class="mob-sheet-lbl">شجرة الحسابات / Tree</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('dynamic');closeMobMore()">
-      <div class="mob-sheet-ico">🔧</div><div class="mob-sheet-lbl">تقرير ديناميكي</div>
+      <div class="mob-sheet-ico">🔧</div><div class="mob-sheet-lbl">تقرير ديناميكي / Dynamic</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('cc');closeMobMore()">
-      <div class="mob-sheet-ico">📞</div><div class="mob-sheet-lbl">مركز الاتصال</div>
+      <div class="mob-sheet-ico">📞</div><div class="mob-sheet-lbl">مركز الاتصال / Call Center</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('settings');closeMobMore()">
-      <div class="mob-sheet-ico">⚙️</div><div class="mob-sheet-lbl">الإعدادات</div>
+      <div class="mob-sheet-ico">⚙️</div><div class="mob-sheet-lbl">الإعدادات / Settings</div>
     </div>
     @if(auth()->user()?->isFinanceAdmin())
     <div class="mob-sheet-item" onclick="mobGo('import');closeMobMore()">
       <div class="mob-sheet-ico">📥</div><div class="mob-sheet-lbl">استيراد</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('managers');closeMobMore()">
-      <div class="mob-sheet-ico">👤</div><div class="mob-sheet-lbl">المديرون</div>
+      <div class="mob-sheet-ico">👤</div><div class="mob-sheet-lbl">المديرون / Managers</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('permissions');closeMobMore()">
-      <div class="mob-sheet-ico">🛡️</div><div class="mob-sheet-lbl">الصلاحيات</div>
+      <div class="mob-sheet-ico">🛡️</div><div class="mob-sheet-lbl">الصلاحيات / Permissions</div>
     </div>
     @endif
     <div class="mob-sheet-item" onclick="mobGo('guide');closeMobMore()">
-      <div class="mob-sheet-ico">📖</div><div class="mob-sheet-lbl">دليل النظام</div>
+      <div class="mob-sheet-ico">📖</div><div class="mob-sheet-lbl">دليل النظام / Guide</div>
     </div>
     <div class="mob-sheet-item" onclick="document.getElementById('logout-form').submit()">
       <div class="mob-sheet-ico">🚪</div><div class="mob-sheet-lbl">خروج</div>

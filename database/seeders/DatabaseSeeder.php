@@ -105,7 +105,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->command->line('  → Users...');
         $fa = User::firstOrCreate(['email'=>'finance@wafragulf.com'], [
-            'name'=>'محمد الشعلة','password'=>Hash::make('Wafra@2026!'),
+            'name'=>'محمد صلاح','password'=>Hash::make('Wafra@2026!'),
             'role'=>'finance_admin','branch_id'=>$branches['HQ']->id,'is_active'=>true,
         ]);
 
@@ -141,33 +141,33 @@ class DatabaseSeeder extends Seeder
             // ── B01 Beirut ──────────────────────────────────
             ['Reyad Sabobah',    'broker',   'B01', 4.00, 3.00, 0.00],
             ['Reyad Khalil',     'broker',   'B01', 3.50, 2.50, 0.00],
-            ['Nada Khalil',      'marketing', 'B01', 0.00, 3.00, 0.00],
-            ['Sara Moussa',      'marketing', 'B01', 0.00, 2.50, 0.00],
+            ['Nada Khalil',      'marketer', 'B01', 0.00, 3.00, 0.00],
+            ['Sara Moussa',      'marketer', 'B01', 0.00, 2.50, 0.00],
             // ── B02 Damascus ────────────────────────────────
             ['Mohammad Khalil',  'broker',   'B02', 4.00, 3.00, 0.00],
             ['Ahmad Nassar',     'broker',   'B02', 4.00, 2.00, 0.00],
-            ['Layla Darwish',    'marketing', 'B02', 0.00, 3.00, 0.00],
+            ['Layla Darwish',    'marketer', 'B02', 0.00, 3.00, 0.00],
             // ── B03 Cairo ───────────────────────────────────
             ['M. Yehia',         'broker',   'B03', 4.00, 3.00, 0.00],
             ['Hassan Ibrahim',   'broker',   'B03', 3.50, 2.50, 0.00],
-            ['Amira Said',       'marketing', 'B03', 0.00, 3.00, 0.00],
+            ['Amira Said',       'marketer', 'B03', 0.00, 3.00, 0.00],
             // ── B04 Riyadh ──────────────────────────────────
             ['Fahad Bloshi',     'external', 'B04', 0.00, 2.00, 0.00],
             ['Khalid Alatawi',   'broker',   'B04', 4.00, 3.00, 0.00],
-            ['Omar Alghamdi',    'marketing', 'B04', 0.00, 3.00, 0.00],
+            ['Omar Alghamdi',    'marketer', 'B04', 0.00, 3.00, 0.00],
             // ── B05 Dubai ───────────────────────────────────
             ['Omar Nasser',      'broker',   'B05', 4.00, 3.00, 0.00],
-            ['Maha Rashid',      'marketing', 'B05', 0.00, 3.00, 0.00],
+            ['Maha Rashid',      'marketer', 'B05', 0.00, 3.00, 0.00],
             ['Ali Mansoor',      'broker',   'B05', 3.50, 2.00, 0.00],
             // ── B06 Amman ───────────────────────────────────
             ['Tarek Haddad',     'broker',   'B06', 4.00, 3.00, 0.00],
-            ['Dana Khalaf',      'marketing', 'B06', 0.00, 2.50, 0.00],
+            ['Dana Khalaf',      'marketer', 'B06', 0.00, 2.50, 0.00],
             // ── B07 Kuwait ──────────────────────────────────
             ['Yousef Alrashidi', 'broker',   'B07', 4.00, 3.00, 0.00],
-            ['Mona Alsabah',     'marketing', 'B07', 0.00, 3.00, 0.00],
+            ['Mona Alsabah',     'marketer', 'B07', 0.00, 3.00, 0.00],
             // ── B08 Baghdad ─────────────────────────────────
             ['Ali Hussain',      'broker',   'B08', 4.00, 2.50, 0.00],
-            ['Zahraa Mahdi',     'marketing', 'B08', 0.00, 2.00, 0.00],
+            ['Zahraa Mahdi',     'marketer', 'B08', 0.00, 2.00, 0.00],
             // ── CC Agents ───────────────────────────────────
             ['علي العتيبي',     'cc_agent', 'CC',  0.00, 1.00, 1.00],
             ['سارة الزهراني',   'cc_agent', 'CC',  0.00, 1.00, 1.50],
@@ -221,7 +221,7 @@ class DatabaseSeeder extends Seeder
             if ($emp->role === 'broker' || $emp->role === 'external') {
                 $brokersByBranch[$emp->branch_id][] = $emp;
             }
-            if ($emp->role === 'marketing') {
+            if ($emp->role === 'marketer') {
                 $marketersByBranch[$emp->branch_id][] = $emp;
             }
             if ($emp->role === 'cc_agent') {

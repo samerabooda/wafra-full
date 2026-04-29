@@ -193,9 +193,17 @@ class CallCenterController extends Controller
 
         $v = Validator::make($request->all(), [
             'reason' => 'required|string|min:5|max:500',
+        ], [
+            'reason.required' => 'يجب كتابة سبب الرفض / Rejection reason is required',
+            'reason.min'      => 'سبب الرفض يجب أن يكون 5 أحرف على الأقل / Minimum 5 characters',
+            'reason.max'      => 'سبب الرفض طويل جداً / Reason too long (max 500)',
         ]);
         if ($v->fails()) {
-            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $v->errors()->first('reason'),
+                'errors'  => $v->errors(),
+            ], 422);
         }
 
         if (!in_array($card->cc_status, ['branch_pending', 'accepted'])) {

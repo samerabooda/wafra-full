@@ -9,7 +9,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name', 100);
             $table->string('email', 150)->nullable()->unique();
-            $table->enum('role', ['broker','marketing','external','other','cc_agent'])->default('broker');
+            $table->enum('role', ['broker','marketing','external','other'])->default('broker');
             $table->foreignId('branch_id')->nullable()->constrained('branches')->nullOnDelete();
             $table->decimal('broker_commission', 8, 2)->default(4.00)->comment('$/lot');
             $table->decimal('marketing_commission', 8, 2)->default(3.00)->comment('$/lot');

@@ -17,6 +17,16 @@
   </div>
 </div>
 <div class="panel"><div class="table-scroll"><table class="data-table" style="min-width:1000px">
+  <div id="tree-month-msg" style="display:flex;align-items:center;gap:10px;padding:20px;
+       background:rgba(46,134,171,.06);border:1px solid rgba(46,134,171,.2);border-radius:9px;margin-bottom:12px">
+    <span style="font-size:24px">📅</span>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--tx)">يرجى اختيار شهر / Please select a month</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:3px">اختر شهراً من القائمة أعلاه لعرض شجرة الحسابات</div>
+    </div>
+  </div>
+  <div id="tree-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+  <table style="width:100%;border-collapse:collapse" id="tree-table">
   <thead><tr><th>المجموعة / الحساب</th><th>الشهر</th><th>إيداع أولي</th><th>إيداع شهري</th><th>البروكر</th><th>ع. بروكر</th><th>مسوّق داخلي</th><th>ع. داخلي</th><th>مسوّق خارجي 1</th><th>ع. خارجي 1</th><th>مسوّق خارجي 2</th><th>ع. خارجي 2</th><th>إجمالي ع.</th><th>الحالة</th></tr></thead>
   <tbody id="tree-tbody"><tr><td colspan="14" style="text-align:center;padding:40px;color:var(--mu)">جاري التحميل...</td></tr></tbody>
 </table></div></div>
@@ -27,6 +37,11 @@ let treeData=[];
 async function loadTree(){
   const group=document.getElementById('t-group').value;
   const month=document.getElementById('t-month').value;
+
+  // Show helpful message if no month selected
+  const msgEl = document.getElementById('tree-month-msg');
+  if(msgEl) msgEl.style.display = month ? 'none' : 'flex';
+  if(!month) { document.getElementById('tree-tbody').innerHTML=''; return; }
   const params=new URLSearchParams({group_by:group});
   if(month)params.set('month',month);
   const r=await api('GET','/cards/tree?'+params);
@@ -34,8 +49,8 @@ async function loadTree(){
   treeData=r.tree;
   const s=r.summary;
   document.getElementById('ts-total').textContent=s.total_accounts.toLocaleString();
-  document.getElementById('ts-broker').textContent='$'+(s.total_broker_comm||0).toFixed(1)+'/lot';
-  document.getElementById('ts-mkt').textContent='$'+((s.total_mkt_comm||0)+(s.total_ext1_comm||0)+(s.total_ext2_comm||0)).toFixed(1)+'/lot';
+  document.getElementById('ts-broker').textContent='$'+(s.total_broker_comm||0).toFixed(1)+'';
+  document.getElementById('ts-mkt').textContent='$'+((s.total_mkt_comm||0)+(s.total_ext1_comm||0)+(s.total_ext2_comm||0)).toFixed(1)+'';
   document.getElementById('ts-dep').textContent=fmtK(s.total_monthly);
   let html='';
   treeData.forEach(g=>{
@@ -44,7 +59,7 @@ async function loadTree(){
       <td>—</td>
       <td class="mono c-blue" style="font-weight:700">${fmt(g.initial_deposit)}</td>
       <td class="mono c-green" style="font-weight:700">${fmt(g.monthly_deposit)}</td>
-      <td colspan="8"><span style="font-size:11px;color:var(--mu)">إجمالي العمولات: <b class="c-orange">$${(g.total_comm||0).toFixed(1)}/lot</b></span></td>
+      <td colspan="8"><span style="font-size:11px;color:var(--mu)">إجمالي العمولات: <b class="c-orange">$${(g.total_comm||0).toFixed(1)}</b></span></td>
       <td></td>
     </tr>`;
     (g.cards||[]).forEach(c=>{
@@ -55,14 +70,14 @@ async function loadTree(){
         <td class="mono c-blue">${fmt(c.initial_deposit)}</td>
         <td class="mono c-green">${fmt(c.monthly_deposit)}</td>
         <td style="font-weight:600;color:var(--pri2)">${c.broker?.name||'—'}</td>
-        <td class="mono c-blue">$${c.broker_commission||0}/lot</td>
+        <td class="mono c-blue">$${c.broker_commission||0}</td>
         <td style="color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?c.marketer.name:'—'}</td>
-        <td class="mono c-green">$${c.marketer_commission||0}/lot</td>
+        <td class="mono c-green">$${c.marketer_commission||0}</td>
         <td style="color:var(--pu)">${c.ext_marketer1?.name||'—'}</td>
-        <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}/lot</td>
+        <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}</td>
         <td style="color:var(--pu)">${c.ext_marketer2?.name||'—'}</td>
-        <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}/lot</td>
-        <td><span class="badge badge-orange">$${totalComm.toFixed(1)}/lot</span></td>
+        <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}</td>
+        <td><span class="badge badge-orange">$${totalComm.toFixed(1)}</span></td>
         <td>${c.status==='modified'?'<span class="badge badge-orange">✏️ معدّل</span>':'<span class="badge badge-blue">عادي</span>'}</td>
       </tr>`;
     });

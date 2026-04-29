@@ -39,7 +39,8 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label class="form-label">سبب الرفض *</label>
+        <label class="form-label">سبب الرفض / Reason *</label>
+        <div id="reject-err" style="display:none;background:rgba(226,75,74,.1);border:1px solid rgba(226,75,74,.25);border-radius:7px;padding:8px 12px;font-size:12px;color:#E24B4A;margin-bottom:8px"></div>
         <textarea id="reject-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض ليصل لمركز الاتصال..."></textarea>
       </div>
     </div>
@@ -64,21 +65,21 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">البروكر *</label>
+          <label class="form-label">البروكر / Broker / Broker *</label>
           <select id="comp-broker" class="form-control" onchange="calcTotal()"><option value="">اختر البروكر</option></select>
         </div>
         <div class="form-group">
-          <label class="form-label">عمولة البروكر ($/lot) *</label>
+          <label class="form-label">عمولة البروكر / Broker Commission ($) *</label>
           <input type="number" id="comp-broker-comm" class="form-control" min="0" step="0.5" value="4" onchange="calcTotal()">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">المسوّق</label>
+          <label class="form-label">المسوّق / Marketer / Marketer</label>
           <select id="comp-marketer" class="form-control" onchange="calcTotal()"><option value="">— اختياري —</option></select>
         </div>
         <div class="form-group">
-          <label class="form-label">عمولة المسوّق ($/lot)</label>
+          <label class="form-label">عمولة المسوّق ($)</label>
           <input type="number" id="comp-marketer-comm" class="form-control" min="0" step="0.5" value="0" onchange="calcTotal()">
         </div>
       </div>
@@ -98,15 +99,15 @@
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
           <div>
             <div style="color:var(--mu);margin-bottom:2px">عمولة CC</div>
-            <div class="mono" style="font-weight:700;color:var(--pri2)" id="disp-cc-comm">$0.00/lot</div>
+            <div class="mono" style="font-weight:700;color:var(--pri2)" id="disp-cc-comm">$0.00</div>
           </div>
           <div>
             <div style="color:var(--mu);margin-bottom:2px">عمولة البروكر</div>
-            <div class="mono" style="font-weight:700;color:var(--gr)" id="disp-broker-comm">$0.00/lot</div>
+            <div class="mono" style="font-weight:700;color:var(--gr)" id="disp-broker-comm">$0.00</div>
           </div>
           <div>
             <div style="color:var(--mu);margin-bottom:2px">الإجمالي</div>
-            <div class="mono" style="font-weight:700" id="disp-total">$0.00/lot</div>
+            <div class="mono" style="font-weight:700" id="disp-total">$0.00</div>
           </div>
         </div>
       </div>
@@ -126,9 +127,9 @@ let currentCardId   = null;
 let currentCcComm   = 0;
 let warningCount    = 0;
 let pendingOverride = false;
-const LIMIT_AMOUNT  = {{ \App\Models\Setting::commissionLimitAmount() }};
-const LIMIT_ENABLED = {{ \App\Models\Setting::commissionLimitEnabled() ? 'true' : 'false' }};
-const MAX_WARNINGS  = {{ \App\Models\Setting::commissionWarningCount() }};
+const LIMIT_AMOUNT  = {{ Setting::commissionLimitAmount() }};
+const LIMIT_ENABLED = {{ Setting::commissionLimitEnabled() ? 'true' : 'false' }};
+const MAX_WARNINGS  = {{ Setting::commissionWarningCount() }};
 
 async function loadPending() {
   const r = await api('GET', '/cc/pending');
@@ -165,7 +166,7 @@ async function loadPending() {
           {branch_pending:'⏳ بانتظار ردك',accepted:'✅ مقبول — أكمل البيانات',rejected:'❌ مرفوض',completed:'✓ مكتمل'}[c.cc_status]||c.cc_status
         }</b></span>
         <span>موظف CC: <b>${c.cc_agent?.name || '—'}</b></span>
-        <span>عمولة CC: <b class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(2)}/lot</b></span>
+        <span>عمولة CC: <b class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(2)}</b></span>
         <span>تاريخ الإرسال: <b>${new Date(c.created_at).toLocaleDateString('ar-SA')}</b></span>
         ${c.notes ? `<span>ملاحظات: <b>${c.notes}</b></span>` : ''}
       </div>
@@ -195,7 +196,16 @@ async function confirmReject() {
   const r = await api('PUT', `/cc/cards/${currentCardId}/reject`, { reason });
   btn.disabled = false; btn.textContent = 'تأكيد الرفض';
 
-  if (r.success) { closeModal('modal-reject'); toast('تم الرفض — أُبلغ مركز الاتصال', 'success'); loadPending(); }
+  if (r.success) {
+    closeModal('modal-reject');
+    toast('تم الرفض — أُبلغ مركز الاتصال', 'success');
+    loadPending();
+  } else {
+    const msg = r.message || (r.errors ? Object.values(r.errors).flat()[0] : 'فشل الرفض');
+    const errEl = document.getElementById('reject-err');
+    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+    else toast(msg, 'error');
+  }
   else toast(r.message||'خطأ','error');
 }
 
@@ -207,8 +217,8 @@ async function openComplete(id, ccComm) {
   pendingOverride = false;
 
   document.getElementById('complete-card-info').innerHTML =
-    `الحساب <b>#${id}</b> — عمولة موظف CC: <span class="mono" style="color:var(--pri2)">$${currentCcComm.toFixed(2)}/lot</span> (محددة مسبقاً)`;
-  document.getElementById('disp-cc-comm').textContent = `$${currentCcComm.toFixed(2)}/lot`;
+    `الحساب <b>#${id}</b> — عمولة موظف CC: <span class="mono" style="color:var(--pri2)">$${currentCcComm.toFixed(2)}</span> (محددة مسبقاً)`;
+  document.getElementById('disp-cc-comm').textContent = `$${currentCcComm.toFixed(2)}`;
   document.getElementById('complete-alert').style.display = 'none';
   document.getElementById('warning-box').style.display = 'none';
   document.getElementById('comp-broker-comm').value = 4;
@@ -236,8 +246,8 @@ function calcTotal() {
   const marketer = parseFloat(document.getElementById('comp-marketer-comm')?.value) || 0;
   const total    = currentCcComm + broker + marketer;
 
-  document.getElementById('disp-broker-comm').textContent  = `$${broker.toFixed(2)}/lot`;
-  document.getElementById('disp-total').textContent        = `$${total.toFixed(2)}/lot`;
+  document.getElementById('disp-broker-comm').textContent  = `$${broker.toFixed(2)}`;
+  document.getElementById('disp-total').textContent        = `$${total.toFixed(2)}`;
 
   // Color total
   const el = document.getElementById('disp-total');
@@ -303,10 +313,10 @@ function showWarning(level, total) {
   const box = document.getElementById('warning-box');
   const blocked = level === 'blocked';
   const msgs = {
-    w1: `⚠️ تحذير: إجمالي العمولات $${total.toFixed(2)}/lot يتجاوز الحد ($${LIMIT_AMOUNT}). هل تريد المتابعة؟`,
-    w2: `⚠️ تحذير ثانٍ: إجمالي العمولات $${total.toFixed(2)}/lot — هذا التجاوز الثاني. تأكيد؟`,
+    w1: `⚠️ تحذير: إجمالي العمولات $${total.toFixed(2)} يتجاوز الحد ($${LIMIT_AMOUNT}). هل تريد المتابعة؟`,
+    w2: `⚠️ تحذير ثانٍ: إجمالي العمولات $${total.toFixed(2)} — هذا التجاوز الثاني. تأكيد؟`,
     w3: `🔴 آخر تحذير: ثلاث محاولات تجاوز الحد. هل تريد المتابعة رغم ذلك؟`,
-    blocked: `🚫 تجاوزت العمولات الحد المسموح ($${LIMIT_AMOUNT}/lot). يرجى التواصل مع المدير المالي لمراجعة هذا الحساب.`,
+    blocked: `🚫 تجاوزت العمولات الحد المسموح ($${LIMIT_AMOUNT}). يرجى التواصل مع المدير المالي لمراجعة هذا الحساب.`,
   };
   box.innerHTML = `<div class="comm-warning ${level === 'blocked' ? 'blocked' : level}">${msgs[level]||msgs.blocked}</div>`;
   box.style.display = 'block';

@@ -62,30 +62,12 @@ class ImportController extends Controller
         $failed   = 0;
         $errors   = [];
 
-        // Employee name → ID cache (single query)
+        // Employee name → ID cache
         $empCache = Employee::where('status', 'approved')
                             ->pluck('id', 'name')
                             ->toArray();
 
-        // Pre-load all existing cards for the incoming ac_nos in one query (avoids N+1)
-        $incomingAcNos = collect($request->rows)
-            ->map(fn($r) => trim((string)($r['ac_no'] ?? '')))
-            ->filter()
-            ->unique()
-            ->values()
-            ->toArray();
-
-        $existingCards = CommissionCard::whereNull('deleted_at')
-            ->whereIn('account_number', $incomingAcNos)
-            ->get(['id', 'account_number', 'month', 'status'])
-            ->keyBy(fn($c) => $c->account_number . '|' . $c->month);
-
-        $currentUser   = $request->user();
-        $branchId      = $currentUser->isBranchManager()
-            ? $currentUser->branch_id
-            : ($request->branch_id ?? null);
-
-        DB::transaction(function () use ($request, $batch, $empCache, $existingCards, $currentUser, $branchId, &$imported, &$skipped, &$failed, &$errors) {
+        DB::transaction(function () use ($request, $batch, $empCache, &$imported, &$skipped, &$failed, &$errors) {
             foreach ($request->rows as $i => $row) {
                 $rowNum = $i + 1;
 
@@ -108,25 +90,32 @@ class ImportController extends Controller
 
                     $data = [
                         'month_date'          => $monthDate,
-                        'broker_id'           => $empCache[$row['broker']        ?? ''] ?? null,
+                        'broker_id'           => $empCache[$row['broker']   ?? ''] ?? null,
                         'broker_commission'   => (float)($row['broker_commission']   ?? 0),
-                        'marketer_id'         => $empCache[$row['marketing']      ?? ''] ?? null,
+                        'marketer_id'         => $empCache[$row['marketing'] ?? ''] ?? null,
                         'marketer_commission' => (float)($row['marketing_commission'] ?? 0),
-                        'ext_marketer1_id'    => $empCache[$row['ext_marketer1']  ?? ''] ?? null,
-                        'ext_commission1'     => (float)($row['ext_commission1']  ?? 0),
-                        'ext_marketer2_id'    => $empCache[$row['ext_marketer2']  ?? ''] ?? null,
-                        'ext_commission2'     => (float)($row['ext_commission2']  ?? 0),
-                        'initial_deposit'     => (float)($row['initial_deposit']  ?? 0),
-                        'monthly_deposit'     => (float)($row['monthly_deposit']  ?? 0),
-                        'account_kind'        => strtolower($row['new_or_sub']    ?? 'new') === 'sub' ? 'sub' : 'new',
+                        'ext_marketer1_id'    => $empCache[$row['ext_marketer1'] ?? ''] ?? null,
+                        'ext_commission1'     => (float)($row['ext_commission1'] ?? 0),
+                        'ext_marketer2_id'    => $empCache[$row['ext_marketer2'] ?? ''] ?? null,
+                        'ext_commission2'     => (float)($row['ext_commission2'] ?? 0),
+                        'initial_deposit'     => (float)($row['initial_deposit'] ?? 0),
+                        'monthly_deposit'     => (float)($row['monthly_deposit'] ?? 0),
+                        'account_kind'        => strtolower($row['new_or_sub'] ?? 'new') === 'sub' ? 'sub' : 'new',
                         'import_batch_id'     => $batch->id,
-                        'created_by'          => $currentUser->id,
+                        'created_by'          => request()->user()->id,
                         'status'              => 'active',
-                        'branch_id'           => $branchId,
+                        // Auto-assign branch for branch managers
+                        'branch_id'           => (function() {
+                            $u = request()->user();
+                            if ($u->isBranchManager()) return $u->branch_id;
+                            return request()->branch_id ?? null;
+                        })(),
                     ];
 
-                    // O(1) lookup — no per-row DB query
-                    $existing = $existingCards[$acNo . '|' . $month] ?? null;
+                    $existing = CommissionCard::where('account_number', $acNo)
+                                              ->where('month', $month)
+                                              ->whereNull('deleted_at')
+                                              ->first();
 
                     if ($existing) {
                         // Update existing (keep status as-is unless it was inactive)

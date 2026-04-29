@@ -23,9 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
                      Request::HEADER_X_FORWARDED_AWS_ELB
         );
 
-        // ── Redirect unauthenticated users to login ────────────
-        $middleware->redirectGuestsTo(fn () => route('auth.login'));
-
         // ── Sanctum stateful API (session-based auth for SPA) ──
         $middleware->statefulApi();
 

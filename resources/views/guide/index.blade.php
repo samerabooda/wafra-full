@@ -254,7 +254,7 @@
 <!-- Total -->
 <rect x="450" y="338" width="90" height="52" rx="4" fill="#27500A" opacity=".9"/>
 <text x="495" y="368" text-anchor="middle" font-size="18" font-weight="700" fill="white" font-family="Tajawal,sans-serif">$8</text>
-<text x="495" y="383" text-anchor="middle" font-size="10" fill="#C0DD97" font-family="Tajawal,sans-serif">/lot max</text>
+<text x="495" y="383" text-anchor="middle" font-size="10" fill="#C0DD97" font-family="Tajawal,sans-serif"> max</text>
 <text x="495" y="403" text-anchor="middle" font-size="10" fill="#27500A" font-family="Tajawal,sans-serif">الحد الأقصى</text>
 
 <!-- ── WARNING SYSTEM ──────────────────────────────────── -->
@@ -334,7 +334,7 @@
         <div class="role-item">يضيف / يحذف مديرين وموظفين</div>
         <div class="role-item">يستورد البيانات من Excel</div>
         <div class="role-item">يُعدّل عمولة كل موظف CC</div>
-        <div class="role-item">يتحكم في حد $8/lot</div>
+        <div class="role-item">يتحكم في حد $8</div>
         <div class="role-item">التقارير الموحّدة لكل الفروع</div>
       </div>
       <div class="role-card bm">
@@ -415,10 +415,10 @@
         <tr><th>العمولة</th><th>من يحددها</th><th>من يراها</th><th>المبلغ المثالي</th></tr>
       </thead>
       <tbody>
-        <tr><td>عمولة موظف CC</td><td>المدير المالي — من ملف الموظف</td><td>CC فقط + المدير المالي</td><td>$1/lot</td></tr>
-        <tr><td>عمولة البروكر</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$4/lot</td></tr>
-        <tr><td>عمولة المسوّق</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$3/lot</td></tr>
-        <tr class="total-row"><td><b>الإجمالي الأقصى</b></td><td>—</td><td>المدير المالي فقط</td><td><span class="comm-ok">$8/lot</span></td></tr>
+        <tr><td>عمولة موظف CC</td><td>المدير المالي — من ملف الموظف</td><td>CC فقط + المدير المالي</td><td>$1</td></tr>
+        <tr><td>عمولة البروكر</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$4</td></tr>
+        <tr><td>عمولة المسوّق</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$3</td></tr>
+        <tr class="total-row"><td><b>الإجمالي الأقصى</b></td><td>—</td><td>المدير المالي فقط</td><td><span class="comm-ok">$8</span></td></tr>
       </tbody>
     </table>
     <div class="guide-p">عند تجاوز $8: النظام يُرسل تحذيرات تصاعدية (الحد الافتراضي 3 تحذيرات) ثم يحجب الحفظ نهائياً. المدير المالي يستطيع تغيير هذا الحد أو إيقافه كلياً من صفحة إعدادات العمولات.</div>
@@ -529,7 +529,7 @@
         <div class="role-item">Add / remove managers & employees</div>
         <div class="role-item">Import data from Excel</div>
         <div class="role-item">Set CC agent commission rates</div>
-        <div class="role-item">Control the $8/lot commission cap</div>
+        <div class="role-item">Control the $8 commission cap</div>
         <div class="role-item">Unified reports across all branches</div>
       </div>
       <div class="role-card bm">
@@ -608,10 +608,10 @@
         <tr><th>Commission</th><th>Set by</th><th>Visible to</th><th>Ideal amount</th></tr>
       </thead>
       <tbody>
-        <tr><td>CC Agent commission</td><td>Finance Admin — from employee profile</td><td>CC only + Finance Admin</td><td>$1/lot</td></tr>
-        <tr><td>Broker commission</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$4/lot</td></tr>
-        <tr><td>Marketer commission</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$3/lot</td></tr>
-        <tr class="total-row"><td><b>Maximum total</b></td><td>—</td><td>Finance Admin only</td><td><span class="comm-ok">$8/lot</span></td></tr>
+        <tr><td>CC Agent commission</td><td>Finance Admin — from employee profile</td><td>CC only + Finance Admin</td><td>$1</td></tr>
+        <tr><td>Broker commission</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$4</td></tr>
+        <tr><td>Marketer commission</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$3</td></tr>
+        <tr class="total-row"><td><b>Maximum total</b></td><td>—</td><td>Finance Admin only</td><td><span class="comm-ok">$8</span></td></tr>
       </tbody>
     </table>
     <p class="guide-p">When total exceeds $8: the system issues escalating warnings (default: 3 warnings) then permanently blocks saving. Finance Admin can change this cap or disable it entirely from the Commission Settings page.</p>

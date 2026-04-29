@@ -104,12 +104,12 @@
         <select id="rf-to" class="form-control"><option value="">—</option></select>
       </div>
       <div class="form-group" style="margin:0">
-        <label class="form-label">البروكر</label>
+        <label class="form-label">البروكر / Broker / Broker</label>
         <select id="rf-broker" class="form-control"><option value="">الكل</option></select>
       </div>
       @if(auth()->user()?->isFinanceAdmin())
       <div class="form-group" style="margin:0">
-        <label class="form-label">الفرع</label>
+        <label class="form-label">الفرع / Branch / Branch</label>
         <select id="rf-branch" class="form-control"><option value="">كل الفروع</option></select>
       </div>
       @endif
@@ -123,7 +123,7 @@
         </select>
       </div>
       <div class="form-group" style="margin:0">
-        <label class="form-label">نوع الحساب</label>
+        <label class="form-label">نوع / Type</label>
         <select id="rf-kind" class="form-control">
           <option value="">الكل</option>
           <option value="new">جديد</option>
@@ -135,7 +135,7 @@
         <input type="number" id="rf-min" class="form-control" value="0" min="0">
       </div>
       <div class="form-group" style="margin:0;display:flex;flex-direction:column;justify-content:flex-end">
-        <button class="btn btn-primary" onclick="fetchAndRender()">⚡ توليد التقرير</button>
+        <button class="btn btn-primary" onclick="fetchAndRender()">⚡ عرض التقرير</button>
       </div>
     </div>
   </div>
@@ -263,13 +263,13 @@ const ALL_COLUMNS = [
   { id:'account_status',    label:'حالة الحساب',          type:'text',    width:110 },
   { id:'trading_type',      label:'نوع التداول',          type:'text',    width:110 },
   { id:'broker',            label:'البروكر',              type:'text',    width:140 },
-  { id:'broker_commission', label:'ع. بروكر ($/lot)',     type:'number',  width:130 },
+  { id:'broker_commission', label:'ع. بروكر ($)',     type:'number',  width:130 },
   { id:'marketer',          label:'مسوّق داخلي',         type:'text',    width:140 },
-  { id:'marketer_commission',label:'ع. داخلي ($/lot)',   type:'number',  width:120 },
+  { id:'marketer_commission',label:'ع. داخلي ($)',   type:'number',  width:120 },
   { id:'ext_marketer1',     label:'مسوّق خارجي 1',       type:'text',    width:140 },
-  { id:'ext_commission1',   label:'ع. خارجي 1 ($/lot)',  type:'number',  width:130 },
+  { id:'ext_commission1',   label:'ع. خارجي 1 ($)',  type:'number',  width:130 },
   { id:'ext_marketer2',     label:'مسوّق خارجي 2',       type:'text',    width:140 },
-  { id:'ext_commission2',   label:'ع. خارجي 2 ($/lot)',  type:'number',  width:130 },
+  { id:'ext_commission2',   label:'ع. خارجي 2 ($)',  type:'number',  width:130 },
   { id:'total_commission',  label:'إجمالي العمولات',      type:'number',  width:140 },
   { id:'initial_deposit',   label:'إيداع أولي ($)',       type:'currency',width:130 },
   { id:'monthly_deposit',   label:'إيداع شهري ($)',       type:'currency',width:130 },
@@ -314,17 +314,9 @@ async function loadFilterOptions() {
     api('GET', '/branches'),
   ]);
 
-  // Months
-  const now = new Date();
-  ['rf-from','rf-to'].forEach(id => {
-    const sel = document.getElementById(id); if (!sel) return;
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const m = d.toLocaleString('en-US',{month:'short'})+' '+d.getFullYear();
-      const o = document.createElement('option'); o.value = o.textContent = m;
-      sel.appendChild(o);
-    }
-  });
+  // Mount Option 3 month pickers for filters
+  mountMonthPicker('mp-rf-from', 'rf-from-val');
+  mountMonthPicker('mp-rf-to',   'rf-to-val');
 
   if (emps.success) {
     const bSel = document.getElementById('rf-broker');
@@ -473,8 +465,8 @@ async function fetchAndRender() {
   }
 
   const params = new URLSearchParams();
-  const from   = document.getElementById('rf-from')?.value;
-  const to     = document.getElementById('rf-to')?.value;
+  const from   = document.getElementById('rf-from-val')?.value;
+  const to     = document.getElementById('rf-to-val')?.value;
   const broker = document.getElementById('rf-broker')?.value;
   const branch = document.getElementById('rf-branch')?.value;
   const status = document.getElementById('rf-status')?.value;
@@ -631,7 +623,7 @@ function renderTable() {
   numCols.forEach(col => {
     const total = displayData.reduce((s, r) => s + (parseFloat(getCellRawValue(r, col.id)) || 0), 0);
     if (total > 0) {
-      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '/lot';
+      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '';
       summaryParts.push(`<span class="mono">${col.label}: <b style="color:var(--pri2)">${formatted}</b></span>`);
     }
   });
@@ -685,7 +677,7 @@ function renderCell(row, col) {
     case 'currency':
       return `<span class="mono" style="color:var(--pri2);font-weight:600">${fmtK(v)}</span>`;
     case 'number':
-      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}/lot</span>`;
+      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}</span>`;
     case 'cc':
       if (!v) return '<span style="color:var(--mu)">—</span>';
       return '<span style="font-size:10px;padding:2px 7px;border-radius:12px;background:rgba(29,158,117,.15);color:#1D9E75;border:1px solid rgba(29,158,117,.3)">📞 CC</span>';
@@ -835,7 +827,7 @@ function exportDynExcel() {
     cols.map(col => {
       const v = getCellRawValue(row, col.id);
       if (v === null || v === undefined) return '';
-      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '/lot';
+      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '';
       if (col.type === 'currency') return parseFloat(v) || 0;
       if (col.type === 'badge')    return v === 'new' ? 'NEW' : 'SUB';
       if (col.type === 'status')   return v === 'modified' ? '🟡 معدّل' : v === 'new_added' ? '🆕 جديد' : 'عادي';

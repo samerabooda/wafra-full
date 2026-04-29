@@ -21,19 +21,19 @@
     <div id="ec-alert-ok" class="alert alert-success"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">البروكر</label><select id="ec-broker" class="form-control"></select></div>
-      <div class="form-group"><label class="form-label">عمولة البروكر ($/lot)</label><input type="number" id="ec-bc" class="form-control" step="0.5" min="0"></div>
+      <div class="form-group"><label class="form-label">عمولة البروكر ($)</label><input type="number" id="ec-bc" class="form-control" step="0.5" min="0"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">المسوّق الداخلي</label><select id="ec-marketer" class="form-control"></select></div>
-      <div class="form-group"><label class="form-label">عمولة المسوّق الداخلي ($/lot)</label><input type="number" id="ec-mc" class="form-control" step="0.5" min="0"></div>
+      <div class="form-group"><label class="form-label">عمولة المسوّق الداخلي ($)</label><input type="number" id="ec-mc" class="form-control" step="0.5" min="0"></div>
     </div>
     <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:12px">
       <div class="form-group" style="margin-bottom:0"><label class="form-label">🌐 مسوّق خارجي 1</label><select id="ec-ext1" class="form-control"></select></div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">عمولة خارجي 1 ($/lot)</label><input type="number" id="ec-ec1" class="form-control" step="0.5" min="0"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">عمولة خارجي 1 ($)</label><input type="number" id="ec-ec1" class="form-control" step="0.5" min="0"></div>
     </div>
     <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:12px;margin-bottom:12px">
       <div class="form-group" style="margin-bottom:0"><label class="form-label">🌐 مسوّق خارجي 2</label><select id="ec-ext2" class="form-control"></select></div>
-      <div class="form-group" style="margin-bottom:0"><label class="form-label">عمولة خارجي 2 ($/lot)</label><input type="number" id="ec-ec2" class="form-control" step="0.5" min="0"></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label">عمولة خارجي 2 ($)</label><input type="number" id="ec-ec2" class="form-control" step="0.5" min="0"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">إيداع أولي ($)</label><input type="number" id="ec-dep" class="form-control" min="0"></div>

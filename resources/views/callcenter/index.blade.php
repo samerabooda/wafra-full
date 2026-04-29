@@ -60,12 +60,12 @@ input:checked+.lt-slider:before{transform:translateX(20px)}
     <table class="data-table">
       <thead>
         <tr>
-          <th>رقم الحساب</th>
-          <th>الشهر</th>
+          <th>رقم الحساب / Account No.</th>
+          <th>الشهر / Month</th>
           <th>الموظف</th>
           <th>ع. الموظف</th>
           <th>الفرع المعيّن</th>
-          <th>الحالة</th>
+          <th>الحالة / Status</th>
           <th>سبب الرفض</th>
           <th></th>
         </tr>
@@ -91,7 +91,7 @@ input:checked+.lt-slider:before{transform:translateX(20px)}
 {{-- ═══ COMMISSION LIMIT SETTINGS (FA only) ══════════════════ --}}
 @if(auth()->user()?->isFinanceAdmin())
 <div class="panel" style="margin-top:14px">
-  <div class="panel-header"><div class="panel-title">⚙️ إعداد حد إجمالي العمولات</div></div>
+  <div class="panel-header"><div class="panel-title">⚙️ حد العمولات / Commission Limit</div></div>
   <div class="panel-body">
     <div class="form-limit">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
@@ -102,7 +102,7 @@ input:checked+.lt-slider:before{transform:translateX(20px)}
         تفعيل الحد
       </label>
       <div class="form-group" style="margin:0;display:flex;align-items:center;gap:8px">
-        <label class="form-label" style="margin:0;white-space:nowrap">الحد $/lot</label>
+        <label class="form-label" style="margin:0;white-space:nowrap">الحد $</label>
         <input type="number" id="limit-amount" class="form-control form-control-sm" style="width:80px" min="1" max="100" step="0.5" value="8.00" onchange="saveLimitSettings()">
       </div>
       <div class="form-group" style="margin:0;display:flex;align-items:center;gap:8px">
@@ -126,34 +126,35 @@ input:checked+.lt-slider:before{transform:translateX(20px)}
       <div id="cc-alert" style="display:none;margin-bottom:12px"></div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">رقم الحساب *</label>
+          <label class="form-label">رقم الحساب / Account No. / Account No. *</label>
           <input type="text" id="cc-account" class="form-control" placeholder="مثال: 719750">
         </div>
         <div class="form-group">
-          <label class="form-label">الشهر *</label>
-          <select id="cc-month" class="form-control"><option value="">اختر الشهر</option></select>
+          <label class="form-label">الشهر / Month / Month *</label>
+          <div id="mp-cc"></div>
+          <input type="hidden" id="cc-month" value="">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">الفرع المعيّن *</label>
+          <label class="form-label">الفرع / Branch / Branch *</label>
           <select id="cc-target-branch" class="form-control"><option value="">اختر الفرع</option></select>
         </div>
         <div class="form-group">
-          <label class="form-label">موظف CC *</label>
+          <label class="form-label">موظف CC / CC Agent *</label>
           <select id="cc-agent" class="form-control"><option value="">اختر الموظف</option></select>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">نوع الحساب</label>
+          <label class="form-label">نوع / Type</label>
           <select id="cc-kind" class="form-control">
             <option value="new">جديد</option>
             <option value="sub">فرعي</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">ملاحظات</label>
+          <label class="form-label">ملاحظات / Notes / Notes</label>
           <input type="text" id="cc-notes" class="form-control" placeholder="اختياري">
         </div>
       </div>
@@ -162,7 +163,7 @@ input:checked+.lt-slider:before{transform:translateX(20px)}
       <div id="cc-agent-comm-row" style="display:none;padding:10px;background:var(--bg2);border-radius:8px;margin-bottom:12px;font-size:13px">
         <span style="color:var(--mu)">عمولة الموظف:</span>
         <span id="cc-agent-comm-val" style="font-weight:700;color:var(--pri2);margin-right:6px">—</span>
-        <span style="color:var(--mu)">$/lot</span>
+        <span style="color:var(--mu)">$</span>
         <span style="color:var(--mu);margin-right:12px;font-size:11px">(محددة من المدير المالي)</span>
       </div>
     </div>
@@ -202,7 +203,7 @@ async function loadCcCards() {
       <td><span class="ac-num">#${c.account_number}</span></td>
       <td>${c.month}</td>
       <td>${c.cc_agent?.name || '—'}</td>
-      <td class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(1)}/lot</td>
+      <td class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(1)}</td>
       <td>${c.branch?.name_ar || '—'}</td>
       <td>${ccStatusBadge(c.cc_status)}</td>
       <td style="font-size:11px;color:var(--re)">${c.cc_rejection_reason || '—'}</td>
@@ -286,15 +287,7 @@ async function markAllRead() {
 
 // ── Load form options ─────────────────────────────────────
 async function loadFormOptions() {
-  // Months
-  const now = new Date();
-  const mSel = document.getElementById('cc-month');
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const m = d.toLocaleString('en-US',{month:'short'})+' '+d.getFullYear();
-    const o = document.createElement('option'); o.value = o.textContent = m;
-    mSel.appendChild(o);
-  }
+  // Month picker — Option 3
 
   // Branches (exclude CC itself)
   const bR = await api('GET', '/branches');
@@ -410,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadCcCards();
   loadNotifications();
   loadFormOptions();
+  mountMonthPicker('mp-cc', 'cc-month');
   @if(auth()->user()?->isFinanceAdmin())
   loadLimitSettings();
   @endif

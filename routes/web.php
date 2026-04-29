@@ -9,7 +9,9 @@ Route::get('/login',  [WebController::class,'loginPage'])->name('auth.login');
 Route::post('/login', [WebController::class,'loginPost'])->name('auth.login.submit');
 Route::get('/register',  fn()=>redirect()->route('auth.login'))->name('auth.register');
 Route::post('/register', [WebController::class,'registerPost'])->name('auth.register.submit');
-Route::post('/forgot-password', fn(Request $r)=>back()->with('status','Check your email.'))->name('auth.password.email');
+Route::post('/forgot-password',    [WebController::class,'forgotPassword'])->name('auth.password.email')->middleware('throttle:5,15');
+Route::get('/reset-password',      [WebController::class,'resetPasswordPage'])->name('auth.password.reset');
+Route::post('/reset-password',     [WebController::class,'resetPasswordSubmit'])->name('auth.password.reset.submit');
 
 // Auth check endpoint (public)
 Route::get('/api-fa-check', [WebController::class,'faCheck'])->name('auth.fa-check');

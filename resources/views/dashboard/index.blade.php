@@ -59,19 +59,24 @@
   </div>
 </div>
 
-<!-- Top Brokers & Marketers -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">🥇 أفضل بروكر — حسابات</div></div>
-    <div class="panel-body" id="top-broker-cnt" style="padding:10px 16px"></div>
+<!-- Top Performers -->
+<div class="panel" style="margin-bottom:14px">
+  <div class="panel-header" style="padding:12px 16px;align-items:center">
+    <div class="panel-title">🏆 الأداء المتميز</div>
+    <div style="display:flex;gap:6px;margin-right:auto">
+      <button class="btn btn-ghost btn-sm lb-tab active" onclick="switchLb('cnt',this)">البروكر — الحسابات</button>
+      <button class="btn btn-ghost btn-sm lb-tab" onclick="switchLb('dep',this)">البروكر — الإيداعات</button>
+      <button class="btn btn-ghost btn-sm lb-tab" onclick="switchLb('mkt',this)">المسوّقون</button>
+    </div>
   </div>
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">💰 أفضل بروكر — إيداع</div></div>
-    <div class="panel-body" id="top-broker-dep" style="padding:10px 16px"></div>
+  <div id="lb-cnt" class="lb-pane" style="display:block">
+    <div id="top-broker-cnt" style="padding:0"></div>
   </div>
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">📢 أفضل مسوّق</div></div>
-    <div class="panel-body" id="top-marketer" style="padding:10px 16px"></div>
+  <div id="lb-dep" class="lb-pane" style="display:none">
+    <div id="top-broker-dep" style="padding:0"></div>
+  </div>
+  <div id="lb-mkt" class="lb-pane" style="display:none">
+    <div id="top-marketer" style="padding:0"></div>
   </div>
 </div>
 
@@ -101,28 +106,94 @@
 @push('scripts')
 <script>
 let barChart = null, pieChart = null;
+const MONTHS_DATA = @json($monthlyData ?? []);
 const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE'];
-const medals  = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+
+// ── Leaderboard helpers ──────────────────────────────────
+const RANK_COLORS = ['#EF9F27','#8892a4','#CD7F32','rgba(255,255,255,.2)','rgba(255,255,255,.15)'];
+const RANK_BG     = ['rgba(239,159,39,.1)','rgba(136,146,164,.07)','rgba(205,127,50,.07)','transparent','transparent'];
+
+function lbTable(sorted, mapper) {
+  if (!sorted.length) return '<div style="padding:20px;text-align:center;color:var(--mu);font-size:12px">لا توجد بيانات</div>';
+  const max = sorted[0][1];
+  return sorted.map(([name,val],i) => {
+    const { label, value, unit, bar, rank, meta } = mapper(name, val, i, max);
+    const rankNum = i + 1;
+    const rankColor = RANK_COLORS[i] || 'rgba(255,255,255,.1)';
+    const rowBg    = RANK_BG[i] || 'transparent';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;
+                 border-bottom:1px solid var(--brd1);background:${rowBg};transition:background .15s"
+                 onmouseover="this.style.background='rgba(255,255,255,.03)'"
+                 onmouseout="this.style.background='${rowBg}'">
+      <!-- Rank badge -->
+      <div style="width:26px;height:26px;border-radius:50%;background:${rankColor};
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:11px;font-weight:700;color:white;flex-shrink:0;
+                  ${rankNum<=3?'box-shadow:0 2px 8px '+rankColor+'66':''}">
+        ${rankNum}
+      </div>
+      <!-- Name & meta -->
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--tx);
+                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+        ${meta ? `<div style="font-size:10px;color:var(--mu);margin-top:1px">${meta}</div>` : ''}
+        <!-- Progress bar -->
+        <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:5px;overflow:hidden">
+          <div style="height:100%;width:${Math.round(bar*100)}%;background:${rankColor};
+                      border-radius:2px;transition:width .6s ease"></div>
+        </div>
+      </div>
+      <!-- Value -->
+      <div style="text-align:left;flex-shrink:0">
+        <div style="font-size:14px;font-weight:700;color:${rankColor};font-family:monospace">${value}</div>
+        ${unit ? `<div style="font-size:10px;color:var(--mu);text-align:center">${unit}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchLb(tab, btn) {
+  document.querySelectorAll('.lb-pane').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('lb-' + tab).style.display = 'block';
+  btn.classList.add('active');
+}
 
 async function loadDashboard() {
-  // Single pre-aggregated endpoint — no full-table scan in PHP
-  const r = await api('GET', '/dashboard');
+  // KPIs
+  const r = await api('GET', '/cards/report');
   if (!r.success) return;
+  const s = r.summary;
 
-  const k = r.kpi;
-  document.getElementById('kpi-total').textContent = k.total.toLocaleString();
-  document.getElementById('kpi-dep').textContent   = fmtK(k.initial_deposit);
-  document.getElementById('kpi-mon').textContent   = fmtK(k.monthly_deposit);
-  document.getElementById('kpi-mod').textContent   = k.modified;
-  document.getElementById('kpi-new').textContent   = k.new_added;
+  document.getElementById('kpi-total').textContent = r.count.toLocaleString();
+  document.getElementById('kpi-dep').textContent   = fmtK(s.total_initial_deposit);
+  document.getElementById('kpi-mon').textContent   = fmtK(s.total_monthly_deposit);
+  document.getElementById('kpi-mod').textContent   = s.modified_count;
+  document.getElementById('kpi-new').textContent   = s.new_added_count;
 
-  document.getElementById('sb-cards-count').textContent = k.total;
-  document.getElementById('sb-mod-count').textContent   = k.modified;
+  document.getElementById('sb-cards-count').textContent = r.count;
+  document.getElementById('sb-mod-count').textContent   = s.modified_count;
 
-  // ── Monthly bar chart (data already grouped server-side) ──
-  const mKeys = r.monthly.map(m => m.month);
-  const mDeps = r.monthly.map(m => Math.round(parseFloat(m.initial_deposit)));
-  const mMons = r.monthly.map(m => Math.round(parseFloat(m.monthly_deposit)));
+  // Top deposits
+  const topData = (r.data || []).sort((a,b) => b.monthly_deposit - a.monthly_deposit).slice(0,8);
+  document.getElementById('top-deposits-tb').innerHTML = topData.map(row => `
+    <tr>
+      <td><span class="ac-num">#${row.account_number}</span></td>
+      <td>${row.broker?.name || '—'}</td>
+      <td class="mono c-green">${fmt(row.monthly_deposit)}</td>
+      <td class="c-muted">${row.month}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
+
+  // Charts
+  const monthly = {};
+  (r.data || []).forEach(row => {
+    if (!monthly[row.month]) monthly[row.month] = {dep:0, mon:0};
+    monthly[row.month].dep += parseFloat(row.initial_deposit || 0);
+    monthly[row.month].mon += parseFloat(row.monthly_deposit || 0);
+  });
+  const mKeys   = Object.keys(monthly).slice(-10);
+  const mDeps   = mKeys.map(m => Math.round(monthly[m].dep));
+  const mMons   = mKeys.map(m => Math.round(monthly[m].mon));
 
   if (barChart) barChart.destroy();
   barChart = new Chart(document.getElementById('chart-bar'), {
@@ -144,9 +215,16 @@ async function loadDashboard() {
     }
   });
 
-  // ── Broker distribution pie (top 10, already aggregated) ──
-  const bNames = r.broker_dist.map(b => b.broker_name);
-  const bVals  = r.broker_dist.map(b => parseFloat(b.monthly_deposit));
+  // Broker distribution pie
+  const brokerMap = {};
+  (r.data || []).forEach(row => {
+    const name = row.broker?.name || 'Unknown';
+    if (name !== 'IB account' && name !== 'Self') {
+      brokerMap[name] = (brokerMap[name] || 0) + parseFloat(row.monthly_deposit || 0);
+    }
+  });
+  const bNames = Object.keys(brokerMap);
+  const bVals  = bNames.map(b => brokerMap[b]);
   if (pieChart) pieChart.destroy();
   pieChart = new Chart(document.getElementById('chart-pie'), {
     type: 'doughnut',
@@ -157,57 +235,39 @@ async function loadDashboard() {
     }
   });
 
-  // ── Top brokers by count ───────────────────────────────────
-  const byCount = [...r.broker_dist].sort((a,b) => b.account_count - a.account_count).slice(0,5);
-  document.getElementById('top-broker-cnt').innerHTML = byCount.map((b,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-      <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${b.broker_name}</div><div style="font-size:10px;color:var(--mu)">${b.account_count} حساب</div></div>
-      <div class="mono c-teal" style="font-size:12px;font-weight:700">${b.account_count}</div>
-    </div>`).join('') || '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات</div>';
+  // Top brokers by count
+  const brokerCount = {};
+  (r.data || []).forEach(row => {
+    const n = row.broker?.name || 'Unknown';
+    brokerCount[n] = (brokerCount[n] || 0) + 1;
+  });
+  const sortedCnt = Object.entries(brokerCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  document.getElementById('top-broker-cnt').innerHTML = lbTable(sortedCnt, (name,val,i,max) => ({
+    label: name, value: val, unit: 'حساب', bar: val/max, rank: i,
+    meta: brokerBranch[name] || ''
+  }));
 
-  // ── Top brokers by deposit ─────────────────────────────────
-  const byDep = [...r.broker_dist].sort((a,b) => b.monthly_deposit - a.monthly_deposit).slice(0,5);
-  document.getElementById('top-broker-dep').innerHTML = byDep.map((b,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-      <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${b.broker_name}</div><div style="font-size:10px;color:var(--mu)">${fmtK(parseFloat(b.monthly_deposit))}</div></div>
-      <div class="mono c-green" style="font-size:12px;font-weight:700">${fmtK(parseFloat(b.monthly_deposit))}</div>
-    </div>`).join('') || '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات</div>';
+  // Top brokers by deposit
+  const sortedDep = Object.entries(brokerMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('top-broker-dep').innerHTML = lbTable(sortedDep, (name,val,i,max) => ({
+    label: name, value: fmtK(val), unit: '', bar: val/max, rank: i,
+    meta: brokerBranch[name] || ''
+  }));
 
-  // ── Top marketers ──────────────────────────────────────────
-  document.getElementById('top-marketer').innerHTML = r.top_marketers.length
-    ? r.top_marketers.map((m,i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-        <span style="font-size:16px">${medals[i]||'·'}</span>
-        <div style="flex:1"><div style="font-size:12px;font-weight:700">${m.marketer_name}</div></div>
-        <div class="mono c-teal" style="font-size:12px">${m.account_count}</div>
-      </div>`).join('')
-    : '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات مسوّق منفصل</div>';
-
-  // ── Top deposits table ─────────────────────────────────────
-  document.getElementById('top-deposits-tb').innerHTML = r.top_deposits.length
-    ? r.top_deposits.map(row => `
-      <tr>
-        <td><span class="ac-num">#${row.account_number}</span></td>
-        <td>${row.broker?.name || '—'}</td>
-        <td class="mono c-green">${fmt(row.monthly_deposit)}</td>
-        <td class="c-muted">${row.month}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
-
-  // ── Recent modifications ───────────────────────────────────
-  document.getElementById('modifications-tb').innerHTML = r.recent_mods.length
-    ? r.recent_mods.map(m => `
-      <tr>
-        <td><span class="ac-num">#${m.account_number}</span></td>
-        <td style="color:var(--or);font-size:11px">${m.reason}</td>
-        <td style="color:var(--mu)">${new Date(m.modified_at).toLocaleDateString('ar')}</td>
-        <td style="color:var(--mu)">${m.modified_by?.name || '—'}</td>
-      </tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد تعديلات</td></tr>';
-}
-
-loadDashboard();
-</script>
-@endpush
+  // Top marketers
+  const mktMap = {};
+  (r.data || []).forEach(row => {
+    if (row.marketer?.name && row.marketer.name !== row.broker?.name) {
+      mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
+    }
+  });
+  const sortedMkt = Object.entries(mktMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const mktBranch = {};
+  (r.data||[]).forEach(row=>{if(row.marketer?.name&&row.branch?.name_ar)mktBranch[row.marketer.name]=row.branch.name_ar;});
+  document.getElementById('top-marketer').innerHTML = sortedMkt.length
+    ? lbTable(sortedMkt, (name,val,i,max) => ({
+        label:name, value:val, unit:'حساب', bar:val/max, rank:i,
+        meta: mktBranch[name] || ''
+      }))
+    : '<div style="padding:20px;text-align:center;color:var(--mu);font-size:12px">لا توجد بيانات</div>';

@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','الإعدادات')
-@section('page-title','الإعدادات والتعريفات')
+@section('title','التعريفات')
+@section('page-title','التعريفات والإعدادات')
 @section('content')
 
 @if(!auth()->user()?->isFinanceAdmin())
@@ -10,7 +10,7 @@
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
   <!-- Account Types -->
   <div class="panel">
-    <div class="panel-header"><div class="panel-title">📋 أنواع الحسابات</div></div>
+    <div class="panel-header"><div class="panel-title">📋 أنواع الحسابات / Account Types</div></div>
     <div class="panel-body" id="list-account_types" style="max-height:250px;overflow-y:auto;padding:8px 16px"></div>
     @if(auth()->user()?->isFinanceAdmin())
     <div style="padding:10px 16px;border-top:1px solid var(--brd1);display:flex;gap:8px">
@@ -23,7 +23,7 @@
 
   <!-- Account Statuses -->
   <div class="panel">
-    <div class="panel-header"><div class="panel-title">🏷️ حالات الحسابات</div></div>
+    <div class="panel-header"><div class="panel-title">🏷️ حالات الحسابات / Account Statuses</div></div>
     <div class="panel-body" id="list-account_statuses" style="max-height:250px;overflow-y:auto;padding:8px 16px"></div>
     @if(auth()->user()?->isFinanceAdmin())
     <div style="padding:10px 16px;border-top:1px solid var(--brd1);display:flex;gap:8px">
@@ -36,7 +36,7 @@
 
   <!-- Trading Types -->
   <div class="panel">
-    <div class="panel-header"><div class="panel-title">💰 أنواع التداول</div></div>
+    <div class="panel-header"><div class="panel-title">💰 أنواع التداول / Trading Types</div></div>
     <div class="panel-body" id="list-trading_types" style="max-height:250px;overflow-y:auto;padding:8px 16px"></div>
     @if(auth()->user()?->isFinanceAdmin())
     <div style="padding:10px 16px;border-top:1px solid var(--brd1);display:flex;gap:8px">

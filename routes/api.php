@@ -4,10 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{
     AuthController,
     CommissionCardController,
-    DashboardController,
     EmployeeController,
     ManagerController,
     ImportController,
+    ExportController,
     BranchController,
     SettingsController,
     CallCenterController,
@@ -39,10 +39,6 @@ Route::get('cards/stats', function () {
 
 // ── Protected routes ──────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(function () {
-
-    // Dashboard stats (pre-aggregated, no full-table scan in PHP)
-    Route::get('dashboard', [DashboardController::class, 'stats'])
-         ->middleware('permission:dashboard');
 
     // Auth
     Route::prefix('auth')->group(function () {
@@ -122,6 +118,10 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(func
         Route::put('{id}',  [BranchController::class, 'update'])
              ->middleware('role:finance_admin');
     });
+
+    // ── Export ───────────────────────────────────────────────
+    Route::get('cards/export/excel', [ExportController::class, 'excel']);
+    Route::get('cards/export/pdf',   [ExportController::class, 'pdf']);
 
     // ── Import ────────────────────────────────────────────────
     // Import — Finance Admin ONLY

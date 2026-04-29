@@ -248,7 +248,7 @@ body{
 <text x="125" y="141" text-anchor="middle" font-size="11" font-weight="700" fill="#EF9F27">كرت CC / CC Card</text>
 <line x1="58" y1="148" x2="192" y2="148" stroke="#BA7517" stroke-width=".5" opacity=".5"/>
 <text x="58" y="162" font-size="9" fill="#EF9F27">رقم + شهر + فرع</text>
-<text x="58" y="175" font-size="9" fill="#EF9F27">موظف + عمولته ($1/lot)</text>
+<text x="58" y="175" font-size="9" fill="#EF9F27">موظف + عمولته ($1)</text>
 <text x="58" y="188" font-size="9" fill="#EF9F27">status: cc_pending</text>
 
 <!-- CC Manager box -->
@@ -345,7 +345,7 @@ body{
 <!-- Total bar -->
 <rect x="473" y="315" width="110" height="57" rx="6" fill="rgba(59,109,17,.9)" stroke="rgba(136,195,75,.4)" stroke-width="1"/>
 <text x="528" y="343" text-anchor="middle" font-size="20" font-weight="900" fill="white">$8</text>
-<text x="528" y="360" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)">/lot max</text>
+<text x="528" y="360" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.7)"> max</text>
 <text x="528" y="388" text-anchor="middle" font-size="9" fill="#88C34B" font-weight="600">الحد الأقصى ✓</text>
 
 <!-- Commission note -->
@@ -430,7 +430,7 @@ body{
       <div class="role-item">يضيف / يحذف مديرين وموظفين</div>
       <div class="role-item">يستورد البيانات من Excel</div>
       <div class="role-item">يُعدّل عمولة كل موظف CC</div>
-      <div class="role-item">يُفعّل / يوقف حد $8/lot</div>
+      <div class="role-item">يُفعّل / يوقف حد $8</div>
       <div class="role-item">التقارير الموحّدة لكل الفروع</div>
     </div>
     <div class="role-card role-bm">
@@ -449,7 +449,7 @@ body{
       <div class="role-item">يُدخل رقم الحساب + الشهر</div>
       <div class="role-item">يختار الفرع المستهدف</div>
       <div class="role-item">يُرسل الكرت — يصل إشعار للفرع</div>
-      <div class="role-item">يرى عمولته هو فقط ($1/lot)</div>
+      <div class="role-item">يرى عمولته هو فقط ($1)</div>
       <div class="role-item">يتابع حالة كل كرت أرسله</div>
       <div class="role-item no">لا يُدخل بروكر الفرع</div>
     </div>
@@ -502,7 +502,7 @@ body{
 
 <!-- Commission System -->
 <div class="section">
-  <div class="section-title"><span class="icon">💰</span>نظام العمولات وحد $8/lot</div>
+  <div class="section-title"><span class="icon">💰</span>نظام العمولات وحد $8</div>
   <div class="card">
     <div class="comm-bar">
       <div class="comm-seg" style="flex:1;background:rgba(29,158,117,.75)">$1<small>CC</small></div>
@@ -511,15 +511,15 @@ body{
       <div class="comm-plus">+</div>
       <div class="comm-seg" style="flex:3;background:rgba(83,74,183,.8)">$3<small>مسوّق</small></div>
       <div class="comm-eq">=</div>
-      <div class="comm-total">$8<small>/lot max</small></div>
+      <div class="comm-total">$8<small> max</small></div>
     </div>
     <table class="comm-table" style="margin-top:14px">
       <thead><tr><th>العمولة</th><th>من يحددها</th><th>من يراها</th><th>المبلغ</th></tr></thead>
       <tbody>
-        <tr><td>موظف CC</td><td>المدير المالي — من ملف الموظف</td><td>CC فقط + المدير المالي</td><td>$1/lot</td></tr>
-        <tr><td>البروكر</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$4/lot</td></tr>
-        <tr><td>المسوّق</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$3/lot</td></tr>
-        <tr class="total"><td><b>الإجمالي الأقصى</b></td><td>—</td><td>المدير المالي فقط</td><td><span class="ok">$8/lot ✓</span></td></tr>
+        <tr><td>موظف CC</td><td>المدير المالي — من ملف الموظف</td><td>CC فقط + المدير المالي</td><td>$1</td></tr>
+        <tr><td>البروكر</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$4</td></tr>
+        <tr><td>المسوّق</td><td>مدير الفرع</td><td>الفرع + المدير المالي</td><td>$3</td></tr>
+        <tr class="total"><td><b>الإجمالي الأقصى</b></td><td>—</td><td>المدير المالي فقط</td><td><span class="ok">$8 ✓</span></td></tr>
       </tbody>
     </table>
     <div style="margin-top:14px">
@@ -614,7 +614,7 @@ php artisan serve  # → http://127.0.0.1:8000</div>
       <div class="role-item">Add / remove managers & employees</div>
       <div class="role-item">Import data from Excel</div>
       <div class="role-item">Set CC agent commission rates</div>
-      <div class="role-item">Enable / disable $8/lot cap</div>
+      <div class="role-item">Enable / disable $8 cap</div>
       <div class="role-item">Unified reports across all branches</div>
     </div>
     <div class="role-card role-bm">
@@ -633,7 +633,7 @@ php artisan serve  # → http://127.0.0.1:8000</div>
       <div class="role-item">Enter client account number & month</div>
       <div class="role-item">Select the target branch</div>
       <div class="role-item">Send card — branch gets notified</div>
-      <div class="role-item">View only their own commission ($1/lot)</div>
+      <div class="role-item">View only their own commission ($1)</div>
       <div class="role-item">Track status of all sent cards</div>
       <div class="role-item no">Cannot set branch broker</div>
     </div>
@@ -693,15 +693,15 @@ php artisan serve  # → http://127.0.0.1:8000</div>
       <div class="comm-plus">+</div>
       <div class="comm-seg" style="flex:3;background:rgba(83,74,183,.8)">$3<small>Marketer</small></div>
       <div class="comm-eq">=</div>
-      <div class="comm-total">$8<small>/lot max</small></div>
+      <div class="comm-total">$8<small> max</small></div>
     </div>
     <table class="comm-table" style="margin-top:14px">
       <thead><tr><th>Commission</th><th>Set by</th><th>Visible to</th><th>Amount</th></tr></thead>
       <tbody>
-        <tr><td>CC Agent</td><td>Finance Admin — from employee profile</td><td>CC only + Finance Admin</td><td>$1/lot</td></tr>
-        <tr><td>Broker</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$4/lot</td></tr>
-        <tr><td>Marketer</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$3/lot</td></tr>
-        <tr class="total"><td><b>Maximum total</b></td><td>—</td><td>Finance Admin only</td><td><span class="ok">$8/lot ✓</span></td></tr>
+        <tr><td>CC Agent</td><td>Finance Admin — from employee profile</td><td>CC only + Finance Admin</td><td>$1</td></tr>
+        <tr><td>Broker</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$4</td></tr>
+        <tr><td>Marketer</td><td>Branch Manager</td><td>Branch + Finance Admin</td><td>$3</td></tr>
+        <tr class="total"><td><b>Maximum total</b></td><td>—</td><td>Finance Admin only</td><td><span class="ok">$8 ✓</span></td></tr>
       </tbody>
     </table>
     <div style="margin-top:14px">
