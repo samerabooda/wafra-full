@@ -1,15 +1,11 @@
 ---
 deployment:
   tasks:
-    # Find and run composer
     - export COMPOSER_HOME=/home/systemwafragulf/.composer
-    - export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/opt/cpanel/ea-php82/root/usr/bin
+    - export COMPOSER_BIN=/opt/cpanel/ea-wappspector/composer.phar
 
-    # Install composer if missing
-    - test -f /usr/local/bin/composer || (curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer 2>&1)
-
-    # Run composer (try all possible paths)
-    - /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1 || php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1 || curl -sS https://getcomposer.org/installer | php && php composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1
+    # Install/update dependencies
+    - php /opt/cpanel/ea-wappspector/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1
 
     # Fix permissions
     - find /home/systemwafragulf/public_html -type d -exec chmod 755 {} \;
@@ -23,4 +19,4 @@ deployment:
     - php artisan storage:link --force 2>&1
     - php artisan optimize:clear 2>&1
     - php artisan optimize 2>&1
-    - echo "✅ Done $(date)"
+    - echo "✅ Deployed $(date)"

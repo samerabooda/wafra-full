@@ -619,7 +619,7 @@ const API = '{{ url("/api") }}';
 let API_TOKEN = '{{ session("api_token","") }}' || localStorage.getItem('wg_token') || '';
 // Persist for this session
 if (API_TOKEN) localStorage.setItem('wg_token', API_TOKEN);
-const CURRENT_USER = @json(auth()->user()?->only('id','name','email','role','branch_id') ?? []);
+const CURRENT_USER = {!! json_encode(auth()->user() ? ['id'=>auth()->user()->id,'name'=>auth()->user()->name,'email'=>auth()->user()->email,'role'=>auth()->user()->role,'branch_id'=>auth()->user()->branch_id] : new stdClass()) !!};
 
 // ── Theme ──────────────────────────────────────────────────
 let curTheme = localStorage.getItem('wg_theme') || 'dark';
