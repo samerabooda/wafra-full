@@ -1,11 +1,15 @@
 {
     "name": "wafra-gulf/commission-cards",
     "description": "Wafra Gulf Commission Cards Management System",
-    "keywords": ["laravel", "commission", "wafra-gulf"],
+    "keywords": [
+        "laravel",
+        "commission",
+        "wafra-gulf"
+    ],
     "license": "proprietary",
     "type": "project",
     "require": {
-        "php": "^8.2",
+        "php": "^8.2|^8.5",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
