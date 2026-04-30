@@ -1,5 +1,17 @@
 <?php
-// Wafra Gulf — root entry point fallback
-// Serves if .htaccess mod_rewrite is disabled
-chdir(__DIR__ . '/public');
-require __DIR__ . '/public/index.php';
+
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+// Maintenance mode
+if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// Autoload
+require __DIR__.'/vendor/autoload.php';
+
+// Bootstrap Laravel
+(require_once __DIR__.'/bootstrap/app.php')
+    ->handleRequest(Request::capture());
