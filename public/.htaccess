@@ -1,71 +1,8 @@
-# ══════════════════════════════════════════════════════════════
-# Wafra Gulf — public/.htaccess
-# Laravel public directory entry point
-# ══════════════════════════════════════════════════════════════
-
-Options -Indexes -MultiViews
-
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # ── Handle Authorization Header ───────────────────────────
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # ── Remove Trailing Slash ─────────────────────────────────
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # ── Send to index.php ─────────────────────────────────────
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-</IfModule>
-
-# ── PHP settings for shared hosting ──────────────────────────
-<IfModule mod_php.c>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 20M
-    php_value max_execution_time 120
-    php_value memory_limit 256M
-</IfModule>
-
-<IfModule php7_module>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 20M
-    php_value max_execution_time 120
-    php_value memory_limit 256M
-</IfModule>
-
-<IfModule php8_module>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 20M
-    php_value max_execution_time 120
-    php_value memory_limit 256M
-</IfModule>
-
-# ── Security Headers ──────────────────────────────────────────
-<IfModule mod_headers.c>
-    Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "SAMEORIGIN"
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    Header unset X-Powered-By
-</IfModule>
-
-# ── Compression ───────────────────────────────────────────────
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/css
-    AddOutputFilterByType DEFLATE application/javascript application/json
-</IfModule>
-
-# ── Browser Caching ───────────────────────────────────────────
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/png  "access plus 1 month"
-    ExpiresByType image/svg+xml "access plus 1 month"
-    ExpiresByType text/css   "access plus 1 week"
-    ExpiresByType application/javascript "access plus 1 week"
 </IfModule>

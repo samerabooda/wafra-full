@@ -1,26 +1,19 @@
 ---
 deployment:
   tasks:
-    # ── Composer ───────────────────────────────────────────────
     - export COMPOSER_HOME=/home/systemwafragulf/.composer
     - /usr/local/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction 2>&1
-
-    # ── Fix permissions (critical — prevents 403) ──────────────
-    - chmod -R 755 .
+    - find . -type f -name "*.php" -exec chmod 644 {} \;
+    - find . -type d -exec chmod 755 {} \;
     - chmod -R 775 storage
     - chmod -R 775 bootstrap/cache
     - chmod 644 .htaccess
     - chmod 644 public/.htaccess
+    - chmod 755 public
     - chmod 644 public/index.php
-
-    # ── Laravel setup ──────────────────────────────────────────
     - /usr/local/bin/php artisan key:generate --force --no-interaction 2>&1
     - /usr/local/bin/php artisan migrate --force --no-interaction 2>&1
     - /usr/local/bin/php artisan storage:link --force 2>&1
-
-    # ── Clear + optimize ───────────────────────────────────────
     - /usr/local/bin/php artisan optimize:clear 2>&1
     - /usr/local/bin/php artisan optimize 2>&1
-
-    # ── Done ───────────────────────────────────────────────────
-    - echo "✅ Wafra Gulf deployed successfully at $(date)"
+    - echo "Deploy done $(date)"

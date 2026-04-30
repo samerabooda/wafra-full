@@ -1,25 +1,7 @@
-# ══════════════════════════════════════════════════════════════
-# Wafra Gulf — Root .htaccess
-# Redirects all traffic to /public (Laravel entry point)
-# ══════════════════════════════════════════════════════════════
-
 Options -Indexes
 Options -MultiViews
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-
-    # ── If request is already in /public, serve directly ──────
-    RewriteCond %{REQUEST_URI} ^/public/
-    RewriteRule ^ - [L]
-
-    # ── Route everything through public/index.php ──────────────
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^(.*)$ public/$1 [L,QSA]
-
-    # ── Default: serve public/index.php ───────────────────────
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ public/index.php [L]
 </IfModule>
