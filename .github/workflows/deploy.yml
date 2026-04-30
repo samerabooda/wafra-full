@@ -1,21 +1,92 @@
-name: Deploy to cPanel
+name: 🚀 Auto Deploy — Wafra Gulf
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
-    name: Trigger cPanel Git Pull
+    name: Deploy to system-wafragulf.online
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger cPanel Deployment
+      # ── Step 1: Show what's being deployed ──────────────────
+      - name: 📋 Deployment Info
         run: |
-          curl -s --fail \
-            "https://system-marketequity.com:2083/execute/VersionControl/update" \
+          echo "============================================"
+          echo "  Wafra Gulf — Auto Deploy"
+          echo "  Branch : main"
+          echo "  Server : system-wafragulf.online"
+          echo "  Time   : $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  Commit : ${{ github.sha }}"
+          echo "  Message: ${{ github.event.head_commit.message }}"
+          echo "============================================"
+
+      # ── Step 2: Trigger cPanel Git pull ─────────────────────
+      - name: 🔄 Trigger cPanel Git Pull
+        run: |
+          HTTP_CODE=$(curl -s -o /tmp/cpanel_response.txt -w "%{http_code}" \
+            --max-time 60 \
+            "https://system-wafragulf.online:2083/execute/VersionControl/update" \
             -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
-            -d "type=git&repository_root=%2Fhome%2Fssdawqcq%2Fwafra-full" \
-            && echo "Deployment triggered successfully" \
-            || echo "Deployment trigger failed"
+            --data-urlencode "type=git" \
+            --data-urlencode "repository_root=/home/systemwafragulf/public_html")
+
+          echo "HTTP Status: $HTTP_CODE"
+          cat /tmp/cpanel_response.txt
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ cPanel Git pull triggered successfully"
+          else
+            echo "⚠️  cPanel returned $HTTP_CODE — trying SSH fallback..."
+          fi
+
+      # ── Step 3: SSH fallback — run deploy.sh directly ───────
+      - name: 🔧 SSH Deploy (fallback)
+        if: always()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          port: 22
+          timeout: 120s
+          script: |
+            echo "=== Wafra Gulf Deploy ==="
+            cd /home/systemwafragulf/public_html || exit 1
+
+            # Pull latest code
+            git pull origin main
+
+            # Run migrations
+            php artisan migrate --force --no-interaction
+
+            # Clear caches
+            php artisan optimize:clear
+
+            # Optimize for production
+            php artisan optimize
+
+            echo "✅ Deploy complete: $(date)"
+
+      # ── Step 4: Health check ─────────────────────────────────
+      - name: 🏥 Health Check
+        run: |
+          sleep 10
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 15 \
+            "https://system-wafragulf.online/api/cards/stats")
+          echo "Health check → HTTP $HTTP"
+          if [ "$HTTP" = "200" ]; then
+            echo "✅ Server is healthy"
+          else
+            echo "⚠️  Server returned $HTTP"
+          fi
+
+      # ── Step 5: Notify ───────────────────────────────────────
+      - name: ✅ Deploy Complete
+        run: |
+          echo "============================================"
+          echo "  ✅ Deployment finished"
+          echo "  URL: https://system-wafragulf.online"
+          echo "============================================"
