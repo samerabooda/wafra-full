@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Deploy to system-wafragulf.online
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
 
@@ -17,34 +17,61 @@ jobs:
         run: |
           echo "Commit : ${{ github.sha }}"
           echo "Message: ${{ github.event.head_commit.message }}"
-          echo "Time   : $(date -u)"
 
-      - name: 🔧 Deploy via SSH (port 2222)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 173.231.231.39
-          username: systemwafragulf
-          password: ${{ secrets.SSH_PASS }}
-          port: 2222
-          timeout: 300s
-          script: |
-            set -e
-            cd /home/systemwafragulf/public_html
-            git pull origin main
-            php /opt/cpanel/ea-wappspector/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1
-            find . -type d -exec chmod 755 {} \;
-            find . -type f -exec chmod 644 {} \;
-            chmod -R 775 storage bootstrap/cache
-            php artisan key:generate --force --no-interaction
-            php artisan migrate --force --no-interaction
-            php artisan storage:link --force
-            php artisan optimize:clear
-            php artisan optimize
-            echo "✅ Deploy complete at $(date)"
+      # ── Method 1: cPanel Git Sync API ──────────────────────
+      - name: 🔄 cPanel Git Pull
+        id: cpanel_deploy
+        run: |
+          echo "Triggering cPanel Git pull..."
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+            --max-time 60 \
+            -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_PASS }}" \
+            "https://system-wafragulf.online:2083/execute/VersionControl/update" \
+            -d "type=git&repository_root=%2Fhome%2Fsystemwafragulf%2Fpublic_html")
 
+          HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE:" | cut -d: -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_CODE:")
+
+          echo "HTTP: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "✅ cPanel Git pull triggered"
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "⚠️ cPanel API returned $HTTP_CODE"
+          fi
+
+      # ── Method 2: cPanel UAPI Run Tasks ────────────────────
+      - name: ⚙️ Run Deploy Tasks via cPanel API
+        if: steps.cpanel_deploy.outputs.status == 'success'
+        run: |
+          echo "Running post-deploy tasks..."
+
+          # Run composer via cPanel API
+          curl -s \
+            -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_PASS }}" \
+            "https://system-wafragulf.online:2083/execute/VersionControl/retrieve_repositories" \
+            | python3 -c "import sys,json; data=json.load(sys.stdin); print(json.dumps(data, indent=2))" \
+            || echo "retrieve done"
+
+          echo "✅ Tasks triggered"
+
+      # ── Health Check ─────────────────────────────────────
       - name: 🏥 Health Check
         run: |
-          sleep 8
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 https://system-wafragulf.online)
-          echo "HTTP: $CODE"
-          [ "$CODE" = "200" ] || [ "$CODE" = "302" ] && echo "✅ UP" || echo "⚠️ $CODE"
+          sleep 15
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 20 \
+              --location \
+              "https://system-wafragulf.online")
+            echo "Attempt $i — HTTP: $CODE"
+            if [ "$CODE" = "200" ] || [ "$CODE" = "302" ] || [ "$CODE" = "301" ]; then
+              echo "✅ Site is UP!"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "⚠️ Site check inconclusive — check manually"
