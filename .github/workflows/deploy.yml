@@ -3,7 +3,7 @@ name: 🚀 Auto Deploy — Wafra Gulf
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -13,56 +13,38 @@ jobs:
 
     steps:
 
-      - name: 📋 Deployment Info
+      - name: 📋 Info
         run: |
-          echo "========================================"
-          echo "  Commit : ${{ github.sha }}"
-          echo "  Message: ${{ github.event.head_commit.message }}"
-          echo "  Time   : $(date -u)"
-          echo "========================================"
+          echo "Commit : ${{ github.sha }}"
+          echo "Message: ${{ github.event.head_commit.message }}"
+          echo "Time   : $(date -u)"
 
-      - name: 🔧 Deploy via SSH
+      - name: 🔧 Deploy via SSH (port 2222)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 173.231.231.39
           username: systemwafragulf
           password: ${{ secrets.SSH_PASS }}
-          port: 22
+          port: 2222
           timeout: 300s
           script: |
             set -e
-            echo "=== Starting Deploy ==="
             cd /home/systemwafragulf/public_html
-
-            # Pull latest code
             git pull origin main
-
-            # Install dependencies
-            php /opt/cpanel/ea-wappspector/composer.phar install \
-              --no-dev --optimize-autoloader --no-interaction 2>&1
-
-            # Fix permissions
+            php /opt/cpanel/ea-wappspector/composer.phar install --no-dev --optimize-autoloader --no-interaction 2>&1
             find . -type d -exec chmod 755 {} \;
             find . -type f -exec chmod 644 {} \;
             chmod -R 775 storage bootstrap/cache
-
-            # Laravel tasks
             php artisan key:generate --force --no-interaction
             php artisan migrate --force --no-interaction
             php artisan storage:link --force
             php artisan optimize:clear
             php artisan optimize
-
             echo "✅ Deploy complete at $(date)"
 
       - name: 🏥 Health Check
         run: |
           sleep 8
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 20 https://system-wafragulf.online)
-          echo "HTTP Status: $CODE"
-          if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
-            echo "✅ Site is UP"
-          else
-            echo "⚠️ Site returned $CODE"
-          fi
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 https://system-wafragulf.online)
+          echo "HTTP: $CODE"
+          [ "$CODE" = "200" ] || [ "$CODE" = "302" ] && echo "✅ UP" || echo "⚠️ $CODE"
