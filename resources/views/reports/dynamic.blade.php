@@ -302,6 +302,15 @@ let dragRowIdx  = null;
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+let _currentChartType = 'bar';
+function setChartType(type, btn) {
+  _currentChartType = type;
+  document.querySelectorAll('.ctt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('chart-type-selector').dataset.type = type;
+  if (displayData.length) renderChart();
+}
+
 async function initPage() {
   await loadFilterOptions();
   renderColPicker();

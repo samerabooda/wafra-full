@@ -250,6 +250,141 @@ function destroyChart(id) { if (rptCharts[id]) { rptCharts[id].destroy(); rptCha
 const tc = () => getComputedStyle(document.documentElement).getPropertyValue('--mu').trim() || '#5A7A9A';
 const gc = () => 'rgba(37,58,99,.3)';
 
+// ── Build KPI Strip ──────────────────────────────────────────
+function buildKpiStrip(data, summary) {
+  const strip = document.getElementById('rpt-kpi-strip');
+  if (!strip) return;
+  const total      = data.length;
+  const totalDep   = data.reduce((s,r)=>s+(+r.initial_deposit||0),0);
+  const totalMon   = data.reduce((s,r)=>s+(+r.monthly_deposit||0),0);
+  const avgBc      = total ? data.reduce((s,r)=>s+(+r.broker_commission||0),0)/total : 0;
+  const ccCount    = data.filter(r=>r.cc_branch_id).length;
+  strip.innerHTML = `
+    <div class="kpi-rpt">
+      <div class="kpi-rpt-val" style="color:var(--teal)">${total.toLocaleString()}</div>
+      <div class="kpi-rpt-lbl">إجمالي الكروت</div>
+    </div>
+    <div class="kpi-rpt">
+      <div class="kpi-rpt-val" style="color:var(--pri2)">$${(totalDep/1000000).toFixed(1)}M</div>
+      <div class="kpi-rpt-lbl">إجمالي الإيداعات</div>
+    </div>
+    <div class="kpi-rpt">
+      <div class="kpi-rpt-val" style="color:var(--or)">$${avgBc.toFixed(2)}</div>
+      <div class="kpi-rpt-lbl">متوسط ع. بروكر</div>
+    </div>
+    <div class="kpi-rpt">
+      <div class="kpi-rpt-val" style="color:var(--re)">${ccCount}</div>
+      <div class="kpi-rpt-lbl">حسابات CC</div>
+    </div>
+    <div class="kpi-rpt">
+      <div class="kpi-rpt-val" style="color:var(--pu)">${total>0 ? ((total-ccCount)/total*100).toFixed(1)+'%' : '—'}</div>
+      <div class="kpi-rpt-lbl">عادي / Normal</div>
+    </div>`;
+}
+
+// ── Build Donut Chart ─────────────────────────────────────────
+function buildDonutChart(canvasId, centerId, data, colors) {
+  const existing = Chart.getChart(canvasId);
+  if (existing) existing.destroy();
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  return new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels: data.map(d=>d.label),
+      datasets:[{
+        data: data.map(d=>d.val),
+        backgroundColor: colors.map(c=>c+'BB'),
+        borderColor: colors,
+        borderWidth:1.5, hoverOffset:5,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'68%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:'var(--mu)',font:{size:10},boxWidth:8,padding:6}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString()}`}}
+      },
+      animation:{animateRotate:true,duration:1200}
+    }
+  });
+}
+
+// ── Build Gauge Chart ─────────────────────────────────────────
+function buildGaugeChart(canvasId, val, max) {
+  const existing = Chart.getChart(canvasId);
+  if (existing) existing.destroy();
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const pct = Math.min(val/max, 1);
+  return new Chart(ctx, {
+    type:'doughnut',
+    data:{datasets:[{
+      data:[pct*100, (1-pct)*100],
+      backgroundColor:['rgba(20,184,126,.8)','rgba(255,255,255,.05)'],
+      borderColor:['#14B87E','transparent'],
+      borderWidth:[1.5,0],
+      circumference:180, rotation:-90,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false, cutout:'72%',
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{duration:1500}
+    }
+  });
+}
+
+// ── Build Radar Chart ─────────────────────────────────────────
+function buildRadarChart(canvasId, datasets) {
+  const existing = Chart.getChart(canvasId);
+  if (existing) existing.destroy();
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  const C = ['#14B87E','#37A0CC','#F59820','#E04848','#7C6EEE'];
+  return new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels:['الإيداعات','عدد الكروت','ع. بروكر','نشاط CC','المسوّقون','الاعتماد'],
+      datasets: datasets.map((d,i)=>({
+        label: d.label,
+        data: d.data,
+        borderColor: C[i], backgroundColor: C[i]+'20',
+        borderWidth:2, pointBackgroundColor:C[i], pointRadius:3,
+      }))
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'var(--mu)',font:{size:10},boxWidth:8}}},
+      scales:{r:{
+        grid:{color:'rgba(255,255,255,.07)'},
+        angleLines:{color:'rgba(255,255,255,.05)'},
+        ticks:{display:false},
+        pointLabels:{color:'var(--tx2)',font:{size:9}},
+        min:0, max:100,
+      }},
+      animation:{duration:1500}
+    }
+  });
+}
+
+// ── Build Horizontal Bars ─────────────────────────────────────
+function buildHbarList(containerId, items) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const max = Math.max(...items.map(i=>i.val));
+  const C = ['#14B87E','#37A0CC','#F59820','#E04848','#7C6EEE','#EC4899'];
+  el.innerHTML = items.map((item,i)=>`
+    <div class="hbar-item">
+      <div class="hbar-head">
+        <span style="color:var(--tx2)">${item.label}</span>
+        <span style="color:${C[i]};font-family:monospace;font-weight:700">$${item.val.toFixed(2)}</span>
+      </div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${item.val/max*100}%;background:${C[i]}"></div>
+      </div>
+    </div>`).join('');
+}
+
 function buildCharts() {
   if (!RD.length) return;
 
