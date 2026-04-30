@@ -893,5 +893,6 @@ function exportDynPdf() {
 
 // ══════════════════════════════════════════════════════════
 initPage();
+document.addEventListener('DOMContentLoaded', initPage);
 </script>
 @endpush

@@ -357,4 +357,19 @@ class CommissionCardController extends Controller
     {
         $user = $request->user();
         return $prefix . ':' . ($user?->branch_id ?? 'all') . ':' . md5(json_encode($request->query()));
+    
+    // ── GET /api/cards/stats (public) ─────────────────────────
+    public function stats(Request $request): JsonResponse
+    {
+        $total   = CommissionCard::whereNull('deleted_at')->count();
+        $initDep = CommissionCard::whereNull('deleted_at')->sum('initial_deposit');
+        $monDep  = CommissionCard::whereNull('deleted_at')->sum('monthly_deposit');
+        return response()->json([
+            'success'          => true,
+            'total'            => $total,
+            'initial_deposit'  => (float) $initDep,
+            'monthly_deposit'  => (float) $monDep,
+        ]);
     }
+
+}

@@ -178,4 +178,65 @@ class SettingsController extends Controller
         ]);
     }
 
+
+    // ── POST /api/settings/account-types ──────────────────────
+    public function updateAccountTypes(Request $request): JsonResponse
+    {
+        $v = Validator::make($request->all(), [
+            'types'            => 'required|array|min:1',
+            'types.*.id'       => 'nullable|integer',
+            'types.*.name_ar'  => 'required|string|max:60',
+            'types.*.name_en'  => 'required|string|max:60',
+        ]);
+        if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
+
+        foreach ($request->types as $item) {
+            \App\Models\AccountType::updateOrCreate(
+                ['id' => $item['id'] ?? null],
+                ['name_ar' => $item['name_ar'], 'name_en' => $item['name_en']]
+            );
+        }
+        return response()->json(['success'=>true,'message'=>'تم تحديث أنواع الحسابات / Account types updated']);
+    }
+
+    // ── POST /api/settings/account-statuses ───────────────────
+    public function updateAccountStatuses(Request $request): JsonResponse
+    {
+        $v = Validator::make($request->all(), [
+            'statuses'           => 'required|array|min:1',
+            'statuses.*.id'      => 'nullable|integer',
+            'statuses.*.name_ar' => 'required|string|max:60',
+            'statuses.*.name_en' => 'required|string|max:60',
+        ]);
+        if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
+
+        foreach ($request->statuses as $item) {
+            \App\Models\AccountStatus::updateOrCreate(
+                ['id' => $item['id'] ?? null],
+                ['name_ar' => $item['name_ar'], 'name_en' => $item['name_en']]
+            );
+        }
+        return response()->json(['success'=>true,'message'=>'تم تحديث حالات الحسابات / Account statuses updated']);
+    }
+
+    // ── POST /api/settings/trading-types ──────────────────────
+    public function updateTradingTypes(Request $request): JsonResponse
+    {
+        $v = Validator::make($request->all(), [
+            'types'            => 'required|array|min:1',
+            'types.*.id'       => 'nullable|integer',
+            'types.*.name_ar'  => 'required|string|max:60',
+            'types.*.name_en'  => 'required|string|max:60',
+        ]);
+        if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
+
+        foreach ($request->types as $item) {
+            \App\Models\TradingType::updateOrCreate(
+                ['id' => $item['id'] ?? null],
+                ['name_ar' => $item['name_ar'], 'name_en' => $item['name_en']]
+            );
+        }
+        return response()->json(['success'=>true,'message'=>'تم تحديث أنواع التداول / Trading types updated']);
+    }
+
 }

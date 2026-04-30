@@ -29,13 +29,7 @@ Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
 
 
 // Public: stats for login page brand section (no auth needed)
-Route::get('cards/stats', function () {
-    return response()->json([
-        'success'         => true,
-        'total'           => \App\Models\CommissionCard::count(),
-        'initial_deposit' => (float) \App\Models\CommissionCard::sum('initial_deposit'),
-    ]);
-});
+Route::get('cards/stats', [CommissionCardController::class, 'stats']);
 
 // ── Protected routes ──────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(function () {

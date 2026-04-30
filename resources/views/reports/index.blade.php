@@ -400,5 +400,8 @@ function clearRptFilters() {
 }
 
 loadFilterOptions();
+document.addEventListener('DOMContentLoaded', () => {
+  loadFilterOptions();
+});
 </script>
 @endpush

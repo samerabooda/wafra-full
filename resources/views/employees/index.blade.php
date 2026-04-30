@@ -34,7 +34,7 @@
       <thead>
         <tr>
           <th>الاسم</th><th>الدور</th><th>الفرع / Branch</th>
-          <th>ع. بروكر / Broker Comm.</th><th>ع. تسويق</th>
+          <th>ع. بروكر / Broker Comm.</th><th>ع. تسويق / Mkt. Comm.</th><th>ع. CC</th>
           <th>الحالة / Status</th><th>تمت إضافته</th><th>إجراءات / Actions</th>
         </tr>
       </thead>
@@ -79,9 +79,15 @@
           <input type="number" id="ae-mc" class="form-control" value="3" min="0" step="0.5">
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">البريد / Email</label>
-        <input type="email" id="ae-email" class="form-control" placeholder="employee@wafragulf.com">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ع. CC / CC Commission ($) <span style="font-size:10px;color:var(--mu)">(للموظفين في مركز الاتصال)</span></label>
+          <input type="number" id="ae-cc" class="form-control" value="1" min="0" step="0.25" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">البريد / Email</label>
+          <input type="email" id="ae-email" class="form-control" placeholder="employee@wafragulf.com">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">الفرع / Branch / Branch</label>
@@ -133,6 +139,7 @@ async function loadEmps() {
       <td style="color:var(--mu)">${e.branch?.name_ar || '—'}</td>
       <td class="mono c-blue">$${e.broker_commission}</td>
       <td class="mono c-green">$${e.marketing_commission}</td>
+      <td class="mono" style="color:var(--teal)">${e.cc_commission > 0 ? '$'+e.cc_commission : '—'}</td>
       <td>${statusBadge(e.status)}</td>
       <td style="color:var(--mu);font-size:11px">${e.added_by?.name || '—'}</td>
       <td>
@@ -160,6 +167,7 @@ async function addEmployee() {
     branch_id:              parseInt(document.getElementById('ae-branch').value) || null,
     broker_commission:      parseFloat(document.getElementById('ae-bc').value) || 4,
     marketing_commission:   parseFloat(document.getElementById('ae-mc').value) || 3,
+    cc_commission:          parseFloat(document.getElementById('ae-cc').value) || 0,
   });
 
   if (r.success) {
@@ -183,5 +191,9 @@ async function deleteEmp(id, name) {
 
 loadEmps();
 loadBranches();
+document.addEventListener('DOMContentLoaded', () => {
+  loadEmps();
+  loadBranches();
+});
 </script>
 @endpush

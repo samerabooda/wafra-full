@@ -152,5 +152,27 @@ function cancelImport() {
   importRows = [];
   document.getElementById('file-inp').value = '';
 }
+
+async function loadBatches() {
+  const tbody = document.getElementById('batches-tbody');
+  if (!tbody) return;
+  const r = await api('GET', '/import/batches');
+  if (!r.success) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">لا توجد دُفعات</td></tr>'; return; }
+  const batches = r.data || [];
+  if (!batches.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">لم يتم استيراد أي بيانات بعد</td></tr>';
+    return;
+  }
+  tbody.innerHTML = batches.map(b => `
+    <tr>
+      <td><span style="font-family:monospace;color:var(--pri2)">${b.batch_code}</span></td>
+      <td>${b.file_name || '—'}</td>
+      <td><span style="color:var(--gr)">${b.imported_count || 0}</span> / <span style="color:var(--or)">${b.updated_count || 0}</span> / <span style="color:var(--re)">${b.failed_count || 0}</span></td>
+      <td>${b.imported_by?.name || '—'}</td>
+      <td style="color:var(--mu);font-size:11px">${b.created_at ? b.created_at.substring(0,10) : '—'}</td>
+    </tr>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', loadBatches);
 </script>
 @endpush
