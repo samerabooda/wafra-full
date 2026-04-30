@@ -22,3 +22,10 @@ yarn-error.log
 /storage/framework/views/*
 /storage/logs/*
 *.log
+
+# Keep directory structure
+!bootstrap/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!storage/framework/cache/.gitkeep
+!storage/logs/.gitkeep
