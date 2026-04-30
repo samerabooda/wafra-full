@@ -3,90 +3,66 @@ name: 🚀 Auto Deploy — Wafra Gulf
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
 
 jobs:
   deploy:
     name: Deploy to system-wafragulf.online
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      # ── Step 1: Show what's being deployed ──────────────────
+
       - name: 📋 Deployment Info
         run: |
-          echo "============================================"
-          echo "  Wafra Gulf — Auto Deploy"
-          echo "  Branch : main"
-          echo "  Server : system-wafragulf.online"
-          echo "  Time   : $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "========================================"
           echo "  Commit : ${{ github.sha }}"
           echo "  Message: ${{ github.event.head_commit.message }}"
-          echo "============================================"
+          echo "  Time   : $(date -u)"
+          echo "========================================"
 
-      # ── Step 2: Trigger cPanel Git pull ─────────────────────
-      - name: 🔄 Trigger cPanel Git Pull
-        run: |
-          HTTP_CODE=$(curl -s -o /tmp/cpanel_response.txt -w "%{http_code}" \
-            --max-time 60 \
-            "https://system-wafragulf.online:2083/execute/VersionControl/update" \
-            -u "${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
-            --data-urlencode "type=git" \
-            --data-urlencode "repository_root=/home/systemwafragulf/public_html")
-
-          echo "HTTP Status: $HTTP_CODE"
-          cat /tmp/cpanel_response.txt
-
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ cPanel Git pull triggered successfully"
-          else
-            echo "⚠️  cPanel returned $HTTP_CODE — trying SSH fallback..."
-          fi
-
-      # ── Step 3: SSH fallback — run deploy.sh directly ───────
-      - name: 🔧 SSH Deploy (fallback)
-        if: always()
+      - name: 🔧 Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          host: 173.231.231.39
+          username: systemwafragulf
           password: ${{ secrets.SSH_PASS }}
           port: 22
-          timeout: 120s
+          timeout: 300s
           script: |
-            echo "=== Wafra Gulf Deploy ==="
-            cd /home/systemwafragulf/public_html || exit 1
+            set -e
+            echo "=== Starting Deploy ==="
+            cd /home/systemwafragulf/public_html
 
             # Pull latest code
             git pull origin main
 
-            # Run migrations
+            # Install dependencies
+            php /opt/cpanel/ea-wappspector/composer.phar install \
+              --no-dev --optimize-autoloader --no-interaction 2>&1
+
+            # Fix permissions
+            find . -type d -exec chmod 755 {} \;
+            find . -type f -exec chmod 644 {} \;
+            chmod -R 775 storage bootstrap/cache
+
+            # Laravel tasks
+            php artisan key:generate --force --no-interaction
             php artisan migrate --force --no-interaction
-
-            # Clear caches
+            php artisan storage:link --force
             php artisan optimize:clear
-
-            # Optimize for production
             php artisan optimize
 
-            echo "✅ Deploy complete: $(date)"
+            echo "✅ Deploy complete at $(date)"
 
-      # ── Step 4: Health check ─────────────────────────────────
       - name: 🏥 Health Check
         run: |
-          sleep 10
-          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 15 \
-            "https://system-wafragulf.online/api/cards/stats")
-          echo "Health check → HTTP $HTTP"
-          if [ "$HTTP" = "200" ]; then
-            echo "✅ Server is healthy"
+          sleep 8
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 20 https://system-wafragulf.online)
+          echo "HTTP Status: $CODE"
+          if [ "$CODE" = "200" ] || [ "$CODE" = "302" ]; then
+            echo "✅ Site is UP"
           else
-            echo "⚠️  Server returned $HTTP"
+            echo "⚠️ Site returned $CODE"
           fi
-
-      # ── Step 5: Notify ───────────────────────────────────────
-      - name: ✅ Deploy Complete
-        run: |
-          echo "============================================"
-          echo "  ✅ Deployment finished"
-          echo "  URL: https://system-wafragulf.online"
-          echo "============================================"
