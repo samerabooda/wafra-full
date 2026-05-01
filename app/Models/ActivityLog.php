@@ -7,6 +7,11 @@ class ActivityLog extends Model {
     protected $fillable = ['user_id','action','model_type','model_id','description','ip_address','user_agent','metadata','created_at'];
     protected $casts    = ['metadata'=>'array','created_at'=>'datetime'];
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    // ── Alias: log() — same as record() ─────────────────────
+    public static function log(string $action, $model=null, array $meta=[]): self {
+        return self::record($action, $model, $meta);
+    }
+
     public static function record(string $action, $model=null, array $meta=[]): self {
         return static::create([
             'user_id'    => auth()->id(),

@@ -28,4 +28,7 @@ class Branch extends Model
     public function employees(): HasMany       { return $this->hasMany(Employee::class); }
     public function commissionCards(): HasMany { return $this->hasMany(CommissionCard::class); }
     public function createdBy(): BelongsTo     { return $this->belongsTo(User::class, 'created_by'); }
+
+    // ── Scope: only active branches ─────────────────────────
+    public function scopeActive($query) { return $query->where('is_active', true); }
 }
