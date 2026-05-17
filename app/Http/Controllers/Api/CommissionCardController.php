@@ -11,7 +11,6 @@ class CommissionCardController extends Controller
     private array $with = [
         'branch','accountType','accountStatus','tradingType',
         'broker','marketer','extMarketer1','extMarketer2',
-        'ccAgent','ccBranch',
         'modifications.modifiedBy','createdBy',
     ];
 
@@ -20,19 +19,8 @@ class CommissionCardController extends Controller
     {
         $user = $request->user();
         if ($user->isBranchManager()) {
-            $query->where(function($q) use ($user) {
-                // Own branch regular cards (all statuses)
-                $q->where(function($q1) use ($user) {
-                    $q1->where('branch_id', $user->branch_id)
-                       ->where(function($q2) {
-                           // Exclude CC cards in intermediate states (shown via /callcenter/pending)
-                           $q2->whereNull('cc_branch_id')
-                              ->orWhereIn('cc_status', ['accepted','completed','rejected']);
-                       });
-                })
-                // CC branch sees ALL cards IT sent (any status)
-                ->orWhere('cc_branch_id', $user->branch_id);
-            });
+            // HARD LOCK — cannot be bypassed by request params
+            $query->forBranch($user->branch_id);
         } elseif ($user->isFinanceAdmin() && $request->branch_id) {
             $query->forBranch((int)$request->branch_id);
         }
@@ -51,21 +39,27 @@ class CommissionCardController extends Controller
     // GET /api/cards
     public function index(Request $request): JsonResponse
     {
-        $query = CommissionCard::with($this->with);
+        $query = CommissionCard::query();
         $this->applyBranchScope($query, $request);
 
-        if ($m  = $request->month)       $query->forMonth($m);
-        if ($br = $request->broker_id)   $query->forBroker((int)$br);
-        if ($s  = $request->status)      $query->where('status',$s);
-        if ($k  = $request->kind)        $query->where('account_kind',$k);
-        if ($q  = $request->search)      $query->search($q);
-        if ($request->modified_only)     $query->modified();
-        if ($min = $request->min_deposit) $query->where('monthly_deposit','>=',(float)$min);
+        if ($m  = $request->month)        $query->forMonth($m);
+        if ($br = $request->broker_id)    $query->forBroker((int)$br);
+        if ($s  = $request->status)       $query->where('status', $s);
+        if ($k  = $request->kind)         $query->where('account_kind', $k);
+        if ($q  = $request->search)       $query->search($q);
+        if ($request->modified_only)      $query->modified();
+        if ($min = $request->min_deposit) $query->where('monthly_deposit', '>=', (float)$min);
+
+        // Snapshot for summary aggregates (no eager loads, no pagination)
+        $summaryQuery = clone $query;
 
         $perPage = min((int)($request->per_page ?? 50), 200);
-        $cards   = $query->orderBy('month_date','desc')->orderBy('account_number')->paginate($perPage);
+        $cards   = (clone $query)->with($this->with)
+                                 ->orderBy('month_date', 'desc')
+                                 ->orderBy('account_number')
+                                 ->paginate($perPage);
 
-        return response()->json(['success'=>true,'data'=>$cards,'summary'=>$this->buildSummary($request->user())]);
+        return response()->json(['success'=>true,'data'=>$cards,'summary'=>$this->buildSummary($summaryQuery)]);
     }
 
     // GET /api/cards/{id}
@@ -77,49 +71,7 @@ class CommissionCardController extends Controller
     }
 
     // POST /api/cards
-   
-        // ── Server-side commission limit check ──────────────
-        $hasRebate    = (bool)($request->has_rebate ?? false);
-        $rebateLimit  = (float) \App\Models\Setting::get('rebate_commission_limit', 7.00);
-        $normalLimit  = (float) \App\Models\Setting::get('commission_limit_amount', 8.00);
-        $limitEnabled = (bool) \App\Models\Setting::get('commission_limit_enabled', true);
-        $limitAmount  = $hasRebate ? $rebateLimit : $normalLimit;
-
-        $commTotal = (float)($request->broker_commission ?? 0)
-                   + (float)($request->marketer_commission ?? 0)
-                   + (float)($request->ext_commission1 ?? 0)
-                   + (float)($request->ext_commission2 ?? 0)
-                   + (float)($request->referral_commission ?? 0)
-                   + (float)($request->rebate_amount ?? 0);
-
-        $warningCount = (int) $request->header('X-Commission-Warning-Count', 0);
-        $maxWarnings  = (int) \App\Models\Setting::get('commission_warning_count', 3);
-
-        if ($limitEnabled && $commTotal > $limitAmount) {
-            if ($warningCount >= $maxWarnings) {
-                return response()->json([
-                    'success'    => false,
-                    'blocked'    => true,
-                    'total'      => $commTotal,
-                    'limit'      => $limitAmount,
-                    'has_rebate' => $hasRebate,
-                    'message'    => "تجاوزت العمولات الحد المسموح ({$limitAmount}). يرجى التواصل مع المدير المالي.",
-                ], 422);
-            }
-            return response()->json([
-                'success'        => false,
-                'warning'        => true,
-                'warning_number' => $warningCount + 1,
-                'warnings_left'  => $maxWarnings - $warningCount - 1,
-                'total'          => $commTotal,
-                'limit'          => $limitAmount,
-                'has_rebate'     => $hasRebate,
-                'message'        => ($hasRebate ? "[Rebate حد $7] " : "") . "تحذير: إجمالي العمولات ({$commTotal}) يتجاوز الحد ({$limitAmount}). هل تريد المتابعة؟",
-                'can_override'   => true,
-            ], 422);
-        }
-
- public function store(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $v = Validator::make($request->all(), $this->validationRules());
         if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
@@ -131,18 +83,34 @@ class CommissionCardController extends Controller
             ? $user->branch_id
             : ($request->branch_id ? (int)$request->branch_id : null);
 
-        if (CommissionCard::where('account_number',$request->account_number)
-                          ->where('month',$request->month)
-                          ->whereNull('deleted_at')->exists()) {
+        // Check for an active (non-deleted) duplicate
+        if (CommissionCard::where('account_number', $request->account_number)
+                          ->where('month', $request->month)
+                          ->exists()) {
             return response()->json(['success'=>false,'message'=>"Account #{$request->account_number} already exists for {$request->month}."],409);
         }
 
         $card = DB::transaction(function() use ($request, $branchId, $user) {
-            $fields             = $this->extractFields($request);
+            $fields               = $this->extractFields($request);
             $fields['branch_id']  = $branchId;
             $fields['status']     = 'new_added';
             $fields['created_by'] = $user->id;
-            $card = CommissionCard::create($fields);
+
+            // If a soft-deleted record exists for the same ac+month, restore it instead
+            // of inserting — avoids the DB unique constraint (uq_ac_month) crash.
+            $trashed = CommissionCard::withTrashed()
+                ->where('account_number', $request->account_number)
+                ->where('month', $request->month)
+                ->first();
+
+            if ($trashed) {
+                $trashed->restore();
+                $trashed->update($fields);
+                $card = $trashed->fresh();
+            } else {
+                $card = CommissionCard::create($fields);
+            }
+
             ActivityLog::record('create_card', $card, ['account'=>$card->account_number,'branch_id'=>$branchId]);
             return $card;
         });
@@ -163,7 +131,6 @@ class CommissionCardController extends Controller
         DB::transaction(function() use ($request, $card) {
             $oldData = $card->only(['broker_id','broker_commission','marketer_id','marketer_commission',
                 'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
-            'has_rebate','rebate_amount','referral_account','referral_commission',
                 'initial_deposit','monthly_deposit','account_status_id','account_kind','notes']);
 
             $fields = $this->extractFields($request);
@@ -228,7 +195,7 @@ class CommissionCardController extends Controller
                 'total_mkt_comm'    => round($cards->sum('marketer_commission'),2),
                 'total_ext1_comm'   => round($cards->sum('ext_commission1'),2),
                 'total_ext2_comm'   => round($cards->sum('ext_commission2'),2),
-                'total_all_comm'    => round($cards->sum(fn($c) => $c->broker_commission+$c->marketer_commission+$c->ext_commission1+$c->ext_commission2+$c->referral_commission+$c->rebate_amount),2),
+                'total_all_comm'    => round($cards->sum(fn($c) => $c->broker_commission+$c->marketer_commission+$c->ext_commission1+$c->ext_commission2),2),
                 'modified_count'    => $cards->where('status','modified')->count(),
             ],
             'tree' => $tree,
@@ -285,7 +252,7 @@ class CommissionCardController extends Controller
     {
         $r = $required ? 'required' : 'sometimes|required';
         return [
-            'account_number'=>"{$r}|string|max:30",'month'=>"{$r}|string|max:20",'month_date'=>"{$r}|date",
+            'account_number'=>"{$r}|string|max:30",'month'=>"{$r}|string|max:20",'month_date'=>'nullable|date',
             'branch_id'=>'nullable|exists:branches,id','account_type_id'=>'nullable|exists:account_types,id',
             'account_status_id'=>'nullable|exists:account_statuses,id','trading_type_id'=>'nullable|exists:trading_types,id',
             'account_kind'=>'nullable|in:new,sub',
@@ -293,10 +260,6 @@ class CommissionCardController extends Controller
             'marketer_id'=>'nullable|exists:employees,id','marketer_commission'=>'nullable|numeric|min:0',
             'ext_marketer1_id'=>'nullable|exists:employees,id','ext_commission1'=>'nullable|numeric|min:0',
             'ext_marketer2_id'=>'nullable|exists:employees,id','ext_commission2'=>'nullable|numeric|min:0',
-            'has_rebate'=>'nullable|boolean',
-            'rebate_amount'=>'nullable|numeric|min:0|max:5',
-            'referral_account'=>'nullable|string|max:50',
-            'referral_commission'=>'nullable|numeric|min:0',
             'forex_commission'=>'nullable|numeric|min:0','futures_commission'=>'nullable|numeric|min:0',
             'initial_deposit'=>'nullable|numeric|min:0','monthly_deposit'=>'nullable|numeric|min:0',
             'notes'=>'nullable|string|max:2000',
@@ -305,21 +268,36 @@ class CommissionCardController extends Controller
 
     private function extractFields(Request $request): array
     {
-        return $request->only(['account_number','month','month_date','branch_id',
+        $fields = $request->only([
+            'account_number','month','month_date','branch_id',
             'account_type_id','account_status_id','trading_type_id','account_kind',
             'broker_id','broker_commission','marketer_id','marketer_commission',
             'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
-            'forex_commission','futures_commission','initial_deposit','monthly_deposit','notes']);
+            'forex_commission','futures_commission','initial_deposit','monthly_deposit','notes',
+        ]);
+
+        // Auto-derive month_date from month if not supplied (e.g. "Jan 2025" → "2025-01-01")
+        if (empty($fields['month_date']) && !empty($fields['month'])) {
+            try {
+                $fields['month_date'] = \Carbon\Carbon::parse('01 ' . $fields['month'])->format('Y-m-d');
+            } catch (\Exception $e) {
+                $fields['month_date'] = now()->startOfMonth()->format('Y-m-d');
+            }
+        }
+
+        return $fields;
     }
 
-    private function buildSummary($user): array
+    private function buildSummary($query): array
     {
-        $q = CommissionCard::query();
-        if ($user->isBranchManager() && $user->branch_id) $q->forBranch($user->branch_id);
-        $d = $q->get(['initial_deposit','monthly_deposit','status']);
-        return ['total'=>$d->count(),'initial_deposit'=>round($d->sum('initial_deposit'),2),
-            'monthly_deposit'=>round($d->sum('monthly_deposit'),2),
-            'modified'=>$d->where('status','modified')->count(),'new_added'=>$d->where('status','new_added')->count()];
+        $q = clone $query;
+        return [
+            'total'           => (clone $q)->count(),
+            'initial_deposit' => round((clone $q)->sum('initial_deposit'), 2),
+            'monthly_deposit' => round((clone $q)->sum('monthly_deposit'), 2),
+            'modified'        => (clone $q)->where('status', 'modified')->count(),
+            'new_added'       => (clone $q)->where('status', 'new_added')->count(),
+        ];
     }
 
     private function groupByBroker($cards): array {
@@ -350,26 +328,4 @@ class CommissionCardController extends Controller
                 'total_ext_comm'=>round($g->sum(fn($c)=>$c->ext_commission1+$c->ext_commission2),2),
                 'modified_count'=>$g->where('status','modified')->count(),'cards'=>$g->values()])->values()->toArray();
     }
-}
-
-    // ── Cache helpers ─────────────────────────────────────────
-    private function cacheKey(Request $request, string $prefix): string
-    {
-        $user = $request->user();
-        return $prefix . ':' . ($user?->branch_id ?? 'all') . ':' . md5(json_encode($request->query()));
-    
-    // ── GET /api/cards/stats (public) ─────────────────────────
-    public function stats(Request $request): JsonResponse
-    {
-        $total   = CommissionCard::whereNull('deleted_at')->count();
-        $initDep = CommissionCard::whereNull('deleted_at')->sum('initial_deposit');
-        $monDep  = CommissionCard::whereNull('deleted_at')->sum('monthly_deposit');
-        return response()->json([
-            'success'          => true,
-            'total'            => $total,
-            'initial_deposit'  => (float) $initDep,
-            'monthly_deposit'  => (float) $monDep,
-        ]);
-    }
-
 }

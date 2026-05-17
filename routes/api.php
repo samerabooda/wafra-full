@@ -7,10 +7,8 @@ use App\Http\Controllers\Api\{
     EmployeeController,
     ManagerController,
     ImportController,
-    ExportController,
     BranchController,
     SettingsController,
-    CallCenterController,
 };
 
 /*
@@ -22,17 +20,23 @@ use App\Http\Controllers\Api\{
 */
 
 // ── Public routes (no authentication) ────────────────────────
-Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
+Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']); // FA first-time only
     Route::post('login',    [AuthController::class, 'login']);
 });
 
 
 // Public: stats for login page brand section (no auth needed)
-Route::get('cards/stats', [CommissionCardController::class, 'stats']);
+Route::get('cards/stats', function () {
+    return response()->json([
+        'success'         => true,
+        'total'           => \App\Models\CommissionCard::count(),
+        'initial_deposit' => (float) \App\Models\CommissionCard::sum('initial_deposit'),
+    ]);
+});
 
 // ── Protected routes ──────────────────────────────────────────
-Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(function () {
+Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function () {
 
     // Auth
     Route::prefix('auth')->group(function () {
@@ -42,9 +46,6 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(func
     });
 
     // ── Commission Cards ──────────────────────────────────────
-    // ── Dashboard ─────────────────────────────────────────────
-    Route::get('dashboard', [DashboardController::class, 'stats']);
-
     Route::prefix('cards')->group(function () {
 
         Route::get('tree',          [CommissionCardController::class, 'tree'])
@@ -116,33 +117,11 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(func
              ->middleware('role:finance_admin');
     });
 
-    // ── Export ───────────────────────────────────────────────
-    Route::get('cards/export/excel', [ExportController::class, 'excel']);
-    Route::get('cards/export/pdf',   [ExportController::class, 'pdf']);
-
     // ── Import ────────────────────────────────────────────────
     // Import — Finance Admin ONLY
     Route::prefix('import')->middleware('role:finance_admin')->group(function () {
         Route::post('/',      [ImportController::class, 'import']);
         Route::get('batches', [ImportController::class, 'batches']);
-    });
-
-    // ── Call Center ───────────────────────────────────────────
-    Route::prefix('cc')->group(function () {
-        // CC branch: create & send cards
-        Route::post('cards',                           [CallCenterController::class, 'store']);
-        Route::post('cards/{id}/send',                 [CallCenterController::class, 'send']);
-        Route::get('sent',                             [CallCenterController::class, 'sent']);
-
-        // Regular branch: receive & respond
-        Route::put('cards/{id}/accept',                [CallCenterController::class, 'accept']);
-        Route::put('cards/{id}/reject',                [CallCenterController::class, 'reject']);
-        Route::put('cards/{id}/complete',              [CallCenterController::class, 'complete']);
-        Route::get('pending',                          [CallCenterController::class, 'pending']);
-
-        // Notifications (both branches)
-        Route::get('notifications',                    [CallCenterController::class, 'notifications']);
-        Route::put('notifications/{id}/read',          [CallCenterController::class, 'markRead']);
     });
 
     // ── Settings (Lookup tables) ──────────────────────────────
@@ -163,16 +142,6 @@ Route::middleware(['auth:sanctum', 'active.user', 'throttle:120,1'])->group(func
         Route::post('trading-types',          [SettingsController::class, 'storeTradingType'])
              ->middleware('role:finance_admin');
         Route::delete('trading-types/{id}',   [SettingsController::class, 'destroyTradingType'])
-             ->middleware('role:finance_admin');
-
-        // Commission limit settings — FA only
-        Route::get('commission-limit',         [SettingsController::class, 'getCommissionLimit'])
-             ->middleware('role:finance_admin');
-        Route::post('commission-limit',        [SettingsController::class, 'updateCommissionLimit'])
-             ->middleware('role:finance_admin');
-
-        // CC agent commission per employee — FA only
-        Route::put('employees/{id}/cc-commission', [SettingsController::class, 'updateCcCommission'])
              ->middleware('role:finance_admin');
     });
 });

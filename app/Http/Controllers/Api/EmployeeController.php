@@ -23,7 +23,7 @@ class EmployeeController extends Controller
 
         if ($status = $request->status) $query->where('status', $status);
         if ($role   = $request->role)   $query->where('role', $role);
-        if ($branch = $request->branch_id && $user->isFinanceAdmin()) {
+        if ($request->branch_id && $user->isFinanceAdmin()) {
             $query->where('branch_id', $request->branch_id);
         }
 
@@ -51,8 +51,6 @@ class EmployeeController extends Controller
             'branch_id'            => 'nullable|exists:branches,id',
             'broker_commission'    => 'nullable|numeric|min:0',
             'marketing_commission' => 'nullable|numeric|min:0',
-            'cc_commission'        => 'nullable|numeric|min:0|max:50',
-            'cc_commission'        => 'nullable|numeric|min:0|max:50',
         ]);
 
         if ($v->fails()) {
@@ -69,7 +67,6 @@ class EmployeeController extends Controller
             'branch_id'            => $request->branch_id ?? $user->branch_id,
             'broker_commission'    => $request->broker_commission    ?? 4.00,
             'marketing_commission' => $request->marketing_commission ?? 3.00,
-            'cc_commission'        => $request->cc_commission ?? 0.00,
             'status'               => $isPending ? 'pending' : 'approved',
             'added_by'             => $user->id,
             'approved_by'          => $isPending ? null : $user->id,
@@ -112,7 +109,7 @@ class EmployeeController extends Controller
 
         $emp->update($request->only([
             'name', 'email', 'role', 'branch_id',
-            'broker_commission', 'marketing_commission', 'cc_commission', 'is_active',
+            'broker_commission', 'marketing_commission', 'is_active',
         ]));
 
         ActivityLog::record('update_employee', $emp);
