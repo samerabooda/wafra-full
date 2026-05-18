@@ -85,5 +85,26 @@ class BranchController extends Controller
 
         return response()->json(['success' => true, 'data' => $branch]);
     }
+
+    // DELETE /api/branches/{id}  (Finance Admin only)
+    // Cards linked to this branch will have branch_id set to NULL automatically (nullOnDelete FK)
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        if (!$request->user()->isFinanceAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Finance Admin only.'], 403);
+        }
+
+        $branch = Branch::withCount(['commissionCards'])->findOrFail($id);
+        $cardCount = $branch->commission_cards_count;
+
+        $branch->delete();
+        ActivityLog::record('delete_branch', ['id' => $id, 'name_ar' => $branch->name_ar]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "تم حذف الفرع \"{$branch->name_ar}\". " .
+                         ($cardCount > 0 ? "{$cardCount} حساب أصبح ضمن «حسابات بدون فرع»." : ''),
+        ]);
+    }
 }
 

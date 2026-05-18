@@ -109,11 +109,13 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
 
     // ── Branches ──────────────────────────────────────────────
     Route::prefix('branches')->group(function () {
-        Route::get('/',     [BranchController::class, 'index']);
-        Route::get('{id}',  [BranchController::class, 'show']);
-        Route::post('/',    [BranchController::class, 'store'])
+        Route::get('/',        [BranchController::class, 'index']);
+        Route::get('{id}',     [BranchController::class, 'show']);
+        Route::post('/',       [BranchController::class, 'store'])
              ->middleware('role:finance_admin');
-        Route::put('{id}',  [BranchController::class, 'update'])
+        Route::put('{id}',     [BranchController::class, 'update'])
+             ->middleware('role:finance_admin');
+        Route::delete('{id}',  [BranchController::class, 'destroy'])
              ->middleware('role:finance_admin');
     });
 

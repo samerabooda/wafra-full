@@ -48,7 +48,7 @@
       <div style="font-size:9px;color:var(--mu);text-transform:uppercase;margin-bottom:5px">حد أدنى $</div>
       <input type="number" id="rf-min" class="form-control" style="width:90px" value="0" min="0">
     </div>
-    <button class="btn btn-primary" onclick="generateReport()">⚡ عرض التقرير</button>
+    <button class="btn btn-primary" onclick="generateReport()">⚡ توليد التقرير</button>
     <button class="btn btn-ghost" onclick="clearRptFilters()">✕ مسح</button>
   </div>
 </div>
@@ -68,11 +68,11 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>رقم الحساب / Account No.</th><th style="color:#1D9E75">موظف CC</th><th>البروكر / Broker</th><th>مسوّق داخلي / Internal Marketer</th>
-            <th>مسوّق خارجي 1 / Ext. Marketer 1</th><th>مسوّق خارجي 2 / Ext. Marketer 2</th>
-            <th>إيداع أولي / Init. Deposit</th><th>إيداع شهري</th>
-            <th>ع. بروكر / Broker Comm.</th><th>ع. داخلي</th><th>ع. خارجي 1</th><th>ع. خارجي 2</th>
-            <th>النوع</th><th>الشهر / Month</th><th>الحالة / Status</th>
+            <th>رقم الحساب</th><th>البروكر</th><th>مسوّق داخلي</th>
+            <th>مسوّق خارجي 1</th><th>مسوّق خارجي 2</th>
+            <th>إيداع أولي</th><th>إيداع شهري</th>
+            <th>ع. بروكر</th><th>ع. داخلي</th><th>ع. خارجي 1</th><th>ع. خارجي 2</th>
+            <th>النوع</th><th>الشهر</th><th>الحالة</th>
           </tr>
         </thead>
         <tbody id="rpt-tbody"></tbody>
@@ -89,23 +89,103 @@
   </div>
 </div>
 
-<!-- ── TAB: Dashboard ── -->
+<!-- ── TAB: Dashboard (BI Style) ── -->
 <div id="tab-dash" style="display:none">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" id="rpt-kpis" style="display:none">
-    <div class="panel" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px">
-      <div class="kpi-card kpi-blue"><div class="kpi-label">السجلات</div><div class="kpi-value" id="rpt-k-total">—</div></div>
-      <div class="kpi-card kpi-green"><div class="kpi-label">إيداع شهري</div><div class="kpi-value" id="rpt-k-mon">—</div></div>
-      <div class="kpi-card kpi-teal"><div class="kpi-label">إيداع أولي</div><div class="kpi-value" id="rpt-k-dep">—</div></div>
-      <div class="kpi-card kpi-orange"><div class="kpi-label">معدّلة</div><div class="kpi-value" id="rpt-k-mod">—</div></div>
+
+  <!-- Auto-filter bar for dashboard -->
+  <div class="panel" style="padding:12px 16px;margin-bottom:12px;background:rgba(46,134,171,.05);border-color:rgba(46,134,171,.2)">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:11px;color:var(--mu);font-weight:700">🔍 فلتر سريع:</span>
+      <select id="db-branch" class="form-control" style="min-width:130px" onchange="buildDashboard()"><option value="">كل الفروع</option></select>
+      <select id="db-broker" class="form-control" style="min-width:130px" onchange="buildDashboard()"><option value="">كل البروكرات</option></select>
+      <select id="db-marketer" class="form-control" style="min-width:130px" onchange="buildDashboard()"><option value="">كل المسوّقين</option></select>
+      <select id="db-period" class="form-control" style="min-width:110px" onchange="buildDashboard()">
+        <option value="all">كل الفترات</option>
+        <option value="3">آخر 3 أشهر</option>
+        <option value="6">آخر 6 أشهر</option>
+        <option value="12">آخر 12 شهر</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="clearDashFilters()">✕ مسح</button>
     </div>
-    <div class="panel"><div class="panel-header"><div class="panel-title">🥇 أفضل بروكر في التقرير</div></div>
-      <div class="panel-body" id="rpt-top-broker"></div></div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-    <div class="panel"><div class="panel-header"><div class="panel-title">📊 إيداع شهري بالبروكر</div></div>
-      <div style="height:220px;padding:14px;position:relative"><canvas id="rpt-chart-broker"></canvas></div></div>
-    <div class="panel"><div class="panel-header"><div class="panel-title">🥧 توزيع الحسابات بالنوع</div></div>
-      <div style="height:220px;padding:14px;position:relative"><canvas id="rpt-chart-kind"></canvas></div></div>
+
+  <!-- KPI Row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+    <div class="panel" style="padding:16px;text-align:center">
+      <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">إجمالي الحسابات</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--pri2)" id="db-k-total">—</div>
+    </div>
+    <div class="panel" style="padding:16px;text-align:center">
+      <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">إيداع أولي</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--gr)" id="db-k-dep">—</div>
+    </div>
+    <div class="panel" style="padding:16px;text-align:center">
+      <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">حسابات جديدة</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--or)" id="db-k-new">—</div>
+    </div>
+    <div class="panel" style="padding:16px;text-align:center">
+      <div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">حسابات فرعية</div>
+      <div style="font-size:2rem;font-weight:900;color:var(--pu,#7B68EE)" id="db-k-sub">—</div>
+    </div>
+  </div>
+
+  <!-- Row 2: Best Broker + Best Marketer + Kind Donut -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+
+    <!-- Best Broker -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">🥇 أفضل بروكر</div></div>
+      <div class="panel-body" id="db-top-broker" style="padding:10px">
+        <div style="color:var(--mu);font-size:12px;text-align:center;padding:20px">جارٍ التحميل…</div>
+      </div>
+    </div>
+
+    <!-- Best Marketer -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">🥈 أفضل مسوّق</div></div>
+      <div class="panel-body" id="db-top-marketer" style="padding:10px">
+        <div style="color:var(--mu);font-size:12px;text-align:center;padding:20px">جارٍ التحميل…</div>
+      </div>
+    </div>
+
+    <!-- Account kind donut -->
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">🥧 New / Sub</div></div>
+      <div style="height:160px;padding:10px;position:relative"><canvas id="db-chart-kind"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Accounts per broker bar + Monthly trend -->
+  <div style="display:grid;grid-template-columns:3fr 2fr;gap:12px;margin-bottom:12px">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">📊 عدد الحسابات بالبروكر</div></div>
+      <div style="height:220px;padding:12px;position:relative"><canvas id="db-chart-broker-cnt"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">📈 توزيع الإيداع الأولي بالبروكر</div></div>
+      <div style="height:220px;padding:12px;position:relative"><canvas id="db-chart-broker-dep"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Accounts per month + Marketer performance table -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">📅 الحسابات شهرياً</div></div>
+      <div style="height:200px;padding:12px;position:relative"><canvas id="db-chart-monthly"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">📋 أداء المسوّقين</div></div>
+      <div class="panel-body" style="padding:8px;max-height:230px;overflow-y:auto" id="db-marketer-table">
+        <div style="color:var(--mu);font-size:12px;text-align:center;padding:20px">لا توجد بيانات بعد</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="db-empty" style="text-align:center;padding:60px 20px;color:var(--mu)">
+    <div style="font-size:48px;margin-bottom:12px">📊</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">الداشبورد جاهز</div>
+    <div style="font-size:12px">استخدم فلتر الأعلى أو انقر ⚡ توليد التقرير من التبويب الرئيسي</div>
   </div>
 </div>
 
@@ -132,9 +212,11 @@
 
 @push('scripts')
 <script>
-let RD = []; // Report data
+let RD = []; // Full report data (all fetched records)
+let DB = []; // Dashboard-filtered subset
 let rptCharts = {};
-const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE','#E05050','#26D4E8'];
+let allEmployees = []; // cached employees for dashboard filter
+const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE','#E05050','#26D4E8','#FF6B6B','#4ECDC4'];
 
 // ── Tab switching ──────────────────────────────────────────
 let curTab = 'table';
@@ -145,14 +227,14 @@ function switchTab(name) {
     if (btn) { btn.style.background = t===name ? 'var(--bg3)' : ''; btn.style.color = t===name ? 'var(--pri2)' : 'var(--m2)'; }
   });
   curTab = name;
-  if (RD.length && (name==='dash'||name==='diagrams')) buildCharts();
+  if (name === 'dash') buildDashboard();
+  else if (name === 'diagrams' && RD.length) buildDiagrams();
 }
 switchTab('table');
 
 // ── Load filter options ────────────────────────────────────
 async function loadFilterOptions() {
-  const [settings, employees, branches] = await Promise.all([
-    api('GET', '/cards?per_page=1'),
+  const [employees, branches] = await Promise.all([
     api('GET', '/employees?status=approved'),
     api('GET', '/branches'),
   ]);
@@ -169,13 +251,27 @@ async function loadFilterOptions() {
   });
 
   if (employees.success) {
+    allEmployees = employees.data;
+    // Table filter: broker by name
     const sel = document.getElementById('rf-broker');
-    employees.data.forEach(e => { const o=document.createElement('option');o.value=e.name;o.textContent=e.name;sel.appendChild(o); });
+    employees.data.forEach(e => { const o=document.createElement('option');o.value=e.name;o.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');sel.appendChild(o); });
+
+    // Dashboard filter: broker & marketer by id
+    const dbBroker = document.getElementById('db-broker');
+    const dbMkt    = document.getElementById('db-marketer');
+    employees.data.forEach(e => {
+      const ob=document.createElement('option'); ob.value=e.id; ob.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦'); dbBroker.appendChild(ob);
+      const om=document.createElement('option'); om.value=e.id; om.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦'); dbMkt.appendChild(om);
+    });
   }
 
-  const brSel = document.getElementById('rf-branch');
-  if (brSel && branches.success) {
-    branches.data.forEach(b => { const o=document.createElement('option');o.value=b.id;o.textContent=b.name_ar;brSel.appendChild(o); });
+  if (branches.success) {
+    const brSel = document.getElementById('rf-branch');
+    const dbBr  = document.getElementById('db-branch');
+    branches.data.forEach(b => {
+      if (brSel) { const o=document.createElement('option');o.value=b.id;o.textContent=b.name_ar;brSel.appendChild(o); }
+      if (dbBr)  { const o=document.createElement('option');o.value=b.id;o.textContent=b.name_ar;dbBr.appendChild(o);  }
+    });
   }
 }
 
@@ -198,7 +294,7 @@ async function generateReport() {
   params.set('per_page', 500);
 
   const r = await api('GET', '/cards/report?' + params);
-  if (!r.success) { toast('خطأ في عرض التقرير', 'error'); return; }
+  if (!r.success) { toast('خطأ في توليد التقرير', 'error'); return; }
 
   RD = r.data || [];
   const s = r.summary;
@@ -212,280 +308,300 @@ async function generateReport() {
 
   document.getElementById('rpt-tbody').innerHTML = RD.map(c => `
     <tr class="${c.status==='modified'?'row-modified':''}">
-      <td>
-        ${c.cc_branch_id?`<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(29,158,117,.15);color:#1D9E75;border:1px solid rgba(29,158,117,.3);margin-left:3px">📞CC</span>`:''}
-        <span class="ac-num">#${c.account_number}${c.status==='modified'?' 🟡':''}</span>
-      </td>
-      <td style="font-size:11px">${c.cc_branch_id ? `<span style="color:#1D9E75">${c.cc_agent?.name||'—'}</span><br><span class="mono" style="font-size:10px;color:var(--teal)">$${c.cc_agent_commission||0}</span>` : '<span style="color:var(--mu)">—</span>'}</td>
+      <td><span class="ac-num">#${c.account_number}${c.status==='modified'?' 🟡':''}</span></td>
       <td style="font-weight:600;color:var(--pri2)">${c.broker?.name||'—'}</td>
       <td style="color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?c.marketer.name:'—'}</td>
       <td style="color:var(--pu)">${c.ext_marketer1?.name||'—'}</td>
       <td style="color:var(--pu)">${c.ext_marketer2?.name||'—'}</td>
       <td class="mono c-blue">${fmt(c.initial_deposit)}</td>
       <td class="mono c-green">${fmt(c.monthly_deposit)}</td>
-      <td class="mono c-blue">$${c.broker_commission}</td>
-      <td class="mono c-green">$${c.marketer_commission||0}</td>
-      <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}</td>
-      <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}</td>
+      <td class="mono c-blue">$${c.broker_commission}/lot</td>
+      <td class="mono c-green">$${c.marketer_commission||0}/lot</td>
+      <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}/lot</td>
+      <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}/lot</td>
       <td><span class="badge ${c.account_kind==='new'?'badge-green':'badge-blue'}">${c.account_kind==='new'?'NEW':'SUB'}</span></td>
       <td style="color:var(--mu)">${c.month}</td>
       <td>${c.status==='modified'?'<span class="badge badge-orange">✏️ معدّل</span>':c.status==='new_added'?'<span class="badge badge-green">🆕 جديد</span>':'<span class="badge badge-blue">عادي</span>'}</td>
-    </tr>`).join('') || '<tr><td colspan="15" style="text-align:center;padding:30px;color:var(--mu)">لا توجد نتائج</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="14" style="text-align:center;padding:30px;color:var(--mu)">لا توجد نتائج</td></tr>';
 
   document.getElementById('rpt-table-wrap').style.display = 'block';
 
-  // Update KPIs for dashboard tab
-  document.getElementById('rpt-k-total').textContent = RD.length.toLocaleString();
-  document.getElementById('rpt-k-dep').textContent   = fmtK(s.total_initial_deposit);
-  document.getElementById('rpt-k-mon').textContent   = fmtK(s.total_monthly_deposit);
-  document.getElementById('rpt-k-mod').textContent   = s.modified_count;
-
-  if (curTab === 'dash' || curTab === 'diagrams') buildCharts();
+  if (curTab === 'dash') buildDashboard();
+  else if (curTab === 'diagrams') buildDiagrams();
 
   toast(`تقرير: ${RD.length} سجل — معدّلة: ${s.modified_count} 🟡`, 'success');
 }
 
-// ── Build Charts ───────────────────────────────────────────
+// ── Chart helpers ──────────────────────────────────────────
 function destroyChart(id) { if (rptCharts[id]) { rptCharts[id].destroy(); rptCharts[id]=null; } }
-const tc = () => getComputedStyle(document.documentElement).getPropertyValue('--mu').trim() || '#5A7A9A';
+const tc = () => '#5A7A9A';
 const gc = () => 'rgba(37,58,99,.3)';
 
-// ── Build KPI Strip ──────────────────────────────────────────
-function buildKpiStrip(data, summary) {
-  const strip = document.getElementById('rpt-kpi-strip');
-  if (!strip) return;
-  const total      = data.length;
-  const totalDep   = data.reduce((s,r)=>s+(+r.initial_deposit||0),0);
-  const totalMon   = data.reduce((s,r)=>s+(+r.monthly_deposit||0),0);
-  const avgBc      = total ? data.reduce((s,r)=>s+(+r.broker_commission||0),0)/total : 0;
-  const ccCount    = data.filter(r=>r.cc_branch_id).length;
-  strip.innerHTML = `
-    <div class="kpi-rpt">
-      <div class="kpi-rpt-val" style="color:var(--teal)">${total.toLocaleString()}</div>
-      <div class="kpi-rpt-lbl">إجمالي الكروت</div>
-    </div>
-    <div class="kpi-rpt">
-      <div class="kpi-rpt-val" style="color:var(--pri2)">$${(totalDep/1000000).toFixed(1)}M</div>
-      <div class="kpi-rpt-lbl">إجمالي الإيداعات</div>
-    </div>
-    <div class="kpi-rpt">
-      <div class="kpi-rpt-val" style="color:var(--or)">$${avgBc.toFixed(2)}</div>
-      <div class="kpi-rpt-lbl">متوسط ع. بروكر</div>
-    </div>
-    <div class="kpi-rpt">
-      <div class="kpi-rpt-val" style="color:var(--re)">${ccCount}</div>
-      <div class="kpi-rpt-lbl">حسابات CC</div>
-    </div>
-    <div class="kpi-rpt">
-      <div class="kpi-rpt-val" style="color:var(--pu)">${total>0 ? ((total-ccCount)/total*100).toFixed(1)+'%' : '—'}</div>
-      <div class="kpi-rpt-lbl">عادي / Normal</div>
-    </div>`;
+// ── Dashboard filter helper ────────────────────────────────
+function getDbFiltered() {
+  let data = RD.length ? RD : [];
+  const branchId  = document.getElementById('db-branch')?.value;
+  const brokerId  = document.getElementById('db-broker')?.value;
+  const marketerId= document.getElementById('db-marketer')?.value;
+  const period    = document.getElementById('db-period')?.value || 'all';
+
+  if (branchId)   data = data.filter(c => String(c.branch_id) === branchId);
+  if (brokerId)   data = data.filter(c => String(c.broker_id) === brokerId);
+  if (marketerId) data = data.filter(c =>
+    String(c.marketer_id) === marketerId ||
+    String(c.ext_marketer1_id) === marketerId ||
+    String(c.ext_marketer2_id) === marketerId
+  );
+  if (period !== 'all') {
+    const months = parseInt(period);
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - months);
+    data = data.filter(c => {
+      if (!c.month_date && c.month) {
+        // parse "Jan 2025" style
+        const parsed = new Date('01 ' + c.month);
+        return parsed >= cutoff;
+      }
+      return new Date(c.month_date) >= cutoff;
+    });
+  }
+  return data;
 }
 
-// ── Build Donut Chart ─────────────────────────────────────────
-function buildDonutChart(canvasId, centerId, data, colors) {
-  const existing = Chart.getChart(canvasId);
-  if (existing) existing.destroy();
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  return new Chart(ctx, {
-    type:'doughnut',
-    data:{
-      labels: data.map(d=>d.label),
-      datasets:[{
-        data: data.map(d=>d.val),
-        backgroundColor: colors.map(c=>c+'BB'),
-        borderColor: colors,
-        borderWidth:1.5, hoverOffset:5,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false, cutout:'68%',
-      plugins:{
-        legend:{position:'bottom',labels:{color:'var(--mu)',font:{size:10},boxWidth:8,padding:6}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString()}`}}
-      },
-      animation:{animateRotate:true,duration:1200}
+function clearDashFilters() {
+  ['db-branch','db-broker','db-marketer'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const p = document.getElementById('db-period'); if(p) p.value='all';
+  buildDashboard();
+}
+
+// ── Build Dashboard ────────────────────────────────────────
+async function buildDashboard() {
+  // If no data loaded yet, try to auto-load everything
+  if (!RD.length) {
+    const r = await api('GET', '/cards/report?per_page=1000');
+    if (r.success) {
+      RD = r.data || [];
     }
-  });
-}
+  }
 
-// ── Build Gauge Chart ─────────────────────────────────────────
-function buildGaugeChart(canvasId, val, max) {
-  const existing = Chart.getChart(canvasId);
-  if (existing) existing.destroy();
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  const pct = Math.min(val/max, 1);
-  return new Chart(ctx, {
-    type:'doughnut',
-    data:{datasets:[{
-      data:[pct*100, (1-pct)*100],
-      backgroundColor:['rgba(20,184,126,.8)','rgba(255,255,255,.05)'],
-      borderColor:['#14B87E','transparent'],
-      borderWidth:[1.5,0],
-      circumference:180, rotation:-90,
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false, cutout:'72%',
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      animation:{duration:1500}
-    }
-  });
-}
+  const data = getDbFiltered();
+  const empty = document.getElementById('db-empty');
 
-// ── Build Radar Chart ─────────────────────────────────────────
-function buildRadarChart(canvasId, datasets) {
-  const existing = Chart.getChart(canvasId);
-  if (existing) existing.destroy();
-  const ctx = document.getElementById(canvasId);
-  if (!ctx) return;
-  const C = ['#14B87E','#37A0CC','#F59820','#E04848','#7C6EEE'];
-  return new Chart(ctx, {
-    type:'radar',
-    data:{
-      labels:['الإيداعات','عدد الكروت','ع. بروكر','نشاط CC','المسوّقون','الاعتماد'],
-      datasets: datasets.map((d,i)=>({
-        label: d.label,
-        data: d.data,
-        borderColor: C[i], backgroundColor: C[i]+'20',
-        borderWidth:2, pointBackgroundColor:C[i], pointRadius:3,
-      }))
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{color:'var(--mu)',font:{size:10},boxWidth:8}}},
-      scales:{r:{
-        grid:{color:'rgba(255,255,255,.07)'},
-        angleLines:{color:'rgba(255,255,255,.05)'},
-        ticks:{display:false},
-        pointLabels:{color:'var(--tx2)',font:{size:9}},
-        min:0, max:100,
-      }},
-      animation:{duration:1500}
-    }
-  });
-}
+  if (!data.length) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
 
-// ── Build Horizontal Bars ─────────────────────────────────────
-function buildHbarList(containerId, items) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  const max = Math.max(...items.map(i=>i.val));
-  const C = ['#14B87E','#37A0CC','#F59820','#E04848','#7C6EEE','#EC4899'];
-  el.innerHTML = items.map((item,i)=>`
-    <div class="hbar-item">
-      <div class="hbar-head">
-        <span style="color:var(--tx2)">${item.label}</span>
-        <span style="color:${C[i]};font-family:monospace;font-weight:700">$${item.val.toFixed(2)}</span>
+  // ── KPIs ──────────────────────────────────────────────────
+  const totalDep   = data.reduce((s,c)=>s+parseFloat(c.initial_deposit||0),0);
+  const newAccts   = data.filter(c=>c.account_kind==='new').length;
+  const subAccts   = data.filter(c=>c.account_kind==='sub').length;
+  document.getElementById('db-k-total').textContent = data.length.toLocaleString();
+  document.getElementById('db-k-dep').textContent   = fmtK(totalDep);
+  document.getElementById('db-k-new').textContent   = newAccts.toLocaleString();
+  document.getElementById('db-k-sub').textContent   = subAccts.toLocaleString();
+
+  // ── Broker counts map ──────────────────────────────────────
+  const brokerCnt={}, brokerDep={};
+  data.forEach(c => {
+    const n = c.broker?.name || 'غير محدد';
+    brokerCnt[n] = (brokerCnt[n]||0)+1;
+    brokerDep[n] = (brokerDep[n]||0)+parseFloat(c.initial_deposit||0);
+  });
+  const sortedBrokers = Object.entries(brokerCnt).sort((a,b)=>b[1]-a[1]);
+
+  // ── Top Broker ────────────────────────────────────────────
+  const top1 = sortedBrokers[0];
+  const topPercent1 = top1 ? Math.round(top1[1]/data.length*100) : 0;
+  document.getElementById('db-top-broker').innerHTML = sortedBrokers.slice(0,5).map((([n,cnt],i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i<sortedBrokers.slice(0,5).length-1?'border-bottom:1px solid var(--brd1)':''}">
+      <span style="font-size:16px">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--tx)">${n}</div>
+        <div style="height:4px;background:var(--brd1);border-radius:2px;margin-top:3px">
+          <div style="height:4px;background:var(--pri2);border-radius:2px;width:${Math.round(cnt/top1[1]*100)}%"></div>
+        </div>
       </div>
-      <div class="hbar-track">
-        <div class="hbar-fill" style="width:${item.val/max*100}%;background:${C[i]}"></div>
-      </div>
-    </div>`).join('');
-}
+      <span style="font-size:11px;font-weight:700;color:var(--pri2)">${cnt}</span>
+    </div>`)).join('') || '<div style="color:var(--mu);font-size:12px;text-align:center;padding:16px">لا توجد بيانات</div>';
 
-function buildCharts() {
-  if (!RD.length) return;
-
-  // ── Broker bar ────────────────────────────────────────────
-  const brokerMap = {};
-  RD.forEach(c => {
-    const n = c.broker?.name || 'Unknown';
-    brokerMap[n] = (brokerMap[n]||0) + parseFloat(c.monthly_deposit||0);
+  // ── Top Marketer ──────────────────────────────────────────
+  const mktCnt={};
+  data.forEach(c => {
+    if (c.marketer?.name)    mktCnt[c.marketer.name]    = (mktCnt[c.marketer.name]||0)+1;
+    if (c.ext_marketer1?.name) mktCnt[c.ext_marketer1.name] = (mktCnt[c.ext_marketer1.name]||0)+1;
+    if (c.ext_marketer2?.name) mktCnt[c.ext_marketer2.name] = (mktCnt[c.ext_marketer2.name]||0)+1;
   });
-  const bNames = Object.keys(brokerMap), bVals = bNames.map(b=>brokerMap[b]);
-  destroyChart('broker');
-  rptCharts.broker = new Chart(document.getElementById('rpt-chart-broker'), {
-    type:'bar', data:{labels:bNames, datasets:[{data:bVals, backgroundColor:COLORS, borderRadius:4}]},
+  const sortedMkt = Object.entries(mktCnt).sort((a,b)=>b[1]-a[1]);
+  const topM1 = sortedMkt[0];
+  document.getElementById('db-top-marketer').innerHTML = sortedMkt.slice(0,5).map(([n,cnt],i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i<sortedMkt.slice(0,5).length-1?'border-bottom:1px solid var(--brd1)':''}">
+      <span style="font-size:16px">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅'}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--tx)">${n}</div>
+        <div style="height:4px;background:var(--brd1);border-radius:2px;margin-top:3px">
+          <div style="height:4px;background:var(--gr);border-radius:2px;width:${topM1?Math.round(cnt/topM1[1]*100):100}%"></div>
+        </div>
+      </div>
+      <span style="font-size:11px;font-weight:700;color:var(--gr)">${cnt}</span>
+    </div>`).join('') || '<div style="color:var(--mu);font-size:12px;text-align:center;padding:16px">لا توجد بيانات</div>';
+
+  // ── Kind donut ────────────────────────────────────────────
+  destroyChart('dbKind');
+  const kindEl = document.getElementById('db-chart-kind');
+  if (kindEl) rptCharts.dbKind = new Chart(kindEl, {
+    type:'doughnut',
+    data:{labels:['New — جديد','Sub — فرعي'],datasets:[{data:[newAccts,subAccts],backgroundColor:['#2E86AB','#22C97A'],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{position:'bottom',labels:{color:tc(),font:{size:9},boxWidth:8,padding:6}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/data.length*100)}%)`}}}}
+  });
+
+  // ── Broker count bar ──────────────────────────────────────
+  const topBrkrs = sortedBrokers.slice(0,10);
+  destroyChart('dbBrokerCnt');
+  const bCntEl = document.getElementById('db-chart-broker-cnt');
+  if (bCntEl) rptCharts.dbBrokerCnt = new Chart(bCntEl, {
+    type:'bar',
+    data:{labels:topBrkrs.map(([n])=>n), datasets:[{data:topBrkrs.map(([,c])=>c), backgroundColor:COLORS, borderRadius:5, borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${ctx.raw} حساب (${Math.round(ctx.raw/data.length*100)}%)`}}},
+      scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}}}}
+  });
+
+  // ── Broker initial deposit doughnut ───────────────────────
+  const topBrkrDep = Object.entries(brokerDep).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  destroyChart('dbBrokerDep');
+  const bDepEl = document.getElementById('db-chart-broker-dep');
+  if (bDepEl) rptCharts.dbBrokerDep = new Chart(bDepEl, {
+    type:'doughnut',
+    data:{labels:topBrkrDep.map(([n])=>n), datasets:[{data:topBrkrDep.map(([,v])=>Math.round(v)), backgroundColor:COLORS, borderWidth:2, borderColor:'var(--bg3)', hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'right',labels:{color:tc(),font:{size:8},boxWidth:7,padding:4}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmtK(ctx.raw)}`}}}}
+  });
+
+  // ── Monthly accounts bar ──────────────────────────────────
+  const mCnt={};
+  data.forEach(c => { mCnt[c.month]=(mCnt[c.month]||0)+1; });
+  const mKeys = Object.keys(mCnt).sort((a,b)=>new Date('01 '+a)-new Date('01 '+b));
+  destroyChart('dbMonthly');
+  const mEl = document.getElementById('db-chart-monthly');
+  if (mEl) rptCharts.dbMonthly = new Chart(mEl, {
+    type:'bar',
+    data:{labels:mKeys, datasets:[{label:'عدد الحسابات',data:mKeys.map(m=>mCnt[m]),backgroundColor:'rgba(46,134,171,.75)',borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9},callback:v=>'$'+v.toLocaleString()},grid:{color:gc()}}}}
+      scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}}}}
   });
 
-  // ── Top broker for dashboard ────────────────────────────
-  const topBroker = Object.entries(brokerMap).sort((a,b)=>b[1]-a[1])[0];
-  const cnt = RD.filter(c => c.broker?.name === topBroker?.[0]).length;
-  document.getElementById('rpt-top-broker').innerHTML = topBroker ? `
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0">
-      <span style="font-size:28px">🥇</span>
-      <div><div style="font-size:16px;font-weight:800;color:var(--pri2)">${topBroker[0]}</div>
-      <div style="font-size:12px;color:var(--mu)">${cnt} حساب · ${fmtK(topBroker[1])}</div></div>
-    </div>` : '—';
-
-  // ── Kind pie ──────────────────────────────────────────────
-  const kinds = {};
-  RD.forEach(c => { const k = c.account_kind==='new'?'New':'Sub'; kinds[k]=(kinds[k]||0)+1; });
-  destroyChart('kind');
-  rptCharts.kind = new Chart(document.getElementById('rpt-chart-kind'), {
-    type:'doughnut', data:{labels:Object.keys(kinds), datasets:[{data:Object.values(kinds), backgroundColor:['#2E86AB','#22C97A'], borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:tc(),font:{size:9},boxWidth:8,padding:6}}}}
+  // ── Marketer performance table ────────────────────────────
+  const mktFull = {};
+  data.forEach(c => {
+    [[c.marketer,'داخلي'],[c.ext_marketer1,'خارجي 1'],[c.ext_marketer2,'خارجي 2']].forEach(([emp,type]) => {
+      if (!emp?.name) return;
+      if (!mktFull[emp.name]) mktFull[emp.name] = {name:emp.name,type,cnt:0,dep:0};
+      mktFull[emp.name].cnt++;
+      mktFull[emp.name].dep += parseFloat(c.initial_deposit||0);
+    });
   });
+  const mktRows = Object.values(mktFull).sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('db-marketer-table').innerHTML = mktRows.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="color:var(--mu)">
+        <th style="text-align:right;padding:4px 6px">#</th>
+        <th style="text-align:right;padding:4px 6px">الاسم</th>
+        <th style="text-align:center;padding:4px 6px">النوع</th>
+        <th style="text-align:center;padding:4px 6px">الحسابات</th>
+        <th style="text-align:center;padding:4px 6px">الإيداع الأولي</th>
+        <th style="text-align:center;padding:4px 6px">النسبة</th>
+      </tr></thead>
+      <tbody>${mktRows.map((m,i)=>`
+        <tr style="${i%2===0?'background:rgba(46,134,171,.03)':''}">
+          <td style="padding:5px 6px;color:var(--mu)">${i+1}</td>
+          <td style="padding:5px 6px;font-weight:700">${m.name}</td>
+          <td style="padding:5px 6px;text-align:center"><span class="badge ${m.type==='داخلي'?'badge-blue':'badge-orange'}" style="font-size:9px">${m.type}</span></td>
+          <td style="padding:5px 6px;text-align:center;font-weight:700;color:var(--pri2)">${m.cnt}</td>
+          <td style="padding:5px 6px;text-align:center;color:var(--gr)">${fmtK(m.dep)}</td>
+          <td style="padding:5px 6px;text-align:center">
+            <div style="background:var(--brd1);border-radius:2px;height:5px;min-width:50px">
+              <div style="background:var(--gr);border-radius:2px;height:5px;width:${mktRows[0]?Math.round(m.cnt/mktRows[0].cnt*100):0}%"></div>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>` : '<div style="color:var(--mu);font-size:12px;text-align:center;padding:16px">لا توجد بيانات مسوّقين</div>';
+}
+
+// ── Build Diagrams (Diagrams tab) ──────────────────────────
+function buildDiagrams() {
+  if (!RD.length) return;
+  const data = RD;
 
   // ── Monthly line ──────────────────────────────────────────
   const mDep={}, mCnt={};
-  RD.forEach(c => {
-    mDep[c.month]=(mDep[c.month]||0)+parseFloat(c.monthly_deposit||0);
+  data.forEach(c => {
+    mDep[c.month]=(mDep[c.month]||0)+parseFloat(c.initial_deposit||0);
     mCnt[c.month]=(mCnt[c.month]||0)+1;
   });
-  const mKeys = Object.keys(mDep).sort();
+  const mKeys = Object.keys(mDep).sort((a,b)=>new Date('01 '+a)-new Date('01 '+b));
   destroyChart('line');
-  rptCharts.line = new Chart(document.getElementById('rpt-line'), {
+  const lineEl = document.getElementById('rpt-line');
+  if (lineEl) rptCharts.line = new Chart(lineEl, {
     type:'line',
-    data:{labels:mKeys, datasets:[{label:'إيداع شهري',data:mKeys.map(m=>mDep[m]),borderColor:'var(--pri2)',backgroundColor:'rgba(46,134,171,.1)',tension:.4,fill:true,pointRadius:4}]},
+    data:{labels:mKeys, datasets:[{label:'إيداع أولي',data:mKeys.map(m=>mDep[m]),borderColor:'#2E86AB',backgroundColor:'rgba(46,134,171,.1)',tension:.4,fill:true,pointRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9},callback:v=>'$'+v.toLocaleString()},grid:{color:gc()}}}}
   });
 
   // ── Count bar ──────────────────────────────────────────────
   destroyChart('cnt');
-  rptCharts.cnt = new Chart(document.getElementById('rpt-cnt-bar'), {
+  const cntEl = document.getElementById('rpt-cnt-bar');
+  if (cntEl) rptCharts.cnt = new Chart(cntEl, {
     type:'bar', data:{labels:mKeys, datasets:[{label:'عدد الحسابات',data:mKeys.map(m=>mCnt[m]),backgroundColor:'rgba(34,201,122,.65)',borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}}}}
   });
 
-  // ── Compare ────────────────────────────────────────────────
-  const brDep2={}, brMon2={};
-  RD.forEach(c => {
-    const n=c.broker?.name||'Unknown';
+  // ── Compare initial vs broker commission ──────────────────
+  const brDep2={}, brComm2={};
+  data.forEach(c => {
+    const n=c.broker?.name||'غير محدد';
     brDep2[n]=(brDep2[n]||0)+parseFloat(c.initial_deposit||0);
-    brMon2[n]=(brMon2[n]||0)+parseFloat(c.monthly_deposit||0);
+    if (!brComm2[n]) brComm2[n]=[];
+    brComm2[n].push(parseFloat(c.broker_commission||0));
   });
   const brs2=Object.keys(brDep2);
   destroyChart('compare');
-  rptCharts.compare = new Chart(document.getElementById('rpt-compare'), {
+  const compEl = document.getElementById('rpt-compare');
+  if (compEl) rptCharts.compare = new Chart(compEl, {
     type:'bar',
     data:{labels:brs2, datasets:[
       {label:'إيداع أولي',data:brs2.map(b=>brDep2[b]),backgroundColor:'rgba(46,134,171,.7)',borderRadius:3},
-      {label:'إيداع شهري',data:brs2.map(b=>brMon2[b]),backgroundColor:'rgba(34,201,122,.6)',borderRadius:3},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:tc(),font:{size:9},boxWidth:8}}},
       scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9},callback:v=>'$'+v.toLocaleString()},grid:{color:gc()}}}}
   });
 
   // ── Mod ratio ──────────────────────────────────────────────
-  const modCount=RD.filter(c=>c.status==='modified').length;
-  const normalCount=RD.filter(c=>c.status!=='modified'&&c.status!=='new_added').length;
-  const newCount=RD.filter(c=>c.status==='new_added').length;
+  const modCount=data.filter(c=>c.status==='modified').length;
+  const normalCount=data.filter(c=>c.status!=='modified'&&c.status!=='new_added').length;
+  const newCount=data.filter(c=>c.status==='new_added').length;
   destroyChart('modratio');
-  rptCharts.modratio = new Chart(document.getElementById('rpt-mod-ratio'), {
+  const mrEl = document.getElementById('rpt-mod-ratio');
+  if (mrEl) rptCharts.modratio = new Chart(mrEl, {
     type:'doughnut',
     data:{labels:['معدّلة 🟡','عادية','مضافة جديدة'],datasets:[{data:[modCount,normalCount,newCount],backgroundColor:['#F5A623','#2E86AB','#22C97A'],borderWidth:2,borderColor:'var(--bg3)'}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:tc(),font:{size:9},boxWidth:8,padding:6}}}}
   });
 
-  // ── Commission rate ────────────────────────────────────────
-  const brComm2={};
-  RD.forEach(c => {
-    const n=c.broker?.name||'Unknown';
-    if (!brComm2[n]) brComm2[n]=[];
-    brComm2[n].push(parseFloat(c.broker_commission||0));
-  });
+  // ── Avg commission rate per broker ─────────────────────────
   const brs3=Object.keys(brComm2);
   const avgComm=brs3.map(b=>brComm2[b].reduce((a,v)=>a+v,0)/brComm2[b].length);
   destroyChart('comm');
-  rptCharts.comm = new Chart(document.getElementById('rpt-comm-rate'), {
-    type:'bar', data:{labels:brs3,datasets:[{label:'ع. بروكر ($)',data:avgComm,backgroundColor:'rgba(123,104,238,.7)',borderRadius:4}]},
+  const commEl = document.getElementById('rpt-comm-rate');
+  if (commEl) rptCharts.comm = new Chart(commEl, {
+    type:'bar', data:{labels:brs3,datasets:[{label:'ع. بروكر ($/lot)',data:avgComm,backgroundColor:'rgba(123,104,238,.7)',borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{ticks:{color:tc(),font:{size:9}},grid:{color:gc()}},y:{ticks:{color:tc(),font:{size:9},callback:v=>'$'+v},grid:{color:gc()}}}}
   });
@@ -499,8 +615,8 @@ function exportRptExcel() {
     c.account_number, c.broker?.name||'', c.marketer?.name||'',
     c.ext_marketer1?.name||'', c.ext_marketer2?.name||'',
     c.initial_deposit, c.monthly_deposit,
-    '$'+c.broker_commission+'', '$'+(c.marketer_commission||0)+'',
-    '$'+(c.ext_commission1||0)+'', '$'+(c.ext_commission2||0)+'',
+    '$'+c.broker_commission+'/lot', '$'+(c.marketer_commission||0)+'/lot',
+    '$'+(c.ext_commission1||0)+'/lot', '$'+(c.ext_commission2||0)+'/lot',
     c.account_kind, c.month,
     c.status==='modified'?'🟡 معدّل':c.status==='new_added'?'🆕 جديد':'عادي',
   ])];
@@ -535,8 +651,5 @@ function clearRptFilters() {
 }
 
 loadFilterOptions();
-document.addEventListener('DOMContentLoaded', () => {
-  loadFilterOptions();
-});
 </script>
 @endpush
