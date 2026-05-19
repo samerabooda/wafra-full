@@ -17,7 +17,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 /* Brand */
 .brand{flex:1}
 .brand-logo-row{display:flex;align-items:center;gap:16px;margin-bottom:24px}
-.brand-logo{width:110px;height:110px;object-fit:contain;border-radius:18px;background:white;padding:9px;box-shadow:0 14px 44px rgba(46,134,171,.4)}
+.brand-logo-row svg{flex-shrink:0}
 .brand-name{font-size:1.8rem;font-weight:900;color:var(--tx)}
 .brand-name span{color:var(--pri2)}
 .brand-sub{font-size:12px;color:var(--mu);margin-top:3px}
@@ -37,8 +37,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
   padding:36px 32px;width:400px;flex-shrink:0;
   box-shadow:0 40px 90px rgba(0,0,0,.6);animation:cardUp .5s cubic-bezier(.16,1,.3,1)}
 @keyframes cardUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.card-logo{width:100px;height:100px;object-fit:contain;border-radius:18px;background:white;
-  padding:9px;margin:0 auto 14px;display:block;box-shadow:0 8px 24px rgba(46,134,171,.3)}
+/* card-logo replaced with inline SVG globe */
 .card-title{text-align:center;font-size:1rem;font-weight:800;margin-bottom:3px}
 .card-sub{text-align:center;font-size:11px;color:var(--mu);margin-bottom:22px}
 
@@ -86,13 +85,39 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 </style>
 </head>
 <body>
+
+{{-- Splash (standalone page — inline version) --}}
+<div id="wfr-splash" aria-hidden="true">
+  <div id="wfr-splash-inner">
+    @include('partials.globe', ['size'=>'xl', 'showText'=>true, 'gid'=>'lsplash'])
+    <div id="wfr-splash-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+<style>
+#wfr-splash{position:fixed;inset:0;z-index:99999;background:linear-gradient(145deg,#060D1B,#0C1830,#0E2040);display:flex;align-items:center;justify-content:center;animation:wfr-splash-out .4s ease-in 2.2s forwards;pointer-events:all}
+#wfr-splash-inner{display:flex;flex-direction:column;align-items:center;gap:18px;animation:wfr-splash-in .5s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes wfr-splash-in{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes wfr-splash-out{to{opacity:0;visibility:hidden;pointer-events:none}}
+#wfr-splash-dots{display:flex;gap:7px;margin-top:4px}
+#wfr-splash-dots span{width:7px;height:7px;border-radius:50%;background:rgba(90,205,230,.55);animation:wfr-dot-pulse .7s ease-in-out infinite alternate}
+#wfr-splash-dots span:nth-child(2){animation-delay:.22s}
+#wfr-splash-dots span:nth-child(3){animation-delay:.44s}
+@keyframes wfr-dot-pulse{from{opacity:.2;transform:scale(.7)}to{opacity:1;transform:scale(1.1)}}
+body.wfr-loading{overflow:hidden}
+</style>
+<script>
+document.body.classList.add('wfr-loading');
+var sp=document.getElementById('wfr-splash');
+if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-splash-out'){sp.remove();document.body.classList.remove('wfr-loading');}});}
+</script>
+
 <div class="login-wrap">
 
   <!-- Brand Left -->
   <div class="brand">
     <div class="brand-logo-row">
-      <img src="{{ asset('logo.png') }}" class="brand-logo" alt="وفرة الخليجية"
-           onerror="this.style.background='var(--pri3)';this.style.display='flex'">
+      @include('partials.globe', ['size'=>'lg', 'showText'=>false, 'gid'=>'brand',
+        'style'=>'border-radius:18px;background:white;padding:9px;box-shadow:0 14px 44px rgba(46,134,171,.4)'])
       <div>
         <div class="brand-name">وفرة <span>الخليجية</span></div>
         <div class="brand-sub">للخدمات المالية · Financial Services</div>
@@ -111,8 +136,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 
   <!-- Login Card Right -->
   <div class="login-card">
-    <img src="{{ asset('logo.png') }}" class="card-logo" alt=""
-         onerror="this.style.display='none'">
+    <div style="margin:0 auto 14px;display:block;width:fit-content">
+      @include('partials.globe', ['size'=>'md', 'showText'=>false, 'gid'=>'card',
+        'style'=>'border-radius:18px;background:white;padding:9px;box-shadow:0 8px 24px rgba(46,134,171,.3)'])
+    </div>
     <div class="card-title">وفرة الخليجية</div>
     <div class="card-sub">Commission Cards · بوابة الدخول</div>
 

@@ -398,13 +398,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 @stack('styles')
 </head>
 <body>
+
+{{-- ── Page-load animated splash (globe spins 2 s then fades) ── --}}
+@include('partials.splash')
+
 <div class="app-layout">
 
   {{-- SIDEBAR --}}
   <aside class="sidebar">
     <div class="sb-header">
-      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية"
-           onerror="this.style.display='none'">
+      @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'sb',
+        'style'=>'border-radius:8px;background:white;padding:3px;flex-shrink:0'])
       <div>
         <div class="sb-brand">وفرة الخليجية<small>Commission Cards</small></div>
       </div>
@@ -492,7 +496,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
-        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="" onerror="this.style.display='none'">
+        @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'tb',
+          'style'=>'border-radius:6px;background:white;padding:2px'])
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
           <div class="tb-sub">وفرة الخليجية / <span id="tb-branch">الإدارة المالية</span></div>
