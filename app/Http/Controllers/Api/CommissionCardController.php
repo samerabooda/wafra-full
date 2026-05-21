@@ -14,12 +14,12 @@ class CommissionCardController extends Controller
         'modifications.modifiedBy','createdBy',
     ];
 
-    // ── BRANCH ISOLATION: hard-lock branch managers to own branch ──
+    // ── BRANCH ISOLATION: hard-lock branch-scoped users to their own branch ──
     private function applyBranchScope($query, Request $request)
     {
         $user = $request->user();
-        if ($user->isBranchManager()) {
-            // HARD LOCK — cannot be bypassed by request params
+        if ($user->isScopedToBranch()) {
+            // HARD LOCK for branch_manager AND viewer — cannot be bypassed by request params
             $query->forBranch($user->branch_id);
         } elseif ($user->isFinanceAdmin() && $request->branch_id) {
             $query->forBranch((int)$request->branch_id);
@@ -27,11 +27,11 @@ class CommissionCardController extends Controller
         return $query;
     }
 
-    // ── Verify branch manager owns a specific card ──
+    // ── Verify branch-scoped user owns a specific card ──
     private function assertOwnership(CommissionCard $card, Request $request): void
     {
         $user = $request->user();
-        if ($user->isBranchManager() && (int)$card->branch_id !== (int)$user->branch_id) {
+        if ($user->isScopedToBranch() && (int)$card->branch_id !== (int)$user->branch_id) {
             abort(403, 'Access denied: this card does not belong to your branch.');
         }
     }
@@ -48,7 +48,7 @@ class CommissionCardController extends Controller
         if ($k  = $request->kind)         $query->where('account_kind', $k);
         if ($q  = $request->search)       $query->search($q);
         if ($request->modified_only)      $query->modified();
-        if ($min = $request->min_deposit) $query->where('monthly_deposit', '>=', (float)$min);
+        if ($min = $request->min_deposit) $query->where('initial_deposit', '>=', (float)$min);
 
         // Snapshot for summary aggregates (no eager loads, no pagination)
         $summaryQuery = clone $query;
@@ -78,8 +78,12 @@ class CommissionCardController extends Controller
 
         $user = $request->user();
 
-        // Branch managers are FORCED to their own branch
-        $branchId = $user->isBranchManager()
+        // Branch-scoped users (branch_manager + viewer) are FORCED to their own branch.
+        // Guard against null branch_id (shouldn't happen but prevents data leak).
+        if ($user->isScopedToBranch() && !$user->branch_id) {
+            return response()->json(['success'=>false,'message'=>'Account has no branch assigned. Contact Finance Admin.'],403);
+        }
+        $branchId = $user->isScopedToBranch()
             ? $user->branch_id
             : ($request->branch_id ? (int)$request->branch_id : null);
 
@@ -212,16 +216,21 @@ class CommissionCardController extends Controller
         if ($from = $request->month_from) { try { $query->whereDate('month_date','>=',Carbon::parse("01 {$from}")); } catch(\Exception $e){} }
         if ($to   = $request->month_to)   { try { $query->whereDate('month_date','<=',Carbon::parse("01 {$to}")->endOfMonth()); } catch(\Exception $e){} }
         if ($br   = $request->broker_id)   $query->forBroker((int)$br);
+        if ($brN  = $request->broker_name) $query->whereHas('broker', fn($q) => $q->where('name','like',"%{$brN}%"));
         if ($s    = $request->status)       $query->where('status',$s);
         if ($k    = $request->kind)         $query->where('account_kind',$k);
         if ($min  = $request->min_deposit)  $query->where('initial_deposit','>=',(float)$min);
+        if ($q    = $request->search)       $query->search($q);
 
-        $data = $query->orderBy('month_date','desc')->orderBy('account_number')->get();
+        // Safety cap: prevent memory exhaustion on very large datasets
+        $limit = min((int)($request->per_page ?? 5000), 10000);
+        $data  = $query->orderBy('month_date','desc')->orderBy('account_number')->limit($limit)->get();
 
         return response()->json([
-            'success'      => true,
-            'count'        => $data->count(),
-            'branch_scope' => $user->isBranchManager() ? ($user->branch?->name_ar ?? 'فرعك') : 'جميع الفروع',
+            'success'        => true,
+            'count'          => $data->count(),
+            'records_limited'=> $data->count() >= $limit,
+            'branch_scope'   => $user->isScopedToBranch() ? ($user->branch?->name_ar ?? 'فرعك') : 'جميع الفروع',
             'summary' => [
                 'total_initial_deposit' => round($data->sum('initial_deposit'),2),
                 'total_monthly_deposit' => round($data->sum('monthly_deposit'),2),

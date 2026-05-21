@@ -120,7 +120,7 @@ class ManagerController extends Controller
 
         $v = Validator::make($request->all(), [
             'name'          => 'sometimes|string|max:100',
-            'branch_id'     => 'sometimes|exists:branches,id',
+            'branch_id'     => 'sometimes|required|exists:branches,id',   // required when present — cannot nullify
             'is_active'     => 'sometimes|boolean',
             'permissions'   => 'sometimes|array',
             'permissions.*' => 'string|in:dashboard,cards,modified,reports,create_card,edit_card,employees,import,export,branch_switch',
@@ -180,7 +180,8 @@ class ManagerController extends Controller
     {
         if ($err = $this->requireFA($request)) return $err;
 
-        $manager       = User::findOrFail($id);
+        // Scope to non-FA users only — prevents accidentally resetting another FA's password
+        $manager = User::whereIn('role', ['branch_manager', 'viewer'])->findOrFail($id);
         $newPassword   = Str::upper(Str::random(4)) . '@' . rand(1000, 9999);
 
         $manager->update([

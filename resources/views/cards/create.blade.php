@@ -42,6 +42,8 @@
             </select>
           </div>
         </div>
+        @php $isScopedUser = auth()->user()?->isScopedToBranch(); @endphp
+        @if(!$isScopedUser)
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">الفرع</label>
@@ -54,6 +56,24 @@
             </select>
           </div>
         </div>
+        @else
+        {{-- Branch-scoped user: show read-only branch name, hidden f-branch input --}}
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">الفرع</label>
+            <div class="form-control" style="background:rgba(46,134,171,.08);color:var(--pri2);font-weight:700">
+              {{ auth()->user()->branch?->name_ar ?? 'فرعك المحدد' }}
+            </div>
+            <input type="hidden" id="f-branch" value="{{ auth()->user()->branch_id }}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">نوع التداول</label>
+            <select id="f-trading" class="form-control">
+              <option value="">— اختر —</option>
+            </select>
+          </div>
+        </div>
+        @endif
         <div class="form-group">
           <label class="form-label">نوع الحساب (New / Sub)</label>
           <select id="f-kind" class="form-control">

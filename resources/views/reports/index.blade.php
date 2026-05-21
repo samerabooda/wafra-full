@@ -216,6 +216,7 @@ let RD = []; // Full report data (all fetched records)
 let DB = []; // Dashboard-filtered subset
 let rptCharts = {};
 let allEmployees = []; // cached employees for dashboard filter
+let dashAutoLoaded = false; // prevent repeated auto-loads
 const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE','#E05050','#26D4E8','#FF6B6B','#4ECDC4'];
 
 // ── Tab switching ──────────────────────────────────────────
@@ -252,9 +253,9 @@ async function loadFilterOptions() {
 
   if (employees.success) {
     allEmployees = employees.data;
-    // Table filter: broker by name
+    // Table filter: broker by ID (sent as broker_id to server)
     const sel = document.getElementById('rf-broker');
-    employees.data.forEach(e => { const o=document.createElement('option');o.value=e.name;o.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');sel.appendChild(o); });
+    employees.data.forEach(e => { const o=document.createElement('option');o.value=e.id;o.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');sel.appendChild(o); });
 
     // Dashboard filter: broker & marketer by id
     const dbBroker = document.getElementById('db-broker');
@@ -286,15 +287,18 @@ async function generateReport() {
   const kind   = document.getElementById('rf-kind')?.value;
   const min    = document.getElementById('rf-min')?.value;
 
-  if (from) params.set('month_from', from);
-  if (to)   params.set('month_to', to);
+  if (from)   params.set('month_from', from);
+  if (to)     params.set('month_to', to);
+  if (broker) params.set('broker_id', broker);    // ← was missing, now fixed
+  if (branch) params.set('branch_id', branch);
   if (status) params.set('status', status);
   if (kind)   params.set('kind', kind);
   if (min && parseInt(min) > 0) params.set('min_deposit', min);
-  params.set('per_page', 500);
+  params.set('per_page', 2000);
 
   const r = await api('GET', '/cards/report?' + params);
   if (!r.success) { toast('خطأ في توليد التقرير', 'error'); return; }
+  if (r.records_limited) toast('⚠️ النتائج محدودة بـ 2000 سجل — استخدم الفلاتر لتضييق النطاق', 'warning');
 
   RD = r.data || [];
   const s = r.summary;
@@ -376,11 +380,13 @@ function clearDashFilters() {
 
 // ── Build Dashboard ────────────────────────────────────────
 async function buildDashboard() {
-  // If no data loaded yet, try to auto-load everything
-  if (!RD.length) {
-    const r = await api('GET', '/cards/report?per_page=1000');
+  // Auto-load once if no data yet (only on first tab-switch, not every time)
+  if (!RD.length && !dashAutoLoaded) {
+    dashAutoLoaded = true;
+    const r = await api('GET', '/cards/report?per_page=2000');
     if (r.success) {
       RD = r.data || [];
+      if (r.records_limited) toast('⚠️ عرض أحدث 2000 سجل — استخدم فلاتر التقرير لتحديد نطاق أدق', 'warning');
     }
   }
 

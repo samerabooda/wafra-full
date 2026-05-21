@@ -36,6 +36,17 @@ class User extends Authenticatable
     public function isFinanceAdmin(): bool  { return $this->role === 'finance_admin'; }
     public function isBranchManager(): bool { return $this->role === 'branch_manager'; }
 
+    /**
+     * Returns true for ANY non-FA role that must be locked to their branch.
+     * This covers both branch_manager AND viewer roles.
+     * Only applies when branch_id is actually set (null = not locked).
+     */
+    public function isScopedToBranch(): bool
+    {
+        return in_array($this->role, ['branch_manager', 'viewer'])
+            && $this->branch_id !== null;
+    }
+
     public function hasPermission(string $key): bool
     {
         if ($this->isFinanceAdmin()) return true;
