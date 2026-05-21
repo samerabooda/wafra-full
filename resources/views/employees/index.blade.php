@@ -30,12 +30,12 @@
     </div>
   </div>
   <div class="table-scroll">
-    <table class="data-table" style="min-width:620px">
+    <table class="data-table">
       <thead>
         <tr>
-          <th>الاسم</th><th>الدور</th><th>الفرع / Branch</th>
-          <th>ع. بروكر / Broker Comm.</th><th>ع. تسويق / Mkt. Comm.</th><th>ع. CC</th>
-          <th>الحالة / Status</th><th>تمت إضافته</th><th>إجراءات / Actions</th>
+          <th>الاسم</th><th>الدور</th><th>الفرع</th>
+          <th>ع. بروكر</th><th>ع. تسويق</th>
+          <th>الحالة</th><th>تمت إضافته</th><th>إجراءات</th>
         </tr>
       </thead>
       <tbody id="emp-tbody">
@@ -56,11 +56,11 @@
       <div id="add-emp-err" class="alert alert-error"></div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">الاسم / Full Name *</label>
+          <label class="form-label">الاسم الكامل *</label>
           <input type="text" id="ae-name" class="form-control" placeholder="Ahmed Al-Sayed">
         </div>
         <div class="form-group">
-          <label class="form-label">الدور / Role</label>
+          <label class="form-label">الدور الوظيفي</label>
           <select id="ae-role" class="form-control">
             <option value="broker">🏦 بروكر</option>
             <option value="marketing">📢 مسوّق داخلي</option>
@@ -71,26 +71,20 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">عمولة البروكر / Broker Commission ($)</label>
+          <label class="form-label">عمولة البروكر ($/lot)</label>
           <input type="number" id="ae-bc" class="form-control" value="4" min="0" step="0.5">
         </div>
         <div class="form-group">
-          <label class="form-label">ع. تسويق / Marketing Comm. ($)</label>
+          <label class="form-label">عمولة التسويق ($/lot)</label>
           <input type="number" id="ae-mc" class="form-control" value="3" min="0" step="0.5">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">ع. CC / CC Commission ($) <span style="font-size:10px;color:var(--mu)">(للموظفين في مركز الاتصال)</span></label>
-          <input type="number" id="ae-cc" class="form-control" value="1" min="0" step="0.25" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label class="form-label">البريد / Email</label>
-          <input type="email" id="ae-email" class="form-control" placeholder="employee@wafragulf.com">
-        </div>
+      <div class="form-group">
+        <label class="form-label">البريد الإلكتروني</label>
+        <input type="email" id="ae-email" class="form-control" placeholder="employee@wafragulf.com">
       </div>
       <div class="form-group">
-        <label class="form-label">الفرع / Branch / Branch</label>
+        <label class="form-label">الفرع</label>
         <select id="ae-branch" class="form-control"></select>
       </div>
       @if(auth()->user()?->isBranchManager())
@@ -137,9 +131,8 @@ async function loadEmps() {
       <td style="font-weight:700">${e.name}</td>
       <td>${roleLabels[e.role] || e.role}</td>
       <td style="color:var(--mu)">${e.branch?.name_ar || '—'}</td>
-      <td class="mono c-blue">$${e.broker_commission}</td>
-      <td class="mono c-green">$${e.marketing_commission}</td>
-      <td class="mono" style="color:var(--teal)">${e.cc_commission > 0 ? '$'+e.cc_commission : '—'}</td>
+      <td class="mono c-blue">$${e.broker_commission}/lot</td>
+      <td class="mono c-green">$${e.marketing_commission}/lot</td>
       <td>${statusBadge(e.status)}</td>
       <td style="color:var(--mu);font-size:11px">${e.added_by?.name || '—'}</td>
       <td>
@@ -167,7 +160,6 @@ async function addEmployee() {
     branch_id:              parseInt(document.getElementById('ae-branch').value) || null,
     broker_commission:      parseFloat(document.getElementById('ae-bc').value) || 4,
     marketing_commission:   parseFloat(document.getElementById('ae-mc').value) || 3,
-    cc_commission:          parseFloat(document.getElementById('ae-cc').value) || 0,
   });
 
   if (r.success) {
@@ -191,9 +183,5 @@ async function deleteEmp(id, name) {
 
 loadEmps();
 loadBranches();
-document.addEventListener('DOMContentLoaded', () => {
-  loadEmps();
-  loadBranches();
-});
 </script>
 @endpush

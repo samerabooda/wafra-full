@@ -142,6 +142,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .data-table tr:last-child td{border-bottom:none}
 .data-table tr.row-modified td{background:rgba(245,166,35,.06)!important}
 .data-table tr.row-modified td:first-child{border-right:3px solid var(--or)}
+/* ── CC card rows — purple tint ── */
+.data-table tr.row-cc-card td{background:linear-gradient(90deg,rgba(123,104,238,.07),transparent 80%)!important}
+.data-table tr.row-cc-card td:first-child{border-right:3px solid #7b68ee}
+.data-table tr.row-cc-card:hover td{background:linear-gradient(90deg,rgba(123,104,238,.13),rgba(123,104,238,.04) 80%)!important}
 .table-scroll{overflow-x:auto;max-height:500px;overflow-y:auto}
 
 /* ── Forms ── */
@@ -445,6 +449,18 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </a>
       <a href="{{ route('cards.edit-search') }}" class="nav-item {{ request()->routeIs('cards.edit-search') ? 'active' : '' }}">
         <span>✏️</span> تعديل حساب موجود
+      </a>
+
+      {{-- ── Call Center ── --}}
+      <div class="nav-section">مركز الاتصال</div>
+      <a href="{{ route('callcenter.index') }}" class="nav-item {{ request()->routeIs('callcenter.index') ? 'active' : '' }}"
+         style="{{ request()->routeIs('callcenter.*') ? '' : '' }}">
+        <span>📞</span> مركز الاتصال
+        <span class="nav-badge" style="background:rgba(123,104,238,.2);color:#7b68ee;border-color:rgba(123,104,238,.3)">CC</span>
+      </a>
+      <a href="{{ route('callcenter.pending') }}" class="nav-item {{ request()->routeIs('callcenter.pending') ? 'active' : '' }}">
+        <span>📩</span> كروت CC الواردة
+        <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
       </a>
 
       <div class="nav-section">الإدارة</div>
@@ -767,6 +783,27 @@ window.addEventListener('resize', () => {
 });
 document.addEventListener('DOMContentLoaded', initMobile);
 setTimeout(initMobile, 50);
+</script>
+
+<script>
+// ── CC pending badge counter ───────────────────────────────
+async function loadCcPendingCount() {
+  try {
+    const r = await api('GET', '/cc/pending');
+    const count = r?.count ?? 0;
+    const badge = document.getElementById('sb-cc-pending');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) { /* silent */ }
+}
+// Load once on page ready, then refresh every 60s
+document.addEventListener('DOMContentLoaded', loadCcPendingCount);
+setInterval(loadCcPendingCount, 60000);
 </script>
 
 @stack('scripts')

@@ -9,9 +9,7 @@ Route::get('/login',  [WebController::class,'loginPage'])->name('auth.login');
 Route::post('/login', [WebController::class,'loginPost'])->name('auth.login.submit');
 Route::get('/register',  fn()=>redirect()->route('auth.login'))->name('auth.register');
 Route::post('/register', [WebController::class,'registerPost'])->name('auth.register.submit');
-Route::post('/forgot-password',    [WebController::class,'forgotPassword'])->name('auth.password.email')->middleware('throttle:5,15');
-Route::get('/reset-password',      [WebController::class,'resetPasswordPage'])->name('auth.password.reset');
-Route::post('/reset-password',     [WebController::class,'resetPasswordSubmit'])->name('auth.password.reset.submit');
+Route::post('/forgot-password', fn(Request $r)=>back()->with('status','Check your email.'))->name('auth.password.email');
 
 // Auth check endpoint (public)
 Route::get('/api-fa-check', [WebController::class,'faCheck'])->name('auth.fa-check');
@@ -28,15 +26,13 @@ Route::middleware('auth')->group(function(){
     Route::get('/cards/tree',      [WebController::class,'cardsTree'])->name('cards.tree');
     Route::get('/reports',         [WebController::class,'reports'])->name('reports.index');
     Route::get('/reports/dynamic',  [WebController::class,'reportsDynamic'])->name('reports.dynamic');
-    Route::get('/callcenter',          [WebController::class,'callcenter'])->name('callcenter.index');
-    Route::get('/callcenter/pending',  [WebController::class,'callcenterPending'])->name('callcenter.pending');
     Route::get('/employees',       [WebController::class,'employees'])->name('employees.index');
     Route::get('/settings',        [WebController::class,'settings'])->name('settings.index');
     Route::get('/import',          [WebController::class,'import'])->name('import.index');
     Route::get('/managers',        [WebController::class,'managers'])->name('managers.index');
     Route::get('/branches',        [WebController::class,'branches'])->name('branches.index');
     Route::get('/permissions',     [WebController::class,'permissions'])->name('permissions.index');
+    // Call Center
+    Route::get('/callcenter',         [WebController::class,'callcenterIndex'])->name('callcenter.index');
+    Route::get('/callcenter/pending', [WebController::class,'callcenterPending'])->name('callcenter.pending');
 });
-
-// Guide (public within auth)
-Route::get('/guide', function() { return view('guide.index'); })->name('guide.index')->middleware('auth');

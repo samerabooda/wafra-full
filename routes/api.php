@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{
     AuthController,
     CommissionCardController,
+    CallCenterController,
     EmployeeController,
     ManagerController,
     ImportController,
@@ -117,6 +118,27 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
              ->middleware('role:finance_admin');
         Route::delete('{id}',  [BranchController::class, 'destroy'])
              ->middleware('role:finance_admin');
+    });
+
+    // ── Call Center ───────────────────────────────────────────
+    Route::prefix('cc')->group(function () {
+        // CC creates / sends cards
+        Route::post('cards',              [CallCenterController::class, 'store']);
+        Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
+
+        // Branch responds to CC cards
+        Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);
+        Route::put('cards/{id}/reject',   [CallCenterController::class, 'reject']);
+        Route::put('cards/{id}/complete', [CallCenterController::class, 'complete']);
+
+        // Listings
+        Route::get('pending',             [CallCenterController::class, 'pending']);   // branch: incoming
+        Route::get('sent',                [CallCenterController::class, 'sent']);      // cc: sent cards
+
+        // Notifications
+        Route::get('notifications',            [CallCenterController::class, 'notifications']);
+        Route::put('notifications/read-all',   [CallCenterController::class, 'markAllRead']);
+        Route::put('notifications/{id}/read',  [CallCenterController::class, 'markRead']);
     });
 
     // ── Import ────────────────────────────────────────────────

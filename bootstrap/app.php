@@ -13,30 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health:   '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // ── Trust proxies (HTTPS behind Nginx/Apache/CDN) ──────
-        $middleware->trustProxies(
-            at: '*',
-            headers: Request::HEADER_X_FORWARDED_FOR |
-                     Request::HEADER_X_FORWARDED_HOST |
-                     Request::HEADER_X_FORWARDED_PORT |
-                     Request::HEADER_X_FORWARDED_PROTO |
-                     Request::HEADER_X_FORWARDED_AWS_ELB
-        );
-
-        // ── Sanctum stateful API (session-based auth for SPA) ──
         $middleware->statefulApi();
 
-        // ── Custom middleware aliases ───────────────────────────
         $middleware->alias([
             'role'        => \App\Http\Middleware\RoleMiddleware::class,
             'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
             'active.user' => \App\Http\Middleware\ActiveUserMiddleware::class,
             'force.pwd'   => \App\Http\Middleware\ForcePasswordChangeMiddleware::class,
-        ]);
-
-        // ── Append CORS headers to all responses ───────────────
-        $middleware->web(append: [
-            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

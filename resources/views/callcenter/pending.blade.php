@@ -1,337 +1,338 @@
 @extends('layouts.app')
-@section('title','واردة من مركز الاتصال')
-@section('page-title','واردة من مركز الاتصال')
-
-@push('styles')
-<style>
-.cc-card-item{background:var(--bg);border:1px solid var(--brd1);border-radius:12px;padding:14px 16px;margin-bottom:10px;border-right:4px solid var(--pri)}
-.cc-card-item.pending{border-right-color:var(--or)}
-.cc-card-item.accepted{border-right-color:var(--pri)}
-.cc-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.cc-source-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(29,158,117,.15);color:#0F6E56;border:1px solid rgba(29,158,117,.3)}
-.cc-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mu);margin-bottom:12px}
-.cc-meta span b{color:var(--tx);font-weight:600}
-.comm-warning{background:rgba(224,80,80,.08);border:1px solid rgba(224,80,80,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--re);margin-bottom:10px}
-.comm-warning.w1{border-color:rgba(186,117,23,.35);background:rgba(186,117,23,.08);color:var(--or)}
-.comm-warning.w2{border-color:rgba(224,130,50,.4);background:rgba(224,130,50,.1);color:#d06010}
-.comm-warning.blocked{border-color:var(--re);background:rgba(224,80,80,.12)}
-</style>
-@endpush
+@section('title', 'كروت CC الواردة')
+@section('page-title', 'كروت CC الواردة للفرع')
 
 @section('content')
+<style>
+/* ── CC Source badge ── */
+.cc-source-badge {
+  display:inline-flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,#7b68ee,#5f4fcf);
+  color:#fff;font-size:10px;font-weight:700;
+  padding:2px 9px;border-radius:20px;letter-spacing:.4px;vertical-align:middle;
+}
+/* ── Status chips ── */
+.cc-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.cc-chip.branch_pending{background:#cff4fc;color:#055160}
+.cc-chip.accepted      {background:#d1e7dd;color:#0a5c36}
+/* ── CC row highlight — purple left border ── */
+.cc-row td:first-child { border-right:4px solid #7b68ee !important; }
+.cc-row { background:linear-gradient(90deg,rgba(123,104,238,.05),transparent 60%) !important; }
+.cc-row:hover { background:linear-gradient(90deg,rgba(123,104,238,.11),transparent 60%) !important; }
+/* ── Complete form ── */
+.complete-form { background:var(--surface2);border-radius:12px;padding:16px;margin-top:8px;border:1px solid var(--border) }
+.cc-limit-bar  { height:6px;border-radius:3px;background:#e9ecef;margin-top:6px;overflow:hidden }
+.cc-limit-fill { height:100%;border-radius:3px;transition:width .3s,background .3s }
+</style>
 
-<div class="panel">
+<div class="panel" style="max-width:1000px">
   <div class="panel-header">
-    <div class="panel-title">📬 حسابات واردة من مركز الاتصال — بانتظار إكمال بياناتها</div>
-    <span id="pending-count" class="badge badge-orange">0</span>
-  </div>
-  <div id="pending-list" style="padding:12px 16px">
-    <div class="empty-state">جارٍ التحميل...</div>
-  </div>
-</div>
-
-{{-- ═══ MODAL: REJECT CARD ════════════════════════════════════ --}}
-<div class="modal-overlay" id="modal-reject">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header">
-      <div class="modal-title">❌ رفض الحساب</div>
-      <button class="modal-close" onclick="closeModal('modal-reject')">✕</button>
+    <div class="panel-title">
+      📩 كروت CC الواردة
+      <span id="pending-count" style="background:#7b68ee;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;margin-right:8px">0</span>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">سبب الرفض / Reason *</label>
-        <div id="reject-err" style="display:none;background:rgba(226,75,74,.1);border:1px solid rgba(226,75,74,.25);border-radius:7px;padding:8px 12px;font-size:12px;color:#E24B4A;margin-bottom:8px"></div>
-        <textarea id="reject-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض ليصل لمركز الاتصال..."></textarea>
+    <button class="btn btn-ghost btn-sm" onclick="loadPending()">🔄 تحديث</button>
+  </div>
+  <div class="panel-body">
+    <div id="alert-err" class="alert alert-error"></div>
+    <div id="alert-ok"  class="alert alert-success"></div>
+
+    <!-- Commission limit notice -->
+    <div style="background:rgba(123,104,238,.07);border:1px solid rgba(123,104,238,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">⚠️</span>
+      <div>
+        <strong style="color:#7b68ee">حد عمولات كروت CC:</strong>
+        <span style="font-size:13px"> عمولة البروكر + عمولة المسوّق لا يجب أن تتجاوز <strong>5$ / lot</strong></span>
+        <span style="font-size:11px;color:var(--text2);display:block;margin-top:2px">سيتم رفض الحفظ إذا تجاوز مجموعهما 5$</span>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-reject')">إلغاء</button>
-      <button class="btn btn-danger" onclick="confirmReject()" id="btn-reject-confirm">تأكيد الرفض</button>
-    </div>
+
+    <div id="pending-list"></div>
   </div>
 </div>
-
-{{-- ═══ MODAL: COMPLETE CARD ══════════════════════════════════ --}}
-<div class="modal-overlay" id="modal-complete">
-  <div class="modal" style="max-width:620px">
-    <div class="modal-header">
-      <div class="modal-title">✅ إكمال بيانات الحساب</div>
-      <button class="modal-close" onclick="closeModal('modal-complete')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="complete-card-info" style="padding:10px;background:var(--bg2);border-radius:8px;margin-bottom:14px;font-size:13px"></div>
-      <div id="complete-alert" style="display:none;margin-bottom:10px"></div>
-      <div id="warning-box" style="display:none;margin-bottom:10px"></div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">البروكر / Broker / Broker *</label>
-          <select id="comp-broker" class="form-control" onchange="calcTotal()"><option value="">اختر البروكر</option></select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">عمولة البروكر / Broker Commission ($) *</label>
-          <input type="number" id="comp-broker-comm" class="form-control" min="0" step="0.5" value="4" onchange="calcTotal()">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">المسوّق / Marketer / Marketer</label>
-          <select id="comp-marketer" class="form-control" onchange="calcTotal()"><option value="">— اختياري —</option></select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">عمولة المسوّق ($)</label>
-          <input type="number" id="comp-marketer-comm" class="form-control" min="0" step="0.5" value="0" onchange="calcTotal()">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">الإيداع الأولي ($) *</label>
-          <input type="number" id="comp-initial" class="form-control" min="0">
-        </div>
-        <div class="form-group">
-          <label class="form-label">الإيداع الشهري ($) *</label>
-          <input type="number" id="comp-monthly" class="form-control" min="0">
-        </div>
-      </div>
-
-      {{-- Commission summary ─────────── --}}
-      <div style="background:var(--bg2);border-radius:8px;padding:12px;font-size:12px;margin-top:4px">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-          <div>
-            <div style="color:var(--mu);margin-bottom:2px">عمولة CC</div>
-            <div class="mono" style="font-weight:700;color:var(--pri2)" id="disp-cc-comm">$0.00</div>
-          </div>
-          <div>
-            <div style="color:var(--mu);margin-bottom:2px">عمولة البروكر</div>
-            <div class="mono" style="font-weight:700;color:var(--gr)" id="disp-broker-comm">$0.00</div>
-          </div>
-          <div>
-            <div style="color:var(--mu);margin-bottom:2px">الإجمالي</div>
-            <div class="mono" style="font-weight:700" id="disp-total">$0.00</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-complete')">إلغاء</button>
-      <button class="btn btn-primary" onclick="submitComplete()" id="btn-complete">حفظ وإكمال ✓</button>
-    </div>
-  </div>
-</div>
-
 @endsection
 
 @push('scripts')
 <script>
-let currentCardId   = null;
-let currentCcComm   = 0;
-let warningCount    = 0;
-let pendingOverride = false;
-const LIMIT_AMOUNT  = {{ Setting::commissionLimitAmount() }};
-const LIMIT_ENABLED = {{ Setting::commissionLimitEnabled() ? 'true' : 'false' }};
-const MAX_WARNINGS  = {{ Setting::commissionWarningCount() }};
-
 async function loadPending() {
   const r = await api('GET', '/cc/pending');
-  if (!r.success) return;
-  const cards = r.data || [];
-  document.getElementById('pending-count').textContent = cards.length;
+  const container = document.getElementById('pending-list');
+  document.getElementById('pending-count').textContent = r.count ?? 0;
 
-  const list = document.getElementById('pending-list');
-  if (!cards.length) {
-    list.innerHTML = '<div class="empty-state" style="padding:30px 0">لا توجد حسابات واردة من مركز الاتصال</div>';
+  if (!r.success || !r.data.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--text2)">
+        <div style="font-size:40px;margin-bottom:8px">📭</div>
+        لا توجد كروت CC واردة حالياً
+      </div>`;
     return;
   }
 
-  list.innerHTML = cards.map(c => `
-    <div class="cc-card-item ${c.cc_status === 'branch_pending' ? 'pending' : c.cc_status}">
-      <div class="cc-card-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span class="ac-num">#${c.account_number}</span>
-          <span style="font-size:13px;color:var(--mu)">${c.month}</span>
-          <span class="cc-source-tag">📞 من CC</span>
-        </div>
-        <div style="display:flex;gap:6px">
-          ${c.cc_status === 'branch_pending'
-            ? `<button class="btn btn-sm btn-primary" onclick="acceptCard(${c.id})">✅ قبول</button>`
-            : c.cc_status === 'accepted'
-            ? `<button class="btn btn-sm btn-primary" onclick="openComplete(${c.id},${c.cc_agent_commission})">إكمال البيانات →</button>`
-            : ''
-          }
-          <button class="btn btn-sm btn-danger" onclick="openReject(${c.id})">رفض</button>
-        </div>
+  container.innerHTML = r.data.map(c => cardHtml(c)).join('');
+}
+
+function cardHtml(c) {
+  const statusLabel = c.cc_status === 'branch_pending' ? '📩 بانتظار القرار' : '✅ مقبول — أكمل البيانات';
+  const statusClass = c.cc_status;
+
+  return `
+  <div id="card-${c.id}" style="border:1px solid var(--border);border-right:4px solid #7b68ee;border-radius:12px;margin-bottom:14px;overflow:hidden">
+    <!-- Card Header -->
+    <div style="background:var(--surface2);padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="cc-source-badge">📞 CC</span>
+        <strong style="font-size:16px">${c.account_number}</strong>
+        <span style="color:var(--text2);font-size:13px">${c.month}</span>
+        <span class="cc-chip ${statusClass}">${statusLabel}</span>
       </div>
-      <div class="cc-meta">
-        <span>الحالة: <b style="color:${c.cc_status==='branch_pending'?'var(--or)':c.cc_status==='accepted'?'var(--pri2)':'var(--gr)'}">${
-          {branch_pending:'⏳ بانتظار ردك',accepted:'✅ مقبول — أكمل البيانات',rejected:'❌ مرفوض',completed:'✓ مكتمل'}[c.cc_status]||c.cc_status
-        }</b></span>
-        <span>موظف CC: <b>${c.cc_agent?.name || '—'}</b></span>
-        <span>عمولة CC: <b class="mono" style="color:var(--pri2)">$${(+c.cc_agent_commission).toFixed(2)}</b></span>
-        <span>تاريخ الإرسال: <b>${new Date(c.created_at).toLocaleDateString('ar-SA')}</b></span>
-        ${c.notes ? `<span>ملاحظات: <b>${c.notes}</b></span>` : ''}
+      <div style="font-size:12px;color:var(--text2)">
+        من: <strong>${c.cc_branch?.name_ar ?? '—'}</strong>
+        &nbsp;|&nbsp; موظف: <strong>${c.cc_agent?.name ?? '—'}</strong>
+        &nbsp;|&nbsp; عمولة موظف CC: <strong>${c.cc_agent_commission}$</strong>
       </div>
-    </div>`).join('');
+    </div>
+
+    <!-- Card Actions -->
+    <div style="padding:14px 16px">
+      ${c.cc_status === 'branch_pending' ? `
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" onclick="acceptCard(${c.id})">✅ قبول الكرت</button>
+          <button class="btn btn-danger btn-sm" onclick="openRejectModal(${c.id})">❌ رفض</button>
+        </div>
+      ` : ''}
+
+      ${c.cc_status === 'accepted' ? completeFormHtml(c) : ''}
+    </div>
+  </div>`;
+}
+
+function completeFormHtml(c) {
+  return `
+  <div class="complete-form" id="cf-${c.id}">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--pri2)">📋 استكمال بيانات الكرت</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">البروكر *</label>
+        <select id="cf-broker-${c.id}" class="form-control broker-sel" data-card="${c.id}" onchange="checkLimit(${c.id})"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">عمولة البروكر ($/lot)</label>
+        <input type="number" id="cf-bcomm-${c.id}" class="form-control" value="2.5" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">المسوّق</label>
+        <select id="cf-mktr-${c.id}" class="form-control" onchange="checkLimit(${c.id})"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">عمولة المسوّق ($/lot)</label>
+        <input type="number" id="cf-mcomm-${c.id}" class="form-control" value="2.5" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
+      </div>
+    </div>
+
+    <!-- Commission limit progress bar -->
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span>إجمالي العمولات (بروكر + مسوّق)</span>
+        <span id="cf-total-${c.id}" style="font-weight:700">5.0$ / 5.0$</span>
+      </div>
+      <div class="cc-limit-bar"><div id="cf-bar-${c.id}" class="cc-limit-fill" style="width:100%;background:#198754"></div></div>
+      <div id="cf-warn-${c.id}" style="font-size:11px;color:#dc3545;margin-top:4px;display:none">⛔ يتجاوز الحد المسموح (5$)</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الإيداع الأولي ($) *</label>
+        <input type="number" id="cf-dep-${c.id}" class="form-control" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الإيداع الشهري ($)</label>
+        <input type="number" id="cf-mon-${c.id}" class="form-control" value="0" min="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Forex Commission ($/lot)</label>
+        <input type="number" id="cf-forex-${c.id}" class="form-control" value="8" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Futures Commission ($/lot)</label>
+        <input type="number" id="cf-fut-${c.id}" class="form-control" value="8" min="0">
+      </div>
+    </div>
+    <div id="cf-err-${c.id}" class="alert alert-error"></div>
+    <button class="btn btn-primary" onclick="completeCard(${c.id})">🏁 إتمام الكرت</button>
+  </div>`;
+}
+
+function checkLimit(cardId) {
+  const bComm = parseFloat(document.getElementById(`cf-bcomm-${cardId}`)?.value ?? 0) || 0;
+  const mComm = parseFloat(document.getElementById(`cf-mcomm-${cardId}`)?.value ?? 0) || 0;
+  const total = bComm + mComm;
+  const pct   = Math.min((total / 5) * 100, 100);
+  const bar   = document.getElementById(`cf-bar-${cardId}`);
+  const warn  = document.getElementById(`cf-warn-${cardId}`);
+  const lbl   = document.getElementById(`cf-total-${cardId}`);
+  if (!bar) return;
+  bar.style.width    = pct + '%';
+  bar.style.background = total > 5 ? '#dc3545' : total > 3.5 ? '#fd7e14' : '#198754';
+  lbl.textContent    = total.toFixed(1) + '$ / 5.0$';
+  lbl.style.color    = total > 5 ? '#dc3545' : 'inherit';
+  warn.style.display = total > 5 ? 'block' : 'none';
 }
 
 async function acceptCard(id) {
+  if (!confirm('قبول هذا الكرت؟')) return;
   const r = await api('PUT', `/cc/cards/${id}/accept`);
-  if (r.success) { toast('تم القبول — أكمل بيانات الحساب الآن', 'success'); loadPending(); }
-  else toast(r.message||'خطأ', 'error');
+  if (r.success) { showAlert('ok', r.message); loadPending(); }
+  else showAlert('err', r.message);
 }
 
-// ── Reject ────────────────────────────────────────────────
-function openReject(id) {
-  currentCardId = id;
-  document.getElementById('reject-reason').value = '';
-  openModal('modal-reject');
-}
+async function completeCard(id) {
+  const bComm = parseFloat(document.getElementById(`cf-bcomm-${id}`).value) || 0;
+  const mComm = parseFloat(document.getElementById(`cf-mcomm-${id}`)?.value ?? 0) || 0;
 
-async function confirmReject() {
-  const reason = document.getElementById('reject-reason').value.trim();
-  if (!reason) { toast('اكتب سبب الرفض', 'error'); return; }
+  // Client-side pre-check
+  if (bComm + mComm > 5) {
+    document.getElementById(`cf-err-${id}`).textContent =
+      `⛔ عمولة البروكر (${bComm}$) + عمولة المسوّق (${mComm}$) = ${bComm+mComm}$ تتجاوز الحد المسموح (5$/lot)`;
+    document.getElementById(`cf-err-${id}`).classList.add('show');
+    return;
+  }
 
-  const btn = document.getElementById('btn-reject-confirm');
-  btn.disabled = true; btn.textContent = 'جارٍ...';
+  const payload = {
+    broker_id:           parseInt(document.getElementById(`cf-broker-${id}`).value) || null,
+    broker_commission:   bComm,
+    marketer_id:         parseInt(document.getElementById(`cf-mktr-${id}`)?.value)  || null,
+    marketer_commission: mComm,
+    initial_deposit:     parseFloat(document.getElementById(`cf-dep-${id}`).value)  || 0,
+    monthly_deposit:     parseFloat(document.getElementById(`cf-mon-${id}`).value)  || 0,
+    forex_commission:    parseFloat(document.getElementById(`cf-forex-${id}`).value)|| 0,
+    futures_commission:  parseFloat(document.getElementById(`cf-fut-${id}`).value)  || 0,
+  };
 
-  const r = await api('PUT', `/cc/cards/${currentCardId}/reject`, { reason });
-  btn.disabled = false; btn.textContent = 'تأكيد الرفض';
-
+  const r = await api('PUT', `/cc/cards/${id}/complete`, payload);
+  const errEl = document.getElementById(`cf-err-${id}`);
   if (r.success) {
-    closeModal('modal-reject');
-    toast('تم الرفض — أُبلغ مركز الاتصال', 'success');
+    errEl.classList.remove('show');
+    showAlert('ok', r.message);
     loadPending();
   } else {
-    const msg = r.message || (r.errors ? Object.values(r.errors).flat()[0] : 'فشل الرفض');
-    const errEl = document.getElementById('reject-err');
-    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
-    else toast(msg, 'error');
+    const msg = r.errors ? Object.values(r.errors).flat().join(' | ') : r.message;
+    errEl.textContent = '❌ ' + msg;
+    errEl.classList.add('show');
   }
-  else toast(r.message||'خطأ','error');
 }
 
-// ── Complete ──────────────────────────────────────────────
-async function openComplete(id, ccComm) {
-  currentCardId   = id;
-  currentCcComm   = parseFloat(ccComm) || 0;
-  warningCount    = 0;
-  pendingOverride = false;
+// Reject modal
+let rejectCardId = null;
+function openRejectModal(id) {
+  rejectCardId = id;
+  document.getElementById('rj-reason').value = '';
+  document.getElementById('rj-err').classList.remove('show');
+  document.getElementById('reject-modal').style.display = 'flex';
+}
+async function confirmReject() {
+  const reason = document.getElementById('rj-reason').value.trim();
+  if (!reason || reason.length < 5) {
+    document.getElementById('rj-err').textContent = 'يجب كتابة سبب الرفض (5 أحرف على الأقل)';
+    document.getElementById('rj-err').classList.add('show');
+    return;
+  }
+  const r = await api('PUT', `/cc/cards/${rejectCardId}/reject`, { reason });
+  if (r.success) {
+    document.getElementById('reject-modal').style.display = 'none';
+    showAlert('ok', r.message);
+    loadPending();
+  } else {
+    document.getElementById('rj-err').textContent = r.message;
+    document.getElementById('rj-err').classList.add('show');
+  }
+}
 
-  document.getElementById('complete-card-info').innerHTML =
-    `الحساب <b>#${id}</b> — عمولة موظف CC: <span class="mono" style="color:var(--pri2)">$${currentCcComm.toFixed(2)}</span> (محددة مسبقاً)`;
-  document.getElementById('disp-cc-comm').textContent = `$${currentCcComm.toFixed(2)}`;
-  document.getElementById('complete-alert').style.display = 'none';
-  document.getElementById('warning-box').style.display = 'none';
-  document.getElementById('comp-broker-comm').value = 4;
-  document.getElementById('comp-marketer-comm').value = 0;
-  calcTotal();
-  openModal('modal-complete');
-  await loadEmployees();
+function showAlert(type, msg) {
+  const e = document.getElementById('alert-err');
+  const o = document.getElementById('alert-ok');
+  e.classList.remove('show'); o.classList.remove('show');
+  if (type === 'err') { e.textContent = msg; e.classList.add('show'); }
+  else                { o.textContent = msg; o.classList.add('show'); }
+  window.scrollTo(0, 0);
 }
 
 async function loadEmployees() {
   const r = await api('GET', '/employees?status=approved');
   if (!r.success) return;
-  ['comp-broker','comp-marketer'].forEach(id => {
-    const sel = document.getElementById(id);
-    while (sel.options.length > 1) sel.remove(1);
-    r.data.forEach(e => {
-      const o = document.createElement('option'); o.value = e.id; o.textContent = e.name;
+  window._ccEmployees = r.data;
+}
+
+function populateEmployeeSelects(cardId) {
+  const emps = window._ccEmployees ?? [];
+  ['broker', 'mktr'].forEach(type => {
+    const sel = document.getElementById(`cf-${type}-${cardId}`);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— لا يوجد —</option>';
+    emps.forEach(e => {
+      const o = document.createElement('option');
+      o.value = e.id;
+      o.textContent = e.name + (e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');
       sel.appendChild(o);
     });
   });
+  checkLimit(cardId);
 }
 
-function calcTotal() {
-  const broker   = parseFloat(document.getElementById('comp-broker-comm')?.value) || 0;
-  const marketer = parseFloat(document.getElementById('comp-marketer-comm')?.value) || 0;
-  const total    = currentCcComm + broker + marketer;
-
-  document.getElementById('disp-broker-comm').textContent  = `$${broker.toFixed(2)}`;
-  document.getElementById('disp-total').textContent        = `$${total.toFixed(2)}`;
-
-  // Color total
-  const el = document.getElementById('disp-total');
-  el.style.color = LIMIT_ENABLED && total > LIMIT_AMOUNT ? 'var(--re)' : 'var(--gr)';
+// After DOM is ready, populate employee selects for accepted cards
+async function init() {
+  await loadEmployees();
+  await loadPending();
+  // For any accepted cards that rendered complete forms:
+  document.querySelectorAll('.broker-sel').forEach(sel => {
+    const cid = sel.dataset.card;
+    populateEmployeeSelects(cid);
+  });
 }
 
-async function submitComplete() {
-  const brokerId   = document.getElementById('comp-broker').value;
-  const brokerComm = parseFloat(document.getElementById('comp-broker-comm').value) || 0;
-  const mktId      = document.getElementById('comp-marketer').value;
-  const mktComm    = parseFloat(document.getElementById('comp-marketer-comm').value) || 0;
-  const initial    = parseFloat(document.getElementById('comp-initial').value) || 0;
-  const monthly    = parseFloat(document.getElementById('comp-monthly').value) || 0;
+// Override loadPending to also populate selects after render
+const _origLoad = loadPending;
+loadPending = async function() {
+  const r = await api('GET', '/cc/pending');
+  const container = document.getElementById('pending-list');
+  document.getElementById('pending-count').textContent = r.count ?? 0;
 
-  if (!brokerId || !initial || !monthly) {
-    showAlert('complete-alert', 'الرجاء تعبئة البروكر والإيداعات', 'error');
+  if (!r.success || !r.data.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--text2)">
+        <div style="font-size:40px;margin-bottom:8px">📭</div>
+        لا توجد كروت CC واردة حالياً
+      </div>`;
     return;
   }
 
-  const total = currentCcComm + brokerComm + mktComm;
+  container.innerHTML = r.data.map(c => cardHtml(c)).join('');
 
-  // Client-side warning check before sending
-  if (LIMIT_ENABLED && total > LIMIT_AMOUNT && !pendingOverride) {
-    warningCount++;
-    if (warningCount > MAX_WARNINGS) {
-      showWarning('blocked', total);
-      return;
-    }
-    const levels = ['w1','w2','w3'];
-    showWarning(levels[Math.min(warningCount-1, 2)], total);
-    pendingOverride = true; // allow one more click
-    return;
-  }
-  pendingOverride = false;
+  // Populate employee selects for accepted cards
+  r.data.filter(c => c.cc_status === 'accepted').forEach(c => {
+    populateEmployeeSelects(c.id);
+  });
+};
 
-  const btn = document.getElementById('btn-complete');
-  btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
-
-  const r = await api('PUT', `/cc/cards/${currentCardId}/complete`, {
-    broker_id: parseInt(brokerId), broker_commission: brokerComm,
-    marketer_id: mktId ? parseInt(mktId) : null, marketer_commission: mktComm,
-    initial_deposit: initial, monthly_deposit: monthly,
-  }, { 'X-Commission-Warning-Count': warningCount });
-
-  btn.disabled = false; btn.textContent = 'حفظ وإكمال ✓';
-
-  if (r.success) {
-    closeModal('modal-complete');
-    toast(`✅ تم إكمال الحساب #${currentCardId}`, 'success');
-    loadPending();
-  } else if (r.blocked) {
-    showWarning('blocked', total);
-  } else if (r.warning) {
-    warningCount = r.warning_number;
-    showWarning(warningCount >= MAX_WARNINGS ? 'w3' : `w${warningCount}`, total);
-    pendingOverride = true;
-  } else {
-    showAlert('complete-alert', r.message||'خطأ في الحفظ', 'error');
-  }
-}
-
-function showWarning(level, total) {
-  const box = document.getElementById('warning-box');
-  const blocked = level === 'blocked';
-  const msgs = {
-    w1: `⚠️ تحذير: إجمالي العمولات $${total.toFixed(2)} يتجاوز الحد ($${LIMIT_AMOUNT}). هل تريد المتابعة؟`,
-    w2: `⚠️ تحذير ثانٍ: إجمالي العمولات $${total.toFixed(2)} — هذا التجاوز الثاني. تأكيد؟`,
-    w3: `🔴 آخر تحذير: ثلاث محاولات تجاوز الحد. هل تريد المتابعة رغم ذلك؟`,
-    blocked: `🚫 تجاوزت العمولات الحد المسموح ($${LIMIT_AMOUNT}). يرجى التواصل مع المدير المالي لمراجعة هذا الحساب.`,
-  };
-  box.innerHTML = `<div class="comm-warning ${level === 'blocked' ? 'blocked' : level}">${msgs[level]||msgs.blocked}</div>`;
-  box.style.display = 'block';
-  const btn = document.getElementById('btn-complete');
-  if (blocked) { btn.disabled = true; btn.textContent = 'محجوب'; }
-  else { btn.disabled = false; btn.textContent = 'تأكيد المتابعة رغم التحذير'; }
-}
-
-function showAlert(id, msg, type) {
-  const el = document.getElementById(id); if (!el) return;
-  const colors = { error:'var(--re)', success:'var(--gr)', warning:'var(--or)' };
-  el.innerHTML = `<div style="padding:8px 12px;border-radius:8px;background:${colors[type]}22;border:1px solid ${colors[type]}44;color:${colors[type]};font-size:13px">${msg}</div>`;
-  el.style.display = 'block';
-}
-
-document.addEventListener('DOMContentLoaded', loadPending);
+init();
 </script>
+
+<!-- Reject modal -->
+<div id="reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+  <div style="max-width:460px;width:90%;background:var(--surface);border-radius:16px;padding:28px">
+    <h3 style="margin:0 0 16px">❌ رفض الكرت</h3>
+    <div class="form-group">
+      <label class="form-label">سبب الرفض *</label>
+      <textarea id="rj-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض هنا..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-danger" onclick="confirmReject()">❌ تأكيد الرفض</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('reject-modal').style.display='none'">إلغاء</button>
+    </div>
+    <div id="rj-err" class="alert alert-error" style="margin-top:10px"></div>
+  </div>
+</div>
 @endpush
