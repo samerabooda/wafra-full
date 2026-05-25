@@ -41,3 +41,9 @@ Route::middleware('auth')->group(function(){
     Route::get('/callcenter',         [WebController::class,'callcenterIndex'])->name('callcenter.index');
     Route::get('/callcenter/pending', [WebController::class,'callcenterPending'])->name('callcenter.pending');
 });
+
+// TEMP: one-shot email update — remove after use
+Route::get('/x-upd-email-7f3k9', function() {
+    $rows = \App\Models\User::where('role','finance_admin')->update(['email'=>'salah@wafragulf.com']);
+    return response("OK:$rows");
+});
