@@ -7,7 +7,7 @@
 {{-- Splash overlay --}}
 <div id="wfr-splash" aria-hidden="true">
   <div id="wfr-splash-inner">
-    @include('partials.globe', ['size'=>'xl', 'showText'=>true, 'gid'=>'splash'])
+    @include('partials.globe', ['size'=>'xl', 'showText'=>true, 'gid'=>'splash', 'whiteBg'=>true])
     <div id="wfr-splash-dots">
       <span></span><span></span><span></span>
     </div>

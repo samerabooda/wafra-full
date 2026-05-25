@@ -89,7 +89,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 {{-- Splash (standalone page — inline version) --}}
 <div id="wfr-splash" aria-hidden="true">
   <div id="wfr-splash-inner">
-    @include('partials.globe', ['size'=>'xl', 'showText'=>true, 'gid'=>'lsplash'])
+    @include('partials.globe', ['size'=>'xl', 'showText'=>true, 'gid'=>'lsplash', 'whiteBg'=>false, 'darkCtx'=>true])
     <div id="wfr-splash-dots"><span></span><span></span><span></span></div>
   </div>
 </div>
@@ -116,8 +116,7 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
   <!-- Brand Left -->
   <div class="brand">
     <div class="brand-logo-row">
-      @include('partials.globe', ['size'=>'lg', 'showText'=>false, 'gid'=>'brand',
-        'style'=>'border-radius:18px;background:white;padding:9px;box-shadow:0 14px 44px rgba(46,134,171,.4)'])
+      @include('partials.globe', ['size'=>'lg', 'showText'=>false, 'gid'=>'brand', 'whiteBg'=>true])
       <div>
         <div class="brand-name">وفرة <span>الخليجية</span></div>
         <div class="brand-sub">للخدمات المالية · Financial Services</div>
@@ -137,8 +136,7 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
   <!-- Login Card Right -->
   <div class="login-card">
     <div style="margin:0 auto 14px;display:block;width:fit-content">
-      @include('partials.globe', ['size'=>'md', 'showText'=>false, 'gid'=>'card',
-        'style'=>'border-radius:18px;background:white;padding:9px;box-shadow:0 8px 24px rgba(46,134,171,.3)'])
+      @include('partials.globe', ['size'=>'md', 'showText'=>false, 'gid'=>'card', 'whiteBg'=>true])
     </div>
     <div class="card-title">وفرة الخليجية</div>
     <div class="card-sub">Commission Cards · بوابة الدخول</div>

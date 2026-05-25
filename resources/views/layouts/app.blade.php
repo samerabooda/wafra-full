@@ -411,8 +411,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   {{-- SIDEBAR --}}
   <aside class="sidebar">
     <div class="sb-header">
-      @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'sb',
-        'style'=>'border-radius:8px;background:white;padding:3px;flex-shrink:0'])
+      @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'sb', 'whiteBg'=>true])
       <div>
         <div class="sb-brand">وفرة الخليجية<small>Commission Cards</small></div>
       </div>
@@ -512,8 +511,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
-        @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'tb',
-          'style'=>'border-radius:6px;background:white;padding:2px'])
+        @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'tb', 'whiteBg'=>true])
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
           <div class="tb-sub">وفرة الخليجية / <span id="tb-branch">الإدارة المالية</span></div>

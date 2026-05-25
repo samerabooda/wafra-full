@@ -58,7 +58,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
 
     {{-- Logo --}}
     <div class="logo-row">
-      @include('partials.globe', ['size'=>'sm','showText'=>false,'gid'=>'reset_logo'])
+      @include('partials.globe', ['size'=>'sm','showText'=>false,'gid'=>'reset_logo','whiteBg'=>true])
     </div>
 
     <div class="card-title">تغيير كلمة المرور</div>
