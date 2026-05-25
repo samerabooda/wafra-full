@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
@@ -45,6 +46,12 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['branch_manager', 'viewer'])
             && $this->branch_id !== null;
+    }
+
+    // ── Password Reset ─────────────────────────────────────────
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function hasPermission(string $key): bool

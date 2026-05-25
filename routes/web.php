@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Web\WebController;
+use App\Http\Controllers\Web\PasswordController;
 
 // Public
 Route::get('/', fn() => redirect()->route('auth.login'));
@@ -9,7 +10,11 @@ Route::get('/login',  [WebController::class,'loginPage'])->name('auth.login');
 Route::post('/login', [WebController::class,'loginPost'])->name('auth.login.submit');
 Route::get('/register',  fn()=>redirect()->route('auth.login'))->name('auth.register');
 Route::post('/register', [WebController::class,'registerPost'])->name('auth.register.submit');
-Route::post('/forgot-password', fn(Request $r)=>back()->with('status','Check your email.'))->name('auth.password.email');
+
+// Password Reset
+Route::post('/forgot-password',          [PasswordController::class,'sendResetLink'])->name('auth.password.email');
+Route::get('/reset-password/{token}',    [PasswordController::class,'showResetForm'])->name('auth.password.reset');
+Route::post('/reset-password',           [PasswordController::class,'reset'])->name('auth.password.update');
 
 // Auth check endpoint (public)
 Route::get('/api-fa-check', [WebController::class,'faCheck'])->name('auth.fa-check');
