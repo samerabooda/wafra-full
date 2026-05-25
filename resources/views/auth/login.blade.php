@@ -148,15 +148,18 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('login', this)">دخول</button>
-      <button class="tab" id="register-tab" onclick="switchTab('register', this)" style="display:none">📝 تسجيل</button>
-      <button class="tab" onclick="switchTab('forgot', this)">استعادة</button>
+      <button class="tab active" id="tab-btn-login"    onclick="switchTab('login',this)">دخول</button>
+      <button class="tab"        id="tab-btn-register" onclick="switchTab('register',this)" style="display:none">📝 تسجيل</button>
+      <button class="tab"        id="tab-btn-forgot"   onclick="switchTab('forgot',this)">استعادة</button>
     </div>
 
-    <!-- Login form -->
+    <!-- ── Login form ─────────────────────────────────────── -->
     <div id="tab-login">
       @if(session('error'))
         <div class="err-box show">{{ session('error') }}</div>
+      @endif
+      @if(session('status'))
+        <div class="ok-box show">✅ {{ session('status') }}</div>
       @endif
       <form method="POST" action="{{ route('auth.login.submit') }}">
         @csrf
@@ -174,46 +177,95 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
         </div>
         <button type="submit" class="btn-login">دخول إلى النظام ←</button>
       </form>
-      <div class="link-small" onclick="switchTab('forgot', null)">نسيت كلمة المرور؟</div>
+      <div class="link-small" onclick="switchTab('forgot',null)">نسيت كلمة المرور؟</div>
     </div>
 
-    <!-- Register form (FA first time) -->
+    <!-- ── Register tab — FA first-time OR invited manager ── -->
     <div id="tab-register" style="display:none">
-      <div class="info-box">🔐 <strong>لمرة واحدة فقط.</strong> بعد الإنشاء يختفي هذا الخيار نهائياً.</div>
-      <form method="POST" action="{{ route('auth.register.submit') }}">
-        @csrf
-        <div class="form-group">
-          <label class="form-label">الاسم الكامل</label>
-          <input class="form-input" type="text" name="name" value="{{ old('name') }}" placeholder="الاسم الكامل" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">البريد الإلكتروني</label>
-          <input class="form-input" type="email" name="email" value="{{ old('email') }}" placeholder="your@wafragulf.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">كلمة المرور</label>
-          <div class="pw-wrap">
-            <input class="form-input" type="password" name="password" id="rpw" required oninput="checkPwStrength(this)">
-            <button type="button" class="pw-toggle" onclick="togglePw('rpw')">👁</button>
+
+      {{-- ── FA first-time registration (hidden after FA exists) ── --}}
+      <div id="reg-fa">
+        <div class="info-box">🔐 <strong>لمرة واحدة فقط.</strong> بعد الإنشاء يختفي هذا الخيار نهائياً.</div>
+        <form method="POST" action="{{ route('auth.register.submit') }}">
+          @csrf
+          <div class="form-group">
+            <label class="form-label">الاسم الكامل</label>
+            <input class="form-input" type="text" name="name" value="{{ old('name') }}" placeholder="الاسم الكامل" required>
           </div>
-          <div class="psb" id="pw-bar"></div>
-          <span id="pw-hint" style="font-size:9px;color:var(--gr)">✅ كلمة مرور قوية</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label">تأكيد كلمة المرور</label>
-          <div class="pw-wrap">
-            <input class="form-input" type="password" name="password_confirmation" required>
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input class="form-input" type="email" name="email" value="{{ old('email') }}" placeholder="your@wafragulf.com" required>
           </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <div class="pw-wrap">
+              <input class="form-input" type="password" name="password" id="rpw" required oninput="checkPwStrength(this)">
+              <button type="button" class="pw-toggle" onclick="togglePw('rpw')">👁</button>
+            </div>
+            <div class="psb" id="pw-bar"></div>
+            <span id="pw-hint" style="font-size:9px;color:var(--gr)"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">تأكيد كلمة المرور</label>
+            <div class="pw-wrap">
+              <input class="form-input" type="password" name="password_confirmation" required>
+            </div>
+          </div>
+          @if($errors->any())
+            <div class="err-box show">{{ $errors->first() }}</div>
+          @endif
+          <button type="submit" class="btn-login">إنشاء الحساب 🚀</button>
+          <div class="link-small" onclick="switchTab('login',null)">← رجوع للدخول</div>
+        </form>
+      </div>
+
+      {{-- ── Invited manager registration (shown when FA exists + invites pending) ── --}}
+      <div id="reg-invite" style="display:none">
+
+        {{-- Step 1: email check --}}
+        <div id="inv-step1">
+          <div class="info-box">📧 أدخل بريدك الإلكتروني للتحقق من دعوتك</div>
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input class="form-input" type="email" id="inv-email" placeholder="your@wafragulf.com" autocomplete="email">
+          </div>
+          <div class="err-box" id="inv-err"></div>
+          <button type="button" class="btn-login" onclick="checkInvite()">التحقق من الدعوة ←</button>
+          <div class="link-small" onclick="switchTab('login',null)">← رجوع للدخول</div>
         </div>
-        @if($errors->any())
-          <div class="err-box show">{{ $errors->first() }}</div>
-        @endif
-        <button type="submit" class="btn-login">إنشاء الحساب 🚀</button>
-        <div class="link-small" onclick="switchTab('login',null)">← رجوع للدخول</div>
-      </form>
+
+        {{-- Step 2: fill details (shown after successful invite check) --}}
+        <div id="inv-step2" style="display:none">
+          <div class="ok-box show" id="inv-branch-info" style="margin-bottom:12px"></div>
+          <div class="form-group">
+            <label class="form-label">الاسم الكامل</label>
+            <input class="form-input" type="text" id="inv-name" placeholder="اسمك الكامل">
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <div class="pw-wrap">
+              <input class="form-input" type="password" id="inv-pw" placeholder="8 أحرف على الأقل" oninput="checkPwStrength2(this)">
+              <button type="button" class="pw-toggle" onclick="togglePw('inv-pw')">👁</button>
+            </div>
+            <div class="psb" id="inv-pw-bar"></div>
+            <span id="inv-pw-hint" style="font-size:9px"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">تأكيد كلمة المرور</label>
+            <div class="pw-wrap">
+              <input class="form-input" type="password" id="inv-pw2" placeholder="أعد كتابة كلمة المرور">
+              <button type="button" class="pw-toggle" onclick="togglePw('inv-pw2')">👁</button>
+            </div>
+          </div>
+          <div class="err-box" id="inv-reg-err"></div>
+          <div class="ok-box" id="inv-reg-ok"></div>
+          <button type="button" class="btn-login" id="inv-submit-btn" onclick="submitInviteReg()">إنشاء حسابي 🚀</button>
+          <div class="link-small" onclick="invBack()">← تغيير الإيميل</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Forgot Password -->
+    <!-- ── Forgot Password ─────────────────────────────────── -->
     <div id="tab-forgot" style="display:none">
       <div class="info-box">سيتم إرسال رابط الاستعادة على إيميلك مباشرة</div>
       <form method="POST" action="{{ route('auth.password.email') }}">
@@ -233,38 +285,129 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
 </div>
 
 <script>
-// Show register tab if no FA exists
+// ── Show correct register form based on FA/invite status ──────
 fetch('{{ route("auth.fa-check") }}')
   .then(r => r.json())
   .then(d => {
+    const regTab = document.getElementById('tab-btn-register');
     if (!d.exists) {
+      // First-time: show FA register
       document.getElementById('first-time-banner').classList.add('show');
-      document.getElementById('register-tab').style.display = '';
+      document.getElementById('reg-fa').style.display = '';
+      document.getElementById('reg-invite').style.display = 'none';
+      regTab.style.display = '';
+    } else if (d.invites_pending) {
+      // Invited managers waiting to register
+      document.getElementById('reg-fa').style.display = 'none';
+      document.getElementById('reg-invite').style.display = '';
+      regTab.textContent = '📝 تسجيل';
+      regTab.style.display = '';
     }
+    // If FA exists and no pending invites, register tab stays hidden
   }).catch(() => {});
 
+// ── Tab switching ─────────────────────────────────────────────
 function switchTab(name, btn) {
-  ['login','register','forgot'].forEach(t => document.getElementById('tab-'+t).style.display = 'none');
+  ['login','register','forgot'].forEach(t => document.getElementById('tab-'+t).style.display='none');
   document.getElementById('tab-'+name).style.display = 'block';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  else document.getElementById('tab-btn-'+name)?.classList.add('active');
 }
 
+// ── Password helpers ──────────────────────────────────────────
 function togglePw(id) {
   const i = document.getElementById(id);
-  i.type = i.type === 'password' ? 'text' : 'password';
+  i.type = i.type==='password' ? 'text' : 'password';
 }
-
-function checkPwStrength(inp) {
-  const v = inp.value;
-  const bar = document.getElementById('pw-bar');
-  const hint = document.getElementById('pw-hint');
-  if (!v) { bar.className = 'psb'; hint.textContent = ''; return; }
+function _pwScore(v) {
   const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#!$%]).{8,}$/.test(v);
   const medium = /^(?=.*[a-zA-Z])(?=.*\d).{6,}$/.test(v);
-  if (strong)      { bar.className = 'psb strong'; hint.style.color='var(--gr)'; hint.textContent = '✅ قوية'; }
-  else if (medium) { bar.className = 'psb medium'; hint.style.color='var(--or)'; hint.textContent = '⚠️ متوسطة'; }
-  else             { bar.className = 'psb weak';   hint.style.color='var(--re)'; hint.textContent = '❌ ضعيفة'; }
+  return strong ? 3 : medium ? 2 : v.length ? 1 : 0;
+}
+function _applyPwBar(barId, hintId, v) {
+  const bar = document.getElementById(barId), hint = document.getElementById(hintId);
+  const s = _pwScore(v);
+  const cls = ['psb','psb weak','psb medium','psb strong'];
+  const lbl = ['','❌ ضعيفة','⚠️ متوسطة','✅ قوية'];
+  const clr = ['','var(--re)','#f5a623','var(--gr)'];
+  bar.className = cls[s]; hint.textContent = lbl[s]; hint.style.color = clr[s];
+}
+function checkPwStrength(inp)  { _applyPwBar('pw-bar',    'pw-hint',    inp.value); }
+function checkPwStrength2(inp) { _applyPwBar('inv-pw-bar','inv-pw-hint',inp.value); }
+
+// ── Invite check ──────────────────────────────────────────────
+let _inviteData = null;
+async function checkInvite() {
+  const email = document.getElementById('inv-email').value.trim();
+  const errEl = document.getElementById('inv-err');
+  errEl.textContent = ''; errEl.classList.remove('show');
+  if (!email) { errEl.textContent = 'أدخل بريدك الإلكتروني'; errEl.classList.add('show'); return; }
+
+  try {
+    const res = await fetch('/api/auth/check-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+      body: JSON.stringify({ email }),
+    });
+    const d = await res.json();
+    if (!res.ok || !d.success) {
+      errEl.textContent = d.message || 'الإيميل غير مصرح بالتسجيل.';
+      errEl.classList.add('show');
+      return;
+    }
+    _inviteData = { email, ...d.invite };
+    const branchName = d.invite.branch ? ` — فرع: ${d.invite.branch.name_ar}` : '';
+    document.getElementById('inv-branch-info').textContent = `✅ مرحباً! تم التحقق من دعوتك${branchName}`;
+    document.getElementById('inv-step1').style.display = 'none';
+    document.getElementById('inv-step2').style.display = '';
+  } catch(e) {
+    errEl.textContent = 'حدث خطأ، حاول مجدداً.'; errEl.classList.add('show');
+  }
+}
+
+function invBack() {
+  document.getElementById('inv-step2').style.display = 'none';
+  document.getElementById('inv-step1').style.display = '';
+  _inviteData = null;
+}
+
+// ── Submit invite registration ────────────────────────────────
+async function submitInviteReg() {
+  const name = document.getElementById('inv-name').value.trim();
+  const pw   = document.getElementById('inv-pw').value;
+  const pw2  = document.getElementById('inv-pw2').value;
+  const err  = document.getElementById('inv-reg-err');
+  const ok   = document.getElementById('inv-reg-ok');
+  err.textContent = ''; err.classList.remove('show');
+  ok.classList.remove('show');
+
+  if (!name)          { err.textContent = 'أدخل اسمك الكامل.'; err.classList.add('show'); return; }
+  if (pw.length < 8)  { err.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.'; err.classList.add('show'); return; }
+  if (pw !== pw2)     { err.textContent = 'كلمتا المرور غير متطابقتين.'; err.classList.add('show'); return; }
+
+  const btn = document.getElementById('inv-submit-btn');
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+
+  try {
+    const res = await fetch('/api/auth/register-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+      body: JSON.stringify({ name, email: _inviteData.email, password: pw, password_confirmation: pw2 }),
+    });
+    const d = await res.json();
+    if (!res.ok || !d.success) {
+      const msg = d.errors ? Object.values(d.errors).flat().join(' ') : d.message;
+      err.textContent = msg || 'حدث خطأ.'; err.classList.add('show');
+      btn.disabled = false; btn.textContent = 'إنشاء حسابي 🚀';
+      return;
+    }
+    ok.textContent = '✅ تم إنشاء حسابك! جاري التحويل...'; ok.classList.add('show');
+    setTimeout(() => { switchTab('login', null); }, 1800);
+  } catch(e) {
+    err.textContent = 'حدث خطأ، حاول مجدداً.'; err.classList.add('show');
+    btn.disabled = false; btn.textContent = 'إنشاء حسابي 🚀';
+  }
 }
 </script>
 </body>

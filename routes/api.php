@@ -22,8 +22,10 @@ use App\Http\Controllers\Api\{
 
 // ── Public routes (no authentication) ────────────────────────
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']); // FA first-time only
-    Route::post('login',    [AuthController::class, 'login']);
+    Route::post('register',         [AuthController::class, 'register']);        // FA first-time only
+    Route::post('login',            [AuthController::class, 'login']);
+    Route::post('check-invite',     [AuthController::class, 'checkInvite']);     // validate invite email
+    Route::post('register-invite',  [AuthController::class, 'registerViaInvite']); // branch manager self-signup
 });
 
 
@@ -106,6 +108,13 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         Route::put('{id}',                    [ManagerController::class, 'update']);
         Route::delete('{id}',                 [ManagerController::class, 'destroy']);
         Route::post('{id}/reset-password',    [ManagerController::class, 'resetPassword']);
+    });
+
+    // ── Manager Invites (Finance Admin only) ──────────────────
+    Route::prefix('manager-invites')->middleware('role:finance_admin')->group(function () {
+        Route::get('/',       [ManagerController::class, 'invites']);
+        Route::post('/',      [ManagerController::class, 'storeInvite']);
+        Route::delete('{id}', [ManagerController::class, 'destroyInvite']);
     });
 
     // ── Branches ──────────────────────────────────────────────

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User, UserPermission, ActivityLog};
+use App\Models\{User, UserPermission, ActivityLog, ManagerInvite};
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{Hash, Validator};
 
@@ -144,6 +145,116 @@ class AuthController extends Controller
             'user'        => $this->userResource($user),
             'permissions' => $user->allPermissions(),
         ]);
+    }
+
+    // ── POST /api/auth/check-invite ──────────────────────────
+    // Public — checks if an email has a pending manager invite
+    public function checkInvite(Request $request): JsonResponse
+    {
+        $v = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'message' => 'بريد إلكتروني غير صالح.'], 422);
+        }
+
+        // Check not already registered
+        if (User::where('email', $request->email)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذا الإيميل مسجل مسبقاً. يرجى تسجيل الدخول.',
+            ], 409);
+        }
+
+        $invite = ManagerInvite::where('email', $request->email)
+                               ->whereNull('used_at')
+                               ->with('branch')
+                               ->first();
+
+        if (! $invite) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذا الإيميل غير مصرح بالتسجيل. تواصل مع المدير المالي.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'invite'  => [
+                'id'     => $invite->id,
+                'role'   => $invite->role,
+                'branch' => $invite->branch ? $invite->branch->only('id', 'name_ar') : null,
+                'note'   => $invite->note,
+            ],
+        ]);
+    }
+
+    // ── POST /api/auth/register-invite ───────────────────────
+    // Public — branch manager self-registration via FA invite
+    public function registerViaInvite(Request $request): JsonResponse
+    {
+        $v = Validator::make($request->all(), [
+            'name'                  => 'required|string|max:100',
+            'email'                 => 'required|email|max:150|unique:users,email',
+            'password'              => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string',
+        ]);
+
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
+
+        $invite = ManagerInvite::where('email', $request->email)
+                               ->whereNull('used_at')
+                               ->first();
+
+        if (! $invite) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الدعوة غير موجودة أو تم استخدامها مسبقاً.',
+            ], 403);
+        }
+
+        $user = null;
+        DB::transaction(function () use ($request, $invite, &$user) {
+            $user = User::create([
+                'name'             => $request->name,
+                'email'            => $request->email,
+                'password'         => Hash::make($request->password),
+                'role'             => $invite->role,
+                'branch_id'        => $invite->branch_id,
+                'is_active'        => true,
+                'must_change_pass' => false,
+                'created_by'       => $invite->invited_by,
+            ]);
+
+            // Default permissions for branch manager
+            $permissions = [
+                'dashboard', 'cards', 'modified', 'reports',
+                'create_card', 'edit_card', 'employees', 'import', 'export',
+            ];
+            foreach ($permissions as $perm) {
+                UserPermission::create([
+                    'user_id'    => $user->id,
+                    'permission' => $perm,
+                    'granted'    => true,
+                ]);
+            }
+
+            // Consume the invite
+            $invite->update(['used_at' => now()]);
+
+            ActivityLog::record('manager_self_registered', $user, [
+                'invite_id' => $invite->id,
+                'branch_id' => $invite->branch_id,
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إنشاء حسابك بنجاح. يمكنك الدخول الآن.',
+        ], 201);
     }
 
     // ── Helpers ───────────────────────────────────────────────

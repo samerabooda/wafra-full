@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User, UserPermission, Branch, ActivityLog};
+use App\Models\{User, UserPermission, Branch, ActivityLog, ManagerInvite};
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{Hash, DB, Validator};
 use Illuminate\Support\Str;
@@ -173,6 +173,87 @@ class ManagerController extends Controller
             'success' => true,
             'message' => "Manager {$manager->name} deactivated.",
         ]);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // INVITES — pre-registered emails for branch manager self-signup
+    // ══════════════════════════════════════════════════════════
+
+    // ── GET /api/manager-invites ──────────────────────────────
+    public function invites(Request $request): JsonResponse
+    {
+        if ($err = $this->requireFA($request)) return $err;
+
+        $invites = ManagerInvite::with('branch')
+                                ->orderByDesc('created_at')
+                                ->get()
+                                ->map(fn($i) => [
+                                    'id'         => $i->id,
+                                    'email'      => $i->email,
+                                    'branch'     => $i->branch?->only('id', 'code', 'name_ar', 'name_en'),
+                                    'role'       => $i->role,
+                                    'note'       => $i->note,
+                                    'is_pending' => $i->isPending(),
+                                    'used_at'    => $i->used_at?->toDateTimeString(),
+                                    'created_at' => $i->created_at->toDateTimeString(),
+                                ]);
+
+        return response()->json(['success' => true, 'data' => $invites]);
+    }
+
+    // ── POST /api/manager-invites ─────────────────────────────
+    public function storeInvite(Request $request): JsonResponse
+    {
+        if ($err = $this->requireFA($request)) return $err;
+
+        $v = Validator::make($request->all(), [
+            'email'     => 'required|email|max:150|unique:manager_invites,email|unique:users,email',
+            'branch_id' => 'nullable|exists:branches,id',
+            'role'      => 'nullable|in:branch_manager,viewer',
+            'note'      => 'nullable|string|max:255',
+        ]);
+
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
+
+        $invite = ManagerInvite::create([
+            'email'      => $request->email,
+            'branch_id'  => $request->branch_id,
+            'role'       => $request->role ?? 'branch_manager',
+            'note'       => $request->note,
+            'invited_by' => $request->user()->id,
+        ]);
+
+        ActivityLog::record('invite_created', null, [
+            'email'     => $invite->email,
+            'branch_id' => $invite->branch_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تمت إضافة الإيميل للقائمة المسموح بها.',
+            'data'    => $invite->load('branch'),
+        ], 201);
+    }
+
+    // ── DELETE /api/manager-invites/{id} ─────────────────────
+    public function destroyInvite(Request $request, int $id): JsonResponse
+    {
+        if ($err = $this->requireFA($request)) return $err;
+
+        $invite = ManagerInvite::findOrFail($id);
+
+        if (! $invite->isPending()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن حذف دعوة تم استخدامها.',
+            ], 422);
+        }
+
+        $invite->delete();
+
+        return response()->json(['success' => true, 'message' => 'تم حذف الدعوة.']);
     }
 
     // ── POST /api/managers/{id}/reset-password ────────────────

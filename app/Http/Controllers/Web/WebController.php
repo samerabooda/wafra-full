@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\{User, CommissionCard};
+use App\Models\{User, CommissionCard, ManagerInvite, UserPermission};
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{Auth, Hash, Validator};
 
@@ -99,8 +100,12 @@ class WebController extends Controller
     // ── FA Check (for login page JS) ──────────────────────────
     public function faCheck(): JsonResponse
     {
+        $faExists      = User::where('role', 'finance_admin')->exists();
+        $pendingInvites = ManagerInvite::whereNull('used_at')->exists();
+
         return response()->json([
-            'exists' => User::where('role', 'finance_admin')->exists(),
+            'exists'          => $faExists,
+            'invites_pending' => $pendingInvites, // show register tab for invited managers
         ]);
     }
 
