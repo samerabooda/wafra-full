@@ -29,11 +29,11 @@ $gap     = max(6,  (int)round($gw * 0.10));
 
 /* ── Dot-globe generation ─────────────────────────────── */
 $sR=43.0; $sCx=50.0; $sCy=48.0;
-$dW=8.0;  $dH=6.6;   $dRx=1.7;
-$pX=9.8;  $pY=8.8;
-/* Exact logo teal #1B9BA4 → near-white #E4F3F4 */
+$dW=9.0;  $dH=7.4;   $dRx=1.6;
+$pX=10.5; $pY=9.2;
+/* Exact logo teal #1B9BA4 → near-white #E6F5F6 */
 $r1=27;  $g1=155; $b1=164;
-$r2=228; $g2=243; $b2=244;
+$r2=230; $g2=245; $b2=246;
 
 $dots=[];
 $rowY = $sCy - $sR + $dH/2 + 0.5;
@@ -255,6 +255,10 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
         <clipPath id="{{$gid}}_clip">
           <circle cx="{{$sCx}}" cy="{{$sCy}}" r="{{$sR + 0.5}}"/>
         </clipPath>
+        <radialGradient id="{{$gid}}_glow" cx="62%" cy="38%" r="55%">
+          <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.12"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </radialGradient>
       </defs>
       <g clip-path="url(#{{$gid}}_clip)">
         @foreach($dots as $d)
@@ -262,6 +266,8 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
               width="{{$dW}}" height="{{$dH}}" rx="{{$dRx}}"
               fill="{{$d['c']}}"/>
         @endforeach
+        <circle cx="{{$sCx}}" cy="{{$sCy}}" r="{{$sR}}"
+                fill="url(#{{$gid}}_glow)"/>
       </g>
     </svg>
 
