@@ -76,11 +76,11 @@ while ($rowY <= $sCy + $sR - $dH / 2 - 0.5) {
            xmlns="http://www.w3.org/2000/svg"
            aria-hidden="true">
         <defs>
-          {{-- 3/4 sphere clip: remove bottom-right quadrant         --}}
-          {{-- Start bottom → arc CCW 270° → right → center → close --}}
+          {{-- 3/4 sphere clip: remove bottom-right quadrant           --}}
+          {{-- sweep=1 (CW): bottom→left→top→right = 270° visible arc --}}
           <clipPath id="wfr_sp_clip">
             <path d="M {{ $botX }},{{ $botY }}
-                     A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,0 {{ $rgtX }},{{ $rgtY }}
+                     A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,1 {{ $rgtX }},{{ $rgtY }}
                      L {{ $sCx }},{{ $sCy }} Z"/>
           </clipPath>
           {{-- Radial glow: upper-right light source --}}

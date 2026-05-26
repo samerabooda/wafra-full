@@ -413,7 +413,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="sb-header">
       @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'sb', 'whiteBg'=>true])
       <div>
-        <div class="sb-brand">وفرة الخليجية<small>Commission Cards</small></div>
+        <div class="sb-brand">وفرة الخليجية<small>للخدمات المالية</small></div>
       </div>
     </div>
 

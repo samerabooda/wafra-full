@@ -233,8 +233,9 @@ while ($rowY <= $sCy + $sR - $dH / 2 - 0.5) {
         {{-- 3/4 sphere clip: remove bottom-right quadrant               --}}
         {{-- Path: start at bottom → arc CCW 270° → right → center → Z  --}}
         <clipPath id="{{$gid}}_clip">
+          {{-- sweep=1 (clockwise): bottom→left→top→right = 270° arc, missing bottom-right --}}
           <path d="M {{ $botX }},{{ $botY }}
-                   A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,0 {{ $rgtX }},{{ $rgtY }}
+                   A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,1 {{ $rgtX }},{{ $rgtY }}
                    L {{ $sCx }},{{ $sCy }} Z"/>
         </clipPath>
         {{-- Radial light-source sheen (upper-right bright) --}}

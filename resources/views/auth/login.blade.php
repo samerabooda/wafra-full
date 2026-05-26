@@ -139,7 +139,7 @@ if(sp){sp.addEventListener('animationend',function(e){if(e.animationName==='wfr-
       @include('partials.globe', ['size'=>'md', 'showText'=>false, 'gid'=>'card', 'whiteBg'=>true])
     </div>
     <div class="card-title">وفرة الخليجية</div>
-    <div class="card-sub">Commission Cards · بوابة الدخول</div>
+    <div class="card-sub">للخدمات المالية</div>
 
     <!-- First time banner -->
     <div class="first-time-banner" id="first-time-banner">
