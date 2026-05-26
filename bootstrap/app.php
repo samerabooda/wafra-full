@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
 
+        // Redirect unauthenticated users to the correct named login route
+        $middleware->redirectGuestsTo(fn() => route('auth.login'));
+
         $middleware->alias([
             'role'        => \App\Http\Middleware\RoleMiddleware::class,
             'permission'  => \App\Http\Middleware\PermissionMiddleware::class,
