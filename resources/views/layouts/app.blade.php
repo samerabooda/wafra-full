@@ -549,7 +549,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <script>
 const API = '{{ url("/api") }}';
 let API_TOKEN = localStorage.getItem('wg_token') || '{{ session("api_token","") }}';
-const CURRENT_USER = @json(auth()->user()?->only('id','name','email','role','branch_id') ?? []);
+@php $__cu = auth()->user() ? auth()->user()->only('id','name','email','role','branch_id') : []; @endphp
+const CURRENT_USER = @json($__cu);
 
 // ── Theme ──────────────────────────────────────────────────
 let curTheme = localStorage.getItem('wg_theme') || 'dark';
