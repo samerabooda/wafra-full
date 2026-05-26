@@ -174,13 +174,13 @@ function completeFormHtml(c) {
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">المسوّق الرئيسي</label>
-        <select id="cf-mktr-${c.id}" class="form-control" onchange="checkLimit(${c.id})">
+        <select id="cf-mktr-${c.id}" class="form-control" onchange="onMarketerChange(${c.id})">
           <option value="">— لا يوجد —</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">عمولة المسوّق ($/lot)</label>
-        <input type="number" id="cf-mcomm-${c.id}" class="form-control" value="2.5" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
+        <input type="number" id="cf-mcomm-${c.id}" class="form-control" value="0" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})" disabled>
       </div>
     </div>
 
@@ -188,9 +188,9 @@ function completeFormHtml(c) {
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
         <span>إجمالي العمولات (بروكر + مسوّق)</span>
-        <span id="cf-total-${c.id}" style="font-weight:700">5.0$ / 5.0$</span>
+        <span id="cf-total-${c.id}" style="font-weight:700">0.0$ / 5.0$</span>
       </div>
-      <div class="cc-limit-bar"><div id="cf-bar-${c.id}" class="cc-limit-fill" style="width:100%;background:#198754"></div></div>
+      <div class="cc-limit-bar"><div id="cf-bar-${c.id}" class="cc-limit-fill" style="width:0%;background:#198754"></div></div>
       <div id="cf-warn-${c.id}" style="font-size:11px;color:#dc3545;margin-top:4px;display:none">⛔ يتجاوز الحد المسموح (5$)</div>
     </div>
 
@@ -251,6 +251,16 @@ function completeFormHtml(c) {
   </div>`;
 }
 
+// ── Marketer change: enable/disable commission field ──────────
+function onMarketerChange(cardId) {
+  const mktrSel   = document.getElementById(`cf-mktr-${cardId}`);
+  const mcommInp  = document.getElementById(`cf-mcomm-${cardId}`);
+  const hasMarketer = !!mktrSel?.value;
+  mcommInp.disabled = !hasMarketer;
+  if (!hasMarketer) mcommInp.value = '0';
+  checkLimit(cardId);
+}
+
 // ── Commission limit bar updater ───────────────────────────────
 function checkLimit(cardId) {
   const bComm = parseFloat(document.getElementById(`cf-bcomm-${cardId}`)?.value ?? 0) || 0;
@@ -289,8 +299,9 @@ async function completeCard(id) {
     return;
   }
 
-  const bComm = parseFloat(document.getElementById(`cf-bcomm-${id}`).value)        || 0;
-  const mComm = parseFloat(document.getElementById(`cf-mcomm-${id}`)?.value ?? 0)  || 0;
+  const bComm   = parseFloat(document.getElementById(`cf-bcomm-${id}`).value) || 0;
+  const mktrId  = parseInt(document.getElementById(`cf-mktr-${id}`)?.value)   || null;
+  const mComm   = mktrId ? (parseFloat(document.getElementById(`cf-mcomm-${id}`)?.value) || 0) : 0;
 
   // Client-side commission limit check
   if (bComm + mComm > 5) {
@@ -302,7 +313,7 @@ async function completeCard(id) {
   const payload = {
     broker_id:           brokerId,
     broker_commission:   bComm,
-    marketer_id:         parseInt(document.getElementById(`cf-mktr-${id}`)?.value)   || null,
+    marketer_id:         mktrId,
     marketer_commission: mComm,
     ext_marketer1_id:    parseInt(document.getElementById(`cf-ext1-${id}`)?.value)   || null,
     ext_commission1:     parseFloat(document.getElementById(`cf-ecomm1-${id}`)?.value) || 0,
@@ -383,7 +394,8 @@ function populateEmployeeSelects(cardId) {
       sel.appendChild(o);
     });
   });
-  checkLimit(cardId);
+  // Sync marketer commission field state after populating
+  onMarketerChange(cardId);
 }
 
 // ── Init ───────────────────────────────────────────────────────
