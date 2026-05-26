@@ -1,8 +1,9 @@
 {{--
   ╔══════════════════════════════════════════════════════════╗
-  ║  Wafra Gulf — Animated Logo Component  v8.0              ║
-  ║  Exact logo: white bg · teal dots · dark charcoal text   ║
-  ║  Ring animates back→front · name animates in perspective ║
+  ║  Wafra Gulf — Animated Logo Component  v9.0              ║
+  ║  Exact logo: 3/4 sphere (bottom-right quadrant missing)  ║
+  ║  Dark teal diagonal swoosh band across upper face        ║
+  ║  Teal tiles gradient: dark-left → near-white upper-right ║
   ║  Usage:                                                  ║
   ║    @include('partials.globe', [                          ║
   ║      'size'      => 'xs|sm|md|lg|xl', (default: 'md')   ║
@@ -19,45 +20,59 @@ $gid     = isset($gid)     ? preg_replace('/[^a-z0-9]/i','_',$gid) : ('wfg_'.ran
 $sz      = $size     ?? 'md';
 $gw      = match($sz){ 'xs'=>44,'sm'=>62,'lg'=>132,'xl'=>176, default=>100 };
 $hasText = $showText ?? true;
-$whiteBg = $whiteBg  ?? true;   // white card wrapper (matches official logo)
-$darkCtx = $darkCtx  ?? false;  // true = dark background, invert text to white
-/* Also accept legacy $darkText=false as dark context */
+$whiteBg = $whiteBg  ?? true;
+$darkCtx = $darkCtx  ?? false;
 if (isset($darkText) && $darkText === false) $darkCtx = true;
 $nm_fs   = max(11, (int)round($gw * 0.20));
 $tg_fs   = max(8,  (int)round($gw * 0.120));
 $gap     = max(6,  (int)round($gw * 0.10));
 
-/* ── Dot-globe generation ─────────────────────────────── */
-$sR=43.0; $sCx=50.0; $sCy=48.0;
-$dW=9.0;  $dH=7.4;   $dRx=1.6;
-$pX=10.5; $pY=9.2;
-/* Exact logo teal #1B9BA4 → near-white #E6F5F6 */
+/* ── Sphere geometry ─────────────────────────────────── */
+/* 3/4 sphere: center (50,46), radius 44                  */
+/* Missing: bottom-right quadrant (natural logo look)      */
+$sR  = 44.0; $sCx = 50.0; $sCy = 46.0;
+$dW  =  9.0; $dH  =  7.4; $dRx = 1.6;
+$pX  = 10.5; $pY  =  9.2;
+
+/* Logo teal  #1B9BA4 → near-white #E6F5F6 */
 $r1=27;  $g1=155; $b1=164;
 $r2=230; $g2=245; $b2=246;
 
-$dots=[];
-$rowY = $sCy - $sR + $dH/2 + 0.5;
-while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
-    $dy=$rowY-$sCy;
-    $hw=sqrt(max(0.0,$sR*$sR-$dy*$dy));
-    if ($hw > $dW/2) {
-        $n = min(
-            max(1,(int)floor(($hw*2-$dW*0.4)/$pX)+1),
-            (int)floor($hw*2/($dW+0.8))
+/* 3/4 clip path coordinates */
+$botX = $sCx;               $botY = $sCy + $sR + 0.5;   // bottom of circle
+$rgtX = $sCx + $sR + 0.5;  $rgtY = $sCy;                 // right of circle
+
+/* Swoosh (tilted ellipse): dark teal diagonal band */
+$swRx = $sR;                          // same rx as sphere
+$swRy = round($sR * 0.44, 1);         // ≈ 19.4 — flattened
+$swSW = round($sR * 0.26, 1);         // ≈ 11.4 stroke-width
+$swRot = -42;                         // tilt angle (degrees)
+
+/* ── Dot generation ──────────────────────────────────── */
+$dots = [];
+$rowY = $sCy - $sR + $dH / 2 + 0.5;
+while ($rowY <= $sCy + $sR - $dH / 2 - 0.5) {
+    $dy = $rowY - $sCy;
+    $hw = sqrt(max(0.0, $sR * $sR - $dy * $dy));
+    if ($hw > $dW / 2) {
+        $n  = min(
+            max(1, (int) floor(($hw * 2 - $dW * 0.4) / $pX) + 1),
+            (int) floor($hw * 2 / ($dW + 0.8))
         );
-        $sx = $sCx - ($n-1)*$pX/2;
-        for ($i=0;$i<$n;$i++) {
-            $cx = $sx + $i*$pX;
-            $nx = ($cx-($sCx-$sR))/($sR*2);
-            $ny = ($rowY-($sCy-$sR))/($sR*2);
-            $lf = max(0.0,min(1.0,$nx*0.62+(1-$ny)*0.50-0.10));
-            $dots[]=[
-                'x'=>round($cx-$dW/2,2),
-                'y'=>round($rowY-$dH/2,2),
-                'c'=>sprintf('rgb(%d,%d,%d)',
-                    (int)($r1+($r2-$r1)*$lf),
-                    (int)($g1+($g2-$g1)*$lf),
-                    (int)($b1+($b2-$b1)*$lf)),
+        $sx = $sCx - ($n - 1) * $pX / 2;
+        for ($i = 0; $i < $n; $i++) {
+            $cx = $sx + $i * $pX;
+            $nx = ($cx - ($sCx - $sR)) / ($sR * 2);
+            $ny = ($rowY - ($sCy - $sR)) / ($sR * 2);
+            /* Light source: upper-right bright, lower-left dark */
+            $lf = max(0.0, min(1.0, $nx * 0.62 + (1 - $ny) * 0.50 - 0.10));
+            $dots[] = [
+                'x' => round($cx - $dW / 2, 2),
+                'y' => round($rowY - $dH / 2, 2),
+                'c' => sprintf('rgb(%d,%d,%d)',
+                    (int)($r1 + ($r2 - $r1) * $lf),
+                    (int)($g1 + ($g2 - $g1) * $lf),
+                    (int)($b1 + ($b2 - $b1) * $lf)),
             ];
         }
     }
@@ -67,8 +82,7 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
 
 <style>
 /* ═══════════════════════════════════════════════════════
-   WFG Logo v8 — scoped to #{{$gid}}
-   White background · exact logo palette · perspective anim
+   WFG Logo v9 — 3/4 sphere + diagonal swoosh
    ═══════════════════════════════════════════════════════ */
 #{{$gid}} {
   --gw  : {{ $gw }}px;
@@ -90,16 +104,13 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
   from { opacity:0; transform:scale(.9) translateY(12px); }
   to   { opacity:1; transform:none; }
 }
-
-/* ── Scene ──────────────────────────────────────────── */
 #{{$gid}} .wfg-scene {
   position : relative;
   width    : var(--gw);
   height   : var(--gw);
   overflow : visible;
 }
-
-/* ── SVG dot globe ──────────────────────────────────── */
+/* ── SVG (3/4 sphere) ──────────────────────────────── */
 #{{$gid}} .wfg-dots {
   position : absolute;
   inset    : 0;
@@ -109,14 +120,10 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
   animation: wfgGlobeIn_{{$gid}} 1s cubic-bezier(.34,1.56,.64,1) .1s both;
 }
 @keyframes wfgGlobeIn_{{$gid}} {
-  from { opacity:0; transform:scale(.7); }
+  from { opacity:0; transform:scale(.7) rotate(-15deg); }
   to   { opacity:1; transform:none; }
 }
-
-/* ══════════════════════════════════════════════════════
-   ORBIT ARC — dark teal, back→top→front
-   Matches the diagonal swoosh band in the official logo
-   ══════════════════════════════════════════════════════ */
+/* ── Orbit arc (sweeps around the sphere) ──────────── */
 #{{$gid}} .wfg-orbit-wrap {
   position        : absolute;
   width           : calc(var(--gw)*1.54);
@@ -147,8 +154,6 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
   80%  { transform:rotateX( 60deg) rotateZ(-5deg); opacity:.36; }
   100% { transform:rotateX( 92deg) rotateZ(-8deg); opacity:.05; }
 }
-
-/* ── Second ring (depth layer) ──────────────────────── */
 #{{$gid}} .wfg-orbit-ring2 {
   position          : absolute;
   width             : calc(var(--gw)*1.30);
@@ -171,16 +176,13 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
   80%  { transform:rotateX( 65deg) rotateZ( 5deg); opacity:.26; }
   100% { transform:rotateX( 95deg) rotateZ( 7deg); opacity:.04; }
 }
-
-/* ── Company text ────────────────────────────────────── */
+/* ── Company text ─────────────────────────────────── */
 #{{$gid}} .wfg-text {
   text-align : center;
   direction  : rtl;
   line-height: 1.3;
   @if($hasText) display:flex; flex-direction:column; align-items:center; @else display:none; @endif
 }
-
-/* ─ Name: perspective animation (comes from back to front) */
 #{{$gid}} .wfg-name {
   font-family   : 'Tajawal', 'Cairo', 'Segoe UI', Arial, sans-serif;
   font-size     : {{ $nm_fs }}px;
@@ -191,29 +193,15 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
     color : #FFFFFF;
     filter: drop-shadow(0 1px 4px rgba(27,155,164,.28));
   @else
-    /* Exact logo dark charcoal */
-    color : #3A3D42;
+    color : #2B2E33;
   @endif
   animation : wfgNameIn_{{$gid}} 1.1s cubic-bezier(.22,1,.36,1) .35s both;
 }
 @keyframes wfgNameIn_{{$gid}} {
-  0%  {
-    opacity  : 0;
-    transform: perspective(500px) translateZ(-180px) scale(.72);
-    filter   : blur(3px);
-  }
-  60% {
-    opacity  : 1;
-    filter   : blur(0);
-  }
-  100% {
-    opacity  : 1;
-    transform: perspective(500px) translateZ(0) scale(1);
-    filter   : blur(0);
-  }
+  0%  { opacity:0; transform:perspective(500px) translateZ(-180px) scale(.72); filter:blur(3px); }
+  60% { opacity:1; filter:blur(0); }
+  100%{ opacity:1; transform:perspective(500px) translateZ(0) scale(1); filter:blur(0); }
 }
-
-/* ─ Tagline: same perspective animation, slight delay */
 #{{$gid}} .wfg-tagline {
   font-family : 'Tajawal', 'Cairo', 'Segoe UI', Arial, sans-serif;
   font-size   : {{ $tg_fs }}px;
@@ -223,55 +211,62 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
   @if($darkCtx)
     color : rgba(200,228,232,.85);
   @else
-    /* Exact logo medium gray */
     color : #888888;
   @endif
   animation : wfgTagIn_{{$gid}} 1.1s cubic-bezier(.22,1,.36,1) .52s both;
 }
 @keyframes wfgTagIn_{{$gid}} {
-  0%  {
-    opacity  : 0;
-    transform: perspective(500px) translateZ(-120px) scale(.8);
-    filter   : blur(2px);
-  }
+  0%  { opacity:0; transform:perspective(500px) translateZ(-120px) scale(.8); filter:blur(2px); }
   60% { opacity:1; filter:blur(0); }
-  100% {
-    opacity  : 1;
-    transform: perspective(500px) translateZ(0) scale(1);
-    filter   : blur(0);
-  }
+  100%{ opacity:1; transform:perspective(500px) translateZ(0) scale(1); filter:blur(0); }
 }
 </style>
 
 {{-- ══════════════ DOM ══════════════ --}}
 <div id="{{$gid}}">
-
   <div class="wfg-scene">
 
-    {{-- SVG dot-globe (tiles matching official logo) --}}
+    {{-- ── 3/4 Sphere SVG ── --}}
     <svg class="wfg-dots" viewBox="0 0 100 100"
          xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
+        {{-- 3/4 sphere clip: remove bottom-right quadrant               --}}
+        {{-- Path: start at bottom → arc CCW 270° → right → center → Z  --}}
         <clipPath id="{{$gid}}_clip">
-          <circle cx="{{$sCx}}" cy="{{$sCy}}" r="{{$sR + 0.5}}"/>
+          <path d="M {{ $botX }},{{ $botY }}
+                   A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,0 {{ $rgtX }},{{ $rgtY }}
+                   L {{ $sCx }},{{ $sCy }} Z"/>
         </clipPath>
-        <radialGradient id="{{$gid}}_glow" cx="62%" cy="38%" r="55%">
-          <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.12"/>
+        {{-- Radial light-source sheen (upper-right bright) --}}
+        <radialGradient id="{{$gid}}_glow" cx="65%" cy="35%" r="52%">
+          <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.16"/>
           <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
         </radialGradient>
       </defs>
+
       <g clip-path="url(#{{$gid}}_clip)">
+        {{-- Teal tile grid --}}
         @foreach($dots as $d)
         <rect x="{{$d['x']}}" y="{{$d['y']}}"
               width="{{$dW}}" height="{{$dH}}" rx="{{$dRx}}"
               fill="{{$d['c']}}"/>
         @endforeach
+
+        {{-- Diagonal swoosh band (dark teal arc — signature logo element) --}}
+        {{-- Tilted ellipse stroke creates the diagonal band from lower-left to upper-right --}}
+        <ellipse cx="{{$sCx}}" cy="{{$sCy}}"
+                 rx="{{$swRx}}" ry="{{$swRy}}"
+                 stroke="#0B6B74" stroke-width="{{$swSW}}"
+                 fill="none" opacity="0.82"
+                 transform="rotate({{$swRot}}, {{$sCx}}, {{$sCy}})"/>
+
+        {{-- Light-source sheen overlay --}}
         <circle cx="{{$sCx}}" cy="{{$sCy}}" r="{{$sR}}"
                 fill="url(#{{$gid}}_glow)"/>
       </g>
     </svg>
 
-    {{-- Primary orbit arc: back → over top → front --}}
+    {{-- Animated orbit arc (back→top→front sweep) --}}
     <div class="wfg-orbit-wrap">
       <div class="wfg-orbit-ring"></div>
     </div>
@@ -279,10 +274,9 @@ while ($rowY <= $sCy + $sR - $dH/2 - 0.5) {
 
   </div>
 
-  {{-- Company name (perspective animation: back → front) --}}
+  {{-- Company name --}}
   <div class="wfg-text">
     <div class="wfg-name">وفرة الخليجية</div>
     <div class="wfg-tagline">للخدمات المالية</div>
   </div>
-
 </div>
