@@ -80,7 +80,7 @@
             🏢 <strong>ملف واحد = فرع واحد</strong> — حدد الفرع المستهدف قبل كل رفع
           </div>
           <div style="padding:8px;background:rgba(123,104,238,.08);border-radius:7px;border-right:3px solid #7b68ee">
-            📊 <strong>الحد الأقصى:</strong> 5,000 سجل لكل ملف — للملفات الأكبر قسّمها لأجزاء
+            📊 <strong>لا يوجد حد أقصى</strong> — يمكنك رفع أي عدد من السجلات في ملف واحد
           </div>
           <div style="padding:8px;background:rgba(46,134,171,.08);border-radius:7px;border-right:3px solid var(--pri)">
             💾 <strong>النتيجة:</strong> بعد الاستيراد ستظهر تفاصيل كاملة — جديد / تحديث / أخطاء مع رقم الصف

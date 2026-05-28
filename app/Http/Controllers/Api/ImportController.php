@@ -36,7 +36,7 @@ class ImportController extends Controller
     public function import(Request $request): JsonResponse
     {
         $v = Validator::make($request->all(), [
-            'rows'         => 'required|array|min:1|max:5000',
+            'rows'         => 'required|array|min:1',
             'rows.*.ac_no' => 'required|string',
             'rows.*.month' => 'required|string',
             'filename'     => 'nullable|string|max:255',
