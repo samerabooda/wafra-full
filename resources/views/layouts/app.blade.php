@@ -530,7 +530,8 @@ html{font-size:16px}
   {{-- SIDEBAR --}}
   <aside class="sidebar">
     <div class="sb-header">
-      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية">
+      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية"
+           onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
       <div class="sb-brand">
         <span data-i18n="company.short">وفرة الخليجية</span>
         <small data-i18n="company.tagline">للخدمات المالية</small>
@@ -600,7 +601,8 @@ html{font-size:16px}
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
-        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية">
+        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية"
+             onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
           <div class="tb-sub"><span data-i18n="company.short">وفرة الخليجية</span> / <span id="tb-branch" data-i18n="tb.dept">الإدارة المالية</span></div>
@@ -937,6 +939,14 @@ applyLang=function(lang){_appApplyLang(lang);cNavApplyLang();};
 /* Apply saved preference on load */
 applyLang(curLang);
 
+// ── Logo Refresh ───────────────────────────────────────────
+// Clears the session-splash flag so the splash plays again,
+// then reloads the current page.
+function logoRefresh() {
+  sessionStorage.removeItem('wfr_shown');
+  location.reload();
+}
+
 // ── Toast ──────────────────────────────────────────────────
 function toast(msg, type = 'success') {
   const c = document.getElementById('toast-container');
@@ -1216,7 +1226,8 @@ setInterval(loadCcPendingCount, 60000);
 <div class="mob-header" id="mob-header">
   <button class="mob-burger" onclick="toggleMobSidebar()">☰</button>
   <div class="mob-logo-row">
-    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="وفرة الخليجية للخدمات المالية">
+    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="وفرة الخليجية للخدمات المالية"
+         onclick="logoRefresh()" style="cursor:pointer">
     <div class="mob-title"><span data-i18n="company.short">وفرة الخليجية</span><small id="mob-pg-title">لوحة المتابعة</small></div>
   </div>
   <div style="display:flex;gap:5px;align-items:center">

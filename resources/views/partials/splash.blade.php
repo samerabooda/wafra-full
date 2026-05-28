@@ -212,18 +212,28 @@ body.wfr-loading { overflow:hidden; }
 <script>
 (function(){
   'use strict';
-  document.body.classList.add('wfr-loading');
 
   var splash    = document.getElementById('wfr-splash');
+  if (!splash) return;
+
+  // ── Skip splash on normal page navigation (only show once per session) ──
+  if (sessionStorage.getItem('wfr_shown')) {
+    splash.style.display = 'none';
+    document.body.classList.remove('wfr-loading');
+    return;
+  }
+  sessionStorage.setItem('wfr_shown', '1');
+
+  document.body.classList.add('wfr-loading');
+
   var typedEl   = document.getElementById('wfr-typed-text');
   var cursor    = document.getElementById('wfr-cursor');
   var tagline   = document.getElementById('wfr-tagline');
-  if (tagline) tagline.textContent = lang === 'en' ? 'Commission Cards Management System' : 'نظام إدارة كروت العمولات';
   var progBar   = document.getElementById('wfr-progress-bar');
-  if (!splash) return;
 
   /* ── Typewriter ── */
-  var lang     = localStorage.getItem('wg_lang') || 'ar';
+  var lang = localStorage.getItem('wg_lang') || 'ar';
+  if (tagline) tagline.textContent = lang === 'en' ? 'Commission Cards Management System' : 'نظام إدارة كروت العمولات';
   var nameAr   = lang === 'en' ? 'Wafra Gulf Financial Services' : 'وفرة الخليجية للخدمات المالية';
   var charDelay = lang === 'en' ? 75 : 95;  /* ms per character */
   var typeStart = 900;   /* delay before typing begins (ms) */

@@ -39,6 +39,28 @@
 .legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block}
 </style>
 
+<!-- Account Number Quick Search -->
+<div id="ac-search-bar" style="
+  display:flex;gap:10px;align-items:center;
+  background:linear-gradient(135deg,rgba(26,173,186,.08),rgba(26,173,186,.04));
+  border:1px solid rgba(26,173,186,.25);border-radius:14px;
+  padding:14px 18px;margin-bottom:14px;flex-wrap:wrap;
+">
+  <span style="font-size:20px">🔍</span>
+  <div style="flex:1;min-width:200px">
+    <div style="font-size:11px;font-weight:700;color:var(--pri2);margin-bottom:5px" id="idx-acsearch-lbl">بحث سريع برقم الحساب</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="ac-search-input" class="form-control"
+        placeholder="أدخل رقم الحساب ..." inputmode="numeric"
+        style="flex:1;max-width:280px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;letter-spacing:.5px"
+        onkeydown="if(event.key==='Enter')acSearch()">
+      <button class="btn btn-primary btn-sm" onclick="acSearch()" style="white-space:nowrap" id="idx-acsearch-btn">بحث</button>
+      <button class="btn btn-ghost btn-sm" onclick="acSearchClear()" id="idx-acsearch-clear" style="display:none">✕ مسح</button>
+    </div>
+  </div>
+  <div id="ac-search-result-lbl" style="font-size:12px;color:var(--mu)"></div>
+</div>
+
 <!-- KPI Summary Strip -->
 <div class="kpi-strip">
   <div class="kpi-pill kpi-blue">
@@ -485,5 +507,52 @@ function exportPdf(){
 idxApplyLang();
 loadFilterOptions();
 loadCards();
+
+// ── Account Number Quick Search ────────────────────────────
+function acSearch() {
+  const inp = document.getElementById('ac-search-input');
+  const val = (inp?.value || '').trim();
+  if (!val) { toast('أدخل رقم الحساب', 'error'); return; }
+
+  // Put the value into the main search filter and reload
+  const mainSearch = document.getElementById('f-search');
+  if (mainSearch) mainSearch.value = val;
+
+  // Also clear other filters for a clean search
+  const monthSel = document.getElementById('f-month');
+  const brokerSel = document.getElementById('f-broker');
+  const kindSel = document.getElementById('f-kind');
+  const statusSel = document.getElementById('f-status');
+  const sourceSel = document.getElementById('f-source');
+  if (monthSel) monthSel.value = '';
+  if (brokerSel) brokerSel.value = '';
+  if (kindSel) kindSel.value = '';
+  if (statusSel) statusSel.value = '';
+  if (sourceSel) sourceSel.value = '';
+
+  currentPage = 1;
+  loadCards().then(() => {
+    const clearBtn = document.getElementById('idx-acsearch-clear');
+    const lbl = document.getElementById('ac-search-result-lbl');
+    if (clearBtn) clearBtn.style.display = '';
+    if (lbl) {
+      const cnt = filteredCards.length;
+      lbl.textContent = cnt > 0
+        ? (cnt + ' كرت ' + (cnt > 1 ? 'مسجّل' : 'مسجّل') + ' لهذا الحساب')
+        : 'لا توجد نتائج لهذا الرقم';
+      lbl.style.color = cnt > 0 ? 'var(--gr)' : 'var(--re)';
+    }
+  });
+}
+
+function acSearchClear() {
+  const inp = document.getElementById('ac-search-input');
+  const clearBtn = document.getElementById('idx-acsearch-clear');
+  const lbl = document.getElementById('ac-search-result-lbl');
+  if (inp) inp.value = '';
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (lbl) lbl.textContent = '';
+  clearFilters();
+}
 </script>
 @endpush

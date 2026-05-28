@@ -222,24 +222,37 @@ class CommissionCardController extends Controller
         if ($min  = $request->min_deposit)  $query->where('initial_deposit','>=',(float)$min);
         if ($q    = $request->search)       $query->search($q);
 
-        // Safety cap: prevent memory exhaustion on very large datasets
+        // ── Exact aggregates via DB queries (no memory limit) ──────────
+        // Clone query BEFORE adding limit so aggregates reflect true totals.
+        $aggQ              = clone $query;
+        $exactCount        = (clone $aggQ)->count();
+        $totalInitial      = round((clone $aggQ)->sum('initial_deposit'), 2);
+        $totalMonthly      = round((clone $aggQ)->sum('monthly_deposit'), 2);
+        $totalBrokerComm   = round((clone $aggQ)->sum('broker_commission'), 2);
+        $totalMarketerComm = round((clone $aggQ)->sum('marketer_commission'), 2);
+        $totalExt1Comm     = round((clone $aggQ)->sum('ext_commission1'), 2);
+        $totalExt2Comm     = round((clone $aggQ)->sum('ext_commission2'), 2);
+        $modifiedCount     = (clone $aggQ)->where('status','modified')->count();
+        $newAddedCount     = (clone $aggQ)->where('status','new_added')->count();
+
+        // Safety cap: data payload for charts/tables
         $limit = min((int)($request->per_page ?? 5000), 10000);
         $data  = $query->orderBy('month_date','desc')->orderBy('account_number')->limit($limit)->get();
 
         return response()->json([
             'success'        => true,
-            'count'          => $data->count(),
-            'records_limited'=> $data->count() >= $limit,
+            'count'          => $exactCount,
+            'records_limited'=> $exactCount > $limit,
             'branch_scope'   => $user->isScopedToBranch() ? ($user->branch?->name_ar ?? 'فرعك') : 'جميع الفروع',
             'summary' => [
-                'total_initial_deposit' => round($data->sum('initial_deposit'),2),
-                'total_monthly_deposit' => round($data->sum('monthly_deposit'),2),
-                'total_broker_comm'     => round($data->sum('broker_commission'),2),
-                'total_marketer_comm'   => round($data->sum('marketer_commission'),2),
-                'total_ext1_comm'       => round($data->sum('ext_commission1'),2),
-                'total_ext2_comm'       => round($data->sum('ext_commission2'),2),
-                'modified_count'        => $data->where('status','modified')->count(),
-                'new_added_count'       => $data->where('status','new_added')->count(),
+                'total_initial_deposit' => $totalInitial,
+                'total_monthly_deposit' => $totalMonthly,
+                'total_broker_comm'     => $totalBrokerComm,
+                'total_marketer_comm'   => $totalMarketerComm,
+                'total_ext1_comm'       => $totalExt1Comm,
+                'total_ext2_comm'       => $totalExt2Comm,
+                'modified_count'        => $modifiedCount,
+                'new_added_count'       => $newAddedCount,
             ],
             'data' => $data,
         ]);

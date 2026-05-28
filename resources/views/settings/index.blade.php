@@ -24,7 +24,7 @@
       <div id="stnav-hdr" style="font-size:11px; color:var(--mu); font-weight:700; text-transform:uppercase; letter-spacing:.5px">⚙️ لوحة الإعدادات</div>
     </div>
 
-    @foreach(['general','branches','employees','managers','approvals','permissions'] as $sid)
+    @foreach(['general','branches','employees','managers','approvals','permissions','guide'] as $sid)
     <button onclick="showSection('{{ $sid }}')" id="snav-{{ $sid }}" style="
       display:flex; align-items:center; gap:10px;
       padding:10px 14px; margin:1px 8px; border-radius:9px;
@@ -582,6 +582,161 @@
   </div>
 </div>
 
+{{-- ── Workflow Guide Section (inside settings content panel) ── --}}
+<div id="section-guide" class="settings-section" style="display:none;padding:0">
+  <div style="margin-bottom:24px">
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">📖 دليل تشغيل النظام</h2>
+    <p style="font-size:13px;color:var(--mu)">خطوات العمل اليومي وكيفية استخدام كل قسم في منصة وفرة الخليجية</p>
+  </div>
+
+  {{-- Workflow Steps --}}
+  <div style="display:flex;flex-direction:column;gap:14px">
+
+    {{-- Step 1 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🗂</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">1. إضافة كرت عمولة جديد</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          اضغط على <strong>➕ كرت جديد</strong> في أعلى الشاشة أو من القائمة الجانبية.<br>
+          أدخل رقم الحساب، الشهر، البروكر، المسوّق، قيمة الإيداع، ونوع الحساب (NEW / SUB).<br>
+          اضغط <strong>حفظ</strong> — سيظهر الكرت في قائمة كروت العمولات فوراً.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-blue">➕ كرت جديد</span>
+          <span class="badge badge-green">حقل: رقم الحساب</span>
+          <span class="badge badge-green">حقل: الشهر</span>
+          <span class="badge badge-green">حقل: البروكر</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Step 2 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">✏️</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--or);margin-bottom:6px">2. تعديل كرت موجود</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          اضغط على <strong>✏️ تعديل</strong> في شريط الأدوات العلوي، أو ابحث في <strong>كروت العمولات</strong>.<br>
+          أدخل رقم الحساب → اختر الكرت → عدّل البيانات المطلوبة → اختر <strong>سبب التعديل</strong>.<br>
+          التعديل يُسجَّل تلقائياً في سجل التدقيق مع اسم المعدّل والتاريخ.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-orange">✏️ تعديل</span>
+          <span class="badge badge-orange">سجل التعديلات — لوحة المتابعة</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Step 3 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.08));border:1px solid rgba(34,201,122,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📥</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--gr);margin-bottom:6px">3. استيراد بيانات جماعي (Excel)</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          من القائمة الجانبية → <strong>📥 استيراد بيانات</strong> (للمدير المالي فقط).<br>
+          ارفع ملف Excel بالبيانات — النظام يقرأ الصفوف تلقائياً ويعرض معاينة.<br>
+          تأكد من مطابقة الأعمدة ثم اضغط <strong>رفع واستيراد</strong>.<br>
+          لا يوجد حد أقصى لعدد الصفوف — يمكن رفع أي عدد في ملف واحد.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-green">للمدير المالي فقط</span>
+          <span class="badge badge-blue">أعمدة: رقم الحساب، الشهر، البروكر، ...</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Step 4 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.08));border:1px solid rgba(138,120,240,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📞</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--pu);margin-bottom:6px">4. كروت مركز الاتصال (CC)</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          الكروت الواردة من مركز الاتصال تظهر في <strong>📞 مركز الاتصال</strong>.<br>
+          مديرو الفروع يرون فقط الكروت الواردة لفرعهم.<br>
+          يمكن قبول الكرت (ينتقل لقائمة كروت العمولات) أو رفضه مع ذكر السبب.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-purple">CC — مركز الاتصال</span>
+          <span class="badge badge-purple">قبول / رفض</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Step 5 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📈</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">5. التقارير والإحصائيات</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          <strong>📈 التقارير</strong>: تقرير شامل بكل الحسابات مع فلاتر الشهر / الفرع / البروكر.<br>
+          <strong>تقرير ديناميكي</strong>: تجميع حسب البروكر أو المسوّق أو الفرع أو الشهر.<br>
+          <strong>لوحة المتابعة</strong>: ملخص سريع للأرقام الرئيسية وترتيب البروكرات.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-blue">📄 تصدير PDF</span>
+          <span class="badge badge-green">📗 تصدير Excel</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Step 6 --}}
+    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👥</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">6. إدارة الموظفين والمديرين</div>
+        <div style="font-size:13px;color:var(--tx);line-height:1.7">
+          <strong>الموظفون</strong>: إضافة بروكرات ومسوّقين — تحتاج موافقة مدير مالي.<br>
+          <strong>المديرون</strong>: إضافة مديري فروع وتحديد الفرع والصلاحيات (للمدير المالي فقط).<br>
+          <strong>الصلاحيات</strong>: تحكم دقيق في ما يمكن لكل مدير فرع رؤيته أو تعديله.
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-blue">موظف جديد → مراجعة → موافقة</span>
+          <span class="badge badge-orange">الصلاحيات: بناءً على الدور</span>
+        </div>
+      </div>
+    </div>
+
+    {{-- Roles summary --}}
+    <div style="background:linear-gradient(135deg,rgba(26,173,186,.06),rgba(26,173,186,.02));border:1px solid rgba(26,173,186,.2);border-radius:14px;padding:18px">
+      <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:14px">🔐 ملخص الأدوار والصلاحيات</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" class="sgd">
+        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
+          <div style="font-size:13px;font-weight:800;margin-bottom:8px">💼 المدير المالي</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.8">
+            ✅ جميع الصفحات<br>
+            ✅ استيراد / تصدير<br>
+            ✅ إدارة المديرين<br>
+            ✅ إدارة الموظفين<br>
+            ✅ إعدادات النظام
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
+          <div style="font-size:13px;font-weight:800;margin-bottom:8px">🏢 مدير الفرع</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.8">
+            ✅ بيانات فرعه فقط<br>
+            ✅ كروت العمولة<br>
+            ✅ مركز الاتصال CC<br>
+            ⚙️ بناءً على الصلاحيات<br>
+            ❌ لا يرى باقي الفروع
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
+          <div style="font-size:13px;font-weight:800;margin-bottom:8px">👁 المشاهد (Viewer)</div>
+          <div style="font-size:12px;color:var(--mu);line-height:1.8">
+            ✅ قراءة فقط<br>
+            ✅ التقارير<br>
+            ❌ لا تعديل<br>
+            ❌ لا إضافة<br>
+            ❌ لا حذف
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>{{-- end workflow steps --}}
+</div>{{-- end section-guide --}}
+
 @endsection
 
 @push('scripts')
@@ -602,6 +757,7 @@ const ST = {
     s_managers_ico:'👤',    s_managers_lbl:'المديرون',           s_managers_sub:'مديرو الفروع والصلاحيات',
     s_approvals_ico:'✅',   s_approvals_lbl:'الاعتمادات',        s_approvals_sub:'موظفون بانتظار القبول',
     s_permissions_ico:'🔒', s_permissions_lbl:'الصلاحيات',       s_permissions_sub:'صلاحيات المدير المالي',
+    s_guide_ico:'📖',       s_guide_lbl:'دليل تشغيل النظام',     s_guide_sub:'Workflow وكيفية الاستخدام',
     // General
     gen_h2:'📋 الإعدادات العامة',
     gen_p:'أنواع الحسابات وحالاتها وأنواع التداول المتاحة في النظام',
@@ -813,6 +969,7 @@ const ST = {
     s_managers_ico:'👤',    s_managers_lbl:'Managers',           s_managers_sub:'Branch managers & roles',
     s_approvals_ico:'✅',   s_approvals_lbl:'Approvals',         s_approvals_sub:'Pending employee approvals',
     s_permissions_ico:'🔒', s_permissions_lbl:'Permissions',      s_permissions_sub:'Finance admin permissions',
+    s_guide_ico:'📖',       s_guide_lbl:'System Guide',           s_guide_sub:'Workflow & how to use',
     gen_h2:'📋 General Settings',
     gen_p:'Account types, statuses and trading types available in the system',
     gen_adminOnly:'🔒 These settings are for Finance Admin only.',
