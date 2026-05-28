@@ -1,9 +1,9 @@
-# ════════════════════════════════════════════════════════
-#  Wafra Gulf — One-Click Deploy Script
+# ==============================================
+#  Wafra Gulf -- One-Click Deploy Script
 #  Usage:  .\deploy.ps1
-#  Usage:  .\deploy.ps1 -message "my commit message"
-#  Usage:  .\deploy.ps1 -SkipCommit   (called from git hook)
-# ════════════════════════════════════════════════════════
+#  Usage:  .\deploy.ps1 -message "commit msg"
+#  Usage:  .\deploy.ps1 -SkipCommit
+# ==============================================
 param(
     [string]$message    = "",
     [switch]$SkipCommit
@@ -49,13 +49,15 @@ function UploadFile($localPath, $remoteDir, $fileName) {
     return ($res.cpanelresult.event.result -eq 1)
 }
 
-Write-Host "`n══════════════════════════════════════" -ForegroundColor Cyan
-Write-Host " 🚀 Wafra Gulf — Auto Deploy" -ForegroundColor Cyan
-Write-Host "══════════════════════════════════════`n" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host "  Wafra Gulf -- Auto Deploy" -ForegroundColor Cyan
+Write-Host "==========================================" -ForegroundColor Cyan
+Write-Host ""
 
 Set-Location $BASE
 
-# ── Step 1: Git commit & push ─────────────────────────────
+# -- Step 1: Git commit (skipped when called from hook) ----
 if (-not $SkipCommit) {
     $status = git status --porcelain
     if ($status) {
@@ -63,22 +65,24 @@ if (-not $SkipCommit) {
             $ts = Get-Date -Format "yyyy-MM-dd HH:mm"
             $message = "chore: auto-deploy $ts"
         }
-        Write-Host "📦 Committing changes..." -ForegroundColor Yellow
+        Write-Host "Committing changes..." -ForegroundColor Yellow
         git add -A
         git commit -m $message
-        Write-Host "✅ Committed" -ForegroundColor Green
+        Write-Host "Committed." -ForegroundColor Green
     } else {
-        Write-Host "ℹ️  No local changes to commit" -ForegroundColor Gray
+        Write-Host "No local changes to commit." -ForegroundColor Gray
     }
 }
 
-# ── Step 2: Push to GitHub ────────────────────────────────
-Write-Host "`n🔄 Pushing to GitHub..." -ForegroundColor Yellow
+# -- Step 2: Push to GitHub --------------------------------
+Write-Host ""
+Write-Host "Pushing to GitHub..." -ForegroundColor Yellow
 git push origin main 2>&1 | Write-Host
-Write-Host "✅ Pushed to GitHub" -ForegroundColor Green
+Write-Host "Pushed to GitHub." -ForegroundColor Green
 
-# ── Step 3: Get changed files ─────────────────────────────
-Write-Host "`n📋 Detecting changed files..." -ForegroundColor Yellow
+# -- Step 3: Get changed files -----------------------------
+Write-Host ""
+Write-Host "Detecting changed files..." -ForegroundColor Yellow
 $changedFiles = git diff --name-only HEAD~1 HEAD 2>$null
 if (-not $changedFiles) {
     $changedFiles = git ls-files
@@ -91,10 +95,11 @@ $deployable = $changedFiles | Where-Object {
     $keep -and (Test-Path (Join-Path $BASE $f)) -and (-not (Get-Item (Join-Path $BASE $f) -ErrorAction SilentlyContinue).PSIsContainer)
 }
 
-Write-Host "  Found $($deployable.Count) files to deploy`n"
+Write-Host "  Found $($deployable.Count) files to deploy"
+Write-Host ""
 
-# ── Step 4: Upload files ───────────────────────────────────
-Write-Host "📤 Uploading to server..." -ForegroundColor Yellow
+# -- Step 4: Upload files ----------------------------------
+Write-Host "Uploading to server..." -ForegroundColor Yellow
 $ok = 0; $err = 0; $migrations = @()
 
 foreach ($f in $deployable) {
@@ -104,20 +109,22 @@ foreach ($f in $deployable) {
     $fileName   = $remoteFull.Substring($remoteFull.LastIndexOf("/")+1)
 
     if (UploadFile $localPath $remoteDir $fileName) {
-        Write-Host "  ✅ $f" -ForegroundColor Green
+        Write-Host "  OK  $f" -ForegroundColor Green
         $ok++
     } else {
-        Write-Host "  ❌ $f" -ForegroundColor Red
+        Write-Host "  ERR $f" -ForegroundColor Red
         $err++
     }
 
     if ($f -like "database/migrations/*") { $migrations += $f }
 }
 
-Write-Host "`n  Uploaded: $ok OK  $err errors" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Uploaded: $ok OK  $err errors" -ForegroundColor Cyan
 
-# ── Step 5: Clear view cache (correct timestamp order) ─────
-Write-Host "`n🧹 Clearing view cache..." -ForegroundColor Yellow
+# -- Step 5: Clear view cache (timestamp order critical) ---
+Write-Host ""
+Write-Host "Clearing view cache..." -ForegroundColor Yellow
 
 $res = CpanelAPI @{
     cpanel_jsonapi_user       = $CPANEL_USER
@@ -129,7 +136,7 @@ $res = CpanelAPI @{
 }
 $cacheFiles = $res.cpanelresult.data | Where-Object { $_.file -match '\.php$' }
 
-# A: overwrite → mtime = NOW
+# A: overwrite all cache files -> mtime = NOW
 foreach ($cf in $cacheFiles) {
     CpanelAPI @{
         cpanel_jsonapi_user       = $CPANEL_USER
@@ -143,28 +150,34 @@ foreach ($cf in $cacheFiles) {
 }
 Write-Host "  Marked $($cacheFiles.Count) cache files as stale"
 
-# B: wait so re-upload gets newer mtime
+# B: wait 2s so re-upload gets newer mtime than cache
 Start-Sleep -Seconds 2
 
-# C: re-upload ALL blade files → mtime = NOW+2 (critical: must be newer than cache)
+# C: re-upload ALL blade files -> mtime = NOW+2 (must be newer than cache)
 $allBlades = Get-ChildItem -Path $BASE -Filter "*.blade.php" -Recurse |
     Where-Object { $_.FullName -notmatch '\\vendor\\' -and $_.FullName -notmatch '\\node_modules\\' }
 foreach ($blade in $allBlades) {
-    $rel      = $blade.FullName.Replace($BASE+"\","").Replace("\","/")
-    $rfull    = "$REMOTE_BASE/$rel"
+    $rel   = $blade.FullName.Replace($BASE+"\","").Replace("\","/")
+    $rfull = "$REMOTE_BASE/$rel"
     UploadFile $blade.FullName $rfull.Substring(0,$rfull.LastIndexOf("/")) $rfull.Substring($rfull.LastIndexOf("/")+1) | Out-Null
 }
-Write-Host "  Re-uploaded $($allBlades.Count) blade files (source newer than cache — Laravel recompiles)"
+Write-Host "  Re-uploaded $($allBlades.Count) blade files (source now newer than cache)"
 
-# ── Step 6: Migration warning ──────────────────────────────
+# -- Step 6: Migration warning -----------------------------
 if ($migrations.Count -gt 0) {
-    Write-Host "`n⚠️  NEW MIGRATIONS DETECTED:" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "WARNING: NEW MIGRATIONS DETECTED:" -ForegroundColor Yellow
     $migrations | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
-    Write-Host "`n   ▶ Run from cPanel Terminal:" -ForegroundColor White
-    Write-Host "   cd /home/systemwafragulf/public_html && php artisan migrate --force`n" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Run from cPanel Terminal:" -ForegroundColor White
+    Write-Host "  cd /home/systemwafragulf/public_html" -ForegroundColor Cyan
+    Write-Host "  php artisan migrate --force" -ForegroundColor Cyan
+    Write-Host ""
 }
 
-Write-Host "`n══════════════════════════════════════" -ForegroundColor Green
-Write-Host " 🎉 Deployment complete!" -ForegroundColor Green
-Write-Host "   https://system-wafragulf.online" -ForegroundColor Green
-Write-Host "══════════════════════════════════════`n" -ForegroundColor Green
+Write-Host ""
+Write-Host "==========================================" -ForegroundColor Green
+Write-Host "  Deployment complete!" -ForegroundColor Green
+Write-Host "  https://system-wafragulf.online" -ForegroundColor Green
+Write-Host "==========================================" -ForegroundColor Green
+Write-Host ""
