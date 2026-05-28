@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\{Branch, AccountType, AccountStatus, TradingType, ActivityLog};
 use Illuminate\Http\{Request, JsonResponse};
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\{Validator, DB};
+use Illuminate\Validation\Rule;
 
 // ── BranchController ──────────────────────────────────────────
 class BranchController extends Controller
@@ -35,7 +36,9 @@ class BranchController extends Controller
         }
 
         $v = Validator::make($request->all(), [
-            'code'    => 'required|string|max:20|unique:branches,code',
+            // Ignore soft-deleted records in uniqueness check
+            'code'    => ['required', 'string', 'max:20',
+                          Rule::unique('branches', 'code')->whereNull('deleted_at')],
             'name_ar' => 'required|string|max:100',
             'name_en' => 'required|string|max:100',
             'country' => 'nullable|string|max:50',
@@ -87,24 +90,43 @@ class BranchController extends Controller
     }
 
     // DELETE /api/branches/{id}  (Finance Admin only)
-    // Cards linked to this branch will have branch_id set to NULL automatically (nullOnDelete FK)
+    // Uses forceDelete() so the code can be reused immediately.
+    // commission_cards.branch_id → set to NULL via DB trigger/FK nullOnDelete.
     public function destroy(Request $request, int $id): JsonResponse
     {
         if (!$request->user()->isFinanceAdmin()) {
             return response()->json(['success' => false, 'message' => 'Finance Admin only.'], 403);
         }
 
-        $branch = Branch::withCount(['commissionCards'])->findOrFail($id);
+        $branch = Branch::withCount(['commissionCards', 'employees'])->findOrFail($id);
         $cardCount = $branch->commission_cards_count;
+        $empCount  = $branch->employees_count;
 
-        $branch->delete();
-        ActivityLog::record('delete_branch', ['id' => $id, 'name_ar' => $branch->name_ar]);
+        // Detach related records before hard delete
+        // Set branch_id = NULL on commission cards (avoids FK violation)
+        DB::table('commission_cards')->where('branch_id', $id)->update(['branch_id' => null]);
+        // Set branch_id = NULL on employees
+        DB::table('employees')->where('branch_id', $id)->update(['branch_id' => null]);
+        // Set branch_id = NULL on users (managers)
+        DB::table('users')->where('branch_id', $id)->update(['branch_id' => null]);
+
+        ActivityLog::record('delete_branch', null, [
+            'id'      => $id,
+            'name_ar' => $branch->name_ar,
+            'code'    => $branch->code,
+        ]);
+
+        // Hard delete — frees the code for reuse
+        $branch->forceDelete();
+
+        $details = [];
+        if ($cardCount > 0) $details[] = "{$cardCount} حساب أصبح بدون فرع";
+        if ($empCount  > 0) $details[] = "{$empCount} موظف أصبح بدون فرع";
 
         return response()->json([
             'success' => true,
-            'message' => "تم حذف الفرع \"{$branch->name_ar}\". " .
-                         ($cardCount > 0 ? "{$cardCount} حساب أصبح ضمن «حسابات بدون فرع»." : ''),
+            'message' => "✅ تم حذف الفرع \"{$branch->name_ar}\" نهائياً." .
+                         (count($details) ? ' (' . implode(', ', $details) . ')' : ''),
         ]);
     }
 }
-

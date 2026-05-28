@@ -18,12 +18,12 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>الاسم</th><th>البريد</th><th>الفرع</th><th>الدور</th>
+          <th>الاسم</th><th>البريد</th><th>التليفون</th><th>الفرع</th><th>الدور</th>
           <th>آخر دخول</th><th>الحالة</th><th>إجراءات</th>
         </tr>
       </thead>
       <tbody id="mgr-tbody">
-        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">جاري التحميل...</td></tr>
+        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">جاري التحميل...</td></tr>
       </tbody>
     </table>
   </div>
@@ -79,13 +79,44 @@
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">رقم التليفون</label>
+          <div style="display:flex;gap:6px">
+            <select id="mg-phone-code" class="form-control" style="width:150px;flex-shrink:0;font-size:12px;direction:ltr">
+              <option value="+965">🇰🇼 +965 الكويت</option>
+              <option value="+966">🇸🇦 +966 السعودية</option>
+              <option value="+971">🇦🇪 +971 الإمارات</option>
+              <option value="+973">🇧🇭 +973 البحرين</option>
+              <option value="+974">🇶🇦 +974 قطر</option>
+              <option value="+968">🇴🇲 +968 عُمان</option>
+              <option value="+962">🇯🇴 +962 الأردن</option>
+              <option value="+20">🇪🇬 +20 مصر</option>
+              <option value="+964">🇮🇶 +964 العراق</option>
+              <option value="+963">🇸🇾 +963 سوريا</option>
+              <option value="+961">🇱🇧 +961 لبنان</option>
+              <option value="+967">🇾🇪 +967 اليمن</option>
+              <option value="+249">🇸🇩 +249 السودان</option>
+              <option value="+212">🇲🇦 +212 المغرب</option>
+              <option value="+216">🇹🇳 +216 تونس</option>
+              <option value="+213">🇩🇿 +213 الجزائر</option>
+              <option value="+218">🇱🇾 +218 ليبيا</option>
+              <option value="+90">🇹🇷 +90 تركيا</option>
+              <option value="+44">🇬🇧 +44 بريطانيا</option>
+              <option value="+1">🇺🇸 +1 أمريكا</option>
+            </select>
+            <input type="tel" id="mg-phone" class="form-control" placeholder="5XXXXXXXX" dir="ltr" style="flex:1">
+          </div>
+        </div>
+        <div class="form-group">
           <label class="form-label">الفرع المسؤول عنه *</label>
           <select id="mg-branch" class="form-control"></select>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">كلمة مرور مؤقتة (اتركها فارغة للتوليد التلقائي)</label>
           <input type="password" id="mg-pw" class="form-control" placeholder="—">
         </div>
+        <div class="form-group"></div>
       </div>
       <div class="form-section-title" style="margin-top:14px">🔐 الصلاحيات</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -171,15 +202,16 @@ async function init() {
   if (r.success) {
     document.getElementById('mgr-tbody').innerHTML = r.data.map(m => `
       <tr>
-        <td style="font-weight:700">${m.name}</td>
-        <td style="color:var(--mu)">${m.email}</td>
-        <td>${m.branch?.name_ar || '—'}</td>
-        <td><span class="badge badge-blue">${ROLE_AR[m.role] || m.role}</span></td>
-        <td style="color:var(--mu);font-size:11px">${m.last_login || 'لم يدخل بعد'}</td>
+        <td style="font-weight:700">${esc(m.name)}</td>
+        <td style="color:var(--mu);direction:ltr">${esc(m.email)}</td>
+        <td style="direction:ltr;color:var(--mu)">${m.phone ? esc(m.phone) : '<span style="color:var(--mu)">—</span>'}</td>
+        <td>${esc(m.branch?.name_ar || '—')}</td>
+        <td><span class="badge badge-blue">${esc(ROLE_AR[m.role] || m.role)}</span></td>
+        <td style="color:var(--mu);font-size:11px">${esc(m.last_login || 'لم يدخل بعد')}</td>
         <td><span class="badge ${m.is_active ? 'badge-green' : 'badge-red'}">${m.is_active ? 'نشط' : 'معطّل'}</span></td>
-        <td><button class="btn btn-ghost btn-sm" onclick="resetPw(${m.id},'${m.name}')">🔑 تغيير كلمة المرور</button></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="resetPw(${m.id})" data-name="${esc(m.name)}">🔑 كلمة المرور</button></td>
       </tr>`).join('') ||
-      '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">لا يوجد مديرون</td></tr>';
+      '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">لا يوجد مديرون</td></tr>';
   }
 
   // Load branches (for both modals)
@@ -247,9 +279,12 @@ function selectAllPerms(v) {
 
 // ── Create Manager (manual) ───────────────────────────────────
 async function createManager() {
-  const name   = document.getElementById('mg-name').value.trim();
-  const email  = document.getElementById('mg-email').value.trim();
-  const branch = document.getElementById('mg-branch').value;
+  const name      = document.getElementById('mg-name').value.trim();
+  const email     = document.getElementById('mg-email').value.trim();
+  const branch    = document.getElementById('mg-branch').value;
+  const phoneCode = document.getElementById('mg-phone-code').value;
+  const phoneNum  = document.getElementById('mg-phone').value.trim();
+  const phone     = phoneNum ? (phoneCode + phoneNum) : null;
   if (!name || !email) {
     document.getElementById('mgr-err').textContent = 'يرجى ملء الاسم والإيميل';
     document.getElementById('mgr-err').classList.add('show');
@@ -257,7 +292,7 @@ async function createManager() {
   }
   const perms = PERMS.filter(p => document.getElementById('pchk-' + p.id).textContent === '✓').map(p => p.id);
   const r = await api('POST', '/managers', {
-    name, email,
+    name, email, phone,
     branch_id: parseInt(branch),
     password: document.getElementById('mg-pw').value || null,
     permissions: perms,
@@ -315,7 +350,10 @@ async function deleteInvite(id, email) {
 }
 
 // ── Reset Password ────────────────────────────────────────────
-async function resetPw(id, name) {
+async function resetPw(id) {
+  // Read name from data attribute (safe from XSS in onclick)
+  const btn  = document.querySelector(`[onclick="resetPw(${id})"]`);
+  const name = btn?.dataset?.name || '#' + id;
   if (!confirm('إعادة تعيين كلمة مرور: ' + name + '?')) return;
   const r = await api('POST', `/managers/${id}/reset-password`);
   if (r.success) toast(`كلمة المرور الجديدة: ${r.new_password}`, 'info');

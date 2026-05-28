@@ -317,8 +317,8 @@ class CallCenterController extends Controller
                 'card_id'        => $card->id,
                 'from_branch_id' => $card->branch_id,
                 'to_branch_id'   => $card->cc_branch_id,
-                'sent_by'        => request()->user()->id,
-                'responded_by'   => request()->user()->id,
+                'sent_by'        => $request->user()->id,
+                'responded_by'   => $request->user()->id,
                 'type'           => 'card_completed',
                 'status'         => 'unread',
                 'message'        => "🏁 تم إكمال الحساب #{$card->account_number} ({$card->month}) بواسطة الفرع",
@@ -331,6 +331,44 @@ class CallCenterController extends Controller
             'success' => true,
             'message' => "🏁 تم إكمال الكرت #{$card->account_number} بنجاح.",
             'data'    => $card->fresh(),
+        ]);
+    }
+
+    // ── POST /api/cc/cards/{id}/resend — CC resends rejected card ─
+    public function resend(Request $request, int $id): JsonResponse
+    {
+        $card = CommissionCard::findOrFail($id);
+        $this->assertCcOwnership($card, $request);
+
+        if ($card->cc_status !== 'rejected') {
+            return response()->json([
+                'success' => false,
+                'message' => "لا يمكن إعادة إرسال كرت بحالة '{$card->cc_status}'. يجب أن يكون مرفوضاً.",
+            ], 422);
+        }
+
+        DB::transaction(function () use ($card, $request) {
+            $card->update([
+                'cc_status'           => 'branch_pending',
+                'cc_rejection_reason' => null,
+            ]);
+
+            CcNotification::create([
+                'card_id'        => $card->id,
+                'from_branch_id' => $card->cc_branch_id,
+                'to_branch_id'   => $card->branch_id,
+                'sent_by'        => $request->user()->id,
+                'type'           => 'card_sent',
+                'status'         => 'unread',
+                'message'        => "🔁 إعادة إرسال الحساب #{$card->account_number} ({$card->month}) من مركز الاتصال — بانتظار قراركم",
+            ]);
+
+            ActivityLog::record('cc_card_resent', $card, ['to_branch' => $card->branch_id]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "✅ تمت إعادة إرسال الكرت #{$card->account_number} للفرع.",
         ]);
     }
 

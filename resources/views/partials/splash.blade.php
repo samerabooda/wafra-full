@@ -1,121 +1,44 @@
 {{--
-  Page-load splash screen
-  انبثاق : sphere emerges from nothing (scale 0 → 1 spring)
-  تدوير  : continuous Y-axis globe-spin
-  Exact logo: 3/4 sphere (bottom-right quadrant absent)
-              + dark-teal diagonal swoosh band
-  Fades after 2.2 s, JS removes element on animationend.
+  Wafra Gulf — Splash Screen v2.0
+  • Real logo.png — animated pop-in
+  • Typewriter: "وفرة الخليجية" letter by letter
+  • Disappears when page is fully loaded (min 3.8s)
 --}}
 
-@php
-/* ── Sphere geometry — identical to globe.blade.php ── */
-$sR  = 44.0; $sCx = 50.0; $sCy = 46.0;
-$dW  =  9.0; $dH  =  7.4; $dRx = 1.6;
-$pX  = 10.5; $pY  =  9.2;
-
-/* Logo teal #1B9BA4 → near-white #E6F5F6 */
-$r1=27;  $g1=155; $b1=164;
-$r2=230; $g2=245; $b2=246;
-
-/* 3/4 clip coordinates */
-$botX = $sCx;              $botY = $sCy + $sR + 0.5;
-$rgtX = $sCx + $sR + 0.5; $rgtY = $sCy;
-
-/* Swoosh parameters */
-$swRx = $sR;
-$swRy = round($sR * 0.44, 1);   // ≈ 19.4
-$swSW = round($sR * 0.26, 1);   // ≈ 11.4
-$swRot = -42;
-
-/* ── Tile generation ─────────────────────────────── */
-$sp_dots = [];
-$rowY = $sCy - $sR + $dH / 2 + 0.5;
-while ($rowY <= $sCy + $sR - $dH / 2 - 0.5) {
-    $dy = $rowY - $sCy;
-    $hw = sqrt(max(0.0, $sR * $sR - $dy * $dy));
-    if ($hw > $dW / 2) {
-        $n  = min(
-            max(1, (int) floor(($hw * 2 - $dW * 0.4) / $pX) + 1),
-            (int) floor($hw * 2 / ($dW + 0.8))
-        );
-        $sx = $sCx - ($n - 1) * $pX / 2;
-        for ($i = 0; $i < $n; $i++) {
-            $cx = $sx + $i * $pX;
-            $nx = ($cx - ($sCx - $sR)) / ($sR * 2);
-            $ny = ($rowY - ($sCy - $sR)) / ($sR * 2);
-            $lf = max(0.0, min(1.0, $nx * 0.62 + (1 - $ny) * 0.50 - 0.10));
-            $sp_dots[] = [
-                'x' => round($cx - $dW / 2, 2),
-                'y' => round($rowY - $dH / 2, 2),
-                'c' => sprintf('rgb(%d,%d,%d)',
-                    (int)($r1 + ($r2 - $r1) * $lf),
-                    (int)($g1 + ($g2 - $g1) * $lf),
-                    (int)($b1 + ($b2 - $b1) * $lf)),
-            ];
-        }
-    }
-    $rowY += $pY;
-}
-@endphp
-
-{{-- ── Splash overlay ─────────────────────────────────────── --}}
+{{-- ── Splash overlay ───────────────────────────────────── --}}
 <div id="wfr-splash" aria-hidden="true">
+
+  {{-- Background particles --}}
+  <div class="wfr-particles">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
+
+  {{-- Center content --}}
   <div id="wfr-splash-inner">
 
-    {{-- Sphere stage (perspective container for 3-D spin) --}}
-    <div id="wfr-sphere-stage">
-
-      {{-- Animated orbit swoosh ring (back → top → front) --}}
-      <div id="wfr-splash-ring-wrap">
-        <div id="wfr-splash-ring"></div>
+    {{-- Logo frame --}}
+    <div id="wfr-logo-wrap">
+      <div id="wfr-logo-frame">
+        <img src="{{ asset('logo.png') }}" id="wfr-logo-img" alt="وفرة الخليجية">
       </div>
+      {{-- Expanding rings --}}
+      <div class="wfr-ring wfr-ring-1"></div>
+      <div class="wfr-ring wfr-ring-2"></div>
+      <div class="wfr-ring wfr-ring-3"></div>
+    </div>
 
-      {{-- 3/4 sphere SVG: teal tiles + diagonal swoosh --}}
-      <svg id="wfr-sphere-svg"
-           viewBox="0 0 100 100"
-           xmlns="http://www.w3.org/2000/svg"
-           aria-hidden="true">
-        <defs>
-          {{-- 3/4 sphere clip: remove bottom-right quadrant           --}}
-          {{-- sweep=1 (CW): bottom→left→top→right = 270° visible arc --}}
-          <clipPath id="wfr_sp_clip">
-            <path d="M {{ $botX }},{{ $botY }}
-                     A {{ $sR+0.5 }},{{ $sR+0.5 }} 0 1,1 {{ $rgtX }},{{ $rgtY }}
-                     L {{ $sCx }},{{ $sCy }} Z"/>
-          </clipPath>
-          {{-- Radial glow: upper-right light source --}}
-          <radialGradient id="wfr_sp_glow" cx="65%" cy="35%" r="52%">
-            <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.16"/>
-            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
+    {{-- Company name typewriter --}}
+    <div id="wfr-company-wrap">
+      <div id="wfr-type-line" dir="rtl">
+        <span id="wfr-typed-text"></span><span id="wfr-cursor">|</span>
+      </div>
+      <div id="wfr-tagline">للخدمات المالية</div>
+    </div>
 
-        <g clip-path="url(#wfr_sp_clip)">
-          {{-- Teal tiles --}}
-          @foreach($sp_dots as $d)
-          <rect x="{{ $d['x'] }}" y="{{ $d['y'] }}"
-                width="{{ $dW }}" height="{{ $dH }}"
-                rx="{{ $dRx }}" fill="{{ $d['c'] }}"/>
-          @endforeach
-
-          {{-- Diagonal swoosh (dark teal band — signature logo element) --}}
-          <ellipse cx="{{ $sCx }}" cy="{{ $sCy }}"
-                   rx="{{ $swRx }}" ry="{{ $swRy }}"
-                   stroke="#0B6B74" stroke-width="{{ $swSW }}"
-                   fill="none" opacity="0.82"
-                   transform="rotate({{ $swRot }}, {{ $sCx }}, {{ $sCy }})"/>
-
-          {{-- Light sheen --}}
-          <circle cx="{{ $sCx }}" cy="{{ $sCy }}" r="{{ $sR }}"
-                  fill="url(#wfr_sp_glow)"/>
-        </g>
-      </svg>
-
-    </div>{{-- #wfr-sphere-stage --}}
-
-    {{-- Loading dots --}}
-    <div id="wfr-splash-dots">
-      <span></span><span></span><span></span>
+    {{-- Progress bar --}}
+    <div id="wfr-progress-track">
+      <div id="wfr-progress-bar"></div>
     </div>
 
   </div>
@@ -123,132 +46,240 @@ while ($rowY <= $sCy + $sR - $dH / 2 - 0.5) {
 
 <style>
 /* ══════════════════════════════════════════════════════════
-   SPLASH — انبثاق (emerge) + تدوير (spin)
-   3/4 sphere + diagonal swoosh — matches exact logo
+   SPLASH — Logo pop + Typewriter name
    ══════════════════════════════════════════════════════════ */
 
-/* ── Overlay ─────────────────────────────────────────────── */
 #wfr-splash {
   position       : fixed;
   inset          : 0;
   z-index        : 99999;
-  background     : linear-gradient(145deg, #060D1B 0%, #0C1830 55%, #0E2040 100%);
+  background     : radial-gradient(ellipse at 30% 30%, #0D1E35 0%, #060D1B 60%, #050A14 100%);
   display        : flex;
   align-items    : center;
   justify-content: center;
-  animation      : wfr-out 0.4s ease-in 2.2s forwards;
+  overflow       : hidden;
   pointer-events : all;
+  transition     : opacity .5s ease, visibility .5s ease;
 }
-@keyframes wfr-out {
-  to { opacity:0; visibility:hidden; pointer-events:none; }
+#wfr-splash.wfr-hiding {
+  opacity    : 0;
+  visibility : hidden;
+  pointer-events: none;
 }
 
-/* ── Inner: انبثاق (spring emergence) ────────────────────── */
+/* ── Background floating particles ── */
+.wfr-particles { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.wfr-particles span {
+  position:absolute; border-radius:50%;
+  background:radial-gradient(circle, rgba(26,173,186,.18) 0%, transparent 70%);
+  animation:wfr-float linear infinite;
+}
+.wfr-particles span:nth-child(1){width:320px;height:320px;top:-80px;right:-60px; animation-duration:18s;opacity:.7}
+.wfr-particles span:nth-child(2){width:240px;height:240px;bottom:-60px;left:-40px;animation-duration:22s;animation-delay:-7s;opacity:.5}
+.wfr-particles span:nth-child(3){width:160px;height:160px;top:40%;left:10%;    animation-duration:15s;animation-delay:-4s;opacity:.3}
+.wfr-particles span:nth-child(4){width:100px;height:100px;bottom:20%;right:15%;animation-duration:12s;animation-delay:-9s;opacity:.25}
+.wfr-particles span:nth-child(5){width:200px;height:200px;top:20%;right:20%;  animation-duration:20s;animation-delay:-2s;opacity:.2}
+.wfr-particles span:nth-child(6){width:80px; height:80px; top:60%;left:60%;  animation-duration:9s; animation-delay:-5s;opacity:.15}
+@keyframes wfr-float {
+  0%  { transform:translateY(0)   scale(1);   }
+  50% { transform:translateY(-30px) scale(1.06); }
+  100%{ transform:translateY(0)   scale(1);   }
+}
+
+/* ── Inner wrapper ── */
 #wfr-splash-inner {
   display        : flex;
   flex-direction : column;
   align-items    : center;
-  gap            : 30px;
-  animation      : wfr-emerge 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  gap            : 24px;
+  animation      : wfr-emerge .65s cubic-bezier(.34,1.56,.64,1) both;
 }
 @keyframes wfr-emerge {
-  0%   { opacity:0; transform:scale(0.1) rotate(-30deg); }
-  55%  { opacity:1; }
-  100% { opacity:1; transform:scale(1)   rotate(0deg);   }
+  from { opacity:0; transform:scale(.5) translateY(40px); }
+  to   { opacity:1; transform:none; }
 }
 
-/* ── Sphere stage: 3-D perspective ──────────────────────── */
-#wfr-sphere-stage {
-  position        : relative;
-  width           : 200px;
-  height          : 200px;
-  perspective     : 700px;
-  transform-style : preserve-3d;
+/* ── Logo outer wrapper (holds rings) ── */
+#wfr-logo-wrap {
+  position:relative;
+  width:200px; height:200px;
+  display:flex; align-items:center; justify-content:center;
 }
 
-/* ── SVG sphere: تدوير (Y-axis globe spin) ──────────────── */
-#wfr-sphere-svg {
-  position        : absolute;
-  inset           : 0;
-  width           : 100%;
-  height          : 100%;
-  transform-origin: 50% 48%;    /* spin around sphere centre */
-  animation       : wfr-globe-spin 4s linear infinite;
-  /* Teal glow on dark background */
-  filter          : drop-shadow(0  8px 28px rgba(27,155,164,.50))
-                    drop-shadow(0  0  14px rgba(27,155,164,.30));
+/* ── Logo white frame ── */
+#wfr-logo-frame {
+  width:190px; height:190px;
+  background:white;
+  border-radius:34px;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  position:relative; z-index:2;
+  animation:
+    wfr-logo-pop   .85s cubic-bezier(.34,1.56,.64,1) .15s both,
+    wfr-logo-glow  2.4s ease-in-out 1.2s infinite;
 }
-@keyframes wfr-globe-spin {
-  from { transform: perspective(700px) rotateY(0deg);   }
-  to   { transform: perspective(700px) rotateY(360deg); }
-}
-
-/* ── Orbit ring: swoosh sweeps back→top→front ───────────── */
-#wfr-splash-ring-wrap {
-  position        : absolute;
-  width           : 155%;
-  height          : 155%;
-  top             : -27.5%;
-  left            : -27.5%;
-  transform-style : preserve-3d;
-  perspective     : 1000px;
-  pointer-events  : none;
-  z-index         : 2;
-}
-#wfr-splash-ring {
-  position           : absolute;
-  inset              : 0;
-  border-radius      : 50%;
-  border             : 7px solid transparent;
-  border-top-color   : #0C7A84;
-  border-left-color  : rgba(12,122,132,.65);
-  border-right-color : rgba(12,122,132,.38);
-  filter             : drop-shadow(0 0 8px rgba(12,122,132,.55));
-  animation          : wfr-orbit 4s cubic-bezier(.37,0,.63,1) infinite;
-}
-@keyframes wfr-orbit {
-  0%   { transform:rotateX(-88deg) rotateZ( 6deg); opacity:.05; }
-  18%  { transform:rotateX(-52deg) rotateZ( 3deg); opacity:.58; }
-  38%  { transform:rotateX(-15deg) rotateZ( 1deg); opacity:.96; }
-  50%  { transform:rotateX(  8deg) rotateZ(-1deg); opacity:1.0; }
-  65%  { transform:rotateX( 32deg) rotateZ(-3deg); opacity:.78; }
-  82%  { transform:rotateX( 62deg) rotateZ(-5deg); opacity:.28; }
-  100% { transform:rotateX( 92deg) rotateZ(-8deg); opacity:.05; }
+#wfr-logo-img {
+  width:174px; height:174px;
+  object-fit:contain;
 }
 
-/* ── Loading dots ────────────────────────────────────────── */
-#wfr-splash-dots {
-  display: flex;
-  gap    : 9px;
+@keyframes wfr-logo-pop {
+  0%  { transform:scale(0) rotate(-22deg); opacity:0; filter:blur(18px);
+        box-shadow:0 0 0 rgba(26,173,186,0); }
+  65% { transform:scale(1.14) rotate(4deg); opacity:1; filter:blur(0);
+        box-shadow:0 20px 70px rgba(26,173,186,.8); }
+  80% { transform:scale(0.93) rotate(-1deg); }
+  90% { transform:scale(1.04); }
+  100%{ transform:scale(1) rotate(0); opacity:1; filter:blur(0);
+        box-shadow:0 12px 48px rgba(26,173,186,.45), 0 4px 16px rgba(0,0,0,.35); }
 }
-#wfr-splash-dots span {
-  width        : 7px;
-  height       : 7px;
-  border-radius: 50%;
-  background   : rgba(27,155,164,.7);
-  animation    : wfr-dot 0.7s ease-in-out infinite alternate;
-}
-#wfr-splash-dots span:nth-child(2) { animation-delay:.22s; }
-#wfr-splash-dots span:nth-child(3) { animation-delay:.44s; }
-@keyframes wfr-dot {
-  from { opacity:.2; transform:scale(.7); }
-  to   { opacity:1;  transform:scale(1.2); }
+@keyframes wfr-logo-glow {
+  0%,100%{ box-shadow:0 12px 48px rgba(26,173,186,.45), 0 4px 16px rgba(0,0,0,.35); }
+  50%    { box-shadow:0 18px 72px rgba(26,173,186,.75), 0 0 120px rgba(26,173,186,.22); }
 }
 
-/* Lock scroll during splash */
+/* ── Expanding rings ── */
+.wfr-ring {
+  position:absolute; inset:0;
+  border-radius:34px;
+  border:2.5px solid rgba(26,173,186,.6);
+  animation:wfr-ring-burst 2.8s ease-out infinite;
+  pointer-events:none;
+}
+.wfr-ring-2 { animation-delay:.55s;  border-color:rgba(26,173,186,.4); }
+.wfr-ring-3 { animation-delay:1.1s;  border-color:rgba(26,173,186,.25); border-width:1.5px; }
+@keyframes wfr-ring-burst {
+  0%  { transform:scale(1);   opacity:.85; }
+  100%{ transform:scale(1.85);opacity:0;   }
+}
+
+/* ── Typewriter section ── */
+#wfr-company-wrap {
+  text-align:center;
+  direction:rtl;
+}
+#wfr-type-line {
+  font-family:'Tajawal','Cairo',sans-serif;
+  font-size:2.4rem;
+  font-weight:900;
+  color:#E6EFF6;
+  letter-spacing:.5px;
+  min-height:3rem;
+  direction:rtl;
+  text-shadow:0 2px 20px rgba(26,173,186,.3);
+}
+#wfr-cursor {
+  color:#1AADBA;
+  font-weight:300;
+  animation:wfr-blink .55s step-end infinite;
+  text-shadow:0 0 12px rgba(26,173,186,.8);
+}
+@keyframes wfr-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+#wfr-tagline {
+  font-family:'Tajawal','Cairo',sans-serif;
+  font-size:1.05rem;
+  color:#5A80A0;
+  font-weight:500;
+  margin-top:6px;
+  letter-spacing:.3px;
+  opacity:0;
+  transition:opacity .7s ease;
+}
+#wfr-tagline.visible { opacity:1; }
+
+/* ── Progress bar ── */
+#wfr-progress-track {
+  width:180px; height:3px;
+  background:rgba(26,173,186,.12);
+  border-radius:2px;
+  overflow:hidden;
+  margin-top:4px;
+}
+#wfr-progress-bar {
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, #0E7A88, #1AADBA, #22C4D4);
+  border-radius:2px;
+  transition:width .08s linear;
+  box-shadow:0 0 8px rgba(26,173,186,.6);
+}
+
+/* Lock scroll */
 body.wfr-loading { overflow:hidden; }
 </style>
 
 <script>
-(function () {
+(function(){
+  'use strict';
   document.body.classList.add('wfr-loading');
-  var el = document.getElementById('wfr-splash');
-  if (!el) return;
-  el.addEventListener('animationend', function (e) {
-    if (e.animationName === 'wfr-out') {
-      el.remove();
-      document.body.classList.remove('wfr-loading');
-    }
-  });
+
+  var splash    = document.getElementById('wfr-splash');
+  var typedEl   = document.getElementById('wfr-typed-text');
+  var cursor    = document.getElementById('wfr-cursor');
+  var tagline   = document.getElementById('wfr-tagline');
+  if (tagline) tagline.textContent = lang === 'en' ? 'Commission Cards Management System' : 'نظام إدارة كروت العمولات';
+  var progBar   = document.getElementById('wfr-progress-bar');
+  if (!splash) return;
+
+  /* ── Typewriter ── */
+  var lang     = localStorage.getItem('wg_lang') || 'ar';
+  var nameAr   = lang === 'en' ? 'Wafra Gulf Financial Services' : 'وفرة الخليجية للخدمات المالية';
+  var charDelay = lang === 'en' ? 75 : 95;  /* ms per character */
+  var typeStart = 900;   /* delay before typing begins (ms) */
+  var charIdx   = 0;
+
+  /* Progress bar fills while typing */
+  function updateProgress(pct) {
+    if (progBar) progBar.style.width = pct + '%';
+  }
+
+  setTimeout(function startTyping() {
+    (function typeNext() {
+      if (charIdx < nameAr.length) {
+        typedEl.textContent += nameAr[charIdx];
+        charIdx++;
+        var pct = Math.round((charIdx / nameAr.length) * 80);
+        updateProgress(pct);
+        setTimeout(typeNext, charDelay);
+      } else {
+        /* Typing done — hide cursor, show tagline */
+        setTimeout(function(){
+          cursor.style.display = 'none';
+          tagline.classList.add('visible');
+          updateProgress(100);
+        }, 350);
+      }
+    })();
+  }, typeStart);
+
+  /* ── Dismiss on page load, min 3.8s ── */
+  var MIN_MS   = 3800;
+  var startedAt = Date.now();
+  var dismissed = false;
+
+  function hideSplash() {
+    if (dismissed) return;
+    dismissed = true;
+    var elapsed = Date.now() - startedAt;
+    var wait    = Math.max(0, MIN_MS - elapsed);
+    setTimeout(function(){
+      if (splash) {
+        splash.classList.add('wfr-hiding');
+        setTimeout(function(){
+          splash.remove();
+          document.body.classList.remove('wfr-loading');
+        }, 520);
+      }
+    }, wait);
+  }
+
+  if (document.readyState === 'complete') {
+    hideSplash();
+  } else {
+    window.addEventListener('load', hideSplash);
+    /* Safety fallback */
+    setTimeout(hideSplash, 7000);
+  }
 })();
 </script>

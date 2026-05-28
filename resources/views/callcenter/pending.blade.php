@@ -225,11 +225,11 @@ function completeFormHtml(c) {
     <!-- Row 5: Deposits -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">الإيداع الأولي ($) *</label>
+        <label class="form-label">إيداع فتح الحساب *</label>
         <input type="number" id="cf-dep-${c.id}" class="form-control" value="0" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">الإيداع الشهري ($)</label>
+        <label class="form-label">الإيداع الشهري المتوقع</label>
         <input type="number" id="cf-mon-${c.id}" class="form-control" value="0" min="0">
       </div>
     </div>

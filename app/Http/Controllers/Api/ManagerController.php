@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\{NewManagerMail, ManagerPasswordResetMail};
 use App\Models\{User, UserPermission, Branch, ActivityLog, ManagerInvite};
 use Illuminate\Http\{Request, JsonResponse};
-use Illuminate\Support\Facades\{Hash, DB, Validator};
+use Illuminate\Support\Facades\{Hash, DB, Mail, Validator};
 use Illuminate\Support\Str;
 
 class ManagerController extends Controller
@@ -32,6 +33,7 @@ class ManagerController extends Controller
                             'id'          => $u->id,
                             'name'        => $u->name,
                             'email'       => $u->email,
+                            'phone'       => $u->phone,
                             'role'        => $u->role,
                             'is_active'   => $u->is_active,
                             'branch'      => $u->branch?->only('id','code','name_ar','name_en'),
@@ -50,6 +52,7 @@ class ManagerController extends Controller
         $v = Validator::make($request->all(), [
             'name'          => 'required|string|max:100',
             'email'         => 'required|email|max:150|unique:users,email',
+            'phone'         => 'nullable|string|max:30',
             'branch_id'     => 'required|exists:branches,id',
             'role'          => 'nullable|in:branch_manager,viewer',
             'password'      => 'nullable|string|min:8',
@@ -68,6 +71,7 @@ class ManagerController extends Controller
             $manager = User::create([
                 'name'             => $request->name,
                 'email'            => $request->email,
+                'phone'            => $request->phone ?? null,
                 'password'         => Hash::make($plainPassword),
                 'role'             => $request->role ?? 'branch_manager',
                 'branch_id'        => $request->branch_id,
@@ -98,9 +102,20 @@ class ManagerController extends Controller
 
         $branch = Branch::find($request->branch_id);
 
+        // Send welcome email with credentials (silently fail — don't block account creation)
+        $emailSent = false;
+        try {
+            $manager->load('branch');
+            Mail::to($manager->email)->send(new NewManagerMail($manager, $plainPassword));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            \Log::warning('NewManagerMail failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success'       => true,
-            'message'       => "Manager account created for {$request->name}.",
+            'message'       => "Manager account created for {$request->name}." . ($emailSent ? ' Email sent.' : ' (Email not sent — check mail config.)'),
+            'email_sent'    => $emailSent,
             'data'          => $manager->load(['branch', 'permissions']),
             'credentials'   => [
                 'email'         => $manager->email,
@@ -120,6 +135,7 @@ class ManagerController extends Controller
 
         $v = Validator::make($request->all(), [
             'name'          => 'sometimes|string|max:100',
+            'phone'         => 'nullable|string|max:30',
             'branch_id'     => 'sometimes|required|exists:branches,id',   // required when present — cannot nullify
             'is_active'     => 'sometimes|boolean',
             'permissions'   => 'sometimes|array',
@@ -131,7 +147,7 @@ class ManagerController extends Controller
         }
 
         DB::transaction(function () use ($request, $manager) {
-            $manager->update($request->only('name', 'branch_id', 'is_active'));
+            $manager->update($request->only('name', 'phone', 'branch_id', 'is_active'));
 
             if ($request->has('permissions')) {
                 // Replace all permissions
@@ -274,9 +290,19 @@ class ManagerController extends Controller
 
         ActivityLog::record('reset_password', $manager);
 
+        // Send email with new credentials (silently fail)
+        $emailSent = false;
+        try {
+            Mail::to($manager->email)->send(new ManagerPasswordResetMail($manager, $newPassword));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            \Log::warning('ManagerPasswordResetMail failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success'      => true,
-            'message'      => "Password reset for {$manager->name}.",
+            'message'      => "Password reset for {$manager->name}." . ($emailSent ? ' Email sent.' : ''),
+            'email_sent'   => $emailSent,
             'new_password' => $newPassword,
         ]);
     }

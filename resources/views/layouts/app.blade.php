@@ -24,25 +24,25 @@
 <style>
 /* ═══ CSS VARIABLES ═══ */
 :root {
-  --pri:#2E86AB;--pri2:#3A9DB5;--pri3:#1A5F7A;
-  --bg:#0A1628;--bg1:#0F1E35;--bg2:#142240;--bg3:#1A2B4E;--bg4:#1F3257;
-  --brd1:#253A63;--brd2:#2E4A7A;
-  --tx:#EDF4F8;--mu:#5A7A9A;--m2:#7A9AB5;
-  --gr:#22C97A;--re:#E05050;--or:#F5A623;--pu:#7B68EE;
+  --pri:#1AADBA;--pri2:#22C4D4;--pri3:#0E7A88;
+  --bg:#0C1520;--bg1:#111D2B;--bg2:#162437;--bg3:#1B2D42;--bg4:#20344C;
+  --brd1:#1E3650;--brd2:#2C4E70;
+  --tx:#E6EFF6;--mu:#5A80A0;--m2:#7AABCA;
+  --gr:#1ECC80;--re:#E84545;--or:#F5A828;--pu:#8A78F0;
   --card-bg:var(--bg3);--card-brd:var(--brd1);
   --inp-bg:var(--bg4);--inp-brd:var(--brd1);
-  --sb-bg:var(--bg1);--topb-bg:rgba(10,22,40,.95);
-  --shadow:0 8px 32px rgba(0,0,0,.4);
+  --sb-bg:var(--bg1);--topb-bg:rgba(12,21,32,.95);
+  --shadow:0 8px 32px rgba(0,0,0,.38);
 }
 [data-theme="light"] {
-  --bg:#F2F6FA;--bg1:#FFFFFF;--bg2:#E8F1F8;--bg3:#FFFFFF;--bg4:#F2F6FA;
-  --brd1:#A8C8E0;--brd2:#5A9AC0;
+  --bg:#EDF2F7;--bg1:#FFFFFF;--bg2:#E2EBF4;--bg3:#FFFFFF;--bg4:#EDF2F7;
+  --brd1:#B0CCDF;--brd2:#5A9ABF;
   --tx:#0A1929;--mu:#3A5A78;--m2:#1A3A58;
-  --card-bg:#FFFFFF;--card-brd:#A8C8E0;
-  --sb-bg:#0D2B45;--topb-bg:rgba(13,43,69,.98);
-  --inp-bg:#FFFFFF;--inp-brd:#5A9AC0;
-  --shadow:0 4px 24px rgba(46,134,171,.15);
-  --gr:#1A7A40;--or:#B05500;--re:#C00020;
+  --card-bg:#FFFFFF;--card-brd:#B0CCDF;
+  --sb-bg:#0C2240;--topb-bg:rgba(12,34,64,.98);
+  --inp-bg:#FFFFFF;--inp-brd:#5A9ABF;
+  --shadow:0 4px 24px rgba(26,173,186,.15);
+  --gr:#158838;--or:#A04800;--re:#B80020;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
@@ -62,16 +62,37 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .page-body{flex:1;overflow-y:auto;padding:20px}
 
 /* ── Sidebar ── */
-.sb-header{padding:14px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:10px}
-.sb-logo{width:38px;height:38px;border-radius:8px;background:white;padding:3px;object-fit:contain;flex-shrink:0}
-.sb-brand{font-size:12px;font-weight:800;color:white;line-height:1.2}
-.sb-brand small{display:block;font-size:9px;color:rgba(255,255,255,.4)}
+.sb-header{
+  padding:18px 16px 16px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  background:linear-gradient(180deg,rgba(26,173,186,.12) 0%,transparent 100%);
+}
+.sb-logo{
+  width:82px;height:82px;border-radius:18px;
+  background:white;padding:4px;object-fit:contain;
+  box-shadow:0 6px 24px rgba(26,173,186,.55),0 3px 10px rgba(0,0,0,.4);
+  transition:transform .2s,box-shadow .2s;display:block;
+}
+.sb-logo:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(26,173,186,.7),0 4px 14px rgba(0,0,0,.45)}
+.sb-brand{font-size:13px;font-weight:800;color:white;line-height:1.3;text-align:center}
+.sb-brand small{display:block;font-size:10px;color:rgba(255,255,255,.55);font-weight:400}
 .sb-nav{flex:1;padding:10px 8px}
 .nav-section{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;padding:8px 10px 4px;margin-top:4px}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
   font-size:12px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;
   text-decoration:none;position:relative;margin-bottom:1px}
-.nav-item:hover{background:rgba(255,255,255,.08);color:white}
+.nav-item:hover{
+  background:rgba(255,255,255,.12);
+  color:white;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 2px 12px rgba(26,173,186,.18),inset 0 1px 0 rgba(255,255,255,.15),inset 0 -1px 0 rgba(0,0,0,.08);
+  border:1px solid rgba(255,255,255,.15);
+  transform:translateX(-2px);
+  transition:all .18s ease;
+}
+.nav-item{transition:all .18s ease;border:1px solid transparent}
 .nav-item.active{background:rgba(46,134,171,.25);color:var(--pri2);font-weight:700}
 .nav-item.active::before{content:'';position:absolute;right:0;top:22%;bottom:22%;
   width:3px;background:var(--pri);border-radius:2px 0 0 2px}
@@ -92,9 +113,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ── Topbar ── */
 .tb-left{display:flex;align-items:center;gap:12px}
-.tb-logo{width:32px;height:32px;border-radius:6px;background:white;padding:2px;object-fit:contain}
-.tb-title{font-size:14px;font-weight:800}
-.tb-sub{font-size:11px;color:var(--mu)}
+.tb-logo{width:48px;height:48px;border-radius:12px;background:white;padding:3px;object-fit:contain;
+  box-shadow:0 3px 14px rgba(26,173,186,.35),0 1px 5px rgba(0,0,0,.25)}
+.tb-title{font-size:14px;font-weight:800;color:rgba(255,255,255,.95)}
+.tb-sub{font-size:11px;color:rgba(255,255,255,.5)}
 .tb-right{display:flex;align-items:center;gap:6px}
 .tb-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);
   border:1px solid var(--brd1);border-radius:7px;padding:6px 10px;
@@ -247,7 +269,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .mob-logo-row{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.mob-logo{width:30px;height:30px;object-fit:contain;border-radius:7px;background:white;padding:2px;flex-shrink:0}
+.mob-logo{width:40px;height:40px;object-fit:contain;border-radius:10px;background:white;padding:2px;flex-shrink:0;
+  box-shadow:0 2px 12px rgba(26,173,186,.4),0 1px 4px rgba(0,0,0,.3)}
 .mob-title{font-size:13px;font-weight:800;color:white;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mob-title small{display:block;font-size:9px;color:rgba(255,255,255,.5);font-weight:400}
 .mob-theme-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,.1);
@@ -319,7 +342,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .sidebar.mob-open{transform:translateX(0)!important;box-shadow:-8px 0 30px rgba(0,0,0,.5)}
 
   /* Topbar */
-  .topbar{top:56px!important;padding:0 10px!important;height:46px!important}
+  .topbar{top:66px!important;padding:0 10px!important;height:46px!important;margin:0!important;border-radius:0!important}
   .tb-title{font-size:12px}
   .tb-sub{display:none}
   /* Hide extra topbar buttons on mobile */
@@ -397,6 +420,102 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   .kpi-grid{gap:6px}
   .mob-sheet-grid{grid-template-columns:repeat(3,1fr)}
 }
+
+/* ══════════════════════════════════════════
+   FONT SIZE & READABILITY UPGRADES
+   ══════════════════════════════════════════ */
+html{font-size:16px}
+/* Sidebar */
+.nav-item{font-size:14px!important;padding:10px 12px!important}
+.nav-section{font-size:11px!important;padding:10px 12px 5px!important}
+.nav-badge{font-size:11px!important;padding:2px 9px!important}
+.sb-logo{width:105px!important;height:105px!important}
+.sb-brand{font-size:14px!important;font-weight:800!important;color:white!important}
+.sb-brand small{font-size:11px!important;color:rgba(255,255,255,.6)!important}
+.user-name{font-size:14px!important;font-weight:700!important;color:white!important}
+.user-role{font-size:11px!important;color:rgba(255,255,255,.6)!important}
+.logout-btn{font-size:14px!important;color:rgba(255,255,255,.5)!important}
+/* Topbar — always light text on dark topbar */
+.tb-title{font-size:17px!important;font-weight:800!important;color:rgba(255,255,255,.95)!important}
+.tb-sub{font-size:13px!important;color:rgba(255,255,255,.5)!important}
+.tb-logo{width:48px!important;height:48px!important}
+/* Header 1cm from top */
+.main-wrap{padding-top:10px!important}
+.topbar{top:10px!important;margin:0 10px;border-radius:14px!important}
+.tb-btn{font-size:13px!important;padding:8px 14px!important}
+/* KPI */
+.kpi-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important;font-weight:700!important;margin-bottom:8px!important}
+.kpi-value{font-size:1.8rem!important;font-weight:900!important}
+.kpi-sub{font-size:12px!important}
+.kpi-card{padding:18px 20px!important;border-radius:16px!important}
+/* Panel */
+.panel-title{font-size:16px!important;font-weight:800!important}
+.panel-header{padding:16px 20px!important}
+.panel-body{padding:20px!important}
+/* Table */
+.data-table th{font-size:13px!important;text-transform:none!important;padding:12px 16px!important;font-weight:800!important}
+.data-table td{font-size:14px!important;padding:12px 16px!important}
+/* Forms */
+.form-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important;color:var(--m2)!important;font-weight:700!important;margin-bottom:8px!important}
+.form-control{font-size:15px!important;padding:12px 15px!important}
+.form-section-title{font-size:15px!important;font-weight:800!important;margin-bottom:14px!important}
+.form-group{margin-bottom:18px!important}
+/* Buttons */
+.btn{font-size:14px!important;padding:11px 22px!important;border-radius:10px!important}
+.btn-sm{font-size:13px!important;padding:8px 16px!important;border-radius:8px!important}
+.btn-xl{font-size:16px!important;padding:14px 34px!important;border-radius:12px!important}
+/* Badges */
+.badge{font-size:12px!important;padding:4px 11px!important;border-radius:14px!important}
+/* Modal */
+.modal-title{font-size:17px!important;font-weight:800!important}
+.modal-body{padding:20px 22px!important}
+.modal-footer{padding:14px 22px!important}
+/* Toast */
+.toast{font-size:14px!important;padding:12px 26px!important}
+/* AC number */
+.ac-num{font-size:13px!important;padding:4px 10px!important}
+/* Alerts */
+.alert{font-size:14px!important;padding:14px 18px!important}
+/* Page body */
+.page-body{padding:24px!important}
+/* Panel spacing */
+.panel{border-radius:16px!important;margin-bottom:20px!important}
+
+/* ══════════════════════════════════════════
+   LTR / ENGLISH DIRECTION OVERRIDES
+   ══════════════════════════════════════════ */
+[dir="ltr"] .sidebar{border-left:1px solid var(--brd1);border-right:none}
+[dir="ltr"] .nav-item.active::before{right:auto;left:0;border-radius:0 2px 2px 0}
+[dir="ltr"] .nav-badge{margin-right:0;margin-left:auto}
+[dir="ltr"] .user-chip .logout-btn{margin-right:0;margin-left:auto}
+[dir="ltr"] .sb-footer .user-chip{flex-direction:row}
+[dir="ltr"] .tb-left{flex-direction:row}
+[dir="ltr"] .tb-right{flex-direction:row}
+[dir="ltr"] .data-table th,[dir="ltr"] .data-table td{text-align:left}
+[dir="ltr"] .form-label{text-align:left}
+[dir="ltr"] .kpi-label,[dir="ltr"] .kpi-sub{text-align:left}
+[dir="ltr"] .panel-title{text-align:left}
+[dir="ltr"] .mob-nav-items{flex-direction:row}
+[dir="ltr"] .mob-title{text-align:left}
+[dir="ltr"] .topbar,[dir="ltr"] .mob-header{direction:ltr}
+[dir="ltr"] .form-control,[dir="ltr"] input,[dir="ltr"] select,[dir="ltr"] textarea{text-align:left;direction:ltr}
+[dir="ltr"] .alert,[dir="ltr"] .toast{text-align:left}
+[dir="ltr"] .btn-group{flex-direction:row}
+[dir="ltr"] .sb-header{flex-direction:row}
+[dir="ltr"] .user-name,[dir="ltr"] .user-role{text-align:left}
+
+/* Language toggle button */
+.lang-toggle-btn{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(26,173,186,.1);
+  border:1px solid rgba(26,173,186,.3);
+  border-radius:8px;padding:5px 11px;
+  font-size:12px;font-weight:700;color:var(--pri2);
+  cursor:pointer;font-family:'Tajawal',sans-serif;
+  transition:all .2s;white-space:nowrap;
+}
+.lang-toggle-btn:hover{background:rgba(26,173,186,.22);border-color:var(--pri2)}
+.lang-toggle-btn .lang-flag{font-size:15px}
 </style>
 
 @stack('styles')
@@ -411,82 +530,52 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   {{-- SIDEBAR --}}
   <aside class="sidebar">
     <div class="sb-header">
-      @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'sb', 'whiteBg'=>true])
-      <div>
-        <div class="sb-brand">وفرة الخليجية<small>للخدمات المالية</small></div>
+      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية">
+      <div class="sb-brand">
+        <span data-i18n="company.short">وفرة الخليجية</span>
+        <small data-i18n="company.tagline">للخدمات المالية</small>
       </div>
     </div>
 
     <nav class="sb-nav">
-      <div class="nav-section">الرئيسية</div>
+      <div class="nav-section" data-i18n="nav.sec.main">الرئيسية</div>
       <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-        <span>🏠</span> لوحة المتابعة
+        <span>🏠</span> <span data-i18n="nav.dashboard">لوحة المتابعة</span>
       </a>
+      <div class="nav-section" data-i18n="nav.sec.cards">🗂 كروت العمولة</div>
       <a href="{{ route('cards.index') }}" class="nav-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
-        <span>🗂</span> كروت العمولات
+        <span>🗂</span> <span data-i18n="nav.cards">كروت العمولة</span>
         <span class="nav-badge" id="sb-cards-count">—</span>
       </a>
-      <a href="{{ route('cards.modified') }}" class="nav-item {{ request()->routeIs('cards.modified') ? 'active' : '' }}">
-        <span>✏️</span> الحسابات المعدّلة
-        <span class="nav-badge orange" id="sb-mod-count">—</span>
-      </a>
-      <a href="{{ route('reports.index') }}" class="nav-item {{ request()->routeIs('reports.index') ? 'active' : '' }}">
-        <span>📈</span> التقارير
-      </a>
-      <a href="{{ route('reports.dynamic') }}" class="nav-item {{ request()->routeIs('reports.dynamic') ? 'active' : '' }}">
-        <span>🔧</span> تقرير ديناميكي
-        <span class="nav-badge green">جديد</span>
-      </a>
-      <a href="{{ route('cards.tree') }}" class="nav-item {{ request()->routeIs('cards.tree') ? 'active' : '' }}">
-        <span>🌳</span> شجرة الحسابات
-      </a>
 
-      <div class="nav-section">إنشاء وتعديل</div>
-      <a href="{{ route('cards.create') }}" class="nav-item {{ request()->routeIs('cards.create') ? 'active' : '' }}">
-        <span>➕</span> كرت عمولة جديد
-        <span class="nav-badge green">جديد</span>
-      </a>
-      <a href="{{ route('cards.edit-search') }}" class="nav-item {{ request()->routeIs('cards.edit-search') ? 'active' : '' }}">
-        <span>✏️</span> تعديل حساب موجود
-      </a>
-
-      {{-- ── Call Center ── --}}
-      <div class="nav-section">مركز الاتصال</div>
-      <a href="{{ route('callcenter.index') }}" class="nav-item {{ request()->routeIs('callcenter.index') ? 'active' : '' }}"
-         style="{{ request()->routeIs('callcenter.*') ? '' : '' }}">
-        <span>📞</span> مركز الاتصال
-        <span class="nav-badge" style="background:rgba(123,104,238,.2);color:#7b68ee;border-color:rgba(123,104,238,.3)">CC</span>
-      </a>
+      <div class="nav-section" data-i18n="nav.sec.cc">📞 مركز الاتصال</div>
+      @if(auth()->user()?->isBranchManager())
+      {{-- Branch managers go straight to the incoming-cards view --}}
       <a href="{{ route('callcenter.pending') }}" class="nav-item {{ request()->routeIs('callcenter.pending') ? 'active' : '' }}">
-        <span>📩</span> كروت CC الواردة
+        <span>📩</span> <span data-i18n="nav.cc.pending">كروت CC الواردة</span>
         <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
       </a>
-
-      <div class="nav-section">الإدارة</div>
-      <a href="{{ route('employees.index') }}" class="nav-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
-        <span>👥</span> الموظفون
-        <span class="nav-badge" id="sb-emp-count">—</span>
-      </a>
-
-      @if(auth()->user()?->isFinanceAdmin())
-      <a href="{{ route('managers.index') }}" class="nav-item {{ request()->routeIs('managers.*') ? 'active' : '' }}">
-        <span>👤</span> المديرون
-      </a>
-      <a href="{{ route('branches.index') }}" class="nav-item {{ request()->routeIs('branches.*') ? 'active' : '' }}">
-        <span>🏢</span> الفروع
-      </a>
-      <a href="{{ route('permissions.index') }}" class="nav-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}">
-        <span>🛡️</span> الصلاحيات
-        <span class="nav-badge orange" id="sb-pending-count" style="display:none">0</span>
+      @else
+      {{-- CC staff / FA see the full CC hub --}}
+      <a href="{{ route('callcenter.index') }}" class="nav-item {{ request()->routeIs('callcenter.*') ? 'active' : '' }}">
+        <span>📞</span> <span data-i18n="nav.cc">مركز الاتصال</span>
+        <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
       </a>
       @endif
 
-      <a href="{{ route('settings.index') }}" class="nav-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-        <span>⚙️</span> الإعدادات
+      <div class="nav-section" data-i18n="nav.sec.reports">📈 التقارير</div>
+      <a href="{{ route('reports.index') }}" class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
+        <span>📈</span> <span data-i18n="nav.reports">التقارير</span>
+      </a>
+
+      <div class="nav-section" data-i18n="nav.sec.admin">الإدارة</div>
+      <a href="{{ route('settings.index') }}" class="nav-item {{ request()->routeIs('settings.*') || request()->routeIs('employees.*') || request()->routeIs('managers.*') || request()->routeIs('branches.*') || request()->routeIs('permissions.*') ? 'active' : '' }}">
+        <span>⚙️</span> <span data-i18n="nav.settings">الإعدادات</span>
+        <span class="nav-badge orange" id="sb-pending-count" style="display:none">0</span>
       </a>
       @if(auth()->user()?->isFinanceAdmin())
       <a href="{{ route('import.index') }}" class="nav-item {{ request()->routeIs('import.*') ? 'active' : '' }}">
-        <span>📥</span> استيراد بيانات
+        <span>📥</span> <span data-i18n="nav.import">استيراد بيانات</span>
       </a>
       @endif
     </nav>
@@ -511,16 +600,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
-        @include('partials.globe', ['size'=>'xs', 'showText'=>false, 'gid'=>'tb', 'whiteBg'=>true])
+        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية">
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
-          <div class="tb-sub">وفرة الخليجية / <span id="tb-branch">الإدارة المالية</span></div>
+          <div class="tb-sub"><span data-i18n="company.short">وفرة الخليجية</span> / <span id="tb-branch" data-i18n="tb.dept">الإدارة المالية</span></div>
         </div>
       </div>
       <div class="tb-right">
         @yield('topbar-actions')
-        <a href="{{ route('cards.create') }}" class="tb-btn success">➕ كرت جديد</a>
-        <a href="{{ route('cards.edit-search') }}" class="tb-btn" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ تعديل</a>
+        <a href="{{ route('cards.create') }}" class="tb-btn success">➕ <span data-i18n="btn.newcard">كرت جديد</span></a>
+        <a href="{{ route('cards.edit-search') }}" class="tb-btn" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ <span data-i18n="btn.edit">تعديل</span></a>
+        <button class="lang-toggle-btn" onclick="toggleLang()" id="lang-btn" title="Switch Language / تغيير اللغة">
+          <span class="lang-flag" id="lang-flag">🇬🇧</span><span id="lang-label">EN</span>
+        </button>
         <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
       </div>
     </header>
@@ -565,10 +657,285 @@ function toggleTheme(){
 }
 applyTheme();
 
-// ── Lang (Arabic only — RTL fixed) ────────────────────────
-document.documentElement.setAttribute('lang', 'ar');
-document.documentElement.setAttribute('dir', 'rtl');
-function toggleLang(){ /* reserved for future i18n */ }
+// ══════════════════════════════════════════════════════════
+// BILINGUAL i18n SYSTEM  (AR ↔ EN)
+// ══════════════════════════════════════════════════════════
+const I18N = {
+  ar: {
+    'company.short':   'وفرة الخليجية',
+    'company.tagline': 'للخدمات المالية',
+    'company.full':    'وفرة الخليجية للخدمات المالية',
+    'nav.sec.main':    'الرئيسية',
+    'nav.sec.create':  'إنشاء وتعديل',
+    'nav.sec.cards':   '🗂 كروت العمولة',
+    'nav.sec.cc':      '📞 مركز الاتصال',
+    'nav.sec.reports': '📈 التقارير',
+    'nav.sec.admin':   'الإدارة',
+    'nav.dashboard':   'لوحة المتابعة',
+    'nav.cards':       'كروت العمولات',
+    'nav.modified':    'الحسابات المعدّلة',
+    'nav.reports':     'التقارير',
+    'nav.dynamic':     'تقرير ديناميكي',
+    'nav.tree':        'شجرة الحسابات',
+    'nav.create':      'كرت عمولة جديد',
+    'nav.edit':        'تعديل حساب موجود',
+    'nav.cc':          'مركز الاتصال',
+    'nav.cc.pending':  'كروت CC الواردة',
+    'nav.cc.accounts': 'حسابات CC',
+    'nav.cc.reports':  'تقارير CC',
+    'nav.cc.modified': 'الحسابات المعدّلة',
+    'nav.cc.monthly':  'إحصائيات شهرية',
+    'nav.sec.reports': '📈 التقارير',
+    'nav.reports.main':'التقارير',
+    'nav.employees':   'الموظفون',
+    'nav.managers':    'المديرون',
+    'nav.branches':    'الفروع',
+    'nav.permissions': 'الصلاحيات',
+    'nav.settings':    'الإعدادات',
+    'nav.import':      'استيراد بيانات',
+    'btn.newcard':     'كرت جديد',
+    'btn.edit':        'تعديل',
+    'tb.dept':         'الإدارة المالية',
+    'mob.home':        'الرئيسية',
+    'mob.cards':       'الكروت',
+    'mob.reports':     'التقارير',
+    'mob.employees':   'الموظفون',
+    'mob.more':        'المزيد',
+    'mob.modified':    'المعدّلة',
+    'mob.tree':        'شجرة الحسابات',
+    'mob.dynamic':     'تقرير ديناميكي',
+    'mob.import':      'استيراد',
+    'mob.logout':      'خروج',
+    'badge.new':       'جديد',
+    'role.admin':      'مدير مالي 💼',
+    'role.branch':     'مدير فرع',
+    'page.dashboard':  'لوحة المتابعة',
+    'page.cards':      'كروت العمولات',
+    'page.cards.new':  'كرت جديد',
+    'page.cards.mod':  'الحسابات المعدّلة',
+    'page.cards.edit': 'تعديل حساب',
+    'page.cards.tree': 'شجرة الحسابات',
+    'page.reports':    'التقارير',
+    'page.dynamic':    'تقرير ديناميكي',
+    'page.employees':  'الموظفون',
+    'page.settings':   'الإعدادات',
+    'page.import':     'استيراد بيانات',
+    'page.cc':         'مركز الاتصال',
+    'page.cc.pending': 'كروت CC الواردة',
+  },
+  en: {
+    'company.short':   'Wafra Gulf',
+    'company.tagline': 'Financial Services',
+    'company.full':    'Wafra Gulf Financial Services',
+    'nav.sec.main':    'Main',
+    'nav.sec.create':  'Create & Edit',
+    'nav.sec.cards':   '🗂 Commission Cards',
+    'nav.sec.cc':      '📞 Call Center',
+    'nav.sec.reports': '📈 Reports',
+    'nav.sec.admin':   'Administration',
+    'nav.dashboard':   'Dashboard',
+    'nav.cards':       'Commission Cards',
+    'nav.modified':    'Modified Accounts',
+    'nav.reports':     'Reports',
+    'nav.dynamic':     'Dynamic Report',
+    'nav.tree':        'Account Tree',
+    'nav.create':      'New Commission Card',
+    'nav.edit':        'Edit Existing Account',
+    'nav.cc':          'Call Center',
+    'nav.cc.pending':  'Incoming CC Cards',
+    'nav.cc.accounts': 'CC Accounts',
+    'nav.cc.reports':  'CC Reports',
+    'nav.cc.modified': 'Modified Accounts',
+    'nav.cc.monthly':  'Monthly Stats',
+    'nav.sec.reports': '📈 Reports',
+    'nav.reports.main':'Reports',
+    'nav.employees':   'Employees',
+    'nav.managers':    'Managers',
+    'nav.branches':    'Branches',
+    'nav.permissions': 'Permissions',
+    'nav.settings':    'Settings',
+    'nav.import':      'Import Data',
+    'btn.newcard':     'New Card',
+    'btn.edit':        'Edit',
+    'tb.dept':         'Finance Department',
+    'mob.home':        'Home',
+    'mob.cards':       'Cards',
+    'mob.reports':     'Reports',
+    'mob.employees':   'Staff',
+    'mob.more':        'More',
+    'mob.modified':    'Modified',
+    'mob.tree':        'Account Tree',
+    'mob.dynamic':     'Dynamic Report',
+    'mob.import':      'Import',
+    'mob.logout':      'Logout',
+    'badge.new':       'New',
+    'role.admin':      'Finance Admin 💼',
+    'role.branch':     'Branch Manager',
+    'page.dashboard':  'Dashboard',
+    'page.cards':      'Commission Cards',
+    'page.cards.new':  'New Card',
+    'page.cards.mod':  'Modified Accounts',
+    'page.cards.edit': 'Edit Account',
+    'page.cards.tree': 'Account Tree',
+    'page.reports':    'Reports',
+    'page.dynamic':    'Dynamic Report',
+    'page.employees':  'Employees',
+    'page.settings':   'Settings',
+    'page.import':     'Import Data',
+    'page.cc':         'Call Center',
+    'page.cc.pending': 'Incoming CC Cards',
+  }
+};
+
+let curLang = localStorage.getItem('wg_lang') || 'ar';
+
+function applyLang(lang) {
+  const isEn  = lang === 'en';
+  const dir   = isEn ? 'ltr' : 'rtl';
+  const html  = document.documentElement;
+  html.setAttribute('lang', lang);
+  html.setAttribute('dir',  dir);
+
+  /* Translate all data-i18n elements */
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const t   = I18N[lang]?.[key];
+    if (t !== undefined) el.textContent = t;
+  });
+
+  /* Update lang buttons (desktop + mobile) */
+  const flag  = isEn ? '🇸🇦' : '🇬🇧';
+  const label = isEn ? 'عر'  : 'EN';
+  ['lang-flag','lang-flag-mob'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = flag;
+  });
+  ['lang-label','lang-label-mob'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = label;
+  });
+
+  /* Update role text */
+  const roleEl = document.getElementById('sb-role');
+  if (roleEl && CURRENT_USER?.role) {
+    const key = CURRENT_USER.role === 'finance_admin' ? 'role.admin' : 'role.branch';
+    roleEl.textContent = I18N[lang]?.[key] || roleEl.textContent;
+  }
+
+  /* Logout arrow direction */
+  const logoutBtn = document.querySelector('.logout-btn');
+  if (logoutBtn) logoutBtn.textContent = isEn ? '➡' : '⬅';
+
+  /* Save preference */
+  localStorage.setItem('wg_lang', lang);
+  curLang = lang;
+
+  /* Re-apply mobile page title */
+  updateMobTitle();
+
+  /* Sync all empty text inputs to new language direction */
+  document.querySelectorAll('input,textarea').forEach(function(inp){
+    if (inp.value) return;
+    var t = inp.type || '';
+    if (['hidden','checkbox','radio','number','date','time','month','week',
+         'color','range','file','email','password'].indexOf(t) !== -1) return;
+    inp.setAttribute('dir', dir);
+    inp.setAttribute('lang', lang);
+  });
+}
+
+function toggleLang() { applyLang(curLang === 'ar' ? 'en' : 'ar'); }
+
+/* ── Phone country codes ─────────────────────────────────── */
+const PHONE_CODES = [
+  {v:'+966',l:'🇸🇦 +966 السعودية'},{v:'+971',l:'🇦🇪 +971 الإمارات'},
+  {v:'+965',l:'🇰🇼 +965 الكويت'}, {v:'+974',l:'🇶🇦 +974 قطر'},
+  {v:'+973',l:'🇧🇭 +973 البحرين'},{v:'+968',l:'🇴🇲 +968 عُمان'},
+  {v:'+962',l:'🇯🇴 +962 الأردن'}, {v:'+20', l:'🇪🇬 +20  مصر'},
+  {v:'+213',l:'🇩🇿 +213 الجزائر'},{v:'+216',l:'🇹🇳 +216 تونس'},
+  {v:'+212',l:'🇲🇦 +212 المغرب'}, {v:'+249',l:'🇸🇩 +249 السودان'},
+  {v:'+218',l:'🇱🇾 +218 ليبيا'},  {v:'+963',l:'🇸🇾 +963 سوريا'},
+  {v:'+961',l:'🇱🇧 +961 لبنان'},  {v:'+967',l:'🇾🇪 +967 اليمن'},
+  {v:'+964',l:'🇮🇶 +964 العراق'}, {v:'+90', l:'🇹🇷 +90  تركيا'},
+  {v:'+1',  l:'🇺🇸 +1   أمريكا'}, {v:'+44', l:'🇬🇧 +44  بريطانيا'},
+  {v:'+49', l:'🇩🇪 +49  ألمانيا'},{v:'+33', l:'🇫🇷 +33  فرنسا'},
+  {v:'+7',  l:'🇷🇺 +7   روسيا'},  {v:'+86', l:'🇨🇳 +86  الصين'},
+  {v:'+91', l:'🇮🇳 +91  الهند'},  {v:'+92', l:'🇵🇰 +92  باكستان'},
+  {v:'+880',l:'🇧🇩 +880 بنغلاديش'},
+];
+function fillPhoneCodeSelect(id, selected) {
+  const el = document.getElementById(id); if (!el) return;
+  el.innerHTML = PHONE_CODES.map(p =>
+    `<option value="${p.v}"${p.v===(selected||'+966')?' selected':''}>${p.l}</option>`).join('');
+}
+function parsePhone(phone) {
+  if (!phone) return {code:'+966', num:''};
+  const sorted = [...PHONE_CODES].sort((a,b) => b.v.length - a.v.length);
+  for (const p of sorted) {
+    if (phone.startsWith(p.v)) return {code:p.v, num:phone.slice(p.v.length).replace(/^\s+/,'')};
+  }
+  return {code:'+966', num:phone};
+}
+function buildPhone(codeId, numId) {
+  const code = document.getElementById(codeId)?.value || '+966';
+  const num  = (document.getElementById(numId)?.value||'').trim();
+  return num ? code + num : null;
+}
+
+/* ── Auto Input Direction (Arabic ↔ Latin) ───────────────── */
+/* Applies to ALL text/textarea inputs — no class needed      */
+const _SKIP_TYPES = new Set([
+  'hidden','checkbox','radio','number','date','time','month','week',
+  'color','range','file','email','password'
+]);
+function _autoInputDir(el) {
+  if (!el || _SKIP_TYPES.has(el.type) || el.readOnly) return;
+  var val = el.value || '';
+  if (!val) {
+    el.setAttribute('dir',  curLang === 'en' ? 'ltr' : 'rtl');
+    el.setAttribute('lang', curLang);
+    return;
+  }
+  var hasAr  = /[؀-ۿ]/.test(val);
+  var hasLat = /[a-zA-Z]/.test(val);
+  if      (hasAr  && !hasLat) { el.setAttribute('dir','rtl'); el.setAttribute('lang','ar'); }
+  else if (hasLat && !hasAr)  { el.setAttribute('dir','ltr'); el.setAttribute('lang','en'); }
+  /* mixed: keep current direction — no change */
+}
+/* Detect on every keystroke */
+document.addEventListener('input', function(e) {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') _autoInputDir(e.target);
+}, true);
+/* Set initial direction on focus (empty field) */
+document.addEventListener('focus', function(e) {
+  var el = e.target;
+  if ((el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA') || _SKIP_TYPES.has(el.type)) return;
+  if (!el.value) {
+    el.setAttribute('dir',  curLang === 'en' ? 'ltr' : 'rtl');
+    el.setAttribute('lang', curLang);
+  }
+}, true);
+
+/* Cards internal nav bilingual */
+const CN_NAV={
+  ar:{hdr:'🗂 كروت العمولة',lblIndex:'كروت العمولات',subIndex:'كل الحسابات المسجّلة',lblModified:'الحسابات المعدّلة',subModified:'السجلات المُعدَّلة',lblSearch:'بحث عن حساب',subSearch:'ابحث برقم الحساب',lblCreate:'إنشاء كرت جديد',subCreate:'تسجيل حساب عمولة',lblEdit:'تعديل كرت عمولة',subEdit:'تعديل حساب موجود',lblTree:'شجرة الحسابات',subTree:'توزيع العمولات',footer:'منصة وفرة الخليجية\nلإدارة العمولات'},
+  en:{hdr:'🗂 Commission Cards',lblIndex:'All Cards',subIndex:'All registered accounts',lblModified:'Modified Accounts',subModified:'Modified records',lblSearch:'Search Account',subSearch:'Search by account number',lblCreate:'Create New Card',subCreate:'Register commission account',lblEdit:'Edit Card',subEdit:'Edit existing account',lblTree:'Account Tree',subTree:'Commission distribution',footer:'Wafra Gulf Platform\nCommission Management'},
+};
+function cNavApplyLang(){
+  const d=CN_NAV[curLang]||CN_NAV.ar;
+  const _t=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  _t('cnav-hdr',d.hdr);
+  _t('cnav-lbl-index',d.lblIndex);   _t('cnav-sub-index',d.subIndex);
+  _t('cnav-lbl-modified',d.lblModified); _t('cnav-sub-modified',d.subModified);
+  _t('cnav-lbl-search',d.lblSearch); _t('cnav-sub-search',d.subSearch);
+  _t('cnav-lbl-create',d.lblCreate); _t('cnav-sub-create',d.subCreate);
+  _t('cnav-lbl-edit',d.lblEdit);     _t('cnav-sub-edit',d.subEdit);
+  _t('cnav-lbl-tree',d.lblTree);     _t('cnav-sub-tree',d.subTree);
+  const fn=document.getElementById('cnav-footer');if(fn)fn.innerHTML=d.footer.replace('\n','<br>');
+}
+const _appApplyLang=applyLang;
+applyLang=function(lang){_appApplyLang(lang);cNavApplyLang();};
+
+/* Apply saved preference on load */
+applyLang(curLang);
 
 // ── Toast ──────────────────────────────────────────────────
 function toast(msg, type = 'success') {
@@ -615,12 +982,27 @@ if (CURRENT_USER && CURRENT_USER.name) {
   document.getElementById('sb-role').textContent = CURRENT_USER.role === 'finance_admin' ? 'مدير مالي 💼' : 'مدير فرع';
 }
 
+// ── Security helper — HTML entity encoder ──────────────────
+// Always use esc() when inserting user-supplied text into innerHTML.
+// Usage: `<td>${esc(user.name)}</td>`
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/\//g, '&#47;');
+}
+
 // ── Helpers ────────────────────────────────────────────────
-const fmt = n => n > 0 ? '$' + Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
+const fmt = n => n > 0 ? Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
 const fmtK = n => {
-  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
-  if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
-  return '$' + n;
+  if (!n || isNaN(n)) return '—';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+  return Number(n).toLocaleString('en', {maximumFractionDigits:0});
 };
 
 // ── Modal helpers ──────────────────────────────────────────
@@ -651,6 +1033,7 @@ const MOB_ROUTES = {
   'managers':    '{{ route("managers.index") }}',
   'permissions': '{{ route("permissions.index") }}',
   'tree':        '{{ route("cards.tree") }}',
+  'cc':          '{{ auth()->user()?->isBranchManager() ? route("callcenter.pending") : route("callcenter.index") }}',
 };
 
 const MOB_TITLES = {
@@ -737,28 +1120,31 @@ function setActiveMobNav() {
   }
 }
 
-// Update mobile page title
+// Update mobile page title (uses I18N)
 function updateMobTitle() {
   const path = window.location.pathname;
-  const titleMap = {
-    '/dashboard':         'لوحة المتابعة',
-    '/cards':             'كروت العمولات',
-    '/cards/create':      'كرت جديد',
-    '/cards/modified':    'الحسابات المعدّلة',
-    '/cards/edit':        'تعديل حساب',
-    '/cards/tree':        'شجرة الحسابات',
-    '/reports':           'التقارير',
-    '/reports/dynamic':   'تقرير ديناميكي',
-    '/employees':         'الموظفون',
-    '/settings':          'الإعدادات',
-    '/import':            'استيراد بيانات',
-    '/managers':          'المديرون',
-    '/permissions':       'الصلاحيات',
+  const keyMap = {
+    '/dashboard':       'page.dashboard',
+    '/cards/create':    'page.cards.new',
+    '/cards/modified':  'page.cards.mod',
+    '/cards/edit':      'page.cards.edit',
+    '/cards/tree':      'page.cards.tree',
+    '/cards':           'page.cards',
+    '/reports/dynamic': 'page.dynamic',
+    '/reports':         'page.reports',
+    '/employees':       'page.employees',
+    '/settings':        'page.settings',
+    '/managers':        'page.settings',
+    '/branches':        'page.settings',
+    '/permissions':     'page.settings',
+    '/import':          'page.import',
+    '/callcenter/pending': 'page.cc.pending',
+    '/callcenter':      'page.cc',
   };
-  for (const [route, title] of Object.entries(titleMap)) {
+  for (const [route, key] of Object.entries(keyMap)) {
     if (path.startsWith(route)) {
       const el = document.getElementById('mob-pg-title');
-      if (el) el.textContent = title;
+      if (el) el.textContent = I18N[curLang]?.[key] || I18N.ar[key] || '';
       break;
     }
   }
@@ -785,6 +1171,25 @@ setTimeout(initMobile, 50);
 </script>
 
 <script>
+// ── Pending employees badge (settings nav) ─────────────────
+async function loadPendingBadge() {
+  try {
+    const r = await api('GET', '/employees/pending');
+    const list = r?.data ?? r?.employees ?? [];
+    const count = Array.isArray(list) ? list.length : (r?.count ?? 0);
+    const badge = document.getElementById('sb-pending-count');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) { /* silent */ }
+}
+document.addEventListener('DOMContentLoaded', loadPendingBadge);
+setInterval(loadPendingBadge, 60000);
+
 // ── CC pending badge counter ───────────────────────────────
 async function loadCcPendingCount() {
   try {
@@ -811,10 +1216,15 @@ setInterval(loadCcPendingCount, 60000);
 <div class="mob-header" id="mob-header">
   <button class="mob-burger" onclick="toggleMobSidebar()">☰</button>
   <div class="mob-logo-row">
-    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="" onerror="this.style.display='none'">
-    <div class="mob-title">وفرة الخليجية<small id="mob-pg-title">لوحة المتابعة</small></div>
+    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="وفرة الخليجية للخدمات المالية">
+    <div class="mob-title"><span data-i18n="company.short">وفرة الخليجية</span><small id="mob-pg-title">لوحة المتابعة</small></div>
   </div>
-  <button class="mob-theme-btn" onclick="toggleTheme()" id="mob-theme-btn">🌙</button>
+  <div style="display:flex;gap:5px;align-items:center">
+    <button class="lang-toggle-btn" onclick="toggleLang()" id="lang-btn-mob" style="padding:4px 8px;font-size:11px">
+      <span id="lang-flag-mob">🇬🇧</span><span id="lang-label-mob">EN</span>
+    </button>
+    <button class="mob-theme-btn" onclick="toggleTheme()" id="mob-theme-btn">🌙</button>
+  </div>
 </div>
 
 <div class="mob-overlay" id="mob-overlay" onclick="closeMobSidebar()"></div>
@@ -823,24 +1233,24 @@ setInterval(loadCcPendingCount, 60000);
   <div class="mob-nav-items">
     <button class="mob-nav-item on" id="mbn-d" onclick="mobGo('d','mbn-d')">
       <span class="mob-nav-icon">🏠</span>
-      <span class="mob-nav-lbl">الرئيسية</span>
+      <span class="mob-nav-lbl" data-i18n="mob.home">الرئيسية</span>
     </button>
     <button class="mob-nav-item" id="mbn-c" onclick="mobGo('c','mbn-c')">
       <span class="mob-nav-icon">🗂</span>
-      <span class="mob-nav-lbl">الكروت</span>
+      <span class="mob-nav-lbl" data-i18n="mob.cards">الكروت</span>
       <span class="mob-nav-dot" id="mbn-dot-c"></span>
     </button>
     <button class="mob-nav-item" id="mbn-r" onclick="mobGo('r','mbn-r')">
       <span class="mob-nav-icon">📈</span>
-      <span class="mob-nav-lbl">التقارير</span>
+      <span class="mob-nav-lbl" data-i18n="mob.reports">التقارير</span>
     </button>
     <button class="mob-nav-item" id="mbn-e" onclick="mobGo('e','mbn-e')">
       <span class="mob-nav-icon">👥</span>
-      <span class="mob-nav-lbl">الموظفون</span>
+      <span class="mob-nav-lbl" data-i18n="mob.employees">الموظفون</span>
     </button>
     <button class="mob-nav-item" id="mbn-more" onclick="toggleMobMore()">
       <span class="mob-nav-icon">⋯</span>
-      <span class="mob-nav-lbl">المزيد</span>
+      <span class="mob-nav-lbl" data-i18n="mob.more">المزيد</span>
       <span class="mob-nav-dot" id="mbn-dot-more"></span>
     </button>
   </div>
@@ -849,31 +1259,32 @@ setInterval(loadCcPendingCount, 60000);
 <div class="mob-more-sheet" id="mob-more-sheet">
   <div class="mob-sheet-handle"></div>
   <div class="mob-sheet-grid">
+    <div class="mob-sheet-item" onclick="mobGo('cc');closeMobMore()">
+      @if(auth()->user()?->isBranchManager())
+      <div class="mob-sheet-ico">📩</div><div class="mob-sheet-lbl" data-i18n="nav.cc.pending">كروت CC الواردة</div>
+      @else
+      <div class="mob-sheet-ico">📞</div><div class="mob-sheet-lbl" data-i18n="nav.cc">مركز الاتصال</div>
+      @endif
+    </div>
     <div class="mob-sheet-item" onclick="mobGo('m');closeMobMore()">
-      <div class="mob-sheet-ico">✏️</div><div class="mob-sheet-lbl">المعدّلة</div>
+      <div class="mob-sheet-ico">✏️</div><div class="mob-sheet-lbl" data-i18n="mob.modified">المعدّلة</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('tree');closeMobMore()">
-      <div class="mob-sheet-ico">🌳</div><div class="mob-sheet-lbl">شجرة الحسابات</div>
+      <div class="mob-sheet-ico">🌳</div><div class="mob-sheet-lbl" data-i18n="mob.tree">شجرة الحسابات</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('dynamic');closeMobMore()">
-      <div class="mob-sheet-ico">🔧</div><div class="mob-sheet-lbl">تقرير ديناميكي</div>
+      <div class="mob-sheet-ico">🔧</div><div class="mob-sheet-lbl" data-i18n="mob.dynamic">تقرير ديناميكي</div>
     </div>
     <div class="mob-sheet-item" onclick="mobGo('settings');closeMobMore()">
-      <div class="mob-sheet-ico">⚙️</div><div class="mob-sheet-lbl">الإعدادات</div>
+      <div class="mob-sheet-ico">⚙️</div><div class="mob-sheet-lbl" data-i18n="nav.settings">الإعدادات</div>
     </div>
     @if(auth()->user()?->isFinanceAdmin())
     <div class="mob-sheet-item" onclick="mobGo('import');closeMobMore()">
-      <div class="mob-sheet-ico">📥</div><div class="mob-sheet-lbl">استيراد</div>
-    </div>
-    <div class="mob-sheet-item" onclick="mobGo('managers');closeMobMore()">
-      <div class="mob-sheet-ico">👤</div><div class="mob-sheet-lbl">المديرون</div>
-    </div>
-    <div class="mob-sheet-item" onclick="mobGo('permissions');closeMobMore()">
-      <div class="mob-sheet-ico">🛡️</div><div class="mob-sheet-lbl">الصلاحيات</div>
+      <div class="mob-sheet-ico">📥</div><div class="mob-sheet-lbl" data-i18n="mob.import">استيراد</div>
     </div>
     @endif
     <div class="mob-sheet-item" onclick="document.getElementById('logout-form').submit()">
-      <div class="mob-sheet-ico">🚪</div><div class="mob-sheet-lbl">خروج</div>
+      <div class="mob-sheet-ico">🚪</div><div class="mob-sheet-lbl" data-i18n="mob.logout">خروج</div>
     </div>
   </div>
 </div>

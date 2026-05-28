@@ -128,15 +128,15 @@ async function loadEmps() {
 
   document.getElementById('emp-tbody').innerHTML = emps.map(e => `
     <tr style="${e.status==='pending'?'opacity:.8;border-right:3px solid var(--or)':''}">
-      <td style="font-weight:700">${e.name}</td>
-      <td>${roleLabels[e.role] || e.role}</td>
-      <td style="color:var(--mu)">${e.branch?.name_ar || '—'}</td>
-      <td class="mono c-blue">$${e.broker_commission}/lot</td>
-      <td class="mono c-green">$${e.marketing_commission}/lot</td>
+      <td style="font-weight:700">${esc(e.name)}</td>
+      <td>${esc(roleLabels[e.role] || e.role)}</td>
+      <td style="color:var(--mu)">${esc(e.branch?.name_ar || '—')}</td>
+      <td class="mono c-blue">$${esc(String(e.broker_commission))}/lot</td>
+      <td class="mono c-green">$${esc(String(e.marketing_commission))}/lot</td>
       <td>${statusBadge(e.status)}</td>
-      <td style="color:var(--mu);font-size:11px">${e.added_by?.name || '—'}</td>
+      <td style="color:var(--mu);font-size:11px">${esc(e.added_by?.name || '—')}</td>
       <td>
-        ${!e.is_base ? `<button class="btn btn-ghost btn-sm" onclick="deleteEmp(${e.id},'${e.name}')">🗑️</button>` : '<span style="font-size:10px;color:var(--mu)">أساسي</span>'}
+        ${!e.is_base ? `<button class="btn btn-ghost btn-sm" onclick="deleteEmp(${e.id})" data-name="${esc(e.name)}">🗑️</button>` : '<span style="font-size:10px;color:var(--mu)">أساسي</span>'}
       </td>
     </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">لا يوجد موظفون</td></tr>';
 }
@@ -174,7 +174,9 @@ async function addEmployee() {
   }
 }
 
-async function deleteEmp(id, name) {
+async function deleteEmp(id) {
+  const btn  = document.querySelector(`[onclick="deleteEmp(${id})"]`);
+  const name = btn?.dataset?.name || '#' + id;
   if (!confirm('حذف الموظف: ' + name + '?')) return;
   const r = await api('DELETE', `/employees/${id}`);
   if (r.success) { toast(r.message, 'success'); loadEmps(); }

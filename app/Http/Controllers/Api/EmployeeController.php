@@ -173,22 +173,30 @@ class EmployeeController extends Controller
     // ── DELETE /api/employees/{id} ────────────────────────────
     public function destroy(Request $request, int $id): JsonResponse
     {
+        // Only Finance Admin can delete employees
+        if (!$request->user()->isFinanceAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Finance Admin only.',
+            ], 403);
+        }
+
         $emp = Employee::findOrFail($id);
 
         if ($emp->is_base) {
             return response()->json([
                 'success' => false,
-                'message' => 'Base employees cannot be deleted.',
+                'message' => 'لا يمكن حذف الموظفين الأساسيين.',
             ], 403);
         }
 
         $name = $emp->name;
-        $emp->delete();
-        ActivityLog::record('delete_employee', $emp);
+        ActivityLog::record('delete_employee', $emp, ['name' => $name]);
+        $emp->forceDelete(); // Hard delete to free name for reuse
 
         return response()->json([
             'success' => true,
-            'message' => "Employee {$name} deleted.",
+            'message' => "✅ تم حذف الموظف \"{$name}\" بنجاح.",
         ]);
     }
 

@@ -121,6 +121,7 @@ class WebController extends Controller
     public function cardsIndex()        { return view('cards.index'); }
     public function cardsCreate()       { return view('cards.create'); }
     public function cardsModified()     { return view('cards.modified'); }
+    public function cardsSearch()       { return view('cards.search'); }
     public function cardsEditSearch()   { return view('cards.edit'); }
     public function cardsEdit(int $id)  { return view('cards.edit', ['cardId' => $id]); }
 
@@ -130,8 +131,9 @@ class WebController extends Controller
     }
 
     // ── Reports ────────────────────────────────────────────────
-    public function reports()        { return view('reports.index'); }
-    public function reportsDynamic() { return view('reports.dynamic'); }
+    public function reports()              { return view('reports.index'); }
+    public function reportsDynamic()       { return view('reports.dynamic'); }
+    public function reportsBranchMonthly() { return view('reports.branch-monthly'); }
 
     // ── Employees ──────────────────────────────────────────────
     public function employees() { return view('employees.index'); }

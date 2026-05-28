@@ -12,15 +12,15 @@
     <div class="kpi-icon">📁</div>
   </div>
   <div class="kpi-card kpi-teal">
-    <div class="kpi-label">إيداع أولي</div>
+    <div class="kpi-label">إيداع فتح الحساب</div>
     <div class="kpi-value" id="kpi-dep">—</div>
-    <div class="kpi-sub">Initial Deposits</div>
+    <div class="kpi-sub">إجمالي الإيداع الأولي</div>
     <div class="kpi-icon">💵</div>
   </div>
   <div class="kpi-card kpi-green">
-    <div class="kpi-label">إيداع شهري</div>
+    <div class="kpi-label">الإيداع الشهري المتوقع</div>
     <div class="kpi-value" id="kpi-mon">—</div>
-    <div class="kpi-sub">Monthly Deposits</div>
+    <div class="kpi-sub">إجمالي الإيداع الشهري</div>
     <div class="kpi-icon">📈</div>
   </div>
   <div class="kpi-card kpi-orange">
@@ -30,63 +30,73 @@
     <div class="kpi-icon">✏️</div>
   </div>
   <div class="kpi-card kpi-purple">
-    <div class="kpi-label">كروت مضافة</div>
+    <div class="kpi-label">كروت مضافة حديثاً</div>
     <div class="kpi-value" id="kpi-new">—</div>
     <div class="kpi-sub">Newly Added</div>
     <div class="kpi-icon">🆕</div>
   </div>
 </div>
 
-<!-- Charts Row -->
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px">
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">📊 الإيداعات الشهرية</div>
-      <div style="display:flex;gap:10px;font-size:10px;color:var(--mu)">
-        <span><span style="display:inline-block;width:8px;height:8px;background:var(--pri2);border-radius:50%"></span> أولي</span>
-        <span><span style="display:inline-block;width:8px;height:8px;background:var(--gr);border-radius:50%"></span> شهري</span>
-      </div>
-    </div>
-    <div class="panel-body" style="height:200px;position:relative">
-      <canvas id="chart-bar"></canvas>
-    </div>
+<!-- Branches Chart -->
+<div class="panel" style="margin-bottom:20px">
+  <div class="panel-header">
+    <div class="panel-title">🏢 عدد الحسابات المفتوحة لكل فرع</div>
+    <span style="font-size:13px;color:var(--mu)" id="branch-total-lbl"></span>
   </div>
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">🥧 توزيع البروكرات</div></div>
-    <div class="panel-body" style="height:200px;position:relative">
-      <canvas id="chart-pie"></canvas>
-    </div>
+  <div class="panel-body" style="height:240px;position:relative">
+    <canvas id="chart-branches"></canvas>
   </div>
 </div>
 
-<!-- Top Brokers & Marketers -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">🥇 أفضل بروكر — حسابات</div></div>
-    <div class="panel-body" id="top-broker-cnt" style="padding:10px 16px"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">💰 أفضل بروكر — إيداع</div></div>
-    <div class="panel-body" id="top-broker-dep" style="padding:10px 16px"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">📢 أفضل مسوّق</div></div>
-    <div class="panel-body" id="top-marketer" style="padding:10px 16px"></div>
-  </div>
-</div>
-
-<!-- Recent Tables -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-  <div class="panel">
-    <div class="panel-header"><div class="panel-title">🔝 أعلى الإيداعات الشهرية</div></div>
+<!-- Broker & Marketer Reports -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px">
+  <div class="panel" style="margin-bottom:0">
+    <div class="panel-header"><div class="panel-title">🥇 تقرير البروكرات — عدد الحسابات</div></div>
     <div class="table-scroll">
       <table class="data-table">
-        <thead><tr><th>رقم الحساب</th><th>البروكر</th><th>إيداع شهري</th><th>الشهر</th></tr></thead>
-        <tbody id="top-deposits-tb"></tbody>
+        <thead><tr><th>#</th><th>البروكر</th><th>عدد الحسابات</th></tr></thead>
+        <tbody id="broker-cnt-tb"></tbody>
       </table>
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" style="margin-bottom:0">
+    <div class="panel-header"><div class="panel-title">📢 تقرير المسوّقين</div></div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>المسوّق</th><th>عدد الحسابات</th></tr></thead>
+        <tbody id="marketer-cnt-tb"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:0">
+    <div class="panel-header">
+      <div class="panel-title">📞 مركز الاتصال — CC</div>
+      <span class="badge badge-purple" id="cc-badge" style="display:none"></span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>رقم الحساب</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+        <tbody id="cc-tb"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 20px;border-top:1px solid var(--brd1)">
+      <a href="{{ route('callcenter.pending') }}" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center">عرض الكل ←</a>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Modifications & Broker Deposits -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="panel" style="margin-bottom:0">
+    <div class="panel-header"><div class="panel-title">💰 البروكرات — إجمالي الإيداع الشهري</div></div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>البروكر</th><th>إيداع شهري</th></tr></thead>
+        <tbody id="broker-dep-tb"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:0">
     <div class="panel-header"><div class="panel-title">✏️ آخر التعديلات</div></div>
     <div class="table-scroll">
       <table class="data-table">
@@ -100,17 +110,15 @@
 
 @push('scripts')
 <script>
-let barChart = null, pieChart = null;
-const MONTHS_DATA = @json($monthlyData ?? []);
-const COLORS = ['#2E86AB','#3A9DB5','#1A5F7A','#22C97A','#F5A623','#7B68EE'];
+let branchChart = null;
+const COLORS = ['#1AADBA','#22C4D4','#1ECC80','#F5A828','#8A78F0','#E84545','#F06A28','#2A9D8F'];
 
 async function loadDashboard() {
-  // KPIs
   const r = await api('GET', '/cards/report');
   if (!r.success) return;
   const s = r.summary;
 
-  document.getElementById('kpi-total').textContent = r.count.toLocaleString();
+  document.getElementById('kpi-total').textContent = r.count.toLocaleString('ar');
   document.getElementById('kpi-dep').textContent   = fmtK(s.total_initial_deposit);
   document.getElementById('kpi-mon').textContent   = fmtK(s.total_monthly_deposit);
   document.getElementById('kpi-mod').textContent   = s.modified_count;
@@ -119,124 +127,128 @@ async function loadDashboard() {
   document.getElementById('sb-cards-count').textContent = r.count;
   document.getElementById('sb-mod-count').textContent   = s.modified_count;
 
-  // Top deposits
-  const topData = (r.data || []).sort((a,b) => b.monthly_deposit - a.monthly_deposit).slice(0,8);
-  document.getElementById('top-deposits-tb').innerHTML = topData.map(row => `
-    <tr>
-      <td><span class="ac-num">#${row.account_number}</span></td>
-      <td>${row.broker?.name || '—'}</td>
-      <td class="mono c-green">${fmt(row.monthly_deposit)}</td>
-      <td class="c-muted">${row.month}</td>
-    </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
+  const data = r.data || [];
 
-  // Charts
-  const monthly = {};
-  (r.data || []).forEach(row => {
-    if (!monthly[row.month]) monthly[row.month] = {dep:0, mon:0};
-    monthly[row.month].dep += parseFloat(row.initial_deposit || 0);
-    monthly[row.month].mon += parseFloat(row.monthly_deposit || 0);
+  // ── Per-branch count chart ──
+  const branchMap = {};
+  data.forEach(row => {
+    const name = row.branch?.name_ar || row.branch?.name_en || 'غير محدد';
+    branchMap[name] = (branchMap[name] || 0) + 1;
   });
-  const mKeys   = Object.keys(monthly).slice(-10);
-  const mDeps   = mKeys.map(m => Math.round(monthly[m].dep));
-  const mMons   = mKeys.map(m => Math.round(monthly[m].mon));
+  const bLabels = Object.keys(branchMap).sort((a,b) => branchMap[b] - branchMap[a]);
+  const bVals   = bLabels.map(b => branchMap[b]);
+  const totalBr = bVals.reduce((a,v) => a+v, 0);
+  document.getElementById('branch-total-lbl').textContent = 'الإجمالي: ' + totalBr.toLocaleString('ar') + ' حساب';
 
-  if (barChart) barChart.destroy();
-  barChart = new Chart(document.getElementById('chart-bar'), {
+  if (branchChart) branchChart.destroy();
+  branchChart = new Chart(document.getElementById('chart-branches'), {
     type: 'bar',
     data: {
-      labels: mKeys,
-      datasets: [
-        { label:'إيداع أولي',  data:mDeps, backgroundColor:'rgba(46,134,171,.75)', borderRadius:5 },
-        { label:'إيداع شهري', data:mMons, backgroundColor:'rgba(34,201,122,.65)', borderRadius:5 },
-      ]
+      labels: bLabels,
+      datasets: [{
+        label: 'عدد الحسابات',
+        data: bVals,
+        backgroundColor: bLabels.map((_,i) => COLORS[i % COLORS.length] + 'CC'),
+        borderColor:     bLabels.map((_,i) => COLORS[i % COLORS.length]),
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: { legend:{display:false} },
+      responsive: true, maintainAspectRatio: false, indexAxis: bLabels.length > 6 ? 'y' : 'x',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('ar') + ' حساب' } }
+      },
       scales: {
-        x: { ticks:{color:'#5A7A9A',font:{size:9},maxRotation:45}, grid:{color:'rgba(37,58,99,.3)'} },
-        y: { ticks:{color:'#5A7A9A',font:{size:9},callback:v=>'$'+v.toLocaleString()}, grid:{color:'rgba(37,58,99,.3)'} }
+        x: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'} },
+        y: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'}, beginAtZero:true }
       }
     }
   });
 
-  // Broker distribution pie
-  const brokerMap = {};
-  (r.data || []).forEach(row => {
-    const name = row.broker?.name || 'Unknown';
-    if (name !== 'IB account' && name !== 'Self') {
-      brokerMap[name] = (brokerMap[name] || 0) + parseFloat(row.monthly_deposit || 0);
-    }
-  });
-  const bNames = Object.keys(brokerMap);
-  const bVals  = bNames.map(b => brokerMap[b]);
-  if (pieChart) pieChart.destroy();
-  pieChart = new Chart(document.getElementById('chart-pie'), {
-    type: 'doughnut',
-    data: { labels:bNames, datasets:[{ data:bVals, backgroundColor:COLORS, borderWidth:0, hoverOffset:4 }] },
-    options: {
-      responsive:true, maintainAspectRatio:false, cutout:'68%',
-      plugins: { legend:{ position:'bottom', labels:{color:'#7A9AB5',font:{size:9},boxWidth:8,padding:8} } }
-    }
-  });
-
-  // Top brokers by count
+  // ── Broker count table ──
   const brokerCount = {};
-  (r.data || []).forEach(row => {
-    const n = row.broker?.name || 'Unknown';
+  data.forEach(row => {
+    const n = row.broker?.name || 'غير محدد';
     brokerCount[n] = (brokerCount[n] || 0) + 1;
   });
-  const sortedCnt = Object.entries(brokerCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-  document.getElementById('top-broker-cnt').innerHTML = sortedCnt.map(([name,cnt],i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-      <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div><div style="font-size:10px;color:var(--mu)">${cnt} حساب</div></div>
-      <div class="mono c-teal" style="font-size:12px;font-weight:700">${cnt}</div>
-    </div>`).join('');
+  const sortedBrCnt = Object.entries(brokerCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  const medals = ['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+  document.getElementById('broker-cnt-tb').innerHTML = sortedBrCnt.map(([name,cnt],i) => `
+    <tr>
+      <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
+      <td style="font-weight:700">${esc(name)}</td>
+      <td class="mono c-teal" style="font-weight:800">${cnt.toLocaleString('ar')}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
 
-  // Top brokers by deposit
-  const sortedDep = Object.entries(brokerMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('top-broker-dep').innerHTML = sortedDep.map(([name,dep],i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-      <span style="font-size:16px">${medals[i]||'·'}</span>
-      <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div><div style="font-size:10px;color:var(--mu)">${fmtK(dep)}</div></div>
-      <div class="mono c-green" style="font-size:12px;font-weight:700">${fmtK(dep)}</div>
-    </div>`).join('');
-
-  // Top marketers
+  // ── Marketer count table ──
   const mktMap = {};
-  (r.data || []).forEach(row => {
-    if (row.marketer?.name && row.marketer.name !== row.broker?.name) {
+  data.forEach(row => {
+    if (row.marketer?.name) {
       mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
     }
   });
-  const sortedMkt = Object.entries(mktMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('top-marketer').innerHTML = sortedMkt.length
+  const sortedMkt = Object.entries(mktMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  document.getElementById('marketer-cnt-tb').innerHTML = sortedMkt.length
     ? sortedMkt.map(([name,cnt],i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd1)">
-        <span style="font-size:16px">${medals[i]||'·'}</span>
-        <div style="flex:1"><div style="font-size:12px;font-weight:700">${name}</div></div>
-        <div class="mono c-teal" style="font-size:12px">${cnt}</div>
-      </div>`).join('')
-    : '<div style="color:var(--mu);font-size:12px;padding:10px 0">لا توجد بيانات مسوّق منفصل</div>';
+      <tr>
+        <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
+        <td style="font-weight:700">${esc(name)}</td>
+        <td class="mono c-green" style="font-weight:800">${cnt.toLocaleString('ar')}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">لا يوجد مسوّقون</td></tr>';
+
+  // ── Broker deposit table ──
+  const brokerDep = {};
+  data.forEach(row => {
+    const n = row.broker?.name || 'غير محدد';
+    brokerDep[n] = (brokerDep[n] || 0) + parseFloat(row.monthly_deposit || 0);
+  });
+  const sortedBrDep = Object.entries(brokerDep).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  document.getElementById('broker-dep-tb').innerHTML = sortedBrDep.map(([name,dep],i) => `
+    <tr>
+      <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
+      <td style="font-weight:700">${esc(name)}</td>
+      <td class="mono c-green" style="font-weight:800">${fmtK(dep)}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">لا توجد بيانات</td></tr>';
 }
 
-// Modifications
+// ── CC Pending ──
+async function loadCcPending() {
+  const r = await api('GET', '/cc/pending');
+  if (!r.success) return;
+  const items = r.data?.data || r.items || [];
+  const count = r.count ?? items.length;
+  if (count > 0) {
+    const badge = document.getElementById('cc-badge');
+    badge.textContent = count + ' معلّق';
+    badge.style.display = '';
+  }
+  document.getElementById('cc-tb').innerHTML = items.slice(0, 6).map(cc => `
+    <tr>
+      <td><span class="ac-num">#${esc(String(cc.account_number || '—'))}</span></td>
+      <td><span class="badge badge-orange">${esc(cc.cc_status || 'قيد المراجعة')}</span></td>
+      <td style="color:var(--mu);font-size:13px">${cc.created_at ? new Date(cc.created_at).toLocaleDateString('ar') : '—'}</td>
+    </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">لا توجد كروت CC معلّقة</td></tr>';
+}
+
+// ── Modifications ──
 async function loadModifications() {
   const r = await api('GET', '/cards/modifications');
   if (!r.success) return;
   const rows = (r.data?.data || []).slice(0, 8);
   document.getElementById('modifications-tb').innerHTML = rows.map(m => `
     <tr>
-      <td><span class="ac-num">#${m.account_number}</span></td>
-      <td style="color:var(--or);font-size:11px">${m.reason}</td>
+      <td><span class="ac-num">#${esc(String(m.account_number))}</span></td>
+      <td style="color:var(--or);font-size:13px">${esc(m.reason)}</td>
       <td style="color:var(--mu)">${new Date(m.modified_at).toLocaleDateString('ar')}</td>
-      <td style="color:var(--mu)">${m.modified_by?.name || '—'}</td>
+      <td style="color:var(--mu)">${esc(m.modified_by?.name || '—')}</td>
     </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">لا توجد تعديلات</td></tr>';
 }
 
 loadDashboard();
 loadModifications();
+loadCcPending();
 </script>
 @endpush

@@ -134,6 +134,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         // CC creates / sends cards
         Route::post('cards',              [CallCenterController::class, 'store']);
         Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
+        Route::post('cards/{id}/resend',  [CallCenterController::class, 'resend']);
 
         // Branch responds to CC cards
         Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);

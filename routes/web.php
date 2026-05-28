@@ -26,11 +26,13 @@ Route::middleware('auth')->group(function(){
     Route::get('/cards',           [WebController::class,'cardsIndex'])->name('cards.index');
     Route::get('/cards/create',    [WebController::class,'cardsCreate'])->name('cards.create');
     Route::get('/cards/modified',  [WebController::class,'cardsModified'])->name('cards.modified');
+    Route::get('/cards/search',    [WebController::class,'cardsSearch'])->name('cards.search');
     Route::get('/cards/edit',      [WebController::class,'cardsEditSearch'])->name('cards.edit-search');
     Route::get('/cards/{id}/edit', [WebController::class,'cardsEdit'])->name('cards.edit');
     Route::get('/cards/tree',      [WebController::class,'cardsTree'])->name('cards.tree');
-    Route::get('/reports',         [WebController::class,'reports'])->name('reports.index');
-    Route::get('/reports/dynamic',  [WebController::class,'reportsDynamic'])->name('reports.dynamic');
+    Route::get('/reports',                [WebController::class,'reports'])->name('reports.index');
+    Route::get('/reports/dynamic',        [WebController::class,'reportsDynamic'])->name('reports.dynamic');
+    Route::get('/reports/branch-monthly', [WebController::class,'reportsBranchMonthly'])->name('reports.branch-monthly');
     Route::get('/employees',       [WebController::class,'employees'])->name('employees.index');
     Route::get('/settings',        [WebController::class,'settings'])->name('settings.index');
     Route::get('/import',          [WebController::class,'import'])->name('import.index');

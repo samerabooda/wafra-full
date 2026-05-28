@@ -14,7 +14,7 @@ class User extends Authenticatable
     use HasApiTokens, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'name', 'email', 'password', 'role',
+        'name', 'email', 'phone', 'password', 'role',
         'branch_id', 'is_active', 'last_login_at',
         'must_change_pass', 'created_by',
     ];

@@ -83,6 +83,44 @@
 
 @section('content')
 
+<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+
+  {{-- Reports Sidebar Nav --}}
+  <div id="rnav-sidebar" style="width:220px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--brd1);display:flex;flex-direction:column;padding:10px 0;">
+    <div style="padding:12px 16px 14px;border-bottom:1px solid var(--brd1);margin-bottom:8px">
+      <div id="rnav-hdr" style="font-size:11px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📈 التقارير</div>
+    </div>
+    <a href="{{ route('reports.index') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
+      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);">📊</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap" id="rnav-lbl-monthly">التقارير الشهرية</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-monthly">تحليل شامل بالرسوم البيانية</div>
+      </div>
+    </a>
+    <a href="{{ route('reports.dynamic') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:rgba(26,173,186,.15);border:1px solid rgba(26,173,186,.25);">
+      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.25);border:1px solid rgba(26,173,186,.5);">🔧</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--pri2);white-space:nowrap" id="rnav-lbl-dynamic">تقرير ديناميكي</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-dynamic">بناء تقرير مخصص</div>
+      </div>
+      <span style="font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(34,201,122,.2);color:var(--gr);font-weight:700;border:1px solid rgba(34,201,122,.3)" id="rnav-badge-new">جديد</span>
+    </a>
+    <a href="{{ route('reports.branch-monthly') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
+      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);">🏢</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">تقرير شهري للفروع</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px">فرع + شهر محدد</div>
+      </div>
+    </a>
+    <div style="flex:1"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--brd1);margin-top:8px">
+      <div id="rnav-footer" style="font-size:10px;color:var(--mu);line-height:1.6"></div>
+    </div>
+  </div>
+
+  {{-- Content Panel --}}
+  <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
+
 {{-- ═══ SECTION 1: FILTERS ═══ --}}
 <div class="panel" style="margin-bottom:14px">
   <div class="panel-header">
@@ -244,6 +282,9 @@
   <div class="summary-bar" id="dyn-summary"></div>
 </div>
 
+  </div>{{-- content panel --}}
+</div>{{-- reports shell --}}
+
 @endsection
 
 @push('scripts')
@@ -260,16 +301,16 @@ const ALL_COLUMNS = [
   { id:'account_status',    label:'حالة الحساب',          type:'text',    width:110 },
   { id:'trading_type',      label:'نوع التداول',          type:'text',    width:110 },
   { id:'broker',            label:'البروكر',              type:'text',    width:140 },
-  { id:'broker_commission', label:'ع. بروكر ($/lot)',     type:'number',  width:130 },
+  { id:'broker_commission', label:'عمولة البروكر',        type:'number',  width:130 },
   { id:'marketer',          label:'مسوّق داخلي',         type:'text',    width:140 },
-  { id:'marketer_commission',label:'ع. داخلي ($/lot)',   type:'number',  width:120 },
+  { id:'marketer_commission',label:'عمولة المسوّق',      type:'number',  width:120 },
   { id:'ext_marketer1',     label:'مسوّق خارجي 1',       type:'text',    width:140 },
-  { id:'ext_commission1',   label:'ع. خارجي 1 ($/lot)',  type:'number',  width:130 },
+  { id:'ext_commission1',   label:'عمولة خارجي 1',       type:'number',  width:130 },
   { id:'ext_marketer2',     label:'مسوّق خارجي 2',       type:'text',    width:140 },
-  { id:'ext_commission2',   label:'ع. خارجي 2 ($/lot)',  type:'number',  width:130 },
+  { id:'ext_commission2',   label:'عمولة خارجي 2',       type:'number',  width:130 },
   { id:'total_commission',  label:'إجمالي العمولات',      type:'number',  width:140 },
-  { id:'initial_deposit',   label:'إيداع أولي ($)',       type:'currency',width:130 },
-  { id:'monthly_deposit',   label:'إيداع شهري ($)',       type:'currency',width:130 },
+  { id:'initial_deposit',   label:'إيداع فتح الحساب',     type:'currency',width:140 },
+  { id:'monthly_deposit',   label:'الإيداع الشهري المتوقع',type:'currency',width:155 },
   { id:'forex_commission',  label:'Forex Comm.',          type:'number',  width:110 },
   { id:'futures_commission',label:'Futures Comm.',        type:'number',  width:110 },
   { id:'status',            label:'الحالة',               type:'status',  width:100 },
@@ -889,5 +930,24 @@ function exportDynPdf() {
 
 // ══════════════════════════════════════════════════════════
 initPage();
+
+/* ── Reports sidebar nav bilingual ──────────────────────── */
+(function(){
+  const RN={
+    ar:{hdr:'📈 التقارير',lblMonthly:'التقارير الشهرية',subMonthly:'تحليل شامل بالرسوم البيانية',lblDynamic:'تقرير ديناميكي',subDynamic:'بناء تقرير مخصص',badgeNew:'جديد',footer:'منصة وفرة الخليجية\nلإدارة العمولات'},
+    en:{hdr:'📈 Reports',lblMonthly:'Monthly Reports',subMonthly:'Full analysis with charts',lblDynamic:'Dynamic Report',subDynamic:'Build custom report',badgeNew:'New',footer:'Wafra Gulf Platform\nCommission Management'},
+  };
+  function rNavApplyLang(){
+    const L=(typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))||'ar';
+    const d=RN[L]||RN.ar;
+    const _t=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+    _t('rnav-hdr',d.hdr);_t('rnav-lbl-monthly',d.lblMonthly);_t('rnav-sub-monthly',d.subMonthly);
+    _t('rnav-lbl-dynamic',d.lblDynamic);_t('rnav-sub-dynamic',d.subDynamic);_t('rnav-badge-new',d.badgeNew);
+    const fn=document.getElementById('rnav-footer');if(fn)fn.innerHTML=d.footer.replace('\n','<br>');
+  }
+  const _rnOrig=window.applyLang;
+  window.applyLang=function(lang){if(_rnOrig)_rnOrig(lang);rNavApplyLang();};
+  rNavApplyLang();
+})();
 </script>
 @endpush
