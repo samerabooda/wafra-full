@@ -2,8 +2,12 @@
 #  Wafra Gulf — One-Click Deploy Script
 #  Usage:  .\deploy.ps1
 #  Usage:  .\deploy.ps1 -message "my commit message"
+#  Usage:  .\deploy.ps1 -SkipCommit   (called from git hook)
 # ════════════════════════════════════════════════════════
-param([string]$message = "")
+param(
+    [string]$message    = "",
+    [switch]$SkipCommit
+)
 
 [Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -45,29 +49,35 @@ function UploadFile($localPath, $remoteDir, $fileName) {
     return ($res.cpanelresult.event.result -eq 1)
 }
 
-# ── Step 1: Git commit & push ─────────────────────────────
 Write-Host "`n══════════════════════════════════════" -ForegroundColor Cyan
 Write-Host " 🚀 Wafra Gulf — Auto Deploy" -ForegroundColor Cyan
 Write-Host "══════════════════════════════════════`n" -ForegroundColor Cyan
 
 Set-Location $BASE
 
-$status = git status --porcelain
-if ($status) {
-    if (!$message) {
-        $ts = Get-Date -Format "yyyy-MM-dd HH:mm"
-        $message = "chore: auto-deploy $ts"
+# ── Step 1: Git commit & push ─────────────────────────────
+if (-not $SkipCommit) {
+    $status = git status --porcelain
+    if ($status) {
+        if (!$message) {
+            $ts = Get-Date -Format "yyyy-MM-dd HH:mm"
+            $message = "chore: auto-deploy $ts"
+        }
+        Write-Host "📦 Committing changes..." -ForegroundColor Yellow
+        git add -A
+        git commit -m $message
+        Write-Host "✅ Committed" -ForegroundColor Green
+    } else {
+        Write-Host "ℹ️  No local changes to commit" -ForegroundColor Gray
     }
-    Write-Host "📦 Committing changes..." -ForegroundColor Yellow
-    git add -A
-    git commit -m $message
-    git push origin main
-    Write-Host "✅ Pushed to GitHub" -ForegroundColor Green
-} else {
-    Write-Host "ℹ️  No local changes to commit" -ForegroundColor Gray
 }
 
-# ── Step 2: Get changed files ─────────────────────────────
+# ── Step 2: Push to GitHub ────────────────────────────────
+Write-Host "`n🔄 Pushing to GitHub..." -ForegroundColor Yellow
+git push origin main 2>&1 | Write-Host
+Write-Host "✅ Pushed to GitHub" -ForegroundColor Green
+
+# ── Step 3: Get changed files ─────────────────────────────
 Write-Host "`n📋 Detecting changed files..." -ForegroundColor Yellow
 $changedFiles = git diff --name-only HEAD~1 HEAD 2>$null
 if (-not $changedFiles) {
@@ -83,7 +93,7 @@ $deployable = $changedFiles | Where-Object {
 
 Write-Host "  Found $($deployable.Count) files to deploy`n"
 
-# ── Step 3: Upload files ───────────────────────────────────
+# ── Step 4: Upload files ───────────────────────────────────
 Write-Host "📤 Uploading to server..." -ForegroundColor Yellow
 $ok = 0; $err = 0; $migrations = @()
 
@@ -106,7 +116,7 @@ foreach ($f in $deployable) {
 
 Write-Host "`n  Uploaded: $ok OK  $err errors" -ForegroundColor Cyan
 
-# ── Step 4: Clear view cache (correct timestamp order) ─────
+# ── Step 5: Clear view cache (correct timestamp order) ─────
 Write-Host "`n🧹 Clearing view cache..." -ForegroundColor Yellow
 
 $res = CpanelAPI @{
@@ -120,7 +130,6 @@ $res = CpanelAPI @{
 $cacheFiles = $res.cpanelresult.data | Where-Object { $_.file -match '\.php$' }
 
 # A: overwrite → mtime = NOW
-$stub = [System.Web.HttpUtility]::UrlEncode("<?php // stale")
 foreach ($cf in $cacheFiles) {
     CpanelAPI @{
         cpanel_jsonapi_user       = $CPANEL_USER
@@ -147,7 +156,7 @@ foreach ($blade in $allBlades) {
 }
 Write-Host "  Re-uploaded $($allBlades.Count) blade files (source newer than cache — Laravel recompiles)"
 
-# ── Step 5: Migration warning ──────────────────────────────
+# ── Step 6: Migration warning ──────────────────────────────
 if ($migrations.Count -gt 0) {
     Write-Host "`n⚠️  NEW MIGRATIONS DETECTED:" -ForegroundColor Yellow
     $migrations | ForEach-Object { Write-Host "   $_" -ForegroundColor Yellow }
