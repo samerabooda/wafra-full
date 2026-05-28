@@ -137,14 +137,15 @@ Write-Host "  Marked $($cacheFiles.Count) cache files as stale"
 # B: wait so re-upload gets newer mtime
 Start-Sleep -Seconds 2
 
-# C: re-upload blade files → mtime = NOW+2
-$bladeFiles = $deployable | Where-Object { $_ -like "*.blade.php" } | Select-Object -First 8
-foreach ($bf in $bladeFiles) {
-    $localPath  = Join-Path $BASE $bf
-    $remoteFull = $REMOTE_BASE + "/" + $bf.Replace("\","/")
-    UploadFile $localPath $remoteFull.Substring(0,$remoteFull.LastIndexOf("/")) $remoteFull.Substring($remoteFull.LastIndexOf("/")+1) | Out-Null
+# C: re-upload ALL blade files → mtime = NOW+2 (critical: must be newer than cache)
+$allBlades = Get-ChildItem -Path $BASE -Filter "*.blade.php" -Recurse |
+    Where-Object { $_.FullName -notmatch '\\vendor\\' -and $_.FullName -notmatch '\\node_modules\\' }
+foreach ($blade in $allBlades) {
+    $rel      = $blade.FullName.Replace($BASE+"\","").Replace("\","/")
+    $rfull    = "$REMOTE_BASE/$rel"
+    UploadFile $blade.FullName $rfull.Substring(0,$rfull.LastIndexOf("/")) $rfull.Substring($rfull.LastIndexOf("/")+1) | Out-Null
 }
-Write-Host "  Re-uploaded $($bladeFiles.Count) blade files (source newer than cache)"
+Write-Host "  Re-uploaded $($allBlades.Count) blade files (source newer than cache — Laravel recompiles)"
 
 # ── Step 5: Migration warning ──────────────────────────────
 if ($migrations.Count -gt 0) {
