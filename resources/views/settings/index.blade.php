@@ -1,6 +1,6 @@
-﻿@extends('layouts.app')
-@section('title','ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ')
-@section('page-title','ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ظˆط§ظ„ط¥ط¯ط§ط±ط©')
+@extends('layouts.app')
+@section('title','الإعدادات')
+@section('page-title','الإعدادات والإدارة')
 
 @section('topbar-actions')
 <div id="settings-topbar-actions" style="display:flex;gap:6px"></div>
@@ -14,14 +14,14 @@
   border-radius:16px; overflow:hidden;
 ">
 
-  {{-- â”€â”€ Settings Sidebar Nav â”€â”€ --}}
+  {{-- ── Settings Sidebar Nav ── --}}
   <div id="settings-nav" style="
     width:220px; flex-shrink:0;
     background:var(--bg2); border-left:1px solid var(--brd1);
     display:flex; flex-direction:column; padding:10px 0;
   ">
     <div style="padding:12px 16px 14px; border-bottom:1px solid var(--brd1); margin-bottom:8px">
-      <div id="stnav-hdr" style="font-size:11px; color:var(--mu); font-weight:700; text-transform:uppercase; letter-spacing:.5px">âڑ™ï¸ڈ ظ„ظˆط­ط© ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ</div>
+      <div id="stnav-hdr" style="font-size:11px; color:var(--mu); font-weight:700; text-transform:uppercase; letter-spacing:.5px">⚙️ لوحة الإعدادات</div>
     </div>
 
     @foreach(['general','branches','employees','managers','approvals','permissions'] as $sid)
@@ -51,7 +51,7 @@
     </div>
   </div>
 
-  {{-- â”€â”€ Settings Content Panel â”€â”€ --}}
+  {{-- ── Settings Content Panel ── --}}
   <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
     {{-- GENERAL --}}
@@ -72,13 +72,13 @@
         <div class="panel">
           <div class="panel-header">
             <div class="panel-title" id="pt-{{ $key }}"></div>
-            <span style="font-size:10px;color:var(--mu)" id="cnt-{{ $key }}">â€”</span>
+            <span style="font-size:10px;color:var(--mu)" id="cnt-{{ $key }}">—</span>
           </div>
           <div id="list-{{ $key }}" style="max-height:220px;overflow-y:auto;padding:8px 16px"></div>
           @if(auth()->user()?->isFinanceAdmin())
           <div style="padding:10px 16px;border-top:1px solid var(--brd1);display:flex;gap:8px">
             <input type="text" id="new-en-{{ $key }}" class="form-control" placeholder="English" style="flex:1">
-            <input type="text" id="new-ar-{{ $key }}" class="form-control" placeholder="ط¹ط±ط¨ظٹ" style="flex:1">
+            <input type="text" id="new-ar-{{ $key }}" class="form-control" placeholder="عربي" style="flex:1">
             <button class="btn btn-primary btn-sm" id="addbtn-{{ $key }}"
               onclick="addLookup('{{ $ep }}','{{ $key }}')"></button>
           </div>
@@ -91,7 +91,7 @@
           <div class="panel-body">
             <div style="display:flex;flex-direction:column;gap:12px">
               @foreach([
-                ['gen_company',     'company.full',    'span', 'ظˆظپط±ط© ط§ظ„ط®ظ„ظٹط¬ظٹط© ظ„ظ„ط®ط¯ظ…ط§طھ ط§ظ„ظ…ط§ظ„ظٹط©'],
+                ['gen_company',     'company.full',    'span', 'وفرة الخليجية للخدمات المالية'],
                 ['gen_version',     null,              'badge','v2.0'],
                 ['gen_status',      null,              'active',null],
                 ['gen_currentUser', null,              'user',  null],
@@ -105,7 +105,7 @@
                 @elseif($type==='active')
                   <span class="badge badge-green" id="gen-active-badge"></span>
                 @else
-                  <span style="font-size:12px;font-weight:700" id="gen-current-user">â€”</span>
+                  <span style="font-size:12px;font-weight:700" id="gen-current-user">—</span>
                 @endif
               </div>
               @endforeach
@@ -130,7 +130,7 @@
         <div class="panel-header">
           <div class="panel-title">
             <span id="br-list-title"></span>
-            <span id="br-count" class="badge badge-blue" style="margin-right:6px">â€”</span>
+            <span id="br-count" class="badge badge-blue" style="margin-right:6px">—</span>
           </div>
           <button class="btn btn-ghost btn-sm" id="br-refresh-btn" onclick="loadBranchesSection()"></button>
         </div>
@@ -159,7 +159,7 @@
       </div>
       @if(auth()->user()?->isFinanceAdmin())
       <div id="emp-pending-banner" class="alert alert-warning" style="display:none;margin-bottom:14px">
-        âڈ³ <span id="emp-pending-text"></span>
+        ⏳ <span id="emp-pending-text"></span>
         <button onclick="showSection('approvals')" id="emp-approve-now-btn"
           style="background:none;border:none;color:var(--or);font-weight:700;cursor:pointer;margin-right:8px;font-family:'Tajawal',sans-serif"></button>
       </div>
@@ -172,7 +172,7 @@
           </div>
           <div style="display:flex;gap:8px">
             <select id="emp-f-role" class="form-control" style="width:auto;font-size:12px;padding:5px 9px" onchange="loadEmployeesSection()"></select>
-            <button class="btn btn-ghost btn-sm" onclick="loadEmployeesSection()">ًں”„</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadEmployeesSection()">🔄</button>
           </div>
         </div>
         <div class="table-scroll">
@@ -261,7 +261,7 @@
         </div>
         <div id="appr-list" class="panel-body">
           <div style="text-align:center;padding:30px;color:var(--mu)" id="appr-loading-cell">
-            <div style="font-size:38px;opacity:.25;margin-bottom:10px">âœ…</div>
+            <div style="font-size:38px;opacity:.25;margin-bottom:10px">✅</div>
           </div>
         </div>
       </div>
@@ -274,7 +274,7 @@
               <th id="appr-th-decision"></th><th id="appr-th-by"></th>
             </tr></thead>
             <tbody id="appr-history">
-              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">â€”</td></tr>
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">—</td></tr>
             </tbody>
           </table>
         </div>
@@ -299,19 +299,18 @@
       </div>
     </div>{{-- section-permissions --}}
 
-    {{-- Guide section moved to /guide (standalone page) --}}
 
   </div>{{-- content panel --}}
 </div>{{-- shell --}}
 
-{{-- â•گâ•گâ•گ MODALS â•گâ•گâ•گ --}}
+{{-- ═══ MODALS ═══ --}}
 
 {{-- Branch Modal --}}
 <div class="modal-overlay" id="modal-add-branch">
   <div class="modal modal-narrow">
     <div class="modal-header">
       <div class="modal-title" id="br-modal-title"></div>
-      <button class="modal-close" onclick="closeModal('modal-add-branch')">âœ•</button>
+      <button class="modal-close" onclick="closeModal('modal-add-branch')">✕</button>
     </div>
     <div class="modal-body">
       <div id="br-err" class="alert alert-error"></div>
@@ -343,7 +342,7 @@
   <div class="modal modal-narrow">
     <div class="modal-header">
       <div class="modal-title" id="ae-modal-title"></div>
-      <button class="modal-close" onclick="closeModal('modal-add-emp')">âœ•</button>
+      <button class="modal-close" onclick="closeModal('modal-add-emp')">✕</button>
     </div>
     <div class="modal-body">
       <div id="emp-err" class="alert alert-error"></div>
@@ -393,7 +392,7 @@
   <div class="modal modal-wide">
     <div class="modal-header">
       <div class="modal-title" id="mg-modal-title"></div>
-      <button class="modal-close" onclick="closeModal('modal-add-mgr')">âœ•</button>
+      <button class="modal-close" onclick="closeModal('modal-add-mgr')">✕</button>
     </div>
     <div class="modal-body">
       <div id="mgr-err" class="alert alert-error"></div>
@@ -423,7 +422,7 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="mg-lbl-pw"></label>
-          <input type="password" id="mg-pw" class="form-control" placeholder="â€”">
+          <input type="password" id="mg-pw" class="form-control" placeholder="—">
         </div>
         <div class="form-group"></div>
       </div>
@@ -445,8 +444,8 @@
 <div class="modal-overlay" id="modal-edit-mgr">
   <div class="modal modal-wide">
     <div class="modal-header">
-      <div class="modal-title" id="emg-modal-title">âœڈï¸ڈ طھط¹ط¯ظٹظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط¯ظٹط±</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-mgr')">âœ•</button>
+      <div class="modal-title" id="emg-modal-title">✏️ تعديل بيانات المدير</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-mgr')">✕</button>
     </div>
     <div class="modal-body">
       <div id="emg-err" class="alert alert-error"></div>
@@ -473,14 +472,14 @@
           <label class="form-label" id="emg-lbl-active" style="margin-bottom:14px"></label>
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg4);border-radius:9px;border:1px solid var(--brd1)">
             <input type="checkbox" id="emg-active" style="width:18px;height:18px;cursor:pointer;accent-color:var(--pri)">
-            <span id="emg-active-lbl" style="font-size:14px;font-weight:600;color:var(--gr)">ظ†ط´ط·</span>
+            <span id="emg-active-lbl" style="font-size:14px;font-weight:600;color:var(--gr)">نشط</span>
           </label>
         </div>
       </div>
-      <div class="form-section-title" id="emg-perms-title" style="margin-top:8px">ًں”گ ط§ظ„طµظ„ط§ط­ظٹط§طھ ط§ظ„ظ…ظ…ظ†ظˆط­ط©</div>
+      <div class="form-section-title" id="emg-perms-title" style="margin-top:8px">🔐 الصلاحيات الممنوحة</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="btn btn-ghost btn-sm" onclick="selectAllPermsEdit(true)">âœ… طھط­ط¯ظٹط¯ ط§ظ„ظƒظ„</button>
-        <button class="btn btn-ghost btn-sm" onclick="selectAllPermsEdit(false)">âکگ ط¥ظ„ط؛ط§ط، ط§ظ„ظƒظ„</button>
+        <button class="btn btn-ghost btn-sm" id="emg-sel-all" onclick="selectAllPermsEdit(true)"></button>
+        <button class="btn btn-ghost btn-sm" id="emg-clr-all" onclick="selectAllPermsEdit(false)"></button>
       </div>
       <div id="perm-grid-edit" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
     </div>
@@ -495,8 +494,8 @@
 <div class="modal-overlay" id="modal-edit-emp">
   <div class="modal modal-wide">
     <div class="modal-header">
-      <div class="modal-title" id="eep-modal-title">âœڈï¸ڈ طھط¹ط¯ظٹظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ظˆط¸ظپ</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-emp')">âœ•</button>
+      <div class="modal-title" id="eep-modal-title">✏️ تعديل بيانات الموظف</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-emp')">✕</button>
     </div>
     <div class="modal-body">
       <div id="eep-err" class="alert alert-error"></div>
@@ -536,7 +535,7 @@
         <label class="form-label" id="eep-lbl-active" style="margin-bottom:10px"></label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg4);border-radius:9px;border:1px solid var(--brd1);width:fit-content">
           <input type="checkbox" id="eep-active" style="width:18px;height:18px;cursor:pointer;accent-color:var(--pri)">
-          <span id="eep-active-lbl" style="font-size:14px;font-weight:600;color:var(--gr)">ظ†ط´ط·</span>
+          <span id="eep-active-lbl" style="font-size:14px;font-weight:600;color:var(--gr)">نشط</span>
         </label>
       </div>
     </div>
@@ -552,7 +551,7 @@
   <div class="modal modal-narrow">
     <div class="modal-header">
       <div class="modal-title" id="inv-modal-title"></div>
-      <button class="modal-close" onclick="closeModal('modal-add-invite')">âœ•</button>
+      <button class="modal-close" onclick="closeModal('modal-add-invite')">✕</button>
     </div>
     <div class="modal-body">
       <div class="alert alert-info show" id="inv-modal-info" style="margin-bottom:14px"></div>
@@ -584,441 +583,292 @@
   </div>
 </div>
 
-{{-- (duplicate removed) --}}
-
-  {{-- Workflow Steps --}}
-  <div style="display:flex;flex-direction:column;gap:14px">
-
-    {{-- Step 1 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">ًں—‚</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">1. ط¥ط¶ط§ظپط© ظƒط±طھ ط¹ظ…ظˆظ„ط© ط¬ط¯ظٹط¯</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          ط§ط¶ط؛ط· ط¹ظ„ظ‰ <strong>â‍• ظƒط±طھ ط¬ط¯ظٹط¯</strong> ظپظٹ ط£ط¹ظ„ظ‰ ط§ظ„ط´ط§ط´ط© ط£ظˆ ظ…ظ† ط§ظ„ظ‚ط§ط¦ظ…ط© ط§ظ„ط¬ط§ظ†ط¨ظٹط©.<br>
-          ط£ط¯ط®ظ„ ط±ظ‚ظ… ط§ظ„ط­ط³ط§ط¨طŒ ط§ظ„ط´ظ‡ط±طŒ ط§ظ„ط¨ط±ظˆظƒط±طŒ ط§ظ„ظ…ط³ظˆظ‘ظ‚طŒ ظ‚ظٹظ…ط© ط§ظ„ط¥ظٹط¯ط§ط¹طŒ ظˆظ†ظˆط¹ ط§ظ„ط­ط³ط§ط¨ (NEW / SUB).<br>
-          ط§ط¶ط؛ط· <strong>ط­ظپط¸</strong> â€” ط³ظٹط¸ظ‡ط± ط§ظ„ظƒط±طھ ظپظٹ ظ‚ط§ط¦ظ…ط© ظƒط±ظˆطھ ط§ظ„ط¹ظ…ظˆظ„ط§طھ ظپظˆط±ط§ظ‹.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-blue">â‍• ظƒط±طھ ط¬ط¯ظٹط¯</span>
-          <span class="badge badge-green">ط­ظ‚ظ„: ط±ظ‚ظ… ط§ظ„ط­ط³ط§ط¨</span>
-          <span class="badge badge-green">ط­ظ‚ظ„: ط§ظ„ط´ظ‡ط±</span>
-          <span class="badge badge-green">ط­ظ‚ظ„: ط§ظ„ط¨ط±ظˆظƒط±</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Step 2 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">âœڈï¸ڈ</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--or);margin-bottom:6px">2. طھط¹ط¯ظٹظ„ ظƒط±طھ ظ…ظˆط¬ظˆط¯</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          ط§ط¶ط؛ط· ط¹ظ„ظ‰ <strong>âœڈï¸ڈ طھط¹ط¯ظٹظ„</strong> ظپظٹ ط´ط±ظٹط· ط§ظ„ط£ط¯ظˆط§طھ ط§ظ„ط¹ظ„ظˆظٹطŒ ط£ظˆ ط§ط¨ط­ط« ظپظٹ <strong>ظƒط±ظˆطھ ط§ظ„ط¹ظ…ظˆظ„ط§طھ</strong>.<br>
-          ط£ط¯ط®ظ„ ط±ظ‚ظ… ط§ظ„ط­ط³ط§ط¨ â†’ ط§ط®طھط± ط§ظ„ظƒط±طھ â†’ ط¹ط¯ظ‘ظ„ ط§ظ„ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط·ظ„ظˆط¨ط© â†’ ط§ط®طھط± <strong>ط³ط¨ط¨ ط§ظ„طھط¹ط¯ظٹظ„</strong>.<br>
-          ط§ظ„طھط¹ط¯ظٹظ„ ظٹظڈط³ط¬ظژظ‘ظ„ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ظپظٹ ط³ط¬ظ„ ط§ظ„طھط¯ظ‚ظٹظ‚ ظ…ط¹ ط§ط³ظ… ط§ظ„ظ…ط¹ط¯ظ‘ظ„ ظˆط§ظ„طھط§ط±ظٹط®.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-orange">âœڈï¸ڈ طھط¹ط¯ظٹظ„</span>
-          <span class="badge badge-orange">ط³ط¬ظ„ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ â€” ظ„ظˆط­ط© ط§ظ„ظ…طھط§ط¨ط¹ط©</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Step 3 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.08));border:1px solid rgba(34,201,122,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">ًں“¥</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--gr);margin-bottom:6px">3. ط§ط³طھظٹط±ط§ط¯ ط¨ظٹط§ظ†ط§طھ ط¬ظ…ط§ط¹ظٹ (Excel)</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          ظ…ظ† ط§ظ„ظ‚ط§ط¦ظ…ط© ط§ظ„ط¬ط§ظ†ط¨ظٹط© â†’ <strong>ًں“¥ ط§ط³طھظٹط±ط§ط¯ ط¨ظٹط§ظ†ط§طھ</strong> (ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ ظپظ‚ط·).<br>
-          ط§ط±ظپط¹ ظ…ظ„ظپ Excel ط¨ط§ظ„ط¨ظٹط§ظ†ط§طھ â€” ط§ظ„ظ†ط¸ط§ظ… ظٹظ‚ط±ط£ ط§ظ„طµظپظˆظپ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ظˆظٹط¹ط±ط¶ ظ…ط¹ط§ظٹظ†ط©.<br>
-          طھط£ظƒط¯ ظ…ظ† ظ…ط·ط§ط¨ظ‚ط© ط§ظ„ط£ط¹ظ…ط¯ط© ط«ظ… ط§ط¶ط؛ط· <strong>ط±ظپط¹ ظˆط§ط³طھظٹط±ط§ط¯</strong>.<br>
-          ظ„ط§ ظٹظˆط¬ط¯ ط­ط¯ ط£ظ‚طµظ‰ ظ„ط¹ط¯ط¯ ط§ظ„طµظپظˆظپ â€” ظٹظ…ظƒظ† ط±ظپط¹ ط£ظٹ ط¹ط¯ط¯ ظپظٹ ظ…ظ„ظپ ظˆط§ط­ط¯.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-green">ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ ظپظ‚ط·</span>
-          <span class="badge badge-blue">ط£ط¹ظ…ط¯ط©: ط±ظ‚ظ… ط§ظ„ط­ط³ط§ط¨طŒ ط§ظ„ط´ظ‡ط±طŒ ط§ظ„ط¨ط±ظˆظƒط±طŒ ...</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Step 4 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.08));border:1px solid rgba(138,120,240,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">ًں“‍</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--pu);margin-bottom:6px">4. ظƒط±ظˆطھ ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„ (CC)</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          ط§ظ„ظƒط±ظˆطھ ط§ظ„ظˆط§ط±ط¯ط© ظ…ظ† ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„ طھط¸ظ‡ط± ظپظٹ <strong>ًں“‍ ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„</strong>.<br>
-          ظ…ط¯ظٹط±ظˆ ط§ظ„ظپط±ظˆط¹ ظٹط±ظˆظ† ظپظ‚ط· ط§ظ„ظƒط±ظˆطھ ط§ظ„ظˆط§ط±ط¯ط© ظ„ظپط±ط¹ظ‡ظ….<br>
-          ظٹظ…ظƒظ† ظ‚ط¨ظˆظ„ ط§ظ„ظƒط±طھ (ظٹظ†طھظ‚ظ„ ظ„ظ‚ط§ط¦ظ…ط© ظƒط±ظˆطھ ط§ظ„ط¹ظ…ظˆظ„ط§طھ) ط£ظˆ ط±ظپط¶ظ‡ ظ…ط¹ ط°ظƒط± ط§ظ„ط³ط¨ط¨.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-purple">CC â€” ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„</span>
-          <span class="badge badge-purple">ظ‚ط¨ظˆظ„ / ط±ظپط¶</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Step 5 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">ًں“ˆ</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">5. ط§ظ„طھظ‚ط§ط±ظٹط± ظˆط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          <strong>ًں“ˆ ط§ظ„طھظ‚ط§ط±ظٹط±</strong>: طھظ‚ط±ظٹط± ط´ط§ظ…ظ„ ط¨ظƒظ„ ط§ظ„ط­ط³ط§ط¨ط§طھ ظ…ط¹ ظپظ„ط§طھط± ط§ظ„ط´ظ‡ط± / ط§ظ„ظپط±ط¹ / ط§ظ„ط¨ط±ظˆظƒط±.<br>
-          <strong>طھظ‚ط±ظٹط± ط¯ظٹظ†ط§ظ…ظٹظƒظٹ</strong>: طھط¬ظ…ظٹط¹ ط­ط³ط¨ ط§ظ„ط¨ط±ظˆظƒط± ط£ظˆ ط§ظ„ظ…ط³ظˆظ‘ظ‚ ط£ظˆ ط§ظ„ظپط±ط¹ ط£ظˆ ط§ظ„ط´ظ‡ط±.<br>
-          <strong>ظ„ظˆط­ط© ط§ظ„ظ…طھط§ط¨ط¹ط©</strong>: ظ…ظ„ط®طµ ط³ط±ظٹط¹ ظ„ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ط±ط¦ظٹط³ظٹط© ظˆطھط±طھظٹط¨ ط§ظ„ط¨ط±ظˆظƒط±ط§طھ.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-blue">ًں“„ طھطµط¯ظٹط± PDF</span>
-          <span class="badge badge-green">ًں“— طھطµط¯ظٹط± Excel</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Step 6 --}}
-    <div style="display:flex;gap:16px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;padding:18px;align-items:flex-start">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">ًں‘¥</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:6px">6. ط¥ط¯ط§ط±ط© ط§ظ„ظ…ظˆط¸ظپظٹظ† ظˆط§ظ„ظ…ط¯ظٹط±ظٹظ†</div>
-        <div style="font-size:13px;color:var(--tx);line-height:1.7">
-          <strong>ط§ظ„ظ…ظˆط¸ظپظˆظ†</strong>: ط¥ط¶ط§ظپط© ط¨ط±ظˆظƒط±ط§طھ ظˆظ…ط³ظˆظ‘ظ‚ظٹظ† â€” طھط­طھط§ط¬ ظ…ظˆط§ظپظ‚ط© ظ…ط¯ظٹط± ظ…ط§ظ„ظٹ.<br>
-          <strong>ط§ظ„ظ…ط¯ظٹط±ظˆظ†</strong>: ط¥ط¶ط§ظپط© ظ…ط¯ظٹط±ظٹ ظپط±ظˆط¹ ظˆطھط­ط¯ظٹط¯ ط§ظ„ظپط±ط¹ ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ (ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ ظپظ‚ط·).<br>
-          <strong>ط§ظ„طµظ„ط§ط­ظٹط§طھ</strong>: طھط­ظƒظ… ط¯ظ‚ظٹظ‚ ظپظٹ ظ…ط§ ظٹظ…ظƒظ† ظ„ظƒظ„ ظ…ط¯ظٹط± ظپط±ط¹ ط±ط¤ظٹطھظ‡ ط£ظˆ طھط¹ط¯ظٹظ„ظ‡.
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <span class="badge badge-blue">ظ…ظˆط¸ظپ ط¬ط¯ظٹط¯ â†’ ظ…ط±ط§ط¬ط¹ط© â†’ ظ…ظˆط§ظپظ‚ط©</span>
-          <span class="badge badge-orange">ط§ظ„طµظ„ط§ط­ظٹط§طھ: ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ„ط¯ظˆط±</span>
-        </div>
-      </div>
-    </div>
-
-    {{-- Roles summary --}}
-    <div style="background:linear-gradient(135deg,rgba(26,173,186,.06),rgba(26,173,186,.02));border:1px solid rgba(26,173,186,.2);border-radius:14px;padding:18px">
-      <div style="font-size:14px;font-weight:800;color:var(--pri2);margin-bottom:14px">ًں”گ ظ…ظ„ط®طµ ط§ظ„ط£ط¯ظˆط§ط± ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" class="sgd">
-        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
-          <div style="font-size:13px;font-weight:800;margin-bottom:8px">ًں’¼ ط§ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ</div>
-          <div style="font-size:12px;color:var(--mu);line-height:1.8">
-            âœ… ط¬ظ…ظٹط¹ ط§ظ„طµظپط­ط§طھ<br>
-            âœ… ط§ط³طھظٹط±ط§ط¯ / طھطµط¯ظٹط±<br>
-            âœ… ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط¯ظٹط±ظٹظ†<br>
-            âœ… ط¥ط¯ط§ط±ط© ط§ظ„ظ…ظˆط¸ظپظٹظ†<br>
-            âœ… ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ظ†ط¸ط§ظ…
-          </div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
-          <div style="font-size:13px;font-weight:800;margin-bottom:8px">ًںڈ¢ ظ…ط¯ظٹط± ط§ظ„ظپط±ط¹</div>
-          <div style="font-size:12px;color:var(--mu);line-height:1.8">
-            âœ… ط¨ظٹط§ظ†ط§طھ ظپط±ط¹ظ‡ ظپظ‚ط·<br>
-            âœ… ظƒط±ظˆطھ ط§ظ„ط¹ظ…ظˆظ„ط©<br>
-            âœ… ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„ CC<br>
-            âڑ™ï¸ڈ ط¨ظ†ط§ط،ظ‹ ط¹ظ„ظ‰ ط§ظ„طµظ„ط§ط­ظٹط§طھ<br>
-            â‌Œ ظ„ط§ ظٹط±ظ‰ ط¨ط§ظ‚ظٹ ط§ظ„ظپط±ظˆط¹
-          </div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:14px">
-          <div style="font-size:13px;font-weight:800;margin-bottom:8px">ًں‘پ ط§ظ„ظ…ط´ط§ظ‡ط¯ (Viewer)</div>
-          <div style="font-size:12px;color:var(--mu);line-height:1.8">
-            âœ… ظ‚ط±ط§ط،ط© ظپظ‚ط·<br>
-            âœ… ط§ظ„طھظ‚ط§ط±ظٹط±<br>
-            â‌Œ ظ„ط§ طھط¹ط¯ظٹظ„<br>
-            â‌Œ ظ„ط§ ط¥ط¶ط§ظپط©<br>
-            â‌Œ ظ„ط§ ط­ط°ظپ
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>{{-- end old duplicate (empty) --}}
-</div>{{-- end old duplicate --}}
 
 @endsection
 
 @push('scripts')
 <script>
-/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ
-   SETTINGS PAGE â€” BILINGUAL CONTROLLER
-   â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS PAGE — BILINGUAL CONTROLLER
+   ══════════════════════════════════════════════════════════════ */
 
-/* â”€â”€â”€ Translation Dictionary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Translation Dictionary ─────────────────────────────── */
 const ST = {
   ar: {
-    panelHdr:'âڑ™ï¸ڈ ظ„ظˆط­ط© ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ',
-    footerNote:'ًں”گ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ط­ط³ط§ط³ط©\nظ„ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ ظپظ‚ط·',
+    panelHdr:'⚙️ لوحة الإعدادات',
+    footerNote:'🔐 الإعدادات الحساسة\nللمدير المالي فقط',
     // Nav sections
-    s_general_ico:'ًں“‹',     s_general_lbl:'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ط¹ط§ظ…ط©',  s_general_sub:'ط£ظ†ظˆط§ط¹ ظˆط­ط§ظ„ط§طھ ط§ظ„ط­ط³ط§ط¨ط§طھ',
-    s_branches_ico:'ًںڈ¢',    s_branches_lbl:'ط§ظ„ظپط±ظˆط¹',             s_branches_sub:'ط¥ط¯ط§ط±ط© ظپط±ظˆط¹ ط§ظ„ط´ط±ظƒط©',
-    s_employees_ico:'ًں‘¥',   s_employees_lbl:'ط§ظ„ظ…ظˆط¸ظپظˆظ†',          s_employees_sub:'ط§ظ„ط¨ط±ظˆظƒط±ط² ظˆط§ظ„ظ…ط³ظˆظ‘ظ‚ظˆظ†',
-    s_managers_ico:'ًں‘¤',    s_managers_lbl:'ط§ظ„ظ…ط¯ظٹط±ظˆظ†',           s_managers_sub:'ظ…ط¯ظٹط±ظˆ ط§ظ„ظپط±ظˆط¹ ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ',
-    s_approvals_ico:'âœ…',   s_approvals_lbl:'ط§ظ„ط§ط¹طھظ…ط§ط¯ط§طھ',        s_approvals_sub:'ظ…ظˆط¸ظپظˆظ† ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ‚ط¨ظˆظ„',
-    s_permissions_ico:'ًں”’', s_permissions_lbl:'ط§ظ„طµظ„ط§ط­ظٹط§طھ',       s_permissions_sub:'طµظ„ط§ط­ظٹط§طھ ط§ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ',
+    s_general_ico:'📋',     s_general_lbl:'الإعدادات العامة',  s_general_sub:'أنواع وحالات الحسابات',
+    s_branches_ico:'🏢',    s_branches_lbl:'الفروع',             s_branches_sub:'إدارة فروع الشركة',
+    s_employees_ico:'👥',   s_employees_lbl:'الموظفون',          s_employees_sub:'البروكرز والمسوّقون',
+    s_managers_ico:'👤',    s_managers_lbl:'المديرون',           s_managers_sub:'مديرو الفروع والصلاحيات',
+    s_approvals_ico:'✅',   s_approvals_lbl:'الاعتمادات',        s_approvals_sub:'موظفون بانتظار القبول',
+    s_permissions_ico:'🔒', s_permissions_lbl:'الصلاحيات',       s_permissions_sub:'صلاحيات المدير المالي',
     // General
-    gen_h2:'ًں“‹ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ط¹ط§ظ…ط©',
-    gen_p:'ط£ظ†ظˆط§ط¹ ط§ظ„ط­ط³ط§ط¨ط§طھ ظˆط­ط§ظ„ط§طھظ‡ط§ ظˆط£ظ†ظˆط§ط¹ ط§ظ„طھط¯ط§ظˆظ„ ط§ظ„ظ…طھط§ط­ط© ظپظٹ ط§ظ„ظ†ط¸ط§ظ…',
-    gen_adminOnly:'ًں”’ ظ‡ط°ظ‡ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ظ„ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ ظپظ‚ط·.',
-    gen_acTypes:'ًں“‹ ط£ظ†ظˆط§ط¹ ط§ظ„ط­ط³ط§ط¨ط§طھ',
-    gen_acStatuses:'ًںڈ·ï¸ڈ ط­ط§ظ„ط§طھ ط§ظ„ط­ط³ط§ط¨ط§طھ',
-    gen_trTypes:'ًں’° ط£ظ†ظˆط§ط¹ ط§ظ„طھط¯ط§ظˆظ„',
-    gen_addBtn:'+ ط¥ط¶ط§ظپط©',
-    gen_sysInfo:'â„¹ï¸ڈ ظ…ط¹ظ„ظˆظ…ط§طھ ط§ظ„ظ†ط¸ط§ظ…',
-    gen_company:'ط§ط³ظ… ط§ظ„ط´ط±ظƒط©',
-    gen_version:'ط§ظ„ط¥طµط¯ط§ط±',
-    gen_status:'ط­ط§ظ„ط© ط§ظ„ظ†ط¸ط§ظ…',
-    gen_active:'ًںں¢ ظ†ط´ط·',
-    gen_currentUser:'ط§ظ„ظ…ط³طھط®ط¯ظ… ط§ظ„ط­ط§ظ„ظٹ',
-    gen_noItems:'ظ„ط§ طھظˆط¬ط¯ ط¹ظ†ط§طµط±',
-    gen_items:' ط¹ظ†طµط±',
-    gen_phAr:'ط¹ط±ط¨ظٹ',
+    gen_h2:'📋 الإعدادات العامة',
+    gen_p:'أنواع الحسابات وحالاتها وأنواع التداول المتاحة في النظام',
+    gen_adminOnly:'🔒 هذه الإعدادات للمدير المالي فقط.',
+    gen_acTypes:'📋 أنواع الحسابات',
+    gen_acStatuses:'🏷️ حالات الحسابات',
+    gen_trTypes:'💰 أنواع التداول',
+    gen_addBtn:'+ إضافة',
+    gen_sysInfo:'ℹ️ معلومات النظام',
+    gen_company:'اسم الشركة',
+    gen_version:'الإصدار',
+    gen_status:'حالة النظام',
+    gen_active:'🟢 نشط',
+    gen_currentUser:'المستخدم الحالي',
+    gen_noItems:'لا توجد عناصر',
+    gen_items:' عنصر',
+    gen_phAr:'عربي',
     // Branches
-    br_h2:'ًںڈ¢ ط¥ط¯ط§ط±ط© ط§ظ„ظپط±ظˆط¹',
-    br_p:'طھط¹ط±ظٹظپ ظپط±ظˆط¹ ط§ظ„ط´ط±ظƒط© ظˆط¥ط¯ط§ط±طھظ‡ط§',
-    br_newBtn:'ًںڈ¢ ظپط±ط¹ ط¬ط¯ظٹط¯',
-    br_listTitle:'ًںڈ¢ ظ‚ط§ط¦ظ…ط© ط§ظ„ظپط±ظˆط¹',
-    br_refresh:'ًں”„ طھط­ط¯ظٹط«',
-    br_th_code:'ط§ظ„ظƒظˆط¯', br_th_nar:'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ط¹ط±ط¨ظٹ', br_th_nen:'ط§ظ„ط§ط³ظ… ط¨ط§ظ„ط¥ظ†ط¬ظ„ظٹط²ظٹ',
-    br_th_cards:'ط¹ط¯ط¯ ط§ظ„ظƒط±ظˆطھ', br_th_date:'طھط§ط±ظٹط® ط§ظ„ط¥ظ†ط´ط§ط،',
-    br_loading:'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...',
-    br_empty:'ظ„ط§ طھظˆط¬ط¯ ظپط±ظˆط¹',
-    br_del:'ًں—‘ ط­ط°ظپ',
-    br_card_lbl:'ظƒط±طھ',
-    br_modal_title:'ًںڈ¢ ط¥ط¶ط§ظپط© ظپط±ط¹ ط¬ط¯ظٹط¯',
-    br_lbl_ar:'ط§ط³ظ… ط§ظ„ظپط±ط¹ ط¨ط§ظ„ط¹ط±ط¨ظٹ *',
-    br_ph_ar:'ظ…ط«ط§ظ„: ظپط±ط¹ ط§ظ„ط±ظٹط§ط¶',
+    br_h2:'🏢 إدارة الفروع',
+    br_p:'تعريف فروع الشركة وإدارتها',
+    br_newBtn:'🏢 فرع جديد',
+    br_listTitle:'🏢 قائمة الفروع',
+    br_refresh:'🔄 تحديث',
+    br_th_code:'الكود', br_th_nar:'الاسم بالعربي', br_th_nen:'الاسم بالإنجليزي',
+    br_th_cards:'عدد الكروت', br_th_date:'تاريخ الإنشاء',
+    br_loading:'جاري التحميل...',
+    br_empty:'لا توجد فروع',
+    br_del:'🗑 حذف',
+    br_card_lbl:'كرت',
+    br_modal_title:'🏢 إضافة فرع جديد',
+    br_lbl_ar:'اسم الفرع بالعربي *',
+    br_ph_ar:'مثال: فرع الرياض',
     br_lbl_en:'Branch Name (English)',
     br_ph_en:'e.g. Riyadh Branch',
-    br_lbl_code:'ظƒظˆط¯ ط§ظ„ظپط±ط¹ (ظٹطھظ… طھظˆظ„ظٹط¯ظ‡ طھظ„ظ‚ط§ط¦ظٹط§ظ‹)',
-    br_cancel:'ط¥ظ„ط؛ط§ط،',
-    br_submit:'ًںڈ¢ ط¥ط¶ط§ظپط© ط§ظ„ظپط±ط¹',
-    br_err_noAr:'ط£ط¯ط®ظ„ ط§ط³ظ… ط§ظ„ظپط±ط¹ ط¨ط§ظ„ط¹ط±ط¨ظٹ',
-    br_ok_prefix:'âœ… طھظ…طھ ط¥ط¶ط§ظپط© ط§ظ„ظپط±ط¹: ',
-    br_confirm_cards:'âڑ ï¸ڈ ظ‡ط°ط§ ط§ظ„ظپط±ط¹ ظٹط­طھظˆظٹ ط¹ظ„ظ‰ ',
-    br_confirm_cards2:' ظƒط±طھ.\nط³ظٹطھظ… ظپطµظ„ظ‡ط§ ط¹ظ†ط¯ ط§ظ„ط­ط°ظپ.\nظ‡ظ„ طھط±ظٹط¯ ط§ظ„ظ…طھط§ط¨ط¹ط©طں',
-    br_confirm_del:'ط­ط°ظپ ط§ظ„ظپط±ط¹ آ«',
-    br_confirm_del2:'آ»طں',
+    br_lbl_code:'كود الفرع (يتم توليده تلقائياً)',
+    br_cancel:'إلغاء',
+    br_submit:'🏢 إضافة الفرع',
+    br_err_noAr:'أدخل اسم الفرع بالعربي',
+    br_ok_prefix:'✅ تمت إضافة الفرع: ',
+    br_confirm_cards:'⚠️ هذا الفرع يحتوي على ',
+    br_confirm_cards2:' كرت.\nسيتم فصلها عند الحذف.\nهل تريد المتابعة؟',
+    br_confirm_del:'حذف الفرع «',
+    br_confirm_del2:'»؟',
     // Employees
-    emp_h2:'ًں‘¥ ط¥ط¯ط§ط±ط© ط§ظ„ظ…ظˆط¸ظپظٹظ†',
-    emp_p:'ط§ظ„ط¨ط±ظˆظƒط±ط² ظˆط§ظ„ظ…ط³ظˆظ‘ظ‚ظˆظ† ط§ظ„ط¯ط§ط®ظ„ظٹظˆظ† ظˆط§ظ„ط®ط§ط±ط¬ظٹظˆظ†',
-    emp_newBtn:'â‍• ظ…ظˆط¸ظپ ط¬ط¯ظٹط¯',
-    emp_approveNow:'ط§ط¹طھظ…ط§ط¯ ط§ظ„ط¢ظ† â†گ',
-    emp_listTitle:'ًں‘¥ ظ‚ط§ط¦ظ…ط© ط§ظ„ظ…ظˆط¸ظپظٹظ†',
-    emp_f_all:'ظƒظ„ ط§ظ„ط£ط¯ظˆط§ط±',
-    emp_role_broker:'ًںڈ¦ ط¨ط±ظˆظƒط±',
-    emp_role_mkt:'ًں“¢ ظ…ط³ظˆظ‘ظ‚ ط¯ط§ط®ظ„ظٹ',
-    emp_role_ext:'ًںŒگ ظ…ط³ظˆظ‘ظ‚ ط®ط§ط±ط¬ظٹ',
-    emp_role_other:'ًں“‹ ط£ط®ط±ظ‰',
-    emp_status_approved:'âœ… ظ…ط¹طھظ…ط¯',
-    emp_status_pending:'âڈ³ ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط±',
-    emp_status_rejected:'â‌Œ ظ…ط±ظپظˆط¶',
-    emp_th_name:'ط§ظ„ط§ط³ظ…', emp_th_role:'ط§ظ„ط¯ظˆط±', emp_th_branch:'ط§ظ„ظپط±ط¹',
-    emp_th_bc:'ط¹. ط§ظ„ط¨ط±ظˆظƒط±', emp_th_mc:'ط¹. ط§ظ„طھط³ظˆظٹظ‚',
-    emp_th_status:'ط§ظ„ط­ط§ظ„ط©', emp_th_addedby:'ط£ط¶ظٹظپ ط¨ظˆط§ط³ط·ط©',
-    emp_loading:'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...',
-    emp_empty:'ظ„ط§ ظٹظˆط¬ط¯ ظ…ظˆط¸ظپظˆظ†',
-    emp_base:'ط£ط³ط§ط³ظٹ',
-    emp_approved_lbl:'ظ…ظˆط¸ظپ ظ…ط¹طھظ…ط¯',
-    emp_pending_lbl:'ظ…ظˆط¸ظپ ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯',
-    emp_del_confirm:'ط­ط°ظپ ط§ظ„ظ…ظˆط¸ظپ: ',
-    ae_modal_title:'â‍• ط¥ط¶ط§ظپط© ظ…ظˆط¸ظپ ط¬ط¯ظٹط¯',
-    ae_lbl_name:'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„ *', ae_lbl_role:'ط§ظ„ط¯ظˆط± ط§ظ„ظˆط¸ظٹظپظٹ',
-    ae_lbl_bc:'ط¹ظ…ظˆظ„ط© ط§ظ„ط¨ط±ظˆظƒط±', ae_lbl_mc:'ط¹ظ…ظˆظ„ط© ط§ظ„طھط³ظˆظٹظ‚',
-    ae_lbl_email:'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ', ae_lbl_branch:'ط§ظ„ظپط±ط¹',
-    ae_pendingNote:'â„¹ï¸ڈ ط³ظٹظڈط¶ط§ظپ ط§ظ„ظ…ظˆط¸ظپ ظƒظ€ ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط± â€” ظٹط­طھط§ط¬ ط§ط¹طھظ…ط§ط¯ ط§ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ.',
-    ae_cancel:'ط¥ظ„ط؛ط§ط،', ae_submit:'ط¥ط¶ط§ظپط© ط§ظ„ظ…ظˆط¸ظپ â†گ',
-    ae_err_noName:'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط§ط³ظ…',
+    emp_h2:'👥 إدارة الموظفين',
+    emp_p:'البروكرز والمسوّقون الداخليون والخارجيون',
+    emp_newBtn:'➕ موظف جديد',
+    emp_approveNow:'اعتماد الآن ←',
+    emp_listTitle:'👥 قائمة الموظفين',
+    emp_f_all:'كل الأدوار',
+    emp_role_broker:'🏦 بروكر',
+    emp_role_mkt:'📢 مسوّق داخلي',
+    emp_role_ext:'🌐 مسوّق خارجي',
+    emp_role_other:'📋 أخرى',
+    emp_status_approved:'✅ معتمد',
+    emp_status_pending:'⏳ قيد الانتظار',
+    emp_status_rejected:'❌ مرفوض',
+    emp_th_name:'الاسم', emp_th_role:'الدور', emp_th_branch:'الفرع',
+    emp_th_bc:'ع. البروكر', emp_th_mc:'ع. التسويق',
+    emp_th_status:'الحالة', emp_th_addedby:'أضيف بواسطة',
+    emp_loading:'جاري التحميل...',
+    emp_empty:'لا يوجد موظفون',
+    emp_base:'أساسي',
+    emp_approved_lbl:'موظف معتمد',
+    emp_pending_lbl:'موظف بانتظار الاعتماد',
+    emp_del_confirm:'حذف الموظف: ',
+    ae_modal_title:'➕ إضافة موظف جديد',
+    ae_lbl_name:'الاسم الكامل *', ae_lbl_role:'الدور الوظيفي',
+    ae_lbl_bc:'عمولة البروكر', ae_lbl_mc:'عمولة التسويق',
+    ae_lbl_email:'البريد الإلكتروني', ae_lbl_branch:'الفرع',
+    ae_pendingNote:'ℹ️ سيُضاف الموظف كـ قيد الانتظار — يحتاج اعتماد المدير المالي.',
+    ae_cancel:'إلغاء', ae_submit:'إضافة الموظف ←',
+    ae_err_noName:'يرجى إدخال الاسم',
     // Managers
-    mgr_h2:'ًں‘¤ ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط¯ظٹط±ظٹظ†',
-    mgr_p:'ظ…ط¯ظٹط±ظˆ ط§ظ„ظپط±ظˆط¹ ظˆطµظ„ط§ط­ظٹط§طھظ‡ظ… ظˆط¯ط¹ظˆط§طھ ط§ظ„طھط³ط¬ظٹظ„',
-    mgr_newBtn:'ًں‘¤ ظ…ط¯ظٹط± ط¬ط¯ظٹط¯',
-    mgr_inviteBtn:'ًں“§ ط¯ط¹ظˆط© ظ…ط¯ظٹط±',
-    mgr_listTitle:'ًں‘¤ ظ‚ط§ط¦ظ…ط© ط§ظ„ظ…ط¯ظٹط±ظٹظ†',
-    mgr_refresh:'ًں”„ طھط­ط¯ظٹط«',
-    mgr_th_name:'ط§ظ„ط§ط³ظ…', mgr_th_email:'ط§ظ„ط¨ط±ظٹط¯', mgr_th_phone:'ط§ظ„طھظ„ظٹظپظˆظ†', mgr_th_branch:'ط§ظ„ظپط±ط¹',
-    mgr_th_role:'ط§ظ„ط¯ظˆط±', mgr_th_login:'ط¢ط®ط± ط¯ط®ظˆظ„',
-    mgr_th_status:'ط§ظ„ط­ط§ظ„ط©',
-    mgr_loading:'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...',
-    mgr_empty:'ظ„ط§ ظٹظˆط¬ط¯ ظ…ط¯ظٹط±ظˆظ†',
-    mgr_neverLogin:'ظ„ظ… ظٹط¯ط®ظ„ ط¨ط¹ط¯',
-    mgr_active:'ظ†ط´ط·', mgr_inactive:'ظ…ط¹ط·ظ‘ظ„',
-    mgr_resetPw:'ًں”‘ ط¥ط¹ط§ط¯ط© طھط¹ظٹظٹظ†',
-    mgr_del:'ًں—‘ ط­ط°ظپ',
-    mgr_del_confirm:'ط­ط°ظپ ط§ظ„ظ…ط¯ظٹط±: ',
-    mgr_role_bm:'ظ…ط¯ظٹط± ظپط±ط¹', mgr_role_viewer:'ظ…ط´ط§ظ‡ط¯', mgr_role_fa:'ظ…ط¯ظٹط± ظ…ط§ظ„ظٹ',
-    mgr_reset_confirm:'ط¥ط¹ط§ط¯ط© طھط¹ظٹظٹظ† ظƒظ„ظ…ط© ظ…ط±ظˆط±: ',
-    mgr_reset_ok:'ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ط§ظ„ط¬ط¯ظٹط¯ط©: ',
-    mgr_edit:'âœڈï¸ڈ طھط¹ط¯ظٹظ„',
-    mgr_edit_title:'âœڈï¸ڈ طھط¹ط¯ظٹظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط¯ظٹط±',
-    mgr_edit_lbl_name:'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„', mgr_edit_lbl_phone:'ط±ظ‚ظ… ط§ظ„طھظ„ظٹظپظˆظ†',
-    mgr_edit_lbl_branch:'ط§ظ„ظپط±ط¹', mgr_edit_lbl_active:'ط§ظ„ط­ط§ظ„ط© (ظ†ط´ط·)',
-    mgr_edit_save:'ًں’¾ ط­ظپط¸ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ', mgr_edit_cancel:'ط¥ظ„ط؛ط§ط،',
-    mgr_edit_ok:'âœ… طھظ… طھط­ط¯ظٹط« ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ط¯ظٹط±',
-    emp_edit:'âœڈï¸ڈ طھط¹ط¯ظٹظ„',
-    emp_edit_title:'âœڈï¸ڈ طھط¹ط¯ظٹظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ظˆط¸ظپ',
-    emp_edit_lbl_name:'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„', emp_edit_lbl_email:'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ',
-    emp_edit_lbl_role:'ط§ظ„ط¯ظˆط± ط§ظ„ظˆط¸ظٹظپظٹ', emp_edit_lbl_branch:'ط§ظ„ظپط±ط¹',
-    emp_edit_lbl_bc:'ط¹ظ…ظˆظ„ط© ط§ظ„ط¨ط±ظˆظƒط±', emp_edit_lbl_mc:'ط¹ظ…ظˆظ„ط© ط§ظ„طھط³ظˆظٹظ‚',
-    emp_edit_lbl_active:'ط§ظ„ط­ط§ظ„ط© (ظ†ط´ط·)',
-    emp_edit_save:'ًں’¾ ط­ظپط¸ ط§ظ„طھط¹ط¯ظٹظ„ط§طھ', emp_edit_cancel:'ط¥ظ„ط؛ط§ط،',
-    emp_edit_ok:'âœ… طھظ… طھط­ط¯ظٹط« ط¨ظٹط§ظ†ط§طھ ط§ظ„ظ…ظˆط¸ظپ',
+    mgr_h2:'👤 إدارة المديرين',
+    mgr_p:'مديرو الفروع وصلاحياتهم ودعوات التسجيل',
+    mgr_newBtn:'👤 مدير جديد',
+    mgr_inviteBtn:'📧 دعوة مدير',
+    mgr_listTitle:'👤 قائمة المديرين',
+    mgr_refresh:'🔄 تحديث',
+    mgr_th_name:'الاسم', mgr_th_email:'البريد', mgr_th_phone:'التليفون', mgr_th_branch:'الفرع',
+    mgr_th_role:'الدور', mgr_th_login:'آخر دخول',
+    mgr_th_status:'الحالة',
+    mgr_loading:'جاري التحميل...',
+    mgr_empty:'لا يوجد مديرون',
+    mgr_neverLogin:'لم يدخل بعد',
+    mgr_active:'نشط', mgr_inactive:'معطّل',
+    mgr_resetPw:'🔑 إعادة تعيين',
+    mgr_del:'🗑 حذف',
+    mgr_del_confirm:'حذف المدير: ',
+    mgr_role_bm:'مدير فرع', mgr_role_viewer:'مشاهد', mgr_role_fa:'مدير مالي',
+    mgr_reset_confirm:'إعادة تعيين كلمة مرور: ',
+    mgr_reset_ok:'كلمة المرور الجديدة: ',
+    mgr_edit:'✏️ تعديل',
+    mgr_edit_title:'✏️ تعديل بيانات المدير',
+    mgr_edit_lbl_name:'الاسم الكامل', mgr_edit_lbl_phone:'رقم التليفون',
+    mgr_edit_lbl_branch:'الفرع', mgr_edit_lbl_active:'الحالة (نشط)',
+    mgr_edit_save:'💾 حفظ التعديلات', mgr_edit_cancel:'إلغاء',
+    mgr_edit_ok:'✅ تم تحديث بيانات المدير',
+    emp_edit:'✏️ تعديل',
+    emp_edit_title:'✏️ تعديل بيانات الموظف',
+    emp_edit_lbl_name:'الاسم الكامل', emp_edit_lbl_email:'البريد الإلكتروني',
+    emp_edit_lbl_role:'الدور الوظيفي', emp_edit_lbl_branch:'الفرع',
+    emp_edit_lbl_bc:'عمولة البروكر', emp_edit_lbl_mc:'عمولة التسويق',
+    emp_edit_lbl_active:'الحالة (نشط)',
+    emp_edit_save:'💾 حفظ التعديلات', emp_edit_cancel:'إلغاء',
+    emp_edit_ok:'✅ تم تحديث بيانات الموظف',
     // Invites
-    inv_listTitle:'ًں“§ ط¯ط¹ظˆط§طھ ط§ظ„طھط³ط¬ظٹظ„',
-    inv_newBtn:'+ ط¯ط¹ظˆط© ط¬ط¯ظٹط¯ط©',
-    inv_desc:'ط£ط¶ظپ ط¥ظٹظ…ظٹظ„ط§طھ ظ…ط¯ط±ط§ط، ط§ظ„ظپط±ظˆط¹ â€” ط³ظٹطھظ…ظƒظ†ظˆظ† ظ…ظ† ط§ظ„طھط³ط¬ظٹظ„ ط¨ط£ظ†ظپط³ظ‡ظ… ط¨ط§ط³طھط®ط¯ط§ظ… ظ‡ط°ظ‡ ط§ظ„ط¥ظٹظ…ظٹظ„ط§طھ',
-    inv_th_email:'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ', inv_th_branch:'ط§ظ„ظپط±ط¹', inv_th_role:'ط§ظ„ط¯ظˆط±',
-    inv_th_note:'ظ…ظ„ط§ط­ط¸ط©', inv_th_status:'ط§ظ„ط­ط§ظ„ط©', inv_th_date:'ط§ظ„طھط§ط±ظٹط®',
-    inv_loading:'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...',
-    inv_empty:'ظ„ط§ طھظˆط¬ط¯ ط¯ط¹ظˆط§طھ',
-    inv_pending_badge:'âڈ³ ط¨ط§ظ†طھط¸ط§ط± ط§ظ„طھط³ط¬ظٹظ„',
-    inv_used_badge:'âœ… ظ…ظڈط³طھط®ط¯ظ…ط©',
-    inv_expired:'ظ…ظ†طھظ‡ظٹط©',
-    inv_del:'ًں—‘ ط­ط°ظپ',
-    inv_del_confirm:'ط­ط°ظپ ط§ظ„ط¯ط¹ظˆط© ظ„ظ€ ',
-    inv_modal_title:'ًں“§ ط¯ط¹ظˆط© ظ…ط¯ظٹط± ظپط±ط¹ ظ„ظ„طھط³ط¬ظٹظ„',
-    inv_modal_info:'ًں“Œ ط£ط¶ظپ ط¨ط±ظٹط¯ ظ…ط¯ظٹط± ط§ظ„ظپط±ط¹ â€” ط³ظٹطھظ…ظƒظ† ظ…ظ† ط§ظ„طھط³ط¬ظٹظ„ ط¨ظ†ظپط³ظ‡ ط¹ط¨ط± طµظپط­ط© ط§ظ„ط¯ط®ظˆظ„.',
-    inv_lbl_email:'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ *', inv_lbl_branch:'ط§ظ„ظپط±ط¹',
-    inv_lbl_role:'ط§ظ„ط¯ظˆط±', inv_lbl_note:'ظ…ظ„ط§ط­ط¸ط© (ط§ط®طھظٹط§ط±ظٹ)',
-    inv_ph_note:'ظ…ط«ط§ظ„: ظ…ط¯ظٹط± ظپط±ط¹ ط§ظ„ط±ظٹط§ط¶',
-    inv_no_branch:'â€” ط¨ط¯ظˆظ† ظپط±ط¹ ظ…ط­ط¯ط¯ â€”',
-    inv_cancel:'ط¥ظ„ط؛ط§ط،', inv_submit:'ًں“§ ط¥ط¶ط§ظپط© ط§ظ„ط¯ط¹ظˆط©',
-    inv_err_noEmail:'ط£ط¯ط®ظ„ ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ',
-    inv_ok_prefix:'âœ… طھظ…طھ ط¥ط¶ط§ظپط© ',
+    inv_listTitle:'📧 دعوات التسجيل',
+    inv_newBtn:'+ دعوة جديدة',
+    inv_desc:'أضف إيميلات مدراء الفروع — سيتمكنون من التسجيل بأنفسهم باستخدام هذه الإيميلات',
+    inv_th_email:'البريد الإلكتروني', inv_th_branch:'الفرع', inv_th_role:'الدور',
+    inv_th_note:'ملاحظة', inv_th_status:'الحالة', inv_th_date:'التاريخ',
+    inv_loading:'جاري التحميل...',
+    inv_empty:'لا توجد دعوات',
+    inv_pending_badge:'⏳ بانتظار التسجيل',
+    inv_used_badge:'✅ مُستخدمة',
+    inv_expired:'منتهية',
+    inv_del:'🗑 حذف',
+    inv_del_confirm:'حذف الدعوة لـ ',
+    inv_modal_title:'📧 دعوة مدير فرع للتسجيل',
+    inv_modal_info:'📌 أضف بريد مدير الفرع — سيتمكن من التسجيل بنفسه عبر صفحة الدخول.',
+    inv_lbl_email:'البريد الإلكتروني *', inv_lbl_branch:'الفرع',
+    inv_lbl_role:'الدور', inv_lbl_note:'ملاحظة (اختياري)',
+    inv_ph_note:'مثال: مدير فرع الرياض',
+    inv_no_branch:'— بدون فرع محدد —',
+    inv_cancel:'إلغاء', inv_submit:'📧 إضافة الدعوة',
+    inv_err_noEmail:'أدخل البريد الإلكتروني',
+    inv_ok_prefix:'✅ تمت إضافة ',
     // Manager modal
-    mg_modal_title:'ًں‘¤ ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨ ظ…ط¯ظٹط± ط¬ط¯ظٹط¯',
-    mg_lbl_name:'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„ *', mg_lbl_email:'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ *',
-    mg_lbl_phone:'ط±ظ‚ظ… ط§ظ„طھظ„ظٹظپظˆظ† (ط§ط®طھظٹط§ط±ظٹ)', mg_lbl_branch:'ط§ظ„ظپط±ط¹ ط§ظ„ظ…ط³ط¤ظˆظ„ ط¹ظ†ظ‡ *',
-    mg_lbl_pw:'ظƒظ„ظ…ط© ظ…ط±ظˆط± ظ…ط¤ظ‚طھط© (ط§طھط±ظƒظ‡ط§ ظپط§ط±ط؛ط© ظ„ظ„طھظˆظ„ظٹط¯ ط§ظ„طھظ„ظ‚ط§ط¦ظٹ)',
-    mg_perms_title:'ًں”گ ط§ظ„طµظ„ط§ط­ظٹط§طھ ط§ظ„ظ…ظ…ظ†ظˆط­ط©',
-    mg_sel_all:'âœ… طھط­ط¯ظٹط¯ ط§ظ„ظƒظ„', mg_clr_all:'âکگ ط¥ظ„ط؛ط§ط، ط§ظ„ظƒظ„',
-    mg_cancel:'ط¥ظ„ط؛ط§ط،', mg_submit:'ًں“§ ط¥ظ†ط´ط§ط، ظˆط¥ط±ط³ط§ظ„ ط¨ظٹط§ظ†ط§طھ ط§ظ„ط¯ط®ظˆظ„',
-    mg_err_required:'ظٹط±ط¬ظ‰ ظ…ظ„ط، ط§ظ„ط§ط³ظ… ظˆط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ',
-    mg_ok_prefix:'âœ… طھظ… ط§ظ„ط¥ظ†ط´ط§ط،!',
+    mg_modal_title:'👤 إنشاء حساب مدير جديد',
+    mg_lbl_name:'الاسم الكامل *', mg_lbl_email:'البريد الإلكتروني *',
+    mg_lbl_phone:'رقم التليفون (اختياري)', mg_lbl_branch:'الفرع المسؤول عنه *',
+    mg_lbl_pw:'كلمة مرور مؤقتة (اتركها فارغة للتوليد التلقائي)',
+    mg_perms_title:'🔐 الصلاحيات الممنوحة',
+    mg_sel_all:'✅ تحديد الكل', mg_clr_all:'☐ إلغاء الكل',
+    mg_cancel:'إلغاء', mg_submit:'📧 إنشاء وإرسال بيانات الدخول',
+    mg_err_required:'يرجى ملء الاسم والبريد الإلكتروني',
+    mg_ok_prefix:'✅ تم الإنشاء!',
     // Approvals
-    appr_h2:'âœ… ط§ط¹طھظ…ط§ط¯ ط§ظ„ظ…ظˆط¸ظپظٹظ† ط§ظ„ط¬ط¯ط¯',
-    appr_p:'ظ…ط±ط§ط¬ط¹ط© ط·ظ„ط¨ط§طھ ط¥ط¶ط§ظپط© ط§ظ„ظ…ظˆط¸ظپظٹظ† ط§ظ„ظ…ظ‚ط¯ظ‘ظ…ط© ظ…ظ† ظ…ط¯ط±ط§ط، ط§ظ„ظپط±ظˆط¹',
-    appr_listTitle:'âڈ³ ظ…ظˆط¸ظپظˆظ† ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯',
-    appr_refresh:'ًں”„ طھط­ط¯ظٹط«',
-    appr_histTitle:'ًں“‹ ط³ط¬ظ„ ط§ظ„ظ‚ط±ط§ط±ط§طھ ط§ظ„ط£ط®ظٹط±ط©',
-    appr_th_emp:'ط§ظ„ظ…ظˆط¸ظپ', appr_th_role:'ط§ظ„ط¯ظˆط±', appr_th_branch:'ط§ظ„ظپط±ط¹',
-    appr_th_decision:'ط§ظ„ظ‚ط±ط§ط±', appr_th_by:'ط¨ظˆط§ط³ط·ط©',
-    appr_loading:'ط¬ط§ط±ظٹ ط§ظ„طھط­ظ…ظٹظ„...',
-    appr_empty:'ظ„ط§ ظٹظˆط¬ط¯ ظ…ظˆط¸ظپظˆظ† ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯',
-    appr_approve:'âœ… ط§ط¹طھظ…ط§ط¯', appr_reject:'â‌Œ ط±ظپط¶',
-    appr_addedBy:'ط£ط¶ط§ظپظ‡:', appr_broker:'ط¨ط±ظˆظƒط±:', appr_mkt:'طھط³ظˆظٹظ‚:',
-    appr_waiting:'ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯',
-    appr_reject_prompt:'ط³ط¨ط¨ ط±ظپط¶ ',
+    appr_h2:'✅ اعتماد الموظفين الجدد',
+    appr_p:'مراجعة طلبات إضافة الموظفين المقدّمة من مدراء الفروع',
+    appr_listTitle:'⏳ موظفون بانتظار الاعتماد',
+    appr_refresh:'🔄 تحديث',
+    appr_histTitle:'📋 سجل القرارات الأخيرة',
+    appr_th_emp:'الموظف', appr_th_role:'الدور', appr_th_branch:'الفرع',
+    appr_th_decision:'القرار', appr_th_by:'بواسطة',
+    appr_loading:'جاري التحميل...',
+    appr_empty:'لا يوجد موظفون بانتظار الاعتماد',
+    appr_approve:'✅ اعتماد', appr_reject:'❌ رفض',
+    appr_addedBy:'أضافه:', appr_broker:'بروكر:', appr_mkt:'تسويق:',
+    appr_waiting:'بانتظار الاعتماد',
+    appr_reject_prompt:'سبب رفض ',
     // Permissions section
-    perm_h2:'ًں”’ ط§ظ„طµظ„ط§ط­ظٹط§طھ ظˆط§ظ„ط£ط¯ظˆط§ط±',
-    perm_p:'طھظˆط¶ظٹط­ طµظ„ط§ط­ظٹط§طھ ظƒظ„ ط¯ظˆط± ظپظٹ ط§ظ„ظ†ط¸ط§ظ…',
-    perm_fa_title:'ًں’¼ ط§ظ„ظ…ط¯ظٹط± ط§ظ„ظ…ط§ظ„ظٹ â€” طµظ„ط§ط­ظٹط§طھ ط­طµط±ظٹط©',
-    perm_bm_title:'ًںڈ¢ ظ…ط¯ظٹط± ط§ظ„ظپط±ط¹ â€” طµظ„ط§ط­ظٹط§طھظ‡',
-    perm_fa_badge:'ًں’¼ ظ…ط§ظ„ظٹ ظپظ‚ط·',
-    perm_bm_badge:'ًںڈ¢ ظ…ط¯ظٹط± ظپط±ط¹',
+    perm_h2:'🔒 الصلاحيات والأدوار',
+    perm_p:'توضيح صلاحيات كل دور في النظام',
+    perm_fa_title:'💼 المدير المالي — صلاحيات حصرية',
+    perm_bm_title:'🏢 مدير الفرع — صلاحياته',
+    perm_fa_badge:'💼 مالي فقط',
+    perm_bm_badge:'🏢 مدير فرع',
     // FA permissions list
     perm_fa_items:[
-      ['ًںڈ¢','ط¥ط¶ط§ظپط© ظˆطھط¹ط¯ظٹظ„ ط§ظ„ظپط±ظˆط¹','ط§ظ„ظˆط­ظٹط¯ ط§ظ„ظ…ط®ظˆظ‘ظ„ ط¨طھط¹ط±ظٹظپ ط§ظ„ظپط±ظˆط¹ ظˆطھط¹ط¯ظٹظ„ظ‡ط§'],
-      ['ًں‘¤','ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨ط§طھ ط§ظ„ظ…ط¯ظٹط±ظٹظ†','ط¥ظ†ط´ط§ط، ظˆط¥ط¯ط§ط±ط© ظ…ط¯ظٹط±ظٹ ط§ظ„ظپط±ظˆط¹'],
-      ['âœ…','ط§ط¹طھظ…ط§ط¯ ط§ظ„ظ…ظˆط¸ظپظٹظ† ط§ظ„ط¬ط¯ط¯','ط§ظ„ظ‚ط¨ظˆظ„ ط£ظˆ ط§ظ„ط±ظپط¶ ظ„ط·ظ„ط¨ط§طھ ظ…ط¯ط±ط§ط، ط§ظ„ظپط±ظˆط¹'],
-      ['ًں“‹','طھط¹ط±ظٹظپ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ط¹ط§ظ…ط©','ط£ظ†ظˆط§ط¹ ظˆط­ط§ظ„ط§طھ ط§ظ„ط­ط³ط§ط¨ط§طھ ظˆط£ظ†ظˆط§ط¹ ط§ظ„طھط¯ط§ظˆظ„'],
-      ['ًں“ٹ','طھظ‚ط§ط±ظٹط± ط¬ظ…ظٹط¹ ط§ظ„ظپط±ظˆط¹','ط¹ط±ط¶ ظˆطھطµط¯ظٹط± ط¨ظٹط§ظ†ط§طھ ظƒظ„ ط§ظ„ظپط±ظˆط¹'],
-      ['ًںŒگ','ط§ظ„طھط¨ط¯ظٹظ„ ط¨ظٹظ† ط§ظ„ظپط±ظˆط¹','ط¹ط±ط¶ ط¨ظٹط§ظ†ط§طھ ط£ظٹ ظپط±ط¹'],
-      ['ًں“¥','ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ','ط±ظپط¹ ظ…ظ„ظپط§طھ Excel ظˆطھط­ط¯ظٹط« ط§ظ„ظƒط±ظˆطھ'],
+      ['🏢','إضافة وتعديل الفروع','الوحيد المخوّل بتعريف الفروع وتعديلها'],
+      ['👤','إنشاء حسابات المديرين','إنشاء وإدارة مديري الفروع'],
+      ['✅','اعتماد الموظفين الجدد','القبول أو الرفض لطلبات مدراء الفروع'],
+      ['📋','تعريف الإعدادات العامة','أنواع وحالات الحسابات وأنواع التداول'],
+      ['📊','تقارير جميع الفروع','عرض وتصدير بيانات كل الفروع'],
+      ['🌐','التبديل بين الفروع','عرض بيانات أي فرع'],
+      ['📥','استيراد البيانات','رفع ملفات Excel وتحديث الكروت'],
     ],
     perm_bm_items:[
-      ['âœ…','ط¹ط±ط¶ ظƒط±ظˆطھ ظپط±ط¹ظ‡','ظٹط±ظ‰ ط§ظ„ظƒط±ظˆطھ ط§ظ„ط®ط§طµط© ط¨ظپط±ط¹ظ‡ ظپظ‚ط·'],
-      ['â‍•','ط¥ظ†ط´ط§ط، ظƒط±ظˆطھ ط¹ظ…ظˆظ„ط§طھ','ط¥ط¶ط§ظپط© ظƒط±ظˆطھ ط¬ط¯ظٹط¯ط© ظ„ظپط±ط¹ظ‡'],
-      ['âœڈï¸ڈ','طھط¹ط¯ظٹظ„ ط§ظ„ظƒط±ظˆطھ','طھط¹ط¯ظٹظ„ ط­ط³ط§ط¨ط§طھ ط§ظ„ظپط±ط¹'],
-      ['ًں‘¥','ط¥ط¶ط§ظپط© ظ…ظˆط¸ظپظٹظ†','ظٹط¶ظٹظپ ظ…ظˆط¸ظپظٹظ† ط¨ط­ط§ظ„ط© آ«ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط±آ»'],
-      ['ًں“ˆ','طھظ‚ط§ط±ظٹط± ط§ظ„ظپط±ط¹','طھظ‚ط§ط±ظٹط± ط®ط§طµط© ط¨ظپط±ط¹ظ‡ ظپظ‚ط·'],
-      ['ًں“‍','ظ…ط±ظƒط² ط§ظ„ط§طھطµط§ظ„','ط¥ط¶ط§ظپط© ظˆط¹ط±ط¶ ظƒط±ظˆطھ CC'],
+      ['✅','عرض كروت فرعه','يرى الكروت الخاصة بفرعه فقط'],
+      ['➕','إنشاء كروت عمولات','إضافة كروت جديدة لفرعه'],
+      ['✏️','تعديل الكروت','تعديل حسابات الفرع'],
+      ['👥','إضافة موظفين','يضيف موظفين بحالة «قيد الانتظار»'],
+      ['📈','تقارير الفرع','تقارير خاصة بفرعه فقط'],
+      ['📞','مركز الاتصال','إضافة وعرض كروت CC'],
     ],
     // Perms list
     perms_list:[
-      {id:'dashboard',  label:'ظ„ظˆط­ط© ط§ظ„ظ…طھط§ط¨ط¹ط©'},
-      {id:'cards',      label:'ظƒط±ظˆطھ ط§ظ„ط¹ظ…ظˆظ„ط§طھ'},
-      {id:'modified',   label:'ط§ظ„ط­ط³ط§ط¨ط§طھ ط§ظ„ظ…ط¹ط¯ظ‘ظ„ط©'},
-      {id:'reports',    label:'ط§ظ„طھظ‚ط§ط±ظٹط±'},
-      {id:'create_card',label:'ط¥ظ†ط´ط§ط، ظƒط±طھ'},
-      {id:'edit_card',  label:'طھط¹ط¯ظٹظ„ ط§ظ„ط­ط³ط§ط¨ط§طھ'},
-      {id:'employees',  label:'ط¥ط¯ط§ط±ط© ط§ظ„ظ…ظˆط¸ظپظٹظ†'},
-      {id:'import',     label:'ط§ط³طھظٹط±ط§ط¯ ط¨ظٹط§ظ†ط§طھ'},
-      {id:'export',     label:'طھطµط¯ظٹط± ط§ظ„ط¨ظٹط§ظ†ط§طھ'},
+      {id:'dashboard',  label:'لوحة المتابعة'},
+      {id:'cards',      label:'كروت العمولات'},
+      {id:'modified',   label:'الحسابات المعدّلة'},
+      {id:'reports',    label:'التقارير'},
+      {id:'create_card',label:'إنشاء كرت'},
+      {id:'edit_card',  label:'تعديل الحسابات'},
+      {id:'employees',  label:'إدارة الموظفين'},
+      {id:'import',     label:'استيراد بيانات'},
+      {id:'export',     label:'تصدير البيانات'},
     ],
     // Shared
-    th_actions:'ط¥ط¬ط±ط§ط،ط§طھ',
-    btn_cancel:'ط¥ظ„ط؛ط§ط،',
-    err_generic:'ط­ط¯ط« ط®ط·ط£',
-    branch_select:'â€” ط§ط®طھط± ط§ظ„ظپط±ط¹ â€”',
+    th_actions:'إجراءات',
+    btn_cancel:'إلغاء',
+    err_generic:'حدث خطأ',
+    branch_select:'— اختر الفرع —',
     // Lookup panel
-    lk_del_confirm:'ط­ط°ظپ آ«',
-    lk_del_confirm2:'آ»طں',
-    lk_err_noEn:'ط£ط¯ط®ظ„ ط§ظ„ط§ط³ظ… ط§ظ„ط¥ظ†ط¬ظ„ظٹط²ظٹ',
-    lk_added_suffix:' â€” طھظ…طھ ط§ظ„ط¥ط¶ط§ظپط© âœ…',
-    lk_deleted:'طھظ… ط§ظ„ط­ط°ظپ',
+    lk_del_confirm:'حذف «',
+    lk_del_confirm2:'»؟',
+    lk_err_noEn:'أدخل الاسم الإنجليزي',
+    lk_added_suffix:' — تمت الإضافة ✅',
+    lk_deleted:'تم الحذف',
   },
   en: {
-    panelHdr:'âڑ™ï¸ڈ Settings Panel',
-    footerNote:'ًں”گ Sensitive settings\nFinance Admin only',
-    s_general_ico:'ًں“‹',     s_general_lbl:'General Settings',   s_general_sub:'Account types & statuses',
-    s_branches_ico:'ًںڈ¢',    s_branches_lbl:'Branches',           s_branches_sub:'Manage company branches',
-    s_employees_ico:'ًں‘¥',   s_employees_lbl:'Employees',         s_employees_sub:'Brokers & marketers',
-    s_managers_ico:'ًں‘¤',    s_managers_lbl:'Managers',           s_managers_sub:'Branch managers & roles',
-    s_approvals_ico:'âœ…',   s_approvals_lbl:'Approvals',         s_approvals_sub:'Pending employee approvals',
-    s_permissions_ico:'ًں”’', s_permissions_lbl:'Permissions',      s_permissions_sub:'Finance admin permissions',
-    gen_h2:'ًں“‹ General Settings',
+    panelHdr:'⚙️ Settings Panel',
+    footerNote:'🔐 Sensitive settings\nFinance Admin only',
+    s_general_ico:'📋',     s_general_lbl:'General Settings',   s_general_sub:'Account types & statuses',
+    s_branches_ico:'🏢',    s_branches_lbl:'Branches',           s_branches_sub:'Manage company branches',
+    s_employees_ico:'👥',   s_employees_lbl:'Employees',         s_employees_sub:'Brokers & marketers',
+    s_managers_ico:'👤',    s_managers_lbl:'Managers',           s_managers_sub:'Branch managers & roles',
+    s_approvals_ico:'✅',   s_approvals_lbl:'Approvals',         s_approvals_sub:'Pending employee approvals',
+    s_permissions_ico:'🔒', s_permissions_lbl:'Permissions',      s_permissions_sub:'Finance admin permissions',
+    gen_h2:'📋 General Settings',
     gen_p:'Account types, statuses and trading types available in the system',
-    gen_adminOnly:'ًں”’ These settings are for Finance Admin only.',
-    gen_acTypes:'ًں“‹ Account Types',
-    gen_acStatuses:'ًںڈ·ï¸ڈ Account Statuses',
-    gen_trTypes:'ًں’° Trading Types',
+    gen_adminOnly:'🔒 These settings are for Finance Admin only.',
+    gen_acTypes:'📋 Account Types',
+    gen_acStatuses:'🏷️ Account Statuses',
+    gen_trTypes:'💰 Trading Types',
     gen_addBtn:'+ Add',
-    gen_sysInfo:'â„¹ï¸ڈ System Info',
+    gen_sysInfo:'ℹ️ System Info',
     gen_company:'Company Name',
     gen_version:'Version',
     gen_status:'System Status',
-    gen_active:'ًںں¢ Active',
+    gen_active:'🟢 Active',
     gen_currentUser:'Current User',
     gen_noItems:'No items found',
     gen_items:' items',
     gen_phAr:'Arabic',
-    br_h2:'ًںڈ¢ Branch Management',
+    br_h2:'🏢 Branch Management',
     br_p:'Define and manage company branches',
-    br_newBtn:'ًںڈ¢ New Branch',
-    br_listTitle:'ًںڈ¢ Branches List',
-    br_refresh:'ًں”„ Refresh',
+    br_newBtn:'🏢 New Branch',
+    br_listTitle:'🏢 Branches List',
+    br_refresh:'🔄 Refresh',
     br_th_code:'Code', br_th_nar:'Arabic Name', br_th_nen:'English Name',
     br_th_cards:'Cards Count', br_th_date:'Created',
     br_loading:'Loading...',
     br_empty:'No branches found',
-    br_del:'ًں—‘ Delete',
+    br_del:'🗑 Delete',
     br_card_lbl:'card(s)',
-    br_modal_title:'ًںڈ¢ Add New Branch',
+    br_modal_title:'🏢 Add New Branch',
     br_lbl_ar:'Arabic Branch Name *',
     br_ph_ar:'e.g. Riyadh Branch (Arabic)',
     br_lbl_en:'Branch Name (English)',
     br_ph_en:'e.g. Riyadh Branch',
     br_lbl_code:'Branch Code (auto-generated)',
     br_cancel:'Cancel',
-    br_submit:'ًںڈ¢ Add Branch',
+    br_submit:'🏢 Add Branch',
     br_err_noAr:'Enter the branch name in Arabic',
-    br_ok_prefix:'âœ… Branch added: ',
-    br_confirm_cards:'âڑ ï¸ڈ This branch has ',
+    br_ok_prefix:'✅ Branch added: ',
+    br_confirm_cards:'⚠️ This branch has ',
     br_confirm_cards2:' card(s).\nCards will be unlinked on delete.\nContinue?',
     br_confirm_del:'Delete branch "',
     br_confirm_del2:'"?',
-    emp_h2:'ًں‘¥ Employee Management',
+    emp_h2:'👥 Employee Management',
     emp_p:'Brokers and internal/external marketers',
-    emp_newBtn:'â‍• New Employee',
-    emp_approveNow:'Approve Now â†’',
-    emp_listTitle:'ًں‘¥ Employees List',
+    emp_newBtn:'➕ New Employee',
+    emp_approveNow:'Approve Now →',
+    emp_listTitle:'👥 Employees List',
     emp_f_all:'All Roles',
-    emp_role_broker:'ًںڈ¦ Broker',
-    emp_role_mkt:'ًں“¢ Internal Marketer',
-    emp_role_ext:'ًںŒگ External Marketer',
-    emp_role_other:'ًں“‹ Other',
-    emp_status_approved:'âœ… Approved',
-    emp_status_pending:'âڈ³ Pending',
-    emp_status_rejected:'â‌Œ Rejected',
+    emp_role_broker:'🏦 Broker',
+    emp_role_mkt:'📢 Internal Marketer',
+    emp_role_ext:'🌐 External Marketer',
+    emp_role_other:'📋 Other',
+    emp_status_approved:'✅ Approved',
+    emp_status_pending:'⏳ Pending',
+    emp_status_rejected:'❌ Rejected',
     emp_th_name:'Name', emp_th_role:'Role', emp_th_branch:'Branch',
     emp_th_bc:'Broker Comm.', emp_th_mc:'Mkt. Comm.',
     emp_th_status:'Status', emp_th_addedby:'Added By',
@@ -1028,19 +878,19 @@ const ST = {
     emp_approved_lbl:'approved employee(s)',
     emp_pending_lbl:'employee(s) pending approval',
     emp_del_confirm:'Delete employee: ',
-    ae_modal_title:'â‍• Add New Employee',
+    ae_modal_title:'➕ Add New Employee',
     ae_lbl_name:'Full Name *', ae_lbl_role:'Job Role',
     ae_lbl_bc:'Broker Commission', ae_lbl_mc:'Marketing Commission',
     ae_lbl_email:'Email Address', ae_lbl_branch:'Branch',
-    ae_pendingNote:'â„¹ï¸ڈ Employee will be added as Pending â€” requires Finance Admin approval.',
-    ae_cancel:'Cancel', ae_submit:'Add Employee â†’',
+    ae_pendingNote:'ℹ️ Employee will be added as Pending — requires Finance Admin approval.',
+    ae_cancel:'Cancel', ae_submit:'Add Employee →',
     ae_err_noName:'Please enter the name',
-    mgr_h2:'ًں‘¤ Manager Management',
+    mgr_h2:'👤 Manager Management',
     mgr_p:'Branch managers, their permissions and registration invites',
-    mgr_newBtn:'ًں‘¤ New Manager',
-    mgr_inviteBtn:'ًں“§ Invite Manager',
-    mgr_listTitle:'ًں‘¤ Managers List',
-    mgr_refresh:'ًں”„ Refresh',
+    mgr_newBtn:'👤 New Manager',
+    mgr_inviteBtn:'📧 Invite Manager',
+    mgr_listTitle:'👤 Managers List',
+    mgr_refresh:'🔄 Refresh',
     mgr_th_name:'Name', mgr_th_email:'Email', mgr_th_phone:'Phone', mgr_th_branch:'Branch',
     mgr_th_role:'Role', mgr_th_login:'Last Login',
     mgr_th_status:'Status',
@@ -1048,91 +898,91 @@ const ST = {
     mgr_empty:'No managers found',
     mgr_neverLogin:'Never logged in',
     mgr_active:'Active', mgr_inactive:'Disabled',
-    mgr_resetPw:'ًں”‘ Reset Password',
-    mgr_del:'ًں—‘ Delete',
+    mgr_resetPw:'🔑 Reset Password',
+    mgr_del:'🗑 Delete',
     mgr_del_confirm:'Delete manager: ',
     mgr_role_bm:'Branch Manager', mgr_role_viewer:'Viewer', mgr_role_fa:'Finance Admin',
     mgr_reset_confirm:'Reset password for: ',
     mgr_reset_ok:'New password: ',
-    mgr_edit:'âœڈï¸ڈ Edit',
-    mgr_edit_title:'âœڈï¸ڈ Edit Manager Details',
+    mgr_edit:'✏️ Edit',
+    mgr_edit_title:'✏️ Edit Manager Details',
     mgr_edit_lbl_name:'Full Name', mgr_edit_lbl_phone:'Phone Number',
     mgr_edit_lbl_branch:'Branch', mgr_edit_lbl_active:'Status (Active)',
-    mgr_edit_save:'ًں’¾ Save Changes', mgr_edit_cancel:'Cancel',
-    mgr_edit_ok:'âœ… Manager updated successfully',
-    emp_edit:'âœڈï¸ڈ Edit',
-    emp_edit_title:'âœڈï¸ڈ Edit Employee Details',
+    mgr_edit_save:'💾 Save Changes', mgr_edit_cancel:'Cancel',
+    mgr_edit_ok:'✅ Manager updated successfully',
+    emp_edit:'✏️ Edit',
+    emp_edit_title:'✏️ Edit Employee Details',
     emp_edit_lbl_name:'Full Name', emp_edit_lbl_email:'Email Address',
     emp_edit_lbl_role:'Job Role', emp_edit_lbl_branch:'Branch',
     emp_edit_lbl_bc:'Broker Commission', emp_edit_lbl_mc:'Marketing Commission',
     emp_edit_lbl_active:'Status (Active)',
-    emp_edit_save:'ًں’¾ Save Changes', emp_edit_cancel:'Cancel',
-    emp_edit_ok:'âœ… Employee updated successfully',
-    inv_listTitle:'ًں“§ Registration Invites',
+    emp_edit_save:'💾 Save Changes', emp_edit_cancel:'Cancel',
+    emp_edit_ok:'✅ Employee updated successfully',
+    inv_listTitle:'📧 Registration Invites',
     inv_newBtn:'+ New Invite',
-    inv_desc:'Add branch manager emails â€” they can self-register using these emails',
+    inv_desc:'Add branch manager emails — they can self-register using these emails',
     inv_th_email:'Email', inv_th_branch:'Branch', inv_th_role:'Role',
     inv_th_note:'Note', inv_th_status:'Status', inv_th_date:'Date',
     inv_loading:'Loading...',
     inv_empty:'No invites found',
-    inv_pending_badge:'âڈ³ Awaiting Registration',
-    inv_used_badge:'âœ… Used',
+    inv_pending_badge:'⏳ Awaiting Registration',
+    inv_used_badge:'✅ Used',
     inv_expired:'Expired',
-    inv_del:'ًں—‘ Delete',
+    inv_del:'🗑 Delete',
     inv_del_confirm:'Delete invite for ',
-    inv_modal_title:'ًں“§ Invite Branch Manager',
-    inv_modal_info:'ًں“Œ Add the branch manager email â€” they can self-register from the login page.',
+    inv_modal_title:'📧 Invite Branch Manager',
+    inv_modal_info:'📌 Add the branch manager email — they can self-register from the login page.',
     inv_lbl_email:'Email Address *', inv_lbl_branch:'Branch',
     inv_lbl_role:'Role', inv_lbl_note:'Note (optional)',
     inv_ph_note:'e.g. Riyadh Branch Manager',
-    inv_no_branch:'â€” No branch assigned â€”',
-    inv_cancel:'Cancel', inv_submit:'ًں“§ Add Invite',
+    inv_no_branch:'— No branch assigned —',
+    inv_cancel:'Cancel', inv_submit:'📧 Add Invite',
     inv_err_noEmail:'Enter an email address',
-    inv_ok_prefix:'âœ… Invite added for ',
-    mg_modal_title:'ًں‘¤ Create New Manager Account',
+    inv_ok_prefix:'✅ Invite added for ',
+    mg_modal_title:'👤 Create New Manager Account',
     mg_lbl_name:'Full Name *', mg_lbl_email:'Email Address *',
     mg_lbl_phone:'Phone Number (optional)', mg_lbl_branch:'Assigned Branch *',
     mg_lbl_pw:'Temporary password (leave blank for auto-generation)',
-    mg_perms_title:'ًں”گ Granted Permissions',
-    mg_sel_all:'âœ… Select All', mg_clr_all:'âکگ Clear All',
-    mg_cancel:'Cancel', mg_submit:'ًں“§ Create & Send Credentials',
+    mg_perms_title:'🔐 Granted Permissions',
+    mg_sel_all:'✅ Select All', mg_clr_all:'☐ Clear All',
+    mg_cancel:'Cancel', mg_submit:'📧 Create & Send Credentials',
     mg_err_required:'Please fill in name and email',
-    mg_ok_prefix:'âœ… Created!',
-    appr_h2:'âœ… New Employee Approvals',
+    mg_ok_prefix:'✅ Created!',
+    appr_h2:'✅ New Employee Approvals',
     appr_p:'Review employee addition requests submitted by branch managers',
-    appr_listTitle:'âڈ³ Employees Awaiting Approval',
-    appr_refresh:'ًں”„ Refresh',
-    appr_histTitle:'ًں“‹ Recent Decisions Log',
+    appr_listTitle:'⏳ Employees Awaiting Approval',
+    appr_refresh:'🔄 Refresh',
+    appr_histTitle:'📋 Recent Decisions Log',
     appr_th_emp:'Employee', appr_th_role:'Role', appr_th_branch:'Branch',
     appr_th_decision:'Decision', appr_th_by:'By',
     appr_loading:'Loading...',
     appr_empty:'No employees awaiting approval',
-    appr_approve:'âœ… Approve', appr_reject:'â‌Œ Reject',
+    appr_approve:'✅ Approve', appr_reject:'❌ Reject',
     appr_addedBy:'Added by:', appr_broker:'Broker:', appr_mkt:'Mkt:',
     appr_waiting:'awaiting approval',
     appr_reject_prompt:'Reason for rejecting ',
-    perm_h2:'ًں”’ Permissions & Roles',
+    perm_h2:'🔒 Permissions & Roles',
     perm_p:"Explanation of each role's permissions in the system",
-    perm_fa_title:'ًں’¼ Finance Admin â€” Exclusive Permissions',
-    perm_bm_title:'ًںڈ¢ Branch Manager â€” Permissions',
-    perm_fa_badge:'ًں’¼ Admin Only',
-    perm_bm_badge:'ًںڈ¢ Branch Mgr',
+    perm_fa_title:'💼 Finance Admin — Exclusive Permissions',
+    perm_bm_title:'🏢 Branch Manager — Permissions',
+    perm_fa_badge:'💼 Admin Only',
+    perm_bm_badge:'🏢 Branch Mgr',
     perm_fa_items:[
-      ['ًںڈ¢','Add & Edit Branches','Only authorized to define and modify branches'],
-      ['ًں‘¤','Create Manager Accounts','Create and manage branch managers'],
-      ['âœ…','Approve New Employees','Accept or reject requests from branch managers'],
-      ['ًں“‹','Define General Settings','Account types, statuses and trading types'],
-      ['ًں“ٹ','All-Branch Reports','View and export data from all branches'],
-      ['ًںŒگ','Switch Between Branches','View data of any branch'],
-      ['ًں“¥','Import Data','Upload Excel files and update cards'],
+      ['🏢','Add & Edit Branches','Only authorized to define and modify branches'],
+      ['👤','Create Manager Accounts','Create and manage branch managers'],
+      ['✅','Approve New Employees','Accept or reject requests from branch managers'],
+      ['📋','Define General Settings','Account types, statuses and trading types'],
+      ['📊','All-Branch Reports','View and export data from all branches'],
+      ['🌐','Switch Between Branches','View data of any branch'],
+      ['📥','Import Data','Upload Excel files and update cards'],
     ],
     perm_bm_items:[
-      ['âœ…','View Branch Cards','Sees only cards belonging to their branch'],
-      ['â‍•','Create Commission Cards','Add new cards for their branch'],
-      ['âœڈï¸ڈ','Edit Cards','Edit branch accounts'],
-      ['ًں‘¥','Add Employees','Adds employees with "Pending" status'],
-      ['ًں“ˆ','Branch Reports','Reports for their branch only'],
-      ['ًں“‍','Call Center','Add and view CC cards'],
+      ['✅','View Branch Cards','Sees only cards belonging to their branch'],
+      ['➕','Create Commission Cards','Add new cards for their branch'],
+      ['✏️','Edit Cards','Edit branch accounts'],
+      ['👥','Add Employees','Adds employees with "Pending" status'],
+      ['📈','Branch Reports','Reports for their branch only'],
+      ['📞','Call Center','Add and view CC cards'],
     ],
     perms_list:[
       {id:'dashboard',  label:'Dashboard'},
@@ -1148,20 +998,20 @@ const ST = {
     th_actions:'Actions',
     btn_cancel:'Cancel',
     err_generic:'An error occurred',
-    branch_select:'â€” Select Branch â€”',
+    branch_select:'— Select Branch —',
     lk_del_confirm:'Delete "',
     lk_del_confirm2:'"?',
     lk_err_noEn:'Enter the English name',
-    lk_added_suffix:' â€” added âœ…',
+    lk_added_suffix:' — added ✅',
     lk_deleted:'Deleted successfully',
   }
 };
 
-/* â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Helpers ─────────────────────────────────────────────── */
 function stLang() { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
 function st(key)  { const l = stLang(); return ST[l]?.[key] ?? ST.ar[key] ?? key; }
 
-/* â”€â”€â”€ Apply all translations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Apply all translations ─────────────────────────────── */
 function stApplyLang() {
   const L = stLang();
   const s = ST[L] || ST.ar;
@@ -1171,7 +1021,7 @@ function stApplyLang() {
   _html('st-footer-note', s.footerNote.replace('\n','<br>'));
 
   // Nav items
-  ['general','branches','employees','managers','approvals','permissions',].forEach(id => {
+  ['general','branches','employees','managers','approvals','permissions'].forEach(id => {
     _txt('snav-ico-' + id, s['s_' + id + '_ico'] || '');
     _txt('snav-lbl-' + id, s['s_' + id + '_lbl'] || '');
     _txt('snav-sub-' + id, s['s_' + id + '_sub'] || '');
@@ -1271,6 +1121,23 @@ function stApplyLang() {
   _txt('mg-sel-all', s.mg_sel_all); _txt('mg-clr-all', s.mg_clr_all);
   _txt('mg-cancel-btn', s.mg_cancel); _txt('mg-submit-btn', s.mg_submit);
 
+  // Edit Manager modal
+  _txt('emg-modal-title', s.mgr_edit_title);
+  _txt('emg-lbl-name', s.mgr_edit_lbl_name); _txt('emg-lbl-phone', s.mgr_edit_lbl_phone);
+  _txt('emg-lbl-branch', s.mgr_edit_lbl_branch); _txt('emg-lbl-active', s.mgr_edit_lbl_active);
+  _txt('emg-active-lbl', s.mgr_active);
+  _txt('emg-perms-title', s.mg_perms_title);
+  _txt('emg-sel-all', s.mg_sel_all); _txt('emg-clr-all', s.mg_clr_all);
+  _txt('emg-cancel-btn', s.mgr_edit_cancel); _txt('emg-save-btn', s.mgr_edit_save);
+
+  // Edit Employee modal
+  _txt('eep-modal-title', s.emp_edit_title);
+  _txt('eep-lbl-name', s.emp_edit_lbl_name); _txt('eep-lbl-email', s.emp_edit_lbl_email);
+  _txt('eep-lbl-role', s.emp_edit_lbl_role); _txt('eep-lbl-branch', s.emp_edit_lbl_branch);
+  _txt('eep-lbl-bc', s.emp_edit_lbl_bc); _txt('eep-lbl-mc', s.emp_edit_lbl_mc);
+  _txt('eep-lbl-active', s.emp_edit_lbl_active); _txt('eep-active-lbl', s.mgr_active);
+  _txt('eep-cancel-btn', s.emp_edit_cancel); _txt('eep-save-btn', s.emp_edit_save);
+
   // Approvals section
   _txt('appr-h2', s.appr_h2); _txt('appr-p', s.appr_p);
   _txt('appr-list-title', s.appr_listTitle); _txt('appr-refresh-btn', s.appr_refresh);
@@ -1293,7 +1160,7 @@ function stApplyLang() {
         background:rgba(46,134,171,.1);border:1px solid rgba(46,134,171,.3);cursor:pointer"
         id="pit-${p.id}" onclick="togPerm('${p.id}')">
         <div style="width:18px;height:18px;border-radius:5px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700"
-          id="pchk-${p.id}">âœ“</div>
+          id="pchk-${p.id}">✓</div>
         <span style="font-size:12px;font-weight:600">${p.label}</span>
       </div>`).join('');
   }
@@ -1329,14 +1196,14 @@ function _renderPermsList(containerId, items, badge, bg, bCls) {
     </div>`).join('');
 }
 
-/* â”€â”€â”€ Hook into global applyLang â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Hook into global applyLang ─────────────────────────── */
 const _stOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
   if (_stOrigApplyLang) _stOrigApplyLang(lang);
   stApplyLang();
 };
 
-/* â”€â”€â”€ State & cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── State & cache ──────────────────────────────────────── */
 let _currentSection = '';
 let _branchesCache  = [];
 const _cacheRender  = {};
@@ -1359,10 +1226,10 @@ function _mgrRole(role) {
   return map[role] || role;
 }
 
-/* â”€â”€â”€ Section navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── Section navigation ─────────────────────────────────── */
 function showSection(name) {
   document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
-  ['general','branches','employees','managers','approvals','permissions',].forEach(id => {
+  ['general','branches','employees','managers','approvals','permissions'].forEach(id => {
     const btn = document.getElementById('snav-' + id);
     const ico = document.getElementById('snav-ico-' + id);
     if (btn) { btn.style.background = 'none'; btn.style.border = 'none'; }
@@ -1379,12 +1246,12 @@ function showSection(name) {
   if (loaders[name]) loaders[name]();
 }
 
-/* â”€â”€â”€ GENERAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── GENERAL ────────────────────────────────────────────── */
 async function loadGeneralSection() {
   const r = await api('GET', '/settings');
   if (!r.success) return;
   const u = document.getElementById('gen-current-user');
-  if (u) u.textContent = document.getElementById('sb-username')?.textContent || 'â€”';
+  if (u) u.textContent = document.getElementById('sb-username')?.textContent || '—';
   ['account_types','account_statuses','trading_types'].forEach(key => {
     const el  = document.getElementById('list-' + key);
     const cnt = document.getElementById('cnt-' + key);
@@ -1397,7 +1264,7 @@ async function loadGeneralSection() {
         <span style="flex:1;font-size:12px;font-weight:600">${item.name_en}</span>
         <span style="color:var(--mu);font-size:11px">${item.name_ar}</span>
         <button class="btn btn-ghost btn-sm" style="color:var(--re);padding:3px 8px"
-          onclick="deleteLookup('${epMap[key]}',${item.id},'${item.name_en}')">âœ•</button>
+          onclick="deleteLookup('${epMap[key]}',${item.id},'${item.name_en}')">✕</button>
       </div>`
     ).join('') || `<div style="color:var(--mu);font-size:12px;padding:12px 0;text-align:center">${st('gen_noItems')}</div>`;
   });
@@ -1423,7 +1290,7 @@ async function deleteLookup(endpoint, id, name) {
   else toast(r.message || st('err_generic'),'error');
 }
 
-/* â”€â”€â”€ BRANCHES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── BRANCHES ───────────────────────────────────────────── */
 async function loadBranchesSection() {
   const r = await api('GET', '/branches');
   if (!r.success) return;
@@ -1443,9 +1310,9 @@ function _renderBranches(data) {
       <tr>
         <td><span class="ac-num">${b.code}</span></td>
         <td style="font-weight:700">${b.name_ar}</td>
-        <td style="color:var(--mu)">${b.name_en || 'â€”'}</td>
+        <td style="color:var(--mu)">${b.name_en || '—'}</td>
         <td><span class="badge badge-blue">${b.commission_cards_count || 0} ${st('br_card_lbl')}</span></td>
-        <td style="color:var(--mu);font-size:11px">${b.created_at?.slice(0,10) || 'â€”'}</td>
+        <td style="color:var(--mu);font-size:11px">${b.created_at?.slice(0,10) || '—'}</td>
         <td><button class="btn btn-ghost btn-sm" style="color:var(--re)"
           onclick="deleteBranch(${b.id},'${b.name_ar.replace(/'/g,"\\'")}',${b.commission_cards_count||0})">${st('br_del')}</button></td>
       </tr>`).join('')
@@ -1490,7 +1357,7 @@ async function deleteBranch(id, nameAr, cardCount) {
   else toast(r.message || st('err_generic'),'error');
 }
 
-/* â”€â”€â”€ EMPLOYEES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── EMPLOYEES ──────────────────────────────────────────── */
 async function loadEmployeesSection() {
   const role = document.getElementById('emp-f-role')?.value || '';
   const r = await api('GET', '/employees' + (role ? '?role=' + role : ''));
@@ -1518,18 +1385,18 @@ function _renderEmployees(data) {
       <tr style="${e.status==='pending'?'opacity:.8':''}">
         <td style="font-weight:700">${e.name}</td>
         <td>${roles[e.role] || e.role}</td>
-        <td style="color:var(--mu)">${e.branch?.name_ar || 'â€”'}</td>
+        <td style="color:var(--mu)">${e.branch?.name_ar || '—'}</td>
         <td class="mono c-blue">$${e.broker_commission}/lot</td>
         <td class="mono c-green">$${e.marketing_commission}/lot</td>
         <td>${_empStatus(e.status)}</td>
-        <td style="color:var(--mu);font-size:11px">${e.added_by?.name || 'â€”'}</td>
+        <td style="color:var(--mu);font-size:11px">${e.added_by?.name || '—'}</td>
         <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" style="color:var(--or);border-color:rgba(245,166,35,.3)" onclick="openEditEmployee(${e.id})">
             ${st('emp_edit')}</button>
           ${CURRENT_USER.role==='finance_admin'
             ? (e.is_base
                 ? `<span style="font-size:11px;color:var(--mu);padding:4px 8px;background:var(--bg3);border-radius:6px;border:1px solid var(--brd1)">${st('emp_base')}</span>`
-                : `<button class="btn btn-ghost btn-sm" style="color:var(--re);border-color:rgba(232,69,69,.3)" onclick="deleteEmployee(${e.id},'${e.name.replace(/'/g,"\\'")}')">ًں—‘</button>`)
+                : `<button class="btn btn-ghost btn-sm" style="color:var(--re);border-color:rgba(232,69,69,.3)" onclick="deleteEmployee(${e.id},'${e.name.replace(/'/g,"\\'")}')">🗑</button>`)
             : ''}
         </td>
       </tr>`).join('')
@@ -1569,11 +1436,11 @@ async function deleteEmployee(id, name) {
 async function deleteManager(id, name) {
   if (!confirm(st('mgr_del_confirm') + name + '?')) return;
   const r = await api('DELETE', '/managers/' + id);
-  if (r.success) { toast(r.message || st('mgr_del') + ' âœ…','success'); loadManagersSection(); }
+  if (r.success) { toast(r.message || st('mgr_del') + ' ✅','success'); loadManagersSection(); }
   else toast(r.message,'error');
 }
 
-/* â”€â”€â”€ MANAGERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── MANAGERS ───────────────────────────────────────────── */
 async function loadManagersSection() {
   const r = await api('GET', '/managers');
   if (r.success) {
@@ -1592,7 +1459,7 @@ async function loadManagersSection() {
         background:rgba(46,134,171,.1);border:1px solid rgba(46,134,171,.3);cursor:pointer"
         id="pit-${p.id}" onclick="togPerm('${p.id}')">
         <div style="width:18px;height:18px;border-radius:5px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700"
-          id="pchk-${p.id}">âœ“</div>
+          id="pchk-${p.id}">✓</div>
         <span style="font-size:12px;font-weight:600">${p.label}</span>
       </div>`).join('');
   }
@@ -1606,8 +1473,8 @@ function _renderManagers(data) {
       <tr>
         <td style="font-weight:700">${m.name}</td>
         <td style="color:var(--mu)">${m.email}</td>
-        <td style="color:var(--mu);direction:ltr;text-align:left">${m.phone || '<span style="color:var(--brd2)">â€”</span>'}</td>
-        <td>${m.branch?.name_ar || 'â€”'}</td>
+        <td style="color:var(--mu);direction:ltr;text-align:left">${m.phone || '<span style="color:var(--brd2)">—</span>'}</td>
+        <td>${m.branch?.name_ar || '—'}</td>
         <td><span class="badge badge-blue">${_mgrRole(m.role)}</span></td>
         <td style="color:var(--mu);font-size:11px">${m.last_login || st('mgr_neverLogin')}</td>
         <td><span class="badge ${m.is_active?'badge-green':'badge-red'}">${m.is_active?st('mgr_active'):st('mgr_inactive')}</span></td>
@@ -1617,7 +1484,7 @@ function _renderManagers(data) {
           <button class="btn btn-ghost btn-sm" onclick="resetManagerPw(${m.id},'${m.name.replace(/'/g,"\\'")}')">
             ${st('mgr_resetPw')}</button>
           ${CURRENT_USER.role==='finance_admin'
-            ? `<button class="btn btn-ghost btn-sm" style="color:var(--re)" title="${st('mgr_del_confirm').trim()}" onclick="deleteManager(${m.id},'${m.name.replace(/'/g,"\\'")}')">ًں—‘</button>`
+            ? `<button class="btn btn-ghost btn-sm" style="color:var(--re)" title="${st('mgr_del_confirm').trim()}" onclick="deleteManager(${m.id},'${m.name.replace(/'/g,"\\'")}')">🗑</button>`
             : ''}
         </td>
       </tr>`).join('')
@@ -1637,13 +1504,13 @@ function _renderInvites(data) {
     ? data.map(i => `
       <tr>
         <td style="font-weight:600">${i.email}</td>
-        <td>${i.branch?.name_ar || '<span style="color:var(--mu)">â€”</span>'}</td>
+        <td>${i.branch?.name_ar || '<span style="color:var(--mu)">—</span>'}</td>
         <td><span class="badge badge-blue">${_mgrRole(i.role)}</span></td>
-        <td style="color:var(--mu);font-size:12px">${i.note || 'â€”'}</td>
+        <td style="color:var(--mu);font-size:12px">${i.note || '—'}</td>
         <td>${i.is_pending
           ? `<span class="badge badge-orange">${st('inv_pending_badge')}</span>`
           : `<span class="badge badge-green">${st('inv_used_badge')}</span>`}</td>
-        <td style="color:var(--mu);font-size:11px">${i.created_at?.slice(0,10) || 'â€”'}</td>
+        <td style="color:var(--mu);font-size:11px">${i.created_at?.slice(0,10) || '—'}</td>
         <td>${i.is_pending
           ? `<button class="btn btn-ghost btn-sm" style="color:var(--re)" onclick="deleteInvite(${i.id},'${i.email}')">${st('inv_del')}</button>`
           : `<span style="color:var(--mu);font-size:11px">${st('inv_expired')}</span>`}</td>
@@ -1654,8 +1521,8 @@ function _renderInvites(data) {
 function togPerm(id) {
   const el = document.getElementById('pit-' + id);
   const chk = document.getElementById('pchk-' + id);
-  const on = chk.textContent === 'âœ“';
-  chk.textContent = on ? '' : 'âœ“';
+  const on = chk.textContent === '✓';
+  chk.textContent = on ? '' : '✓';
   el.style.background  = on ? 'var(--inp-bg)' : 'rgba(46,134,171,.1)';
   el.style.borderColor = on ? 'var(--brd1)'   : 'rgba(46,134,171,.3)';
 }
@@ -1664,7 +1531,7 @@ function selectAllPerms(v) {
     const chk = document.getElementById('pchk-' + p.id);
     const el  = document.getElementById('pit-'  + p.id);
     if (!chk || !el) return;
-    chk.textContent = v ? 'âœ“' : '';
+    chk.textContent = v ? '✓' : '';
     el.style.background  = v ? 'rgba(46,134,171,.1)' : 'var(--inp-bg)';
     el.style.borderColor = v ? 'rgba(46,134,171,.3)' : 'var(--brd1)';
   });
@@ -1679,7 +1546,7 @@ async function createManager() {
   err.classList.remove('show'); ok.classList.remove('show');
   if (!name || !email) { err.textContent = st('mg_err_required'); err.classList.add('show'); return; }
   const perms = (ST[stLang()]?.perms_list || ST.ar.perms_list)
-    .filter(p => document.getElementById('pchk-' + p.id)?.textContent === 'âœ“')
+    .filter(p => document.getElementById('pchk-' + p.id)?.textContent === '✓')
     .map(p => p.id);
   const phone = buildPhone('mg-phone-code','mg-phone-num');
   const r = await api('POST', '/managers', {
@@ -1690,8 +1557,8 @@ async function createManager() {
     permissions: perms,
   });
   if (r.success) {
-    const emailIcon = r.email_sent ? 'ًں“¨ طھظ… ط¥ط±ط³ط§ظ„ ط§ظ„ط¥ظٹظ…ظٹظ„' : 'âڑ ï¸ڈ ظ„ظ… ظٹظڈط±ط³ظ„ ط§ظ„ط¥ظٹظ…ظٹظ„ (طھط­ظ‚ظ‚ ظ…ظ† ط¥ط¹ط¯ط§ط¯ط§طھ ط§ظ„ط¨ط±ظٹط¯)';
-    ok.innerHTML = `${st('mg_ok_prefix')}<br>ًں“§ ${email}<br>ًں”‘ ${st('mgr_reset_ok')} <b style="font-family:monospace">${r.credentials?.temp_password || 'â€”'}</b><br><small style="color:var(--mu)">${emailIcon}</small>`;
+    const emailIcon = r.email_sent ? '📨 تم إرسال الإيميل' : '⚠️ لم يُرسل الإيميل (تحقق من إعدادات البريد)';
+    ok.innerHTML = `${st('mg_ok_prefix')}<br>📧 ${email}<br>🔑 ${st('mgr_reset_ok')} <b style="font-family:monospace">${r.credentials?.temp_password || '—'}</b><br><small style="color:var(--mu)">${emailIcon}</small>`;
     ok.classList.add('show');
     loadManagersSection();
   } else { err.textContent = r.message || st('err_generic'); err.classList.add('show'); }
@@ -1713,7 +1580,7 @@ async function addInvite() {
     document.getElementById('inv-email-input').value = '';
     document.getElementById('inv-note-input').value  = '';
     loadInvites();
-  } else { err.textContent = r.errors ? Object.values(r.errors).flat().join(' â€” ') : r.message; err.classList.add('show'); }
+  } else { err.textContent = r.errors ? Object.values(r.errors).flat().join(' — ') : r.message; err.classList.add('show'); }
 }
 
 async function deleteInvite(id, email) {
@@ -1727,18 +1594,18 @@ async function resetManagerPw(id, name) {
   if (!confirm(st('mgr_reset_confirm') + name + '?')) return;
   const r = await api('POST', '/managers/' + id + '/reset-password');
   if (r.success) {
-    const emailNote = r.email_sent ? ' ًں“¨' : ' (ظ„ظ… ظٹظڈط±ط³ظ„ ط§ظ„ط¥ظٹظ…ظٹظ„)';
+    const emailNote = r.email_sent ? ' 📨' : ' (لم يُرسل الإيميل)';
     toast(st('mgr_reset_ok') + r.new_password + emailNote, 'info');
   } else toast(r.message || st('err_generic'),'error');
 }
 
-/* â”€â”€â”€ EDIT MANAGER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── EDIT MANAGER ───────────────────────────────────────── */
 function openEditManager(id) {
   const m = (_cachedManagers || []).find(x => x.id === id);
-  if (!m) { toast('ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظ„ظ„ظ…ط¯ظٹط±','error'); return; }
+  if (!m) { toast('لا توجد بيانات للمدير','error'); return; }
   document.getElementById('emg-id').value   = id;
   document.getElementById('emg-name').value = m.name || '';
-  // Phone â€” parse into code + number
+  // Phone — parse into code + number
   const _ph = parsePhone(m.phone);
   fillPhoneCodeSelect('emg-phone-code', _ph.code);
   document.getElementById('emg-phone-num').value = _ph.num;
@@ -1760,7 +1627,7 @@ function openEditManager(id) {
         background:${on?'rgba(46,134,171,.1)':'var(--inp-bg)'};border:1px solid ${on?'rgba(46,134,171,.3)':'var(--brd1)'};cursor:pointer"
         id="epit-${p.id}" onclick="togPermEdit('${p.id}')">
       <div style="width:18px;height:18px;border-radius:5px;background:var(--pri);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700"
-        id="epchk-${p.id}">${on?'âœ“':''}</div>
+        id="epchk-${p.id}">${on?'✓':''}</div>
       <span style="font-size:12px;font-weight:600">${p.label}</span>
     </div>`;
   }).join('');
@@ -1783,15 +1650,15 @@ function _emgUpdateActiveLbl() {
   const chk = document.getElementById('emg-active');
   const lbl = document.getElementById('emg-active-lbl');
   if (!chk || !lbl) return;
-  lbl.textContent = chk.checked ? (st('mgr_active')||'ظ†ط´ط·') : (st('mgr_inactive')||'ظ…ط¹ط·ظ‘ظ„');
+  lbl.textContent = chk.checked ? (st('mgr_active')||'نشط') : (st('mgr_inactive')||'معطّل');
   lbl.style.color = chk.checked ? 'var(--gr)' : 'var(--re)';
 }
 function togPermEdit(id) {
   const el  = document.getElementById('epit-' + id);
   const chk = document.getElementById('epchk-' + id);
   if (!el || !chk) return;
-  const on = chk.textContent === 'âœ“';
-  chk.textContent = on ? '' : 'âœ“';
+  const on = chk.textContent === '✓';
+  chk.textContent = on ? '' : '✓';
   el.style.background  = on ? 'var(--inp-bg)' : 'rgba(46,134,171,.1)';
   el.style.borderColor = on ? 'var(--brd1)'   : 'rgba(46,134,171,.3)';
 }
@@ -1800,7 +1667,7 @@ function selectAllPermsEdit(v) {
     const chk = document.getElementById('epchk-' + p.id);
     const el  = document.getElementById('epit-'  + p.id);
     if (!chk || !el) return;
-    chk.textContent = v ? 'âœ“' : '';
+    chk.textContent = v ? '✓' : '';
     el.style.background  = v ? 'rgba(46,134,171,.1)' : 'var(--inp-bg)';
     el.style.borderColor = v ? 'rgba(46,134,171,.3)' : 'var(--brd1)';
   });
@@ -1814,9 +1681,9 @@ async function saveManagerEdit() {
   const err    = document.getElementById('emg-err');
   const ok     = document.getElementById('emg-ok');
   err.classList.remove('show'); ok.classList.remove('show');
-  if (!name) { err.textContent = st('mg_err_required')||'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط§ط³ظ…'; err.classList.add('show'); return; }
+  if (!name) { err.textContent = st('mg_err_required')||'يرجى إدخال الاسم'; err.classList.add('show'); return; }
   const perms = (ST[stLang()]?.perms_list || ST.ar.perms_list)
-    .filter(p => document.getElementById('epchk-' + p.id)?.textContent === 'âœ“')
+    .filter(p => document.getElementById('epchk-' + p.id)?.textContent === '✓')
     .map(p => p.id);
   const r = await api('PUT', '/managers/' + id, {
     name, phone: phone || null,
@@ -1825,7 +1692,7 @@ async function saveManagerEdit() {
     permissions: perms,
   });
   if (r.success) {
-    ok.textContent = st('mgr_edit_ok') || 'âœ… طھظ… ط§ظ„طھط­ط¯ظٹط«';
+    ok.textContent = st('mgr_edit_ok') || '✅ تم التحديث';
     ok.classList.add('show');
     toast(st('mgr_edit_ok'),'success');
     loadManagersSection();
@@ -1833,10 +1700,10 @@ async function saveManagerEdit() {
   } else { err.textContent = r.message || st('err_generic'); err.classList.add('show'); }
 }
 
-/* â”€â”€â”€ EDIT EMPLOYEE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── EDIT EMPLOYEE ──────────────────────────────────────── */
 function openEditEmployee(id) {
   const e = (_cachedEmployees || []).find(x => x.id === id);
-  if (!e) { toast('ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظ„ظ„ظ…ظˆط¸ظپ','error'); return; }
+  if (!e) { toast('لا توجد بيانات للموظف','error'); return; }
   document.getElementById('eep-id').value    = id;
   document.getElementById('eep-name').value  = e.name || '';
   document.getElementById('eep-email').value = e.email || '';
@@ -1879,7 +1746,7 @@ function _eepUpdateActiveLbl() {
   const chk = document.getElementById('eep-active');
   const lbl = document.getElementById('eep-active-lbl');
   if (!chk || !lbl) return;
-  lbl.textContent = chk.checked ? (st('mgr_active')||'ظ†ط´ط·') : (st('mgr_inactive')||'ظ…ط¹ط·ظ‘ظ„');
+  lbl.textContent = chk.checked ? (st('mgr_active')||'نشط') : (st('mgr_inactive')||'معطّل');
   lbl.style.color = chk.checked ? 'var(--gr)' : 'var(--re)';
 }
 async function saveEmployeeEdit() {
@@ -1899,7 +1766,7 @@ async function saveEmployeeEdit() {
     is_active:           document.getElementById('eep-active').checked,
   });
   if (r.success) {
-    ok.textContent = st('emp_edit_ok') || 'âœ… طھظ… ط§ظ„طھط­ط¯ظٹط«';
+    ok.textContent = st('emp_edit_ok') || '✅ تم التحديث';
     ok.classList.add('show');
     toast(st('emp_edit_ok'),'success');
     loadEmployeesSection();
@@ -1907,7 +1774,7 @@ async function saveEmployeeEdit() {
   } else { err.textContent = r.errors ? Object.values(r.errors).flat().join(' | ') : r.message; err.classList.add('show'); }
 }
 
-/* â”€â”€â”€ APPROVALS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── APPROVALS ──────────────────────────────────────────── */
 async function loadApprovalsSection() {
   const r = await api('GET', '/employees/pending');
   if (!r.success) return;
@@ -1937,8 +1804,8 @@ function _renderApprovals(data) {
           <div style="font-size:13px;font-weight:800;margin-bottom:3px">${e.name}</div>
           <div style="font-size:11px;color:var(--mu)">
             ${roles[e.role] || e.role}
-            ${e.branch ? ' آ· ' + e.branch.name_ar : ''}
-            آ· ${st('appr_addedBy')} ${e.added_by?.name || 'â€”'}
+            ${e.branch ? ' · ' + e.branch.name_ar : ''}
+            · ${st('appr_addedBy')} ${e.added_by?.name || '—'}
           </div>
           <div style="display:flex;gap:8px;margin-top:6px">
             <span class="badge badge-blue">${st('appr_broker')} $${e.broker_commission}/lot</span>
@@ -1954,7 +1821,7 @@ function _renderApprovals(data) {
             ${st('appr_reject')}</button>
         </div>
       </div>`).join('')
-    : `<div style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:42px;opacity:.2;margin-bottom:10px">âœ…</div><div style="font-weight:700">${st('appr_empty')}</div></div>`;
+    : `<div style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:42px;opacity:.2;margin-bottom:10px">✅</div><div style="font-weight:700">${st('appr_empty')}</div></div>`;
 }
 
 async function approveEmployee(id, name) {
@@ -1971,7 +1838,7 @@ async function rejectEmployee(id, name) {
   else toast(r.message || st('err_generic'),'error');
 }
 
-/* â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── INIT ───────────────────────────────────────────────── */
 (async function init() {
   stApplyLang();
   // Init phone code dropdowns
@@ -1983,11 +1850,9 @@ async function rejectEmployee(id, name) {
     const nb = document.getElementById('snav-badge-approvals');
     if (nb) { nb.textContent = ap.count; nb.style.display = ''; }
   }
-  // Open specific section from URL param ?s=guide
+  // Open specific section from URL param ?s=...
   const _urlSection = new URLSearchParams(window.location.search).get('s');
   showSection(_urlSection || 'general');
 })();
 </script>
 @endpush
-
-
