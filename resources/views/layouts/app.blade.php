@@ -751,6 +751,7 @@ const I18N = {
     'badge.new':       'جديد',
     'role.admin':      'مدير مالي 💼',
     'role.branch':     'مدير فرع',
+    'role.viewer':     'مشاهد 👁',
     'page.dashboard':  'لوحة المتابعة',
     'page.cards':      'كروت العمولات',
     'page.cards.new':  'كرت جديد',
@@ -764,6 +765,34 @@ const I18N = {
     'page.import':     'استيراد بيانات',
     'page.cc':         'مركز الاتصال',
     'page.cc.pending': 'كروت CC الواردة',
+    'page.guide':      'دليل التشغيل',
+    /* Dashboard */
+    'dash.kpi.total':     'إجمالي الحسابات',
+    'dash.kpi.total.sub': 'سجل مسجّل',
+    'dash.kpi.dep':       'إيداع فتح الحساب',
+    'dash.kpi.dep.sub':   'إجمالي الإيداع الأولي',
+    'dash.kpi.mon':       'الإيداع الشهري المتوقع',
+    'dash.kpi.mon.sub':   'إجمالي الإيداع الشهري',
+    'dash.kpi.mod':       'حسابات معدّلة',
+    'dash.kpi.mod.sub':   'حسابات معدّلة',
+    'dash.kpi.new':       'كروت مضافة حديثاً',
+    'dash.kpi.new.sub':   'مضافة حديثاً',
+    'dash.chart.branches':'🏢 عدد الحسابات المفتوحة لكل فرع',
+    'dash.broker.cnt.title':'🥇 تقرير البروكرات — عدد الحسابات',
+    'dash.mkt.title':     '📢 تقرير المسوّقين',
+    'dash.cc.title':      '📞 مركز الاتصال — CC',
+    'dash.cc.viewall':    'عرض الكل ←',
+    'dash.broker.dep.title':'💰 البروكرات — إجمالي الإيداع الشهري',
+    'dash.mods.title':    '✏️ آخر التعديلات',
+    'dash.th.broker':     'البروكر',
+    'dash.th.mkt':        'المسوّق',
+    'dash.th.cnt':        'عدد الحسابات',
+    'dash.th.dep':        'إيداع شهري',
+    'dash.th.acno':       'رقم الحساب',
+    'dash.th.status':     'الحالة',
+    'dash.th.date':       'التاريخ',
+    'dash.th.reason':     'السبب',
+    'dash.th.by':         'بواسطة',
   },
   en: {
     'company.short':   'Wafra Gulf',
@@ -828,6 +857,35 @@ const I18N = {
     'page.import':     'Import Data',
     'page.cc':         'Call Center',
     'page.cc.pending': 'Incoming CC Cards',
+    'page.guide':      'User Guide',
+    'role.viewer':     'Viewer 👁',
+    /* Dashboard */
+    'dash.kpi.total':     'Total Accounts',
+    'dash.kpi.total.sub': 'Registered records',
+    'dash.kpi.dep':       'Account Opening Deposit',
+    'dash.kpi.dep.sub':   'Total initial deposit',
+    'dash.kpi.mon':       'Expected Monthly Deposit',
+    'dash.kpi.mon.sub':   'Total monthly deposit',
+    'dash.kpi.mod':       'Modified Accounts',
+    'dash.kpi.mod.sub':   'Modified accounts',
+    'dash.kpi.new':       'Newly Added Cards',
+    'dash.kpi.new.sub':   'Recently added',
+    'dash.chart.branches':'🏢 Open Accounts per Branch',
+    'dash.broker.cnt.title':'🥇 Brokers Report — Account Count',
+    'dash.mkt.title':     '📢 Marketers Report',
+    'dash.cc.title':      '📞 Call Center — CC',
+    'dash.cc.viewall':    'View All →',
+    'dash.broker.dep.title':'💰 Brokers — Total Monthly Deposit',
+    'dash.mods.title':    '✏️ Recent Modifications',
+    'dash.th.broker':     'Broker',
+    'dash.th.mkt':        'Marketer',
+    'dash.th.cnt':        'Account Count',
+    'dash.th.dep':        'Monthly Deposit',
+    'dash.th.acno':       'Account No.',
+    'dash.th.status':     'Status',
+    'dash.th.date':       'Date',
+    'dash.th.reason':     'Reason',
+    'dash.th.by':         'By',
   }
 };
 
@@ -857,12 +915,8 @@ function applyLang(lang) {
     const el = document.getElementById(id); if (el) el.textContent = label;
   });
 
-  /* Update role text */
-  const roleEl = document.getElementById('sb-role');
-  if (roleEl && CURRENT_USER?.role) {
-    const key = CURRENT_USER.role === 'finance_admin' ? 'role.admin' : 'role.branch';
-    roleEl.textContent = I18N[lang]?.[key] || roleEl.textContent;
-  }
+  /* Update role text + username chip (re-renders in correct language) */
+  if (typeof updateUserChip === 'function') updateUserChip();
 
   /* Logout arrow direction */
   const logoutBtn = document.querySelector('.logout-btn');
@@ -1028,11 +1082,22 @@ async function api(method, url, body = null) {
 }
 
 // ── Sidebar user info ──────────────────────────────────────
-if (CURRENT_USER && CURRENT_USER.name) {
-  document.getElementById('sb-avatar').textContent = CURRENT_USER.name.charAt(0).toUpperCase();
-  document.getElementById('sb-username').textContent = CURRENT_USER.name;
-  document.getElementById('sb-role').textContent = CURRENT_USER.role === 'finance_admin' ? 'مدير مالي 💼' : 'مدير فرع';
+function updateUserChip() {
+  if (!CURRENT_USER || !CURRENT_USER.name) return;
+  const nameEl = document.getElementById('sb-username');
+  const roleEl = document.getElementById('sb-role');
+  const avatEl = document.getElementById('sb-avatar');
+  const lang = (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar';
+  if (avatEl) avatEl.textContent = CURRENT_USER.name.charAt(0).toUpperCase();
+  if (nameEl) nameEl.textContent = CURRENT_USER.name;
+  if (roleEl) {
+    const roleKey = CURRENT_USER.role === 'finance_admin' ? 'role.admin'
+                  : CURRENT_USER.role === 'branch_manager' ? 'role.branch'
+                  : 'role.viewer';
+    roleEl.textContent = I18N[lang]?.[roleKey] || I18N.ar[roleKey] || CURRENT_USER.role;
+  }
 }
+updateUserChip();
 
 // ── Security helper — HTML entity encoder ──────────────────
 // Always use esc() when inserting user-supplied text into innerHTML.
@@ -1192,6 +1257,7 @@ function updateMobTitle() {
     '/import':          'page.import',
     '/callcenter/pending': 'page.cc.pending',
     '/callcenter':      'page.cc',
+    '/guide':           'page.guide',
   };
   for (const [route, key] of Object.entries(keyMap)) {
     if (path.startsWith(route)) {

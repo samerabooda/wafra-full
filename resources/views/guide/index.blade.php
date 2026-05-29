@@ -408,6 +408,9 @@
 
 </div>{{-- guide-page --}}
 
+@endsection
+
+@push('scripts')
 <script>
 function switchGuideTab(role) {
   ['fa','bm','cc','vw'].forEach(r => {
@@ -415,12 +418,12 @@ function switchGuideTab(role) {
     document.getElementById('gpanel-'+r)?.classList.toggle('active', r===role);
   });
 }
-/* Auto-select current user's role */
+/* Auto-select current user's role — runs after layout defines CURRENT_USER */
 (function(){
-  const role = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER?.role) || 'fa';
+  const role = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER?.role) ? CURRENT_USER.role : 'finance_admin';
   if      (role === 'finance_admin')  switchGuideTab('fa');
   else if (role === 'branch_manager') switchGuideTab('bm');
   else                                switchGuideTab('vw');
 })();
 </script>
-@endsection
+@endpush
