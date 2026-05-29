@@ -579,18 +579,39 @@ html{font-size:16px}
         <span>📥</span> <span data-i18n="nav.import">استيراد بيانات</span>
       </a>
       @endif
+
+      <a href="{{ route('settings.index') }}?s=guide" class="nav-item {{ request()->routeIs('settings.*') && request()->get('s') === 'guide' ? 'active' : '' }}"
+         style="color:rgba(255,255,255,.55)">
+        <span>📖</span>
+        <span data-i18n="nav.guide">دليل التشغيل</span>
+      </a>
     </nav>
 
     <div class="sb-footer">
       <div class="user-chip">
         <div class="user-avatar" id="sb-avatar">م</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="user-name" id="sb-username">—</div>
           <div class="user-role" id="sb-role">—</div>
         </div>
-        <a href="{{ route('auth.logout') }}" class="logout-btn"
-           onclick="event.preventDefault(); document.getElementById('logout-form').submit()">⬅</a>
       </div>
+      {{-- Prominent logout button --}}
+      <a href="{{ route('auth.logout') }}"
+         onclick="event.preventDefault(); document.getElementById('logout-form').submit()"
+         style="
+           display:flex;align-items:center;justify-content:center;gap:7px;
+           margin-top:8px;padding:9px 14px;border-radius:9px;
+           background:rgba(232,69,69,.1);border:1px solid rgba(232,69,69,.25);
+           color:rgba(232,69,69,.8);font-size:13px;font-weight:700;
+           cursor:pointer;text-decoration:none;width:100%;
+           transition:all .18s;
+         "
+         onmouseover="this.style.background='rgba(232,69,69,.18)';this.style.color='#e84545'"
+         onmouseout="this.style.background='rgba(232,69,69,.1)';this.style.color='rgba(232,69,69,.8)'"
+         id="sidebar-logout-btn">
+        <span style="font-size:16px">🚪</span>
+        <span data-i18n="nav.logout">تسجيل الخروج</span>
+      </a>
       <form id="logout-form" action="{{ route('auth.logout') }}" method="POST" style="display:none">
         @csrf
       </form>
@@ -695,6 +716,8 @@ const I18N = {
     'nav.permissions': 'الصلاحيات',
     'nav.settings':    'الإعدادات',
     'nav.import':      'استيراد بيانات',
+    'nav.guide':       'دليل التشغيل',
+    'nav.logout':      'تسجيل الخروج',
     'btn.newcard':     'كرت جديد',
     'btn.edit':        'تعديل',
     'tb.dept':         'الإدارة المالية',
@@ -757,6 +780,8 @@ const I18N = {
     'nav.permissions': 'Permissions',
     'nav.settings':    'Settings',
     'nav.import':      'Import Data',
+    'nav.guide':       'User Guide',
+    'nav.logout':      'Sign Out',
     'btn.newcard':     'New Card',
     'btn.edit':        'Edit',
     'tb.dept':         'Finance Department',

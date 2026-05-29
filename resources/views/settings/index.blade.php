@@ -1292,7 +1292,7 @@ function stApplyLang() {
   _html('st-footer-note', s.footerNote.replace('\n','<br>'));
 
   // Nav items
-  ['general','branches','employees','managers','approvals','permissions'].forEach(id => {
+  ['general','branches','employees','managers','approvals','permissions','guide'].forEach(id => {
     _txt('snav-ico-' + id, s['s_' + id + '_ico'] || '');
     _txt('snav-lbl-' + id, s['s_' + id + '_lbl'] || '');
     _txt('snav-sub-' + id, s['s_' + id + '_sub'] || '');
@@ -2104,7 +2104,9 @@ async function rejectEmployee(id, name) {
     const nb = document.getElementById('snav-badge-approvals');
     if (nb) { nb.textContent = ap.count; nb.style.display = ''; }
   }
-  showSection('general');
+  // Open specific section from URL param ?s=guide
+  const _urlSection = new URLSearchParams(window.location.search).get('s');
+  showSection(_urlSection || 'general');
 })();
 </script>
 @endpush
