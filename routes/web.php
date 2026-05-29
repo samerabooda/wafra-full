@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function(){
     Route::get('/managers',        [WebController::class,'managers'])->name('managers.index');
     Route::get('/branches',        [WebController::class,'branches'])->name('branches.index');
     Route::get('/permissions',     [WebController::class,'permissions'])->name('permissions.index');
+    // Guide
+    Route::get('/guide', [WebController::class,'guide'])->name('guide.index');
     // Call Center
     Route::get('/callcenter',         [WebController::class,'callcenterIndex'])->name('callcenter.index');
     Route::get('/callcenter/pending', [WebController::class,'callcenterPending'])->name('callcenter.pending');

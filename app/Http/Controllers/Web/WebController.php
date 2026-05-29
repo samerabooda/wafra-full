@@ -181,6 +181,12 @@ class WebController extends Controller
         return view('permissions.index');
     }
 
+    // ── Guide ──────────────────────────────────────────────────
+    public function guide()
+    {
+        return view('guide.index');
+    }
+
     // ── Call Center ────────────────────────────────────────────
     public function callcenterIndex()
     {

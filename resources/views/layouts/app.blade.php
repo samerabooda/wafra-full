@@ -106,7 +106,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .user-avatar{width:28px;height:28px;border-radius:50%;
   background:linear-gradient(135deg,var(--pri2),var(--pri3));
   display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0}
-.user-name{font-size:11px;font-weight:700;color:white;flex:1}
+.user-name{font-size:11px;font-weight:800;flex:1;
+  background:linear-gradient(135deg,#22C4D4,#1AADBA);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
 .user-role{font-size:9px;color:rgba(255,255,255,.5)}
 .logout-btn{color:rgba(255,255,255,.4);font-size:12px;text-decoration:none;cursor:pointer}
 .logout-btn:hover{color:var(--re)}
@@ -432,7 +434,9 @@ html{font-size:16px}
 .sb-logo{width:105px!important;height:105px!important}
 .sb-brand{font-size:14px!important;font-weight:800!important;color:white!important}
 .sb-brand small{font-size:11px!important;color:rgba(255,255,255,.6)!important}
-.user-name{font-size:14px!important;font-weight:700!important;color:white!important}
+.user-name{font-size:14px!important;font-weight:800!important;
+  background:linear-gradient(135deg,#22C4D4,#1AADBA)!important;
+  -webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;}
 .user-role{font-size:11px!important;color:rgba(255,255,255,.6)!important}
 .logout-btn{font-size:14px!important;color:rgba(255,255,255,.5)!important}
 /* Topbar — always light text on dark topbar */
@@ -580,7 +584,7 @@ html{font-size:16px}
       </a>
       @endif
 
-      <a href="{{ route('settings.index') }}?s=guide" class="nav-item {{ request()->routeIs('settings.*') && request()->get('s') === 'guide' ? 'active' : '' }}"
+      <a href="{{ route('guide.index') }}" class="nav-item {{ request()->routeIs('guide.*') ? 'active' : '' }}"
          style="color:rgba(255,255,255,.55)">
         <span>📖</span>
         <span data-i18n="nav.guide">دليل التشغيل</span>
