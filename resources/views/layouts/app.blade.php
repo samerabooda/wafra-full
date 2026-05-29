@@ -436,13 +436,34 @@ html{font-size:16px}
 .user-role{font-size:11px!important;color:rgba(255,255,255,.6)!important}
 .logout-btn{font-size:14px!important;color:rgba(255,255,255,.5)!important}
 /* Topbar — always light text on dark topbar */
-.tb-title{font-size:17px!important;font-weight:800!important;color:rgba(255,255,255,.95)!important}
-.tb-sub{font-size:13px!important;color:rgba(255,255,255,.5)!important}
-.tb-logo{width:48px!important;height:48px!important}
-/* Header 1cm from top */
-.main-wrap{padding-top:10px!important}
-.topbar{top:10px!important;margin:0 10px;border-radius:14px!important}
-.tb-btn{font-size:13px!important;padding:8px 14px!important}
+.tb-title{font-size:18px!important;font-weight:800!important;color:rgba(255,255,255,.98)!important}
+.tb-sub{font-size:12px!important;color:rgba(255,255,255,.5)!important}
+.tb-logo{width:52px!important;height:52px!important;border-radius:14px!important}
+/* Header ~1cm (38px) from top — wider, more beautiful */
+.main-wrap{padding-top:14px!important}
+.topbar{
+  top:14px!important;
+  margin:0 14px!important;
+  border-radius:16px!important;
+  height:62px!important;
+  background:linear-gradient(135deg,rgba(10,22,40,.97) 0%,rgba(14,32,56,.97) 60%,rgba(8,28,50,.97) 100%)!important;
+  border:1px solid rgba(26,173,186,.22)!important;
+  border-bottom:1px solid rgba(26,173,186,.18)!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.45),0 2px 0 rgba(26,173,186,.15),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  backdrop-filter:blur(20px)!important;
+  -webkit-backdrop-filter:blur(20px)!important;
+  padding:0 22px!important;
+}
+.tb-btn{font-size:13px!important;padding:8px 14px!important;border-radius:9px!important}
+.tb-btn.success{
+  background:rgba(34,201,122,.12)!important;
+  border:1px solid rgba(34,201,122,.3)!important;
+  color:var(--gr)!important;
+}
+.tb-btn:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 4px 12px rgba(26,173,186,.2)!important;
+}
 /* KPI */
 .kpi-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important;font-weight:700!important;margin-bottom:8px!important}
 .kpi-value{font-size:1.8rem!important;font-weight:900!important}
@@ -763,8 +784,8 @@ const I18N = {
     'page.cc.pending': 'كروت CC الواردة',
     'page.guide':      'دليل التشغيل',
     /* Dashboard */
-    'dash.kpi.total':     'إجمالي الحسابات',
-    'dash.kpi.total.sub': 'سجل مسجّل',
+    'dash.kpi.total':     'إجمالي كروت العمولة',
+    'dash.kpi.total.sub': 'كرت مسجّل (حساب × شهر)',
     'dash.kpi.dep':       'إيداع فتح الحساب',
     'dash.kpi.dep.sub':   'إجمالي الإيداع الأولي',
     'dash.kpi.mon':       'الإيداع الشهري المتوقع',
@@ -856,8 +877,8 @@ const I18N = {
     'page.guide':      'User Guide',
     'role.viewer':     'Viewer 👁',
     /* Dashboard */
-    'dash.kpi.total':     'Total Accounts',
-    'dash.kpi.total.sub': 'Registered records',
+    'dash.kpi.total':     'Total Commission Cards',
+    'dash.kpi.total.sub': 'cards (account × month)',
     'dash.kpi.dep':       'Account Opening Deposit',
     'dash.kpi.dep.sub':   'Total initial deposit',
     'dash.kpi.mon':       'Expected Monthly Deposit',
