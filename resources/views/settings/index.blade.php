@@ -299,120 +299,534 @@
       </div>
     </div>{{-- section-permissions --}}
 
-    {{-- ── GUIDE — Workflow & How-to ── --}}
+    {{-- ══ GUIDE — Beautiful Role-Based Workflow ══ --}}
     <div id="section-guide" class="settings-section" style="display:none">
-      <div style="margin-bottom:24px">
-        <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">📖 دليل تشغيل النظام</h2>
-        <p style="font-size:13px;color:var(--mu)">خطوات العمل اليومي وكيفية استخدام كل قسم في منصة وفرة الخليجية</p>
+
+<style>
+/* ── Guide styles ── */
+.guide-header{text-align:center;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--brd1)}
+.guide-header h2{font-size:22px;font-weight:900;margin-bottom:4px}
+.guide-header p{font-size:13px;color:var(--mu)}
+
+/* Role tabs */
+.guide-role-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:6px}
+.guide-role-tab{flex:1;min-width:110px;padding:9px 12px;border:none;background:none;border-radius:8px;
+  cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;
+  color:var(--mu);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.guide-role-tab.active{background:rgba(26,173,186,.16);border:1px solid rgba(26,173,186,.35);color:var(--pri2)}
+.guide-role-tab .tab-role-badge{font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(26,173,186,.15);color:var(--pri2)}
+.guide-role-tab.active .tab-role-badge{background:rgba(26,173,186,.3)}
+
+/* Role panel */
+.guide-role-panel{display:none}
+.guide-role-panel.active{display:block}
+
+/* Role header banner */
+.role-banner{border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.role-banner-icon{font-size:36px;flex-shrink:0}
+.role-banner-title{font-size:18px;font-weight:900;margin-bottom:3px}
+.role-banner-sub{font-size:12px;opacity:.75;line-height:1.6}
+
+/* Flowchart */
+.flow-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;margin-bottom:22px;padding:18px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px}
+.flow-node{display:flex;flex-direction:column;align-items:center;gap:5px;border-radius:12px;padding:12px 14px;min-width:88px;text-align:center;cursor:default;transition:transform .2s}
+.flow-node:hover{transform:translateY(-2px)}
+.flow-node-ico{font-size:24px;line-height:1}
+.flow-node-lbl{font-size:10px;font-weight:800;white-space:nowrap}
+.flow-node-sub{font-size:9px;color:var(--mu);white-space:nowrap}
+.flow-arrow{font-size:20px;color:var(--mu);padding:0 4px;flex-shrink:0}
+.flow-arrow.down{transform:rotate(90deg)}
+
+/* Steps */
+.guide-steps{display:flex;flex-direction:column;gap:10px}
+.guide-step{display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:14px 16px;align-items:flex-start;transition:border-color .2s}
+.guide-step:hover{border-color:rgba(26,173,186,.35)}
+.step-icon-box{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.step-body{flex:1}
+.step-title{font-size:13px;font-weight:800;margin-bottom:5px}
+.step-desc{font-size:12px;color:var(--tx);line-height:1.75}
+.step-note{font-size:10px;color:var(--mu);margin-top:4px;padding:5px 8px;background:var(--bg3);border-radius:6px;display:inline-block}
+.step-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}
+
+/* Permission table */
+.perm-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:14px}
+.perm-table th{background:var(--bg3);padding:8px 10px;font-size:10px;font-weight:700;color:var(--mu);text-align:right;border-bottom:1px solid var(--brd1)}
+.perm-table td{padding:8px 10px;border-bottom:1px solid var(--brd1);vertical-align:middle}
+.perm-table tr:last-child td{border-bottom:none}
+.perm-table tr:hover td{background:rgba(26,173,186,.04)}
+.perm-yes{color:var(--gr);font-weight:800}
+.perm-no{color:var(--re);opacity:.6}
+.perm-cond{color:var(--or);font-weight:700}
+
+/* Responsive */
+@media(max-width:640px){
+  .flow-diagram{gap:2px;padding:12px}
+  .flow-node{min-width:70px;padding:8px}
+  .guide-role-tabs{gap:4px}
+  .guide-role-tab{font-size:11px;padding:7px 8px}
+}
+</style>
+
+      <div class="guide-header">
+        <h2>📖 دليل تشغيل النظام</h2>
+        <p>اختر دورك لمشاهدة Workflow خاص بك وكيفية الاستخدام من طرفك</p>
       </div>
 
-      {{-- Visual Workflow Diagram --}}
-      <div style="margin-bottom:20px;padding:20px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px">
-        <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:14px;text-align:center">🔄 مسار العمل — Workflow Diagram</div>
-        <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
-            <span style="font-size:22px">📥</span>
-            <span style="font-size:10px;font-weight:700;color:var(--pri2)">استيراد / إدخال</span>
-            <span style="font-size:9px;color:var(--mu)">Excel أو يدوي</span>
-          </div>
-          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
-            <span style="font-size:22px">🗂</span>
-            <span style="font-size:10px;font-weight:700;color:var(--gr)">كروت العمولة</span>
-            <span style="font-size:9px;color:var(--mu)">إضافة / تعديل</span>
-          </div>
-          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(138,120,240,.1);border:1px solid rgba(138,120,240,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
-            <span style="font-size:22px">📞</span>
-            <span style="font-size:10px;font-weight:700;color:var(--pu)">مركز الاتصال CC</span>
-            <span style="font-size:9px;color:var(--mu)">قبول / رفض</span>
-          </div>
-          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
-            <span style="font-size:22px">✏️</span>
-            <span style="font-size:10px;font-weight:700;color:var(--or)">المراجعة</span>
-            <span style="font-size:9px;color:var(--mu)">تدقيق التعديلات</span>
-          </div>
-          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
-            <span style="font-size:22px">📈</span>
-            <span style="font-size:10px;font-weight:700;color:var(--pri2)">التقارير</span>
-            <span style="font-size:9px;color:var(--mu)">PDF / Excel</span>
-          </div>
-        </div>
+      {{-- Role selector tabs --}}
+      <div class="guide-role-tabs" id="guide-tabs">
+        <button class="guide-role-tab" id="gtab-fa"  onclick="switchGuideTab('fa')">
+          💼 المدير المالي <span class="tab-role-badge">كامل</span>
+        </button>
+        <button class="guide-role-tab" id="gtab-bm"  onclick="switchGuideTab('bm')">
+          🏢 مدير الفرع <span class="tab-role-badge">فرعي</span>
+        </button>
+        <button class="guide-role-tab" id="gtab-cc"  onclick="switchGuideTab('cc')">
+          📞 كول سنتر CC <span class="tab-role-badge">متابعة</span>
+        </button>
+        <button class="guide-role-tab" id="gtab-vw"  onclick="switchGuideTab('vw')">
+          👁 مشاهد <span class="tab-role-badge">قراءة</span>
+        </button>
       </div>
 
-      {{-- Steps --}}
-      <div style="display:flex;flex-direction:column;gap:12px">
-
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🗂</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">1. إضافة كرت عمولة جديد</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7">اضغط <strong>➕ كرت جديد</strong> → أدخل رقم الحساب، الشهر، البروكر، المسوّق، الإيداع، النوع (NEW/SUB) → <strong>حفظ</strong></div>
+      {{-- ═══════════ FINANCE ADMIN ═══════════ --}}
+      <div class="guide-role-panel" id="gpanel-fa">
+        <div class="role-banner" style="background:linear-gradient(135deg,rgba(26,173,186,.12),rgba(26,173,186,.04));border:1px solid rgba(26,173,186,.25)">
+          <div class="role-banner-icon">💼</div>
+          <div>
+            <div class="role-banner-title" style="color:var(--pri2)">المدير المالي — Finance Admin</div>
+            <div class="role-banner-sub">صلاحية كاملة لجميع وظائف النظام — يدير الفروع والمديرين والموظفين ويراقب كل العمليات</div>
           </div>
         </div>
 
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✏️</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--or);margin-bottom:5px">2. تعديل كرت موجود</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7">اضغط <strong>✏️ تعديل</strong> → ابحث برقم الحساب → عدّل البيانات → اختر سبب التعديل → <strong>حفظ</strong><br><span style="color:var(--mu);font-size:11px">التعديل يُسجَّل تلقائياً مع اسم المعدّل والتاريخ</span></div>
+        {{-- Flowchart FA --}}
+        <div class="flow-diagram">
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">⚙️</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">إعداد النظام</div>
+            <div class="flow-node-sub">فروع + موظفون</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.3)">
+            <div class="flow-node-ico">📥</div>
+            <div class="flow-node-lbl" style="color:var(--gr)">استيراد Excel</div>
+            <div class="flow-node-sub">بيانات شهرية</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3)">
+            <div class="flow-node-ico">🗂</div>
+            <div class="flow-node-lbl" style="color:var(--or)">مراجعة الكروت</div>
+            <div class="flow-node-sub">إضافة / تعديل</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(138,120,240,.1);border:1px solid rgba(138,120,240,.3)">
+            <div class="flow-node-ico">📞</div>
+            <div class="flow-node-lbl" style="color:var(--pu)">قبول CC</div>
+            <div class="flow-node-sub">جميع الفروع</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(30,204,128,.1);border:1px solid rgba(30,204,128,.3)">
+            <div class="flow-node-ico">✅</div>
+            <div class="flow-node-lbl" style="color:var(--gr)">اعتماد الموظفين</div>
+            <div class="flow-node-sub">من جميع الفروع</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">📈</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">التقارير</div>
+            <div class="flow-node-sub">PDF / Excel</div>
           </div>
         </div>
 
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.08));border:1px solid rgba(34,201,122,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📥</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--gr);margin-bottom:5px">3. استيراد بيانات Excel (للمدير المالي)</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7">القائمة الجانبية → <strong>📥 استيراد بيانات</strong> → ارفع ملف Excel → تأكد من المعاينة → <strong>رفع واستيراد</strong><br><span style="color:var(--mu);font-size:11px">لا حد أقصى للصفوف — يمكن رفع آلاف السجلات في ملف واحد</span></div>
-          </div>
-        </div>
+        <div class="guide-steps">
 
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.08));border:1px solid rgba(138,120,240,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--pu);margin-bottom:5px">4. كروت مركز الاتصال CC</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>📞 مركز الاتصال</strong> → كروت واردة → قبول (ينتقل للقائمة الرئيسية) أو رفض مع السبب<br><span style="color:var(--mu);font-size:11px">مدير الفرع يرى فرعه فقط</span></div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📈</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">5. التقارير والإحصائيات</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>📈 التقارير</strong> → فلتر بالشهر / الفرع / البروكر → تصدير PDF أو Excel<br><strong>لوحة المتابعة</strong>: ملخص الأرقام + ترتيب البروكرات + آخر التعديلات</div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👥</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">6. إدارة الموظفين والمديرين</div>
-            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>الموظفون</strong>: إضافة بروكر/مسوّق → مراجعة → موافقة المدير المالي<br><strong>المديرون</strong>: إضافة مدير فرع + تحديد صلاحياته (للمدير المالي فقط)</div>
-          </div>
-        </div>
-
-        {{-- Roles --}}
-        <div style="background:linear-gradient(135deg,rgba(26,173,186,.06),rgba(26,173,186,.02));border:1px solid rgba(26,173,186,.2);border-radius:12px;padding:16px">
-          <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:12px">🔐 ملخص الأدوار والصلاحيات</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px" class="sgd">
-            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
-              <div style="font-size:12px;font-weight:800;margin-bottom:6px">💼 المدير المالي</div>
-              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ كل الصفحات<br>✅ استيراد / تصدير<br>✅ إدارة المديرين<br>✅ إعدادات النظام</div>
-            </div>
-            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
-              <div style="font-size:12px;font-weight:800;margin-bottom:6px">🏢 مدير الفرع</div>
-              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ فرعه فقط<br>✅ كروت العمولة<br>✅ مركز الاتصال CC<br>⚙️ حسب الصلاحيات</div>
-            </div>
-            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
-              <div style="font-size:12px;font-weight:800;margin-bottom:6px">👁 مشاهد (Viewer)</div>
-              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ قراءة فقط<br>✅ التقارير<br>❌ لا تعديل<br>❌ لا إضافة</div>
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">⚙️</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">1. إعداد النظام</div>
+              <div class="step-desc">
+                <strong>الإعدادات</strong> → <strong>الفروع</strong>: أضف فروع الشركة وكودها<br>
+                <strong>الإعدادات</strong> → <strong>الموظفون</strong>: أضف بروكرات ومسوّقين بعمولاتهم<br>
+                <strong>الإعدادات</strong> → <strong>المديرون</strong>: أضف مديري الفروع وحدد صلاحياتهم
+              </div>
+              <span class="step-note">🔑 يُنفَّذ مرة واحدة عند بدء تشغيل النظام</span>
             </div>
           </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.06));border:1px solid rgba(34,201,122,.3)">📥</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--gr)">2. استيراد البيانات الشهرية</div>
+              <div class="step-desc">
+                القائمة الجانبية → <strong>📥 استيراد بيانات</strong> → ارفع ملف Excel<br>
+                راجع المعاينة → تأكد من صحة الأعمدة → <strong>رفع واستيراد</strong>
+              </div>
+              <span class="step-note">💡 يدعم آلاف السجلات في ملف واحد — بدون حد أقصى</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.06));border:1px solid rgba(245,166,35,.3)">🗂</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--or)">3. مراجعة كروت العمولة</div>
+              <div class="step-desc">
+                <strong>كروت العمولات</strong>: مشاهدة كل الكروت مع الفلاتر (شهر / فرع / بروكر / حالة)<br>
+                <strong>➕ كرت جديد</strong>: إضافة يدوية → أدخل رقم الحساب، الشهر، البروكر، المسوّق، الإيداع<br>
+                <strong>✏️ تعديل</strong>: ابحث برقم الحساب → عدّل → اختر سبب التعديل
+              </div>
+              <span class="step-note">📋 كل تعديل يُسجَّل تلقائياً باسم المعدّل والتاريخ والسبب</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.06));border:1px solid rgba(138,120,240,.3)">📞</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pu)">4. كروت مركز الاتصال CC</div>
+              <div class="step-desc">
+                <strong>📞 مركز الاتصال CC</strong> → قائمة الكروت المعلّقة من جميع الفروع<br>
+                <strong>قبول</strong>: الكرت ينتقل فوراً لقائمة كروت العمولة الرئيسية<br>
+                <strong>رفض</strong>: أدخل سبب الرفض — يُحفظ في سجل الحركات
+              </div>
+              <span class="step-note">👁 ترى كروت جميع الفروع — مدير الفرع يرى فرعه فقط</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(30,204,128,.2),rgba(30,204,128,.06));border:1px solid rgba(30,204,128,.3)">✅</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--gr)">5. اعتماد الموظفين الجدد</div>
+              <div class="step-desc">
+                <strong>⚙️ الإعدادات</strong> → <strong>الاعتمادات</strong>: موظفون أضافهم مدراء الفروع بانتظار موافقتك<br>
+                اعتمد أو ارفض كل موظف — بعد الاعتماد يظهر في قوائم الاختيار عند إنشاء الكروت
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">📈</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">6. التقارير والإحصائيات</div>
+              <div class="step-desc">
+                <strong>📊 لوحة المتابعة</strong>: ملخص الأرقام + ترتيب البروكرات + آخر التعديلات<br>
+                <strong>📈 التقارير</strong>: فلتر متقدم بالشهر / الفرع / البروكر → تصدير PDF أو Excel<br>
+                <strong>📊 تقرير ديناميكي</strong>: تحليل مخصص حسب أي معيار
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.06));border:1px solid rgba(138,120,240,.3)">👤</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pu)">7. إدارة المديرين والدعوات</div>
+              <div class="step-desc">
+                <strong>الإعدادات → المديرون</strong>: أضف مديراً جديداً مع تحديد صلاحياته يدوياً<br>
+                <strong>📧 دعوة مدير فرع</strong>: أضف الإيميل → يصله بريد الكتروني → يسجّل بنفسه<br>
+                يمكن تعديل الصلاحيات أو تعطيل المدير في أي وقت
+              </div>
+            </div>
+          </div>
+
+        </div>{{-- FA steps --}}
+
+        {{-- Permissions table FA --}}
+        <div style="margin-top:18px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px">
+          <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:12px">🔐 جدول الصلاحيات الكاملة — المدير المالي</div>
+          <table class="perm-table">
+            <thead><tr><th>الصفحة / الوظيفة</th><th>المدير المالي</th><th>مدير الفرع</th><th>مشاهد</th></tr></thead>
+            <tbody>
+              <tr><td>لوحة المتابعة</td><td class="perm-yes">✅ كاملة</td><td class="perm-yes">✅ فرعه فقط</td><td class="perm-yes">✅ قراءة</td></tr>
+              <tr><td>كروت العمولة</td><td class="perm-yes">✅ جميع الفروع</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-cond">⚙️ حسب صلاحية</td></tr>
+              <tr><td>إضافة كرت جديد</td><td class="perm-yes">✅ نعم</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>تعديل كرت</td><td class="perm-yes">✅ نعم</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>مركز الاتصال CC</td><td class="perm-yes">✅ جميع الفروع</td><td class="perm-yes">✅ فرعه فقط</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>استيراد Excel</td><td class="perm-yes">✅ نعم</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>تصدير PDF/Excel</td><td class="perm-yes">✅ نعم</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>التقارير</td><td class="perm-yes">✅ جميع الفروع</td><td class="perm-cond">⚙️ حسب صلاحية</td><td class="perm-cond">⚙️ حسب صلاحية</td></tr>
+              <tr><td>إدارة الموظفين</td><td class="perm-yes">✅ نعم + اعتماد</td><td class="perm-cond">⚙️ إضافة فقط</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>إدارة المديرين</td><td class="perm-yes">✅ نعم</td><td class="perm-no">❌ لا</td><td class="perm-no">❌ لا</td></tr>
+              <tr><td>الإعدادات</td><td class="perm-yes">✅ كاملة</td><td class="perm-no">❌ لا</td><td class="perm-no">❌ لا</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>{{-- gpanel-fa --}}
+
+      {{-- ═══════════ BRANCH MANAGER ═══════════ --}}
+      <div class="guide-role-panel" id="gpanel-bm">
+        <div class="role-banner" style="background:linear-gradient(135deg,rgba(34,201,122,.1),rgba(34,201,122,.04));border:1px solid rgba(34,201,122,.25)">
+          <div class="role-banner-icon">🏢</div>
+          <div>
+            <div class="role-banner-title" style="color:var(--gr)">مدير الفرع — Branch Manager</div>
+            <div class="role-banner-sub">تعمل على فرعك المحدد فقط — الصلاحيات تحددها الإدارة المالية وقد تختلف من مدير لآخر</div>
+          </div>
         </div>
 
-      </div>{{-- steps --}}
+        {{-- Flowchart BM --}}
+        <div class="flow-diagram">
+          <div class="flow-node" style="background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.3)">
+            <div class="flow-node-ico">🔐</div>
+            <div class="flow-node-lbl" style="color:var(--gr)">تسجيل الدخول</div>
+            <div class="flow-node-sub">بيانات فرعك</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">🗂</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">كروت الفرع</div>
+            <div class="flow-node-sub">عرض / إضافة</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(138,120,240,.1);border:1px solid rgba(138,120,240,.3)">
+            <div class="flow-node-ico">📞</div>
+            <div class="flow-node-lbl" style="color:var(--pu)">مركز الاتصال</div>
+            <div class="flow-node-sub">قبول / رفض</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3)">
+            <div class="flow-node-ico">👥</div>
+            <div class="flow-node-lbl" style="color:var(--or)">إضافة موظفين</div>
+            <div class="flow-node-sub">بانتظار اعتماد</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">📊</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">تقارير الفرع</div>
+            <div class="flow-node-sub">إذا مسموح</div>
+          </div>
+        </div>
+
+        <div class="guide-steps">
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.06));border:1px solid rgba(34,201,122,.3)">🔐</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--gr)">1. تسجيل الدخول</div>
+              <div class="step-desc">
+                ادخل ببيانات حسابك التي أرسلتها الإدارة المالية على بريدك الإلكتروني<br>
+                إذا كانت هذه أول مرة → سيُطلب منك تغيير كلمة المرور
+              </div>
+              <span class="step-note">📧 إذا لم تستلم البيانات تواصل مع المدير المالي</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">🗂</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">2. مراجعة كروت العمولة (فرعك فقط)</div>
+              <div class="step-desc">
+                <strong>كروت العمولات</strong>: ترى كروت فرعك فقط — مصنّفة بالشهر / الحالة / النوع<br>
+                يمكنك إضافة كرت جديد أو تعديل موجود (إذا كانت لديك الصلاحية)
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.06));border:1px solid rgba(138,120,240,.3)">📞</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pu)">3. معالجة كروت مركز الاتصال CC</div>
+              <div class="step-desc">
+                <strong>📞 مركز الاتصال</strong>: كروت واردة من العملاء خاصة بفرعك<br>
+                اضغط <strong>قبول</strong> → الكرت ينتقل مباشرة لقائمة كروت العمولة<br>
+                اضغط <strong>رفض</strong> → أدخل سبب الرفض
+              </div>
+              <span class="step-note">⏰ راجع قسم CC يومياً لضمان معالجة الكروت في الوقت المناسب</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.06));border:1px solid rgba(245,166,35,.3)">👥</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--or)">4. إضافة موظفين للفرع</div>
+              <div class="step-desc">
+                <strong>الإعدادات → الموظفون</strong>: أضف بروكراً أو مسوّقاً جديداً<br>
+                سيُرسل طلب للمدير المالي للاعتماد — بعد الاعتماد يظهر في قوائم الكروت
+              </div>
+              <span class="step-note">⏳ الموظف لا يظهر في الكروت إلا بعد موافقة المدير المالي</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">📊</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">5. التقارير (إذا كانت مفعّلة)</div>
+              <div class="step-desc">
+                إذا منحك المدير المالي صلاحية التقارير → تستطيع عرض وتصدير تقارير فرعك<br>
+                فلتر بالشهر والبروكر وتصدير PDF / Excel
+              </div>
+            </div>
+          </div>
+
+        </div>{{-- BM steps --}}
+      </div>{{-- gpanel-bm --}}
+
+      {{-- ═══════════ CALL CENTER ═══════════ --}}
+      <div class="guide-role-panel" id="gpanel-cc">
+        <div class="role-banner" style="background:linear-gradient(135deg,rgba(138,120,240,.1),rgba(138,120,240,.04));border:1px solid rgba(138,120,240,.25)">
+          <div class="role-banner-icon">📞</div>
+          <div>
+            <div class="role-banner-title" style="color:var(--pu)">مركز الاتصال — Call Center CC</div>
+            <div class="role-banner-sub">وظيفتك الرئيسية: إدخال كروت العملاء الجدد عبر CC وإرسالها للمراجعة من مدير الفرع</div>
+          </div>
+        </div>
+
+        {{-- Flowchart CC --}}
+        <div class="flow-diagram">
+          <div class="flow-node" style="background:rgba(138,120,240,.1);border:1px solid rgba(138,120,240,.3)">
+            <div class="flow-node-ico">📞</div>
+            <div class="flow-node-lbl" style="color:var(--pu)">استقبال الكرت</div>
+            <div class="flow-node-sub">من العميل</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">➕</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">إدخال البيانات</div>
+            <div class="flow-node-sub">رقم حساب + بيانات</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3)">
+            <div class="flow-node-ico">⏳</div>
+            <div class="flow-node-lbl" style="color:var(--or)">بانتظار المراجعة</div>
+            <div class="flow-node-sub">مدير الفرع</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.3)">
+            <div class="flow-node-ico">✅</div>
+            <div class="flow-node-lbl" style="color:var(--gr)">قبول المدير</div>
+            <div class="flow-node-sub">يدخل القائمة الرئيسية</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3)">
+            <div class="flow-node-ico">📊</div>
+            <div class="flow-node-lbl" style="color:var(--pri2)">الكرت نشط</div>
+            <div class="flow-node-sub">في النظام</div>
+          </div>
+        </div>
+
+        <div class="guide-steps">
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.06));border:1px solid rgba(138,120,240,.3)">📞</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pu)">1. فتح قسم مركز الاتصال</div>
+              <div class="step-desc">
+                من القائمة الجانبية → <strong>📞 مركز الاتصال</strong><br>
+                هنا ترى جميع الكروت الواردة المنتظرة للمراجعة
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">➕</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">2. إدخال كرت جديد من CC</div>
+              <div class="step-desc">
+                <strong>➕ كرت جديد</strong> → أدخل:<br>
+                • رقم الحساب (Account Number)<br>
+                • الشهر<br>
+                • الفرع المعني<br>
+                • نوع الحساب (NEW جديد / SUB فرعي)<br>
+                • البروكر والمسوّق المسؤولَين<br>
+                • مبالغ الإيداع والعمولات
+              </div>
+              <span class="step-note">📌 الكرت يُرسل تلقائياً لمراجعة مدير الفرع</span>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.06));border:1px solid rgba(245,166,35,.3)">⏳</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--or)">3. متابعة حالة الكروت</div>
+              <div class="step-desc">
+                في قائمة CC ترى حالة كل كرت: <strong>معلّق</strong> أو <strong>مقبول</strong> أو <strong>مرفوض مع السبب</strong><br>
+                إذا رُفض الكرت → اقرأ سبب الرفض وأعد الإدخال بعد التصحيح
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.06));border:1px solid rgba(34,201,122,.3)">✅</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--gr)">4. بعد القبول</div>
+              <div class="step-desc">
+                عند قبول مدير الفرع للكرت → يظهر في قائمة <strong>كروت العمولات الرئيسية</strong> تلقائياً<br>
+                يمكنك البحث عنه برقم الحساب للتحقق
+              </div>
+            </div>
+          </div>
+
+        </div>{{-- CC steps --}}
+      </div>{{-- gpanel-cc --}}
+
+      {{-- ═══════════ VIEWER ═══════════ --}}
+      <div class="guide-role-panel" id="gpanel-vw">
+        <div class="role-banner" style="background:linear-gradient(135deg,rgba(90,128,160,.1),rgba(90,128,160,.04));border:1px solid rgba(90,128,160,.25)">
+          <div class="role-banner-icon">👁</div>
+          <div>
+            <div class="role-banner-title" style="color:var(--mu)">مشاهد — Viewer</div>
+            <div class="role-banner-sub">صلاحية قراءة فقط — يمكنك مشاهدة البيانات والتقارير دون إمكانية التعديل أو الإضافة</div>
+          </div>
+        </div>
+
+        <div class="guide-steps">
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(90,128,160,.2),rgba(90,128,160,.06));border:1px solid rgba(90,128,160,.3)">🔐</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--mu)">1. تسجيل الدخول</div>
+              <div class="step-desc">ادخل ببيانات حسابك — إذا أول مرة غيّر كلمة المرور المؤقتة</div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">📊</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">2. مشاهدة لوحة المتابعة</div>
+              <div class="step-desc">
+                ترى ملخص الأرقام: إجمالي الكروت، الإيداعات، ترتيب البروكرات<br>
+                جميع الأرقام محدّثة لحظياً من قاعدة البيانات
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">🗂</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">3. تصفح كروت العمولة (إذا مسموح)</div>
+              <div class="step-desc">
+                إذا منحك المدير المالي صلاحية الكروت → تستطيع عرضها وفلترتها<br>
+                <strong>لا يمكنك</strong> إضافة أو تعديل أي كرت
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-icon-box" style="background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.06));border:1px solid rgba(26,173,186,.3)">📈</div>
+            <div class="step-body">
+              <div class="step-title" style="color:var(--pri2)">4. التقارير (إذا مسموح)</div>
+              <div class="step-desc">
+                إذا منحك المدير المالي صلاحية التقارير → تستطيع عرض وتصدير التقارير<br>
+                فلتر بالشهر / الفرع / البروكر وتصدير PDF أو Excel
+              </div>
+            </div>
+          </div>
+
+        </div>{{-- VW steps --}}
+      </div>{{-- gpanel-vw --}}
+
+      <script>
+      /* Guide tab switcher */
+      function switchGuideTab(role) {
+        ['fa','bm','cc','vw'].forEach(r => {
+          document.getElementById('gtab-'   + r)?.classList.toggle('active', r === role);
+          document.getElementById('gpanel-' + r)?.classList.toggle('active', r === role);
+        });
+      }
+      /* Auto-select based on current user role */
+      (function(){
+        const role = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER.role) || 'fa';
+        if      (role === 'finance_admin')   switchGuideTab('fa');
+        else if (role === 'branch_manager')  switchGuideTab('bm');
+        else                                 switchGuideTab('vw');
+      })();
+      </script>
+
     </div>{{-- section-guide --}}
 
   </div>{{-- content panel --}}

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\{NewManagerMail, ManagerPasswordResetMail};
+use App\Mail\{NewManagerMail, ManagerPasswordResetMail, ManagerInviteMail};
 use App\Models\{User, UserPermission, Branch, ActivityLog, ManagerInvite};
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{Hash, DB, Mail, Validator};
@@ -246,10 +246,21 @@ class ManagerController extends Controller
             'branch_id' => $invite->branch_id,
         ]);
 
+        // Send invitation email to the manager
+        $emailSent = false;
+        try {
+            $branchName = $invite->branch?->name_ar;
+            Mail::to($invite->email)->send(new ManagerInviteMail($invite->email, $branchName, $invite->role));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            \Log::warning('ManagerInviteMail failed: ' . $e->getMessage());
+        }
+
         return response()->json([
-            'success' => true,
-            'message' => 'تمت إضافة الإيميل للقائمة المسموح بها.',
-            'data'    => $invite->load('branch'),
+            'success'    => true,
+            'email_sent' => $emailSent,
+            'message'    => 'تمت إضافة الإيميل للقائمة المسموح بها.' . ($emailSent ? ' تم إرسال بريد الدعوة.' : ' (البريد لم يُرسل.)'),
+            'data'       => $invite->load('branch'),
         ], 201);
     }
 

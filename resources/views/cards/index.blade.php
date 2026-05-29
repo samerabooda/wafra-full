@@ -2,10 +2,6 @@
 @section('title', 'كروت العمولات')
 @section('page-title', 'كروت العمولات')
 
-@section('topbar-actions')
-<a href="{{ route('cards.create') }}" class="tb-btn primary" id="idx-btn-new">➕ كرت جديد</a>
-@endsection
-
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'index'])

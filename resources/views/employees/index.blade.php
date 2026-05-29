@@ -6,6 +6,15 @@
 <button class="tb-btn primary" onclick="openModal('modal-add-emp')">➕ إضافة موظف</button>
 @endsection
 
+<style>
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:7px;border:1px solid var(--brd1);
+  background:var(--bg3);cursor:pointer;font-size:13px;
+  transition:all .18s;color:var(--mu)}
+.icon-btn:hover{border-color:var(--pri);background:rgba(26,173,186,.12);color:var(--pri2)}
+.icon-btn.danger:hover{border-color:var(--re);background:rgba(232,69,69,.1);color:var(--re)}
+</style>
+
 @section('content')
 
 @if(auth()->user()?->isFinanceAdmin())
@@ -33,13 +42,15 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>الاسم</th><th>الدور</th><th>الفرع</th>
-          <th>ع. بروكر</th><th>ع. تسويق</th>
-          <th>الحالة</th><th>تمت إضافته</th><th>إجراءات</th>
+          <th style="min-width:140px">الموظف</th>
+          <th style="min-width:80px">الفرع</th>
+          <th style="min-width:120px">العمولات</th>
+          <th style="min-width:90px">الحالة</th>
+          <th style="width:70px;text-align:center">إجراءات</th>
         </tr>
       </thead>
       <tbody id="emp-tbody">
-        <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">جاري التحميل...</td></tr>
+        <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mu)">جاري التحميل...</td></tr>
       </tbody>
     </table>
   </div>
@@ -127,18 +138,24 @@ async function loadEmps() {
   }
 
   document.getElementById('emp-tbody').innerHTML = emps.map(e => `
-    <tr style="${e.status==='pending'?'opacity:.8;border-right:3px solid var(--or)':''}">
-      <td style="font-weight:700">${esc(e.name)}</td>
-      <td>${esc(roleLabels[e.role] || e.role)}</td>
-      <td style="color:var(--mu)">${esc(e.branch?.name_ar || '—')}</td>
-      <td class="mono c-blue">$${esc(String(e.broker_commission))}/lot</td>
-      <td class="mono c-green">$${esc(String(e.marketing_commission))}/lot</td>
-      <td>${statusBadge(e.status)}</td>
-      <td style="color:var(--mu);font-size:11px">${esc(e.added_by?.name || '—')}</td>
+    <tr style="${e.status==='pending'?'opacity:.82;border-right:3px solid var(--or)':''}">
       <td>
-        ${!e.is_base ? `<button class="btn btn-ghost btn-sm" onclick="deleteEmp(${e.id})" data-name="${esc(e.name)}">🗑️</button>` : '<span style="font-size:10px;color:var(--mu)">أساسي</span>'}
+        <div style="font-weight:700;font-size:13px">${esc(e.name)}</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(roleLabels[e.role] || e.role)}</div>
+        ${e.email ? `<div style="font-size:10px;color:var(--mu);direction:ltr">${esc(e.email)}</div>` : ''}
       </td>
-    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">لا يوجد موظفون</td></tr>';
+      <td style="font-size:12px;color:var(--mu)">${esc(e.branch?.name_ar || '—')}</td>
+      <td>
+        <span class="mono c-blue" style="font-size:11px">بروكر: $${esc(String(e.broker_commission))}</span><br>
+        <span class="mono c-green" style="font-size:11px">تسويق: $${esc(String(e.marketing_commission))}</span>
+      </td>
+      <td>${statusBadge(e.status)}</td>
+      <td style="text-align:center">
+        ${!e.is_base
+          ? `<button class="icon-btn danger" onclick="deleteEmp(${e.id})" data-name="${esc(e.name)}" title="حذف الموظف">🗑</button>`
+          : '<span style="font-size:10px;color:var(--mu)">أساسي</span>'}
+      </td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mu)">لا يوجد موظفون</td></tr>';
 }
 
 async function loadBranches() {
