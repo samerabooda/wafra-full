@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'كروت CC الواردة')
+@section('title', 'CC Cards Inbox')
 @section('page-title', 'CC Cards Inbox')
 
 @section('content')

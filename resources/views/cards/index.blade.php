@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'كروت العمولات')
-@section('page-title', 'كروت العمولات')
+@section('title', 'Commission Cards')
+@section('page-title', 'Commission Cards')
 
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">

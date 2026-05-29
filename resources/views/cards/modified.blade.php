@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','الحسابات المعدّلة')
-@section('page-title','الحسابات المعدّلة')
+@section('title','Modified Accounts')
+@section('page-title','Modified Accounts')
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'modified'])

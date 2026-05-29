@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','مركز الاتصال')
-@section('page-title','مركز الاتصال')
+@section('title','Call Center')
+@section('page-title','Call Center')
 
 @section('topbar-actions')
 <button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openModal('modal-cc-create')">➕ كرت جديد</button>

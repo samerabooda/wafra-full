@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','الموظفون')
-@section('page-title','الموظفون')
+@section('title','Employees')
+@section('page-title','Employees')
 
 @section('topbar-actions')
 <button class="tb-btn primary" id="emp-topbar-add-btn" onclick="openModal('modal-add-emp')">➕ إضافة موظف</button>

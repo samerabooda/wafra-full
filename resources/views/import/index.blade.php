@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title','استيراد بيانات')
+@section('title','Import Data')
 @section('page-title','Import Excel Data')
 @section('content')
 

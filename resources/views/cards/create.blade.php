@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'كرت عمولة جديد')
-@section('page-title', 'إنشاء كرت عمولة جديد')
+@section('title', 'New Commission Card')
+@section('page-title', 'New Commission Card')
 
 @push('styles')
 <style>

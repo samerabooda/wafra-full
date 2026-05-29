@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','تعديل حساب')
-@section('page-title','تعديل حساب موجود')
+@section('title','Edit Account')
+@section('page-title','Edit Account')
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'edit'])

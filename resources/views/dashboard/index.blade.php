@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title', 'لوحة المتابعة')
-@section('page-title', 'لوحة المتابعة')
+@section('title', 'Dashboard')
+@section('page-title', 'Dashboard')
 
 @section('content')
 <!-- KPI Cards -->

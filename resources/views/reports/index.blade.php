@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','التقارير')
-@section('page-title','التقارير الديناميكية')
+@section('title','Reports')
+@section('page-title','Reports')
 
 @push('styles')
 <style>
