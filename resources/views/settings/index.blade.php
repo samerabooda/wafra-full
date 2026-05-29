@@ -297,7 +297,123 @@
           <div class="panel-body" id="perm-bm-list"></div>
         </div>
       </div>
-    </div>
+    </div>{{-- section-permissions --}}
+
+    {{-- ── GUIDE — Workflow & How-to ── --}}
+    <div id="section-guide" class="settings-section" style="display:none">
+      <div style="margin-bottom:24px">
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">📖 دليل تشغيل النظام</h2>
+        <p style="font-size:13px;color:var(--mu)">خطوات العمل اليومي وكيفية استخدام كل قسم في منصة وفرة الخليجية</p>
+      </div>
+
+      {{-- Visual Workflow Diagram --}}
+      <div style="margin-bottom:20px;padding:20px;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px">
+        <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:14px;text-align:center">🔄 مسار العمل — Workflow Diagram</div>
+        <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
+            <span style="font-size:22px">📥</span>
+            <span style="font-size:10px;font-weight:700;color:var(--pri2)">استيراد / إدخال</span>
+            <span style="font-size:9px;color:var(--mu)">Excel أو يدوي</span>
+          </div>
+          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
+            <span style="font-size:22px">🗂</span>
+            <span style="font-size:10px;font-weight:700;color:var(--gr)">كروت العمولة</span>
+            <span style="font-size:9px;color:var(--mu)">إضافة / تعديل</span>
+          </div>
+          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(138,120,240,.1);border:1px solid rgba(138,120,240,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
+            <span style="font-size:22px">📞</span>
+            <span style="font-size:10px;font-weight:700;color:var(--pu)">مركز الاتصال CC</span>
+            <span style="font-size:9px;color:var(--mu)">قبول / رفض</span>
+          </div>
+          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
+            <span style="font-size:22px">✏️</span>
+            <span style="font-size:10px;font-weight:700;color:var(--or)">المراجعة</span>
+            <span style="font-size:9px;color:var(--mu)">تدقيق التعديلات</span>
+          </div>
+          <span style="font-size:18px;color:var(--mu);padding:0 4px">→</span>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);border-radius:12px;padding:12px 14px;min-width:90px;text-align:center">
+            <span style="font-size:22px">📈</span>
+            <span style="font-size:10px;font-weight:700;color:var(--pri2)">التقارير</span>
+            <span style="font-size:9px;color:var(--mu)">PDF / Excel</span>
+          </div>
+        </div>
+      </div>
+
+      {{-- Steps --}}
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🗂</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">1. إضافة كرت عمولة جديد</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7">اضغط <strong>➕ كرت جديد</strong> → أدخل رقم الحساب، الشهر، البروكر، المسوّق، الإيداع، النوع (NEW/SUB) → <strong>حفظ</strong></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">✏️</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--or);margin-bottom:5px">2. تعديل كرت موجود</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7">اضغط <strong>✏️ تعديل</strong> → ابحث برقم الحساب → عدّل البيانات → اختر سبب التعديل → <strong>حفظ</strong><br><span style="color:var(--mu);font-size:11px">التعديل يُسجَّل تلقائياً مع اسم المعدّل والتاريخ</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(34,201,122,.2),rgba(34,201,122,.08));border:1px solid rgba(34,201,122,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📥</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--gr);margin-bottom:5px">3. استيراد بيانات Excel (للمدير المالي)</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7">القائمة الجانبية → <strong>📥 استيراد بيانات</strong> → ارفع ملف Excel → تأكد من المعاينة → <strong>رفع واستيراد</strong><br><span style="color:var(--mu);font-size:11px">لا حد أقصى للصفوف — يمكن رفع آلاف السجلات في ملف واحد</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(138,120,240,.2),rgba(138,120,240,.08));border:1px solid rgba(138,120,240,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--pu);margin-bottom:5px">4. كروت مركز الاتصال CC</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>📞 مركز الاتصال</strong> → كروت واردة → قبول (ينتقل للقائمة الرئيسية) أو رفض مع السبب<br><span style="color:var(--mu);font-size:11px">مدير الفرع يرى فرعه فقط</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📈</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">5. التقارير والإحصائيات</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>📈 التقارير</strong> → فلتر بالشهر / الفرع / البروكر → تصدير PDF أو Excel<br><strong>لوحة المتابعة</strong>: ملخص الأرقام + ترتيب البروكرات + آخر التعديلات</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;background:var(--bg2);border:1px solid var(--brd1);border-radius:12px;padding:16px;align-items:flex-start">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(26,173,186,.2),rgba(26,173,186,.08));border:1px solid rgba(26,173,186,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👥</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:5px">6. إدارة الموظفين والمديرين</div>
+            <div style="font-size:12px;color:var(--tx);line-height:1.7"><strong>الموظفون</strong>: إضافة بروكر/مسوّق → مراجعة → موافقة المدير المالي<br><strong>المديرون</strong>: إضافة مدير فرع + تحديد صلاحياته (للمدير المالي فقط)</div>
+          </div>
+        </div>
+
+        {{-- Roles --}}
+        <div style="background:linear-gradient(135deg,rgba(26,173,186,.06),rgba(26,173,186,.02));border:1px solid rgba(26,173,186,.2);border-radius:12px;padding:16px">
+          <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:12px">🔐 ملخص الأدوار والصلاحيات</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px" class="sgd">
+            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
+              <div style="font-size:12px;font-weight:800;margin-bottom:6px">💼 المدير المالي</div>
+              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ كل الصفحات<br>✅ استيراد / تصدير<br>✅ إدارة المديرين<br>✅ إعدادات النظام</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
+              <div style="font-size:12px;font-weight:800;margin-bottom:6px">🏢 مدير الفرع</div>
+              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ فرعه فقط<br>✅ كروت العمولة<br>✅ مركز الاتصال CC<br>⚙️ حسب الصلاحيات</div>
+            </div>
+            <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:10px;padding:12px">
+              <div style="font-size:12px;font-weight:800;margin-bottom:6px">👁 مشاهد (Viewer)</div>
+              <div style="font-size:11px;color:var(--mu);line-height:1.8">✅ قراءة فقط<br>✅ التقارير<br>❌ لا تعديل<br>❌ لا إضافة</div>
+            </div>
+          </div>
+        </div>
+
+      </div>{{-- steps --}}
+    </div>{{-- section-guide --}}
 
   </div>{{-- content panel --}}
 </div>{{-- shell --}}
@@ -582,8 +698,8 @@
   </div>
 </div>
 
-{{-- ── Workflow Guide Section (inside settings content panel) ── --}}
-<div id="section-guide" class="settings-section" style="display:none;padding:0">
+{{-- (duplicate removed) --}}
+<div id="section-guide-old-REMOVED" style="display:none">
   <div style="margin-bottom:24px">
     <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">📖 دليل تشغيل النظام</h2>
     <p style="font-size:13px;color:var(--mu)">خطوات العمل اليومي وكيفية استخدام كل قسم في منصة وفرة الخليجية</p>
@@ -734,8 +850,8 @@
       </div>
     </div>
 
-  </div>{{-- end workflow steps --}}
-</div>{{-- end section-guide --}}
+  </div>{{-- end old duplicate (empty) --}}
+</div>{{-- end old duplicate --}}
 
 @endsection
 
@@ -1367,7 +1483,7 @@ function _mgrRole(role) {
 /* ─── Section navigation ─────────────────────────────────── */
 function showSection(name) {
   document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
-  ['general','branches','employees','managers','approvals','permissions'].forEach(id => {
+  ['general','branches','employees','managers','approvals','permissions','guide'].forEach(id => {
     const btn = document.getElementById('snav-' + id);
     const ico = document.getElementById('snav-ico-' + id);
     if (btn) { btn.style.background = 'none'; btn.style.border = 'none'; }
@@ -1380,7 +1496,7 @@ function showSection(name) {
   if (navBtn)  { navBtn.style.background = 'rgba(26,173,186,.15)'; navBtn.style.border = '1px solid rgba(26,173,186,.25)'; }
   if (navIco)  { navIco.style.background = 'rgba(26,173,186,.25)'; navIco.style.borderColor = 'rgba(26,173,186,.5)'; }
   _currentSection = name;
-  const loaders = { general:loadGeneralSection, branches:loadBranchesSection, employees:loadEmployeesSection, managers:loadManagersSection, approvals:loadApprovalsSection, permissions:function(){} };
+  const loaders = { general:loadGeneralSection, branches:loadBranchesSection, employees:loadEmployeesSection, managers:loadManagersSection, approvals:loadApprovalsSection, permissions:function(){}, guide:function(){} };
   if (loaders[name]) loaders[name]();
 }
 
