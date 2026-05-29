@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','بحث عن حساب')
-@section('page-title','بحث عن رقم حساب')
+@section('title','Account Search')
+@section('page-title','Account Search')
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'search'])
@@ -61,6 +61,7 @@ const SRCH = {
     thStatus:'الحالة', thType:'نوع الحساب',
     stMod:'✏️ معدّل', stNormal:'عادي',
     btnEdit:'✏️ تعديل',
+    totalComm:'إجمالي العمولة',
   },
   en: {
     lbl:'Account Number',
@@ -79,6 +80,7 @@ const SRCH = {
     thStatus:'Status', thType:'Type',
     stMod:'✏️ Modified', stNormal:'Active',
     btnEdit:'✏️ Edit',
+    totalComm:'Total Commission',
   }
 };
 
@@ -213,7 +215,7 @@ function renderResults(data, term) {
             <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission2||0}/lot</div>
           </div>` : ''}
           <div style="background:rgba(245,166,35,.08);border-radius:10px;padding:12px 14px;border:1px solid rgba(245,166,35,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">💎 إجمالي العمولة</div>
+            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">💎 ${s('totalComm')}</div>
             <div class="badge badge-orange" style="font-size:14px;padding:6px 14px">$${totalComm}/lot</div>
           </div>
         </div>
