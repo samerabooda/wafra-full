@@ -129,50 +129,54 @@
 <div class="panel" style="padding:14px 16px;margin-bottom:14px" id="shared-filters">
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
     <div>
-      <div class="filter-label">من شهر</div>
+      <div class="filter-label" id="rfl-from">من شهر</div>
       <select id="rf-from" class="form-control" style="min-width:120px"><option value="">—</option></select>
     </div>
     <div>
-      <div class="filter-label">إلى شهر</div>
+      <div class="filter-label" id="rfl-to">إلى شهر</div>
       <select id="rf-to" class="form-control" style="min-width:120px"><option value="">—</option></select>
     </div>
     <div>
-      <div class="filter-label">البروكر</div>
-      <select id="rf-broker" class="form-control" style="min-width:140px"><option value="">الكل</option></select>
+      <div class="filter-label" id="rfl-broker">البروكر</div>
+      <select id="rf-broker" class="form-control" style="min-width:140px"><option value="" id="rfl-all-brokers">الكل</option></select>
     </div>
     @if(auth()->user()?->isFinanceAdmin())
     <div>
-      <div class="filter-label">الفرع</div>
-      <select id="rf-branch" class="form-control" style="min-width:140px"><option value="">كل الفروع</option></select>
+      <div class="filter-label" id="rfl-branch">الفرع</div>
+      <select id="rf-branch" class="form-control" style="min-width:140px"><option value="" id="rfl-all-branches">كل الفروع</option></select>
     </div>
     @endif
     <div>
-      <div class="filter-label">الحالة</div>
+      <div class="filter-label" id="rfl-status">الحالة</div>
       <select id="rf-status" class="form-control">
-        <option value="">الكل</option>
-        <option value="modified">معدّلة فقط</option>
-        <option value="new_added">مضافة جديدة فقط</option>
-        <option value="active">عادي فقط</option>
+        <option value="" id="rfl-status-all">الكل</option>
+        <option value="modified" id="rfl-status-mod">معدّلة فقط</option>
+        <option value="new_added" id="rfl-status-new">مضافة جديدة فقط</option>
+        <option value="active" id="rfl-status-act">عادي فقط</option>
       </select>
     </div>
     <div>
-      <div class="filter-label">النوع</div>
-      <select id="rf-kind" class="form-control"><option value="">الكل</option><option value="new">جديد</option><option value="sub">فرعي</option></select>
+      <div class="filter-label" id="rfl-kind">النوع</div>
+      <select id="rf-kind" class="form-control">
+        <option value="" id="rfl-kind-all">الكل</option>
+        <option value="new" id="rfl-kind-new">جديد</option>
+        <option value="sub" id="rfl-kind-sub">فرعي</option>
+      </select>
     </div>
     <div>
-      <div class="filter-label">المصدر</div>
+      <div class="filter-label" id="rfl-source">المصدر</div>
       <select id="rf-source" class="form-control">
-        <option value="">الكل</option>
-        <option value="regular">عادي</option>
-        <option value="cc">CC فقط</option>
+        <option value="" id="rfl-src-all">الكل</option>
+        <option value="regular" id="rfl-src-reg">عادي</option>
+        <option value="cc" id="rfl-src-cc">CC فقط</option>
       </select>
     </div>
     <div>
-      <div class="filter-label">حد أدنى $</div>
+      <div class="filter-label" id="rfl-min">حد أدنى $</div>
       <input type="number" id="rf-min" class="form-control" style="width:80px" value="0" min="0">
     </div>
-    <button class="btn btn-primary" onclick="generateReport()">⚡ توليد التقرير</button>
-    <button class="btn btn-ghost" onclick="clearRptFilters()">✕ مسح</button>
+    <button class="btn btn-primary" id="rpt-gen-btn" onclick="generateReport()">⚡ توليد التقرير</button>
+    <button class="btn btn-ghost" id="rpt-clr-btn" onclick="clearRptFilters()">✕ مسح</button>
   </div>
 </div>
 
@@ -603,6 +607,8 @@ let allEmployees = [];
 let allBranches  = [];
 let dashAutoLoaded = false;
 
+function rL() { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
+
 const COLORS = ['#2E86AB','#22C97A','#F5A623','#7B68EE','#E05050','#3A9DB5','#1A5F7A','#26D4E8','#FF6B6B','#4ECDC4','#95B8D1','#E8A838'];
 const tc = () => 'var(--mu)';
 const gc = () => 'rgba(255,255,255,.05)';
@@ -705,14 +711,14 @@ async function generateReport(){
   if(min && parseInt(min)>0) params.set('min_deposit',min);
   params.set('per_page',2000);
 
-  const loading = toast('⚡ جارٍ توليد التقرير…','info');
+  const loading = toast(rL()==='en'?'⚡ Generating report…':'⚡ جارٍ توليد التقرير…','info');
   const r=await api('GET','/cards/report?'+params);
-  if(!r.success){ toast('خطأ في توليد التقرير','error'); return; }
-  if(r.records_limited) toast('⚠️ محدود بـ 2000 سجل — ضيّق الفلتر للحصول على المزيد','warning');
+  if(!r.success){ toast(rL()==='en'?'Error generating report':'خطأ في توليد التقرير','error'); return; }
+  if(r.records_limited) toast(rL()==='en'?'⚠️ Limited to 2000 records — narrow your filters for more':'⚠️ محدود بـ 2000 سجل — ضيّق الفلتر للحصول على المزيد','warning');
 
   RD=r.data||[];
   renderTable(RD, r.summary||{});
-  toast(`✅ تقرير: ${RD.length} سجل`,'success');
+  toast(rL()==='en'?`✅ Report: ${RD.length} records`:`✅ تقرير: ${RD.length} سجل`,'success');
 
   // Rebuild whichever tab is active
   if(curTab==='dash')        { buildDashboard(); }
@@ -737,12 +743,12 @@ function renderTable(data, summary){
   const modCount  = data.filter(c=>c.status==='modified').length;
   const newCount  = data.filter(c=>c.status==='new_added').length;
 
-  document.getElementById('rpt-count').textContent = data.length+' سجل';
+  document.getElementById('rpt-count').textContent = data.length+(rL()==='en'?' records':' سجل');
   document.getElementById('t-k-total').textContent = data.length.toLocaleString();
   document.getElementById('t-k-dep').textContent   = fmtK(totalDep);
   document.getElementById('t-k-mon').textContent   = fmtK(totalMon);
   document.getElementById('t-k-mod').textContent   = modCount.toLocaleString();
-  document.getElementById('t-k-new-sub').textContent= 'مضافة جديدة: '+newCount;
+  document.getElementById('t-k-new-sub').textContent= (rL()==='en'?'New Added: ':'مضافة جديدة: ')+newCount;
 
   document.getElementById('rpt-tbody').innerHTML = data.map((c,i)=>{
     const isCC      = !!c.cc_status;
@@ -752,7 +758,7 @@ function renderTable(data, summary){
     return `<tr class="${rowCls}">
       <td style="color:var(--mu);font-size:10px">${i+1}</td>
       <td><span class="ac-num">#${c.account_number}</span></td>
-      <td>${isCC?`<span class="cc-pill">CC</span>`:'<span style="font-size:10px;color:var(--mu)">عادي</span>'}</td>
+      <td>${isCC?`<span class="cc-pill">CC</span>`:`<span style="font-size:10px;color:var(--mu)">${rL()==='en'?'Regular':'عادي'}</span>`}</td>
       <td>
         <div style="font-weight:700;color:var(--pri2)">${c.broker?.name||'—'}</div>
         <div class="mono ${commColor(c.broker_commission)}" style="font-size:10px">${fmtComm(c.broker_commission)}</div>
@@ -775,22 +781,23 @@ function renderTable(data, summary){
       <td><span class="badge ${c.account_kind==='new'?'badge-green':'badge-blue'}">${c.account_kind==='new'?'NEW':'SUB'}</span></td>
       <td style="color:var(--mu);font-size:11px">${c.month}</td>
       <td style="font-size:11px">${brName}</td>
-      <td>${c.status==='modified'?'<span class="badge badge-orange">✏️ معدّل</span>':c.status==='new_added'?'<span class="badge badge-green">🆕 جديد</span>':'<span class="badge badge-blue" style="opacity:.5">عادي</span>'}</td>
+      <td>${c.status==='modified'?`<span class="badge badge-orange">✏️ ${rL()==='en'?'Modified':'معدّل'}</span>`:c.status==='new_added'?`<span class="badge badge-green">🆕 ${rL()==='en'?'New Added':'جديد'}</span>`:`<span class="badge badge-blue" style="opacity:.5">${rL()==='en'?'Active':'عادي'}</span>`}</td>
     </tr>`;
   }).join('');
 
   // Footer totals
   const avgBroker = data.length ? (data.reduce((a,c)=>a+parseFloat(c.broker_commission||0),0)/data.length).toFixed(2) : '—';
   const avgMkt    = data.length ? (data.reduce((a,c)=>a+parseFloat(c.marketer_commission||0),0)/data.length).toFixed(2) : '—';
+  const isEn = rL()==='en';
   document.getElementById('rpt-tfoot').innerHTML = `
     <tr style="background:var(--inp-bg);font-weight:700;font-size:11px">
       <td colspan="8" style="padding:8px 12px;color:var(--mu)">
-        إجمالي — متوسط ع.بروكر: <span class="${commColor(avgBroker)}">${avgBroker}$/lot</span>
-        &nbsp;|&nbsp; متوسط ع.مسوّق: <span class="${commColor(avgMkt)}">${avgMkt}$/lot</span>
+        ${isEn?'Totals':'إجمالي'} — ${isEn?'Avg Broker Comm.':'متوسط ع.بروكر'}: <span class="${commColor(avgBroker)}">${avgBroker}$/lot</span>
+        &nbsp;|&nbsp; ${isEn?'Avg Marketer Comm.':'متوسط ع.مسوّق'}: <span class="${commColor(avgMkt)}">${avgMkt}$/lot</span>
       </td>
       <td class="mono c-blue" style="padding:8px 12px">${fmtK(totalDep)}</td>
       <td class="mono c-green" style="padding:8px 12px">${fmtK(totalMon)}</td>
-      <td colspan="4" style="padding:8px 12px;color:var(--mu)">معدّلة: ${modCount} | مضافة: ${newCount} | CC: ${data.filter(c=>!!c.cc_status).length}</td>
+      <td colspan="4" style="padding:8px 12px;color:var(--mu)">${isEn?'Modified':'معدّلة'}: ${modCount} | ${isEn?'Added':'مضافة'}: ${newCount} | CC: ${data.filter(c=>!!c.cc_status).length}</td>
     </tr>`;
 }
 
@@ -845,7 +852,7 @@ async function buildDashboard(){
   // Broker analysis
   const brokerCnt={},brokerDep={};
   data.forEach(c=>{
-    const n=c.broker?.name||'غير محدد';
+    const n=c.broker?.name||(rL()==='en'?'Unassigned':'غير محدد');
     brokerCnt[n]=(brokerCnt[n]||0)+1;
     brokerDep[n]=(brokerDep[n]||0)+parseFloat(c.initial_deposit||0);
   });
@@ -861,7 +868,7 @@ async function buildDashboard(){
         <div class="rank-bar-wrap"><div class="rank-bar" style="background:var(--pri2);width:${top1?Math.round(cnt/top1[1]*100):100}%"></div></div>
       </div>
       <span style="font-size:11px;font-weight:700;color:var(--pri2)">${cnt}</span>
-    </div>`).join('')||'<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">لا توجد بيانات</div>';
+    </div>`).join('')||`<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">${rL()==='en'?'No data available':'لا توجد بيانات'}</div>`;
 
   // Top Marketers list
   const mktCnt={};
@@ -880,7 +887,7 @@ async function buildDashboard(){
         <div class="rank-bar-wrap"><div class="rank-bar" style="background:var(--gr);width:${topM?Math.round(cnt/topM[1]*100):100}%"></div></div>
       </div>
       <span style="font-size:11px;font-weight:700;color:var(--gr)">${cnt}</span>
-    </div>`).join('')||'<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">لا توجد بيانات</div>';
+    </div>`).join('')||`<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">${rL()==='en'?'No data available':'لا توجد بيانات'}</div>`;
 
   // Charts
   destroyChart('dbKind');
@@ -919,7 +926,7 @@ async function buildDashboard(){
   // Marketer table
   const mktFull={};
   data.forEach(c=>{
-    [[c.marketer,'داخلي'],[c.ext_marketer1,'خارجي 1'],[c.ext_marketer2,'خارجي 2']].forEach(([emp,type])=>{
+    [[c.marketer,rL()==='en'?'Internal':'داخلي'],[c.ext_marketer1,rL()==='en'?'External 1':'خارجي 1'],[c.ext_marketer2,rL()==='en'?'External 2':'خارجي 2']].forEach(([emp,type])=>{
       if(!emp?.name)return;
       if(!mktFull[emp.name]) mktFull[emp.name]={name:emp.name,type,cnt:0,dep:0};
       mktFull[emp.name].cnt++;
@@ -934,12 +941,12 @@ async function buildDashboard(){
       <tbody>${mktRows.map((m,i)=>`
         <tr>
           <td>${i+1}</td><td style="font-weight:700">${m.name}</td>
-          <td><span class="badge ${m.type==='داخلي'?'badge-blue':'badge-orange'}" style="font-size:9px">${m.type}</span></td>
+          <td><span class="badge ${(m.type==='داخلي'||m.type==='Internal')?'badge-blue':'badge-orange'}" style="font-size:9px">${m.type}</span></td>
           <td style="font-weight:700;color:var(--pri2)">${m.cnt}</td>
           <td style="color:var(--gr)">${fmtK(m.dep)}</td>
           <td><div class="rank-bar-wrap"><div class="rank-bar" style="background:var(--gr);width:${mktTop?Math.round(m.cnt/mktTop.cnt*100):100}%"></div></div></td>
         </tr>`).join('')}</tbody></table>`
-  :'<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">لا توجد بيانات</div>';
+  :`<div style="color:var(--mu);text-align:center;padding:16px;font-size:12px">${rL()==='en'?'No data available':'لا توجد بيانات'}</div>`;
 }
 
 /* ── Brokers Tab ─────────────────────────────────────────── */
@@ -949,7 +956,7 @@ function buildBrokers(){
 
   const brokers={};
   data.forEach(c=>{
-    const n=c.broker?.name||'غير محدد';
+    const n=c.broker?.name||(rL()==='en'?'Unassigned':'غير محدد');
     if(!brokers[n]) brokers[n]={name:n,cnt:0,new:0,sub:0,dep:0,mon:0,comms:[],cc:0,minC:999,maxC:0};
     brokers[n].cnt++;
     if(c.account_kind==='new') brokers[n].new++;
@@ -1364,7 +1371,7 @@ function buildCc(){
 
 /* ── Export functions ────────────────────────────────────── */
 function exportRptExcel(){
-  if(!RD.length){toast('لا توجد بيانات','error');return;}
+  if(!RD.length){toast(rL()==='en'?'No data to export':'لا توجد بيانات','error');return;}
   const headers=['#','رقم الحساب','المصدر','البروكر','ع.بروكر','مسوّق','ع.مسوّق','خارجي1','ع.خارجي1','خارجي2','ع.خارجي2','إجمالي ع.','إيداع أولي','إيداع شهري','النوع','الشهر','الفرع','الحالة'];
   const rows=[headers,...RD.map((c,i)=>[
     i+1,c.account_number,c.cc_status?'CC':'عادي',
@@ -1385,7 +1392,7 @@ function exportRptExcel(){
 }
 
 function exportRptPdf(){
-  if(!RD.length){toast('لا توجد بيانات','error');return;}
+  if(!RD.length){toast(rL()==='en'?'No data to export':'لا توجد بيانات','error');return;}
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a3'});
   doc.setFontSize(13);doc.setTextColor(46,134,171);
@@ -1410,10 +1417,10 @@ function exportRptPdf(){
 }
 
 function exportBrokersExcel(){
-  if(!RD.length){toast('لا توجد بيانات','error');return;}
+  if(!RD.length){toast(rL()==='en'?'No data to export':'لا توجد بيانات','error');return;}
   const brokers={};
   RD.forEach(c=>{
-    const n=c.broker?.name||'غير محدد';
+    const n=c.broker?.name||(rL()==='en'?'Unassigned':'غير محدد');
     if(!brokers[n]) brokers[n]={name:n,cnt:0,new:0,sub:0,dep:0,mon:0,comms:[],cc:0};
     brokers[n].cnt++;
     if(c.account_kind==='new') brokers[n].new++;else brokers[n].sub++;
@@ -1429,7 +1436,7 @@ function exportBrokersExcel(){
 }
 
 function exportTrendsExcel(){
-  if(!RD.length){toast('لا توجد بيانات','error');return;}
+  if(!RD.length){toast(rL()==='en'?'No data to export':'لا توجد بيانات','error');return;}
   const months={};
   RD.forEach(c=>{
     const m=c.month;if(!months[m])months[m]={m,cnt:0,new:0,sub:0,mod:0,newAdded:0,cc:0,dep:0,mon:0,comms:[]};
@@ -1482,6 +1489,76 @@ loadFilterOptions();
   const _rnOrig=window.applyLang;
   window.applyLang=function(lang){if(_rnOrig)_rnOrig(lang);rNavApplyLang();};
   rNavApplyLang();
+})();
+
+/* ── Reports Page Full Bilingual Translation ─────────────── */
+(function(){
+  const RPT_I18N = {
+    ar: {
+      tbTitle:'التقارير',
+      tbnTable:'📋 جدول البيانات', tbnDash:'📊 Dashboard', tbnBrokers:'🏦 البروكرات',
+      tbnBranches:'🏢 الفروع', tbnTrends:'📈 الاتجاهات', tbnCommissions:'💰 تحليل العمولات', tbnCc:'📞 كروت CC',
+      flFrom:'من شهر', flTo:'إلى شهر', flBroker:'البروكر', flBranch:'الفرع',
+      flStatus:'الحالة', flKind:'النوع', flSource:'المصدر', flMin:'حد أدنى $',
+      allBrokers:'الكل', allBranches:'كل الفروع',
+      statusAll:'الكل', statusMod:'معدّلة فقط', statusNew:'مضافة جديدة فقط', statusAct:'عادي فقط',
+      kindAll:'الكل', kindNew:'جديد', kindSub:'فرعي',
+      srcAll:'الكل', srcReg:'عادي', srcCC:'CC فقط',
+      genBtn:'⚡ توليد التقرير', clearBtn:'✕ مسح',
+    },
+    en: {
+      tbTitle:'Reports',
+      tbnTable:'📋 Data Table', tbnDash:'📊 Dashboard', tbnBrokers:'🏦 Brokers',
+      tbnBranches:'🏢 Branches', tbnTrends:'📈 Trends', tbnCommissions:'💰 Commission Analysis', tbnCc:'📞 CC Cards',
+      flFrom:'From Month', flTo:'To Month', flBroker:'Broker', flBranch:'Branch',
+      flStatus:'Status', flKind:'Kind', flSource:'Source', flMin:'Min Deposit $',
+      allBrokers:'All', allBranches:'All Branches',
+      statusAll:'All', statusMod:'Modified Only', statusNew:'New Added Only', statusAct:'Active Only',
+      kindAll:'All', kindNew:'New', kindSub:'Sub',
+      srcAll:'All', srcReg:'Regular', srcCC:'CC Only',
+      genBtn:'⚡ Generate Report', clearBtn:'✕ Clear',
+    }
+  };
+
+  function rL() { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
+  function ri(key) { const l = rL(); return RPT_I18N[l]?.[key] ?? RPT_I18N.ar[key] ?? key; }
+
+  function rptPageApplyLang() {
+    const t = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = ri(key); };
+    // Tab buttons
+    t('tbn-table','tbnTable'); t('tbn-dash','tbnDash'); t('tbn-brokers','tbnBrokers');
+    t('tbn-branches','tbnBranches'); t('tbn-trends','tbnTrends');
+    t('tbn-commissions','tbnCommissions'); t('tbn-cc','tbnCc');
+    // Filter labels
+    t('rfl-from','flFrom'); t('rfl-to','flTo'); t('rfl-broker','flBroker');
+    t('rfl-branch','flBranch'); t('rfl-status','flStatus');
+    t('rfl-kind','flKind'); t('rfl-source','flSource'); t('rfl-min','flMin');
+    // Filter select options
+    t('rfl-all-brokers','allBrokers'); t('rfl-all-branches','allBranches');
+    t('rfl-status-all','statusAll'); t('rfl-status-mod','statusMod');
+    t('rfl-status-new','statusNew'); t('rfl-status-act','statusAct');
+    t('rfl-kind-all','kindAll'); t('rfl-kind-new','kindNew'); t('rfl-kind-sub','kindSub');
+    t('rfl-src-all','srcAll'); t('rfl-src-reg','srcReg'); t('rfl-src-cc','srcCC');
+    t('rpt-gen-btn','genBtn'); t('rpt-clr-btn','clearBtn');
+    // Topbar
+    const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = ri('tbTitle');
+    // Re-render table if data loaded
+    if (RD.length) renderTable(RD, {});
+  }
+
+  const _rptOrig = window.applyLang;
+  window.applyLang = function(lang) {
+    if (_rptOrig) _rptOrig(lang);
+    rptPageApplyLang();
+    // Rebuild active tab
+    if (curTab === 'dash')        buildDashboard();
+    else if (curTab === 'brokers')     buildBrokers();
+    else if (curTab === 'branches')    buildBranches();
+    else if (curTab === 'trends')      buildTrends();
+    else if (curTab === 'commissions') buildCommissions();
+    else if (curTab === 'cc')          buildCc();
+  };
+  rptPageApplyLang();
 })();
 </script>
 @endpush

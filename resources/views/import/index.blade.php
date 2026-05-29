@@ -1,15 +1,15 @@
 @extends('layouts.app')
 @section('title','استيراد بيانات')
-@section('page-title','استيراد بيانات Excel')
+@section('page-title','Import Excel Data')
 @section('content')
 
 {{-- ── خطة الاستيراد للفروع ── --}}
 <div class="panel" style="max-width:900px;margin-bottom:14px">
   <div class="panel-header">
-    <div class="panel-title">📋 خطة الاستيراد — كروت الفروع السابقة</div>
+    <div class="panel-title" id="imp-plan-title">📋 خطة الاستيراد — كروت الفروع السابقة</div>
   </div>
   <div class="panel-body">
-    <div class="alert alert-info show" style="margin-bottom:14px;font-size:13px;line-height:1.8">
+    <div class="alert alert-info show" style="margin-bottom:14px;font-size:13px;line-height:1.8" id="imp-quick-start">
       💡 <strong>للبدء السريع:</strong>
       اتبع الخطوات التالية لاستيراد كروت كل فرع من البيانات السابقة دون أي كتابة يدوية.
     </div>
@@ -36,7 +36,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       {{-- أعمدة Excel --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
-        <div style="font-size:12px;font-weight:800;color:var(--pri2);margin-bottom:8px">📝 أعمدة ملف Excel (بالترتيب)</div>
+        <div style="font-size:12px;font-weight:800;color:var(--pri2);margin-bottom:8px" id="imp-cols-title">📝 أعمدة ملف Excel (بالترتيب)</div>
         <div style="display:flex;flex-direction:column;gap:3px">
           @foreach([
             ['A','AC No.','رقم الحساب — مطلوب','#e05050'],
@@ -65,7 +65,7 @@
 
       {{-- ملاحظات مهمة --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
-        <div style="font-size:12px;font-weight:800;color:var(--or);margin-bottom:8px">⚠️ ملاحظات مهمة</div>
+        <div style="font-size:12px;font-weight:800;color:var(--or);margin-bottom:8px" id="imp-notes-title">⚠️ ملاحظات مهمة</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
           <div style="padding:8px;background:rgba(224,80,80,.08);border-radius:7px;border-right:3px solid var(--re)">
             🔑 <strong>أسماء الموظفين</strong> يجب أن تطابق بالضبط الأسماء المسجّلة في قسم الموظفين — حرف بحرف
@@ -87,7 +87,7 @@
           </div>
         </div>
         <div style="margin-top:12px">
-          <button class="btn btn-primary" onclick="downloadTemplate()">⬇ تحميل نموذج Excel</button>
+          <button class="btn btn-primary" id="imp-dl-btn" onclick="downloadTemplate()">⬇ تحميل نموذج Excel</button>
         </div>
       </div>
     </div>
@@ -97,11 +97,11 @@
 {{-- ── تحديد الفرع (المدير المالي فقط) ── --}}
 @if(auth()->user()?->isFinanceAdmin())
 <div class="panel" style="max-width:900px;margin-bottom:14px">
-  <div class="panel-header"><div class="panel-title">🏢 تحديد الفرع المستهدف</div></div>
+  <div class="panel-header"><div class="panel-title" id="imp-branch-title">🏢 تحديد الفرع المستهدف</div></div>
   <div class="panel-body">
     <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
       <div style="flex:1;min-width:220px">
-        <label class="form-label">الفرع — جميع كروت الملف ستُضاف لهذا الفرع *</label>
+        <label class="form-label" id="imp-branch-lbl">الفرع — جميع كروت الملف ستُضاف لهذا الفرع *</label>
         <select id="import-branch" class="form-control">
           <option value="">— اختر الفرع —</option>
         </select>
@@ -114,7 +114,7 @@
 
 {{-- ── رفع الملف ── --}}
 <div class="panel" style="max-width:900px">
-  <div class="panel-header"><div class="panel-title">📥 رفع ملف Excel</div></div>
+  <div class="panel-header"><div class="panel-title" id="imp-upload-title">📥 رفع ملف Excel</div></div>
   <div class="panel-body">
     <div id="drop-zone"
          style="border:2px dashed var(--brd2);border-radius:14px;padding:44px 24px;text-align:center;cursor:pointer;transition:all .2s"
@@ -123,9 +123,9 @@
          ondragleave="this.style.borderColor='';this.style.background=''"
          ondrop="onDrop(event)">
       <div style="font-size:44px;opacity:.35;margin-bottom:12px">📂</div>
-      <div style="font-size:1rem;font-weight:700;margin-bottom:5px">اسحب ملف Excel هنا أو اضغط للاختيار</div>
-      <div style="font-size:12px;color:var(--mu);margin-bottom:12px">يدعم: .xlsx / .xls / .csv</div>
-      <button class="btn btn-primary" type="button">📂 اختر الملف</button>
+      <div style="font-size:1rem;font-weight:700;margin-bottom:5px" id="imp-dz-title">اسحب ملف Excel هنا أو اضغط للاختيار</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:12px" id="imp-dz-sub">يدعم: .xlsx / .xls / .csv</div>
+      <button class="btn btn-primary" type="button" id="imp-dz-btn">📂 اختر الملف</button>
     </div>
     <input type="file" id="file-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this)">
 
@@ -149,8 +149,8 @@
           <div id="import-pct" style="font-size:11px;color:var(--mu)">جاري المعالجة...</div>
         </div>
         <div style="padding:12px 16px;border-top:1px solid var(--brd1);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="confirmImport()">✅ استيراد البيانات</button>
-          <button class="btn btn-ghost" onclick="cancelImport()">إلغاء</button>
+          <button class="btn btn-primary" id="imp-confirm-btn" onclick="confirmImport()">✅ استيراد البيانات</button>
+          <button class="btn btn-ghost" id="imp-cancel-btn" onclick="cancelImport()">إلغاء</button>
           <span id="import-status" style="font-size:11px;color:var(--mu);margin-right:auto"></span>
         </div>
       </div>
@@ -159,13 +159,13 @@
     {{-- نتيجة الاستيراد التفصيلية --}}
     <div id="import-details" style="margin-top:14px;display:none">
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">📊 نتيجة الاستيراد</div></div>
+        <div class="panel-header"><div class="panel-title" id="imp-result-title">📊 نتيجة الاستيراد</div></div>
         <div id="import-summary-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;border-bottom:1px solid var(--brd1)"></div>
         <div id="import-errors-wrap" style="display:none;padding:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--re);margin-bottom:8px">⚠️ الصفوف التي بها أخطاء:</div>
+          <div style="font-size:12px;font-weight:700;color:var(--re);margin-bottom:8px" id="imp-err-title">⚠️ الصفوف التي بها أخطاء:</div>
           <div style="overflow-x:auto;max-height:200px;overflow-y:auto">
             <table class="data-table" style="font-size:11px">
-              <thead><tr><th>رقم الصف</th><th>رقم الحساب</th><th>سبب الخطأ</th></tr></thead>
+              <thead><tr><th id="imp-err-th-row">رقم الصف</th><th id="imp-err-th-ac">رقم الحساب</th><th id="imp-err-th-reason">سبب الخطأ</th></tr></thead>
               <tbody id="import-errors-tbody"></tbody>
             </table>
           </div>
@@ -180,6 +180,99 @@
 
 @push('scripts')
 <script>
+/* ══ Import Page Bilingual Dictionary ══ */
+const IMP = {
+  ar: {
+    tbTitle:'استيراد بيانات', planTitle:'📋 خطة الاستيراد — كروت الفروع السابقة',
+    quickStart:'💡 <strong>للبدء السريع:</strong> اتبع الخطوات التالية لاستيراد كروت كل فرع من البيانات السابقة دون أي كتابة يدوية.',
+    colsTitle:'📝 أعمدة ملف Excel (بالترتيب)',
+    notesTitle:'⚠️ ملاحظات مهمة',
+    dlBtn:'⬇ تحميل نموذج Excel',
+    branchTitle:'🏢 تحديد الفرع المستهدف',
+    branchLbl:'الفرع — جميع كروت الملف ستُضاف لهذا الفرع *',
+    uploadTitle:'📥 رفع ملف Excel',
+    dzTitle:'اسحب ملف Excel هنا أو اضغط للاختيار',
+    dzSub:'يدعم: .xlsx / .xls / .csv',
+    dzBtn:'📂 اختر الملف',
+    confirmBtn:'✅ استيراد البيانات',
+    cancelBtn:'إلغاء',
+    resultTitle:'📊 نتيجة الاستيراد',
+    errTitle:'⚠️ الصفوف التي بها أخطاء:',
+    errThRow:'رقم الصف', errThAc:'رقم الحساب', errThReason:'سبب الخطأ',
+    processing:'جاري المعالجة...',
+    optBranch:'— اختر الفرع —',
+    toastTemplate:'✅ تم تحميل النموذج',
+    toastEmpty:'الملف فارغ أو لا يحتوي على بيانات',
+    toastRead:'تم قراءة {n} سجل — راجع البيانات ثم اضغط استيراد',
+    toastNoData:'لا توجد بيانات', toastNoBranch:'⚠️ يرجى اختيار الفرع المستهدف أولاً',
+    toastSuccess:'تم الاستيراد: {i} جديد، {u} تحديث',
+    toastFail:'خطأ: ',
+    summaryTotal:'إجمالي الصفوف', summaryNew:'حسابات جديدة',
+    summaryUpdated:'سجلات محدّثة', summaryFailed:'صفوف فاشلة',
+    rowLabel:'صف',
+  },
+  en: {
+    tbTitle:'Import Data', planTitle:'📋 Import Plan — Previous Branch Cards',
+    quickStart:'💡 <strong>Quick Start:</strong> Follow these steps to import each branch\'s cards from previous data without any manual entry.',
+    colsTitle:'📝 Excel File Columns (in order)',
+    notesTitle:'⚠️ Important Notes',
+    dlBtn:'⬇ Download Excel Template',
+    branchTitle:'🏢 Select Target Branch',
+    branchLbl:'Branch — all cards in the file will be added to this branch *',
+    uploadTitle:'📥 Upload Excel File',
+    dzTitle:'Drag Excel file here or click to select',
+    dzSub:'Supports: .xlsx / .xls / .csv',
+    dzBtn:'📂 Choose File',
+    confirmBtn:'✅ Import Data',
+    cancelBtn:'Cancel',
+    resultTitle:'📊 Import Results',
+    errTitle:'⚠️ Rows with errors:',
+    errThRow:'Row #', errThAc:'Account #', errThReason:'Error Reason',
+    processing:'Processing...',
+    optBranch:'— Select Branch —',
+    toastTemplate:'✅ Template downloaded',
+    toastEmpty:'File is empty or has no data',
+    toastRead:'Read {n} records — review data then click Import',
+    toastNoData:'No data to import', toastNoBranch:'⚠️ Please select the target branch first',
+    toastSuccess:'Imported: {i} new, {u} updated',
+    toastFail:'Error: ',
+    summaryTotal:'Total Rows', summaryNew:'New Accounts',
+    summaryUpdated:'Updated Records', summaryFailed:'Failed Rows',
+    rowLabel:'Row',
+  }
+};
+function impL()    { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
+function imp(key)  { const l = impL(); return IMP[l]?.[key] ?? IMP.ar[key] ?? key; }
+
+function impApplyLang() {
+  const t = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = imp(key); };
+  const h = (id, key) => { const e = document.getElementById(id); if (e) e.innerHTML  = imp(key); };
+  t('imp-plan-title','planTitle');
+  h('imp-quick-start','quickStart');
+  t('imp-cols-title','colsTitle');
+  t('imp-notes-title','notesTitle');
+  t('imp-dl-btn','dlBtn');
+  t('imp-branch-title','branchTitle');
+  t('imp-branch-lbl','branchLbl');
+  t('imp-upload-title','uploadTitle');
+  t('imp-dz-title','dzTitle');
+  t('imp-dz-sub','dzSub');
+  t('imp-dz-btn','dzBtn');
+  t('imp-confirm-btn','confirmBtn');
+  t('imp-cancel-btn','cancelBtn');
+  t('imp-result-title','resultTitle');
+  t('imp-err-title','errTitle');
+  t('imp-err-th-row','errThRow');
+  t('imp-err-th-ac','errThAc');
+  t('imp-err-th-reason','errThReason');
+  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = imp('tbTitle');
+}
+const _impOrigApplyLang = window.applyLang;
+window.applyLang = function(lang) {
+  if (_impOrigApplyLang) _impOrigApplyLang(lang);
+  impApplyLang();
+};
+
 let importRows = [];
 
 // ── تحميل الفروع ───────────────────────────────────────────
@@ -189,8 +282,9 @@ async function loadImportBranches() {
   if (!r.success) return;
   const sel = document.getElementById('import-branch');
   if (!sel) return;
-  sel.innerHTML = '<option value="">— اختر الفرع —</option>' +
-    r.data.map(b => `<option value="${b.id}">${b.name_ar}</option>`).join('');
+  const isEn = impL() === 'en';
+  sel.innerHTML = `<option value="">${imp('optBranch')}</option>` +
+    r.data.map(b => `<option value="${b.id}">${isEn?(b.name_en||b.name_ar):b.name_ar}</option>`).join('');
   sel.onchange = function() {
     const badge = document.getElementById('import-branch-badge');
     if (!badge) return;
@@ -202,6 +296,7 @@ async function loadImportBranches() {
     }
   };
 }
+impApplyLang();
 loadImportBranches();
 
 // ── تحميل نموذج Excel ──────────────────────────────────────
@@ -221,7 +316,7 @@ function downloadTemplate() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Cards Import');
   XLSX.writeFile(wb, 'wafra_import_template.xlsx');
-  toast('✅ تم تحميل النموذج','success');
+  toast(imp('toastTemplate'),'success');
 }
 
 function onDrop(e) {
@@ -239,13 +334,13 @@ function readFile(file) {
     const wb   = XLSX.read(e.target.result, { type: 'array' });
     const ws   = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-    if (rows.length < 2) { toast('الملف فارغ أو لا يحتوي على بيانات', 'error'); return; }
+    if (rows.length < 2) { toast(imp('toastEmpty'), 'error'); return; }
 
     const header = rows[0];
     importRows   = rows.slice(1).filter(r => r.some(c => c));
 
     document.getElementById('import-filename').textContent = '📄 ' + file.name;
-    document.getElementById('import-info').textContent     = importRows.length + ' سجل';
+    document.getElementById('import-info').textContent     = importRows.length + (impL()==='en'?' records':' سجل');
     document.getElementById('import-details').style.display = 'none';
 
     document.getElementById('import-thead').innerHTML =
@@ -261,17 +356,17 @@ function readFile(file) {
     document.getElementById('import-bar').style.width = '0';
     document.getElementById('import-bar').style.background = 'linear-gradient(90deg,var(--pri3),var(--pri2))';
 
-    toast('تم قراءة ' + importRows.length + ' سجل — راجع البيانات ثم اضغط استيراد', 'info');
+    toast(imp('toastRead').replace('{n}', importRows.length), 'info');
   };
   reader.readAsArrayBuffer(file);
 }
 
 async function confirmImport() {
-  if (!importRows.length) { toast('لا توجد بيانات', 'error'); return; }
+  if (!importRows.length) { toast(imp('toastNoData'), 'error'); return; }
 
   const branchId = document.getElementById('import-branch')?.value || null;
   if (!branchId && CURRENT_USER?.role === 'finance_admin') {
-    toast('⚠️ يرجى اختيار الفرع المستهدف أولاً','error');
+    toast(imp('toastNoBranch'),'error');
     document.getElementById('import-branch')?.focus();
     return;
   }
@@ -310,12 +405,12 @@ async function confirmImport() {
 
   if (result.success || result.imported > 0 || result.updated > 0) {
     bar.style.background = 'var(--gr)';
-    pct.textContent = `✅ تم بنجاح — جديد: ${result.imported} | تحديث: ${result.updated} | أخطاء: ${result.failed}`;
-    toast(`تم الاستيراد: ${result.imported} جديد، ${result.updated} تحديث`, 'success');
+    pct.textContent = `✅ ${impL()==='en'?'Done':'تم بنجاح'} — ${impL()==='en'?'New':'جديد'}: ${result.imported} | ${impL()==='en'?'Updated':'تحديث'}: ${result.updated} | ${impL()==='en'?'Errors':'أخطاء'}: ${result.failed}`;
+    toast(imp('toastSuccess').replace('{i}',result.imported).replace('{u}',result.updated), 'success');
   } else {
     bar.style.background = 'var(--re)';
-    pct.textContent = `❌ فشل: ${result.message || 'خطأ غير معروف'}`;
-    toast(`خطأ: ${result.message}`, 'error');
+    pct.textContent = `❌ ${impL()==='en'?'Failed':'فشل'}: ${result.message || (impL()==='en'?'Unknown error':'خطأ غير معروف')}`;
+    toast(imp('toastFail') + result.message, 'error');
   }
 
   document.getElementById('import-status').textContent = result.batch_code
@@ -333,13 +428,13 @@ function showImportDetails(result) {
   // بطاقات الإحصاء
   const grid = document.getElementById('import-summary-grid');
   grid.innerHTML = [
-    { label:'إجمالي الصفوف',  val: result.total   || 0, color:'var(--pri2)' },
-    { label:'حسابات جديدة',   val: result.imported || 0, color:'var(--gr)'   },
-    { label:'سجلات محدّثة',   val: result.updated  || 0, color:'var(--or)'   },
-    { label:'صفوف فاشلة',     val: result.failed   || 0, color:'var(--re)'   },
+    { labelKey:'summaryTotal',   val: result.total   || 0, color:'var(--pri2)' },
+    { labelKey:'summaryNew',     val: result.imported || 0, color:'var(--gr)'   },
+    { labelKey:'summaryUpdated', val: result.updated  || 0, color:'var(--or)'   },
+    { labelKey:'summaryFailed',  val: result.failed   || 0, color:'var(--re)'   },
   ].map(k => `
     <div style="background:var(--bg4);border-radius:10px;padding:14px;text-align:center;border:1px solid var(--brd1)">
-      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${k.label}</div>
+      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${imp(k.labelKey)}</div>
       <div style="font-size:1.8rem;font-weight:900;color:${k.color}">${k.val}</div>
     </div>`).join('');
 
@@ -349,7 +444,7 @@ function showImportDetails(result) {
   if (result.errors && result.errors.length) {
     errBody.innerHTML = result.errors.map(e =>
       `<tr>
-        <td style="color:var(--or)">صف ${e.row}</td>
+        <td style="color:var(--or)">${imp('rowLabel')} ${e.row}</td>
         <td class="mono">${e.ac_no || '—'}</td>
         <td style="color:var(--re)">${e.error}</td>
       </tr>`

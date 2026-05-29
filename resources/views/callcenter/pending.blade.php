@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'كروت CC الواردة')
-@section('page-title', 'كروت CC الواردة للفرع')
+@section('page-title', 'CC Cards Inbox')
 
 @section('content')
 <style>
@@ -19,11 +19,11 @@
 
 <div class="panel" style="max-width:1060px">
   <div class="panel-header">
-    <div class="panel-title">
+    <div class="panel-title" id="pnd-panel-title">
       📩 كروت CC الواردة
       <span id="pending-count" style="background:#7b68ee;color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;margin-right:8px">0</span>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="loadPending()">🔄 تحديث</button>
+    <button class="btn btn-ghost btn-sm" id="pnd-refresh-btn" onclick="loadPending()">🔄 تحديث</button>
   </div>
   <div class="panel-body">
     <div id="alert-err" class="alert alert-error"></div>
@@ -32,7 +32,7 @@
     <!-- Commission limit notice -->
     <div style="background:rgba(123,104,238,.07);border:1px solid rgba(123,104,238,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
       <span style="font-size:20px">⚠️</span>
-      <div>
+      <div id="pnd-limit-notice">
         <strong style="color:#7b68ee">حد عمولات كروت CC:</strong>
         <span style="font-size:13px"> عمولة البروكر + عمولة المسوّق لا يجب أن تتجاوز <strong>5$ / lot</strong></span>
         <span style="font-size:11px;color:var(--text2);display:block;margin-top:2px">سيتم رفض الحفظ إذا تجاوز مجموعهما 5$</span>
@@ -47,19 +47,19 @@
 <div class="modal-overlay" id="modal-reject" style="display:none">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
-      <div class="modal-title">❌ رفض الكرت</div>
+      <div class="modal-title" id="rj-modal-title">❌ رفض الكرت</div>
       <button class="modal-close" onclick="closeRejectModal()">✕</button>
     </div>
     <div class="modal-body">
       <div id="rj-err" class="alert alert-error"></div>
       <div class="form-group">
-        <label class="form-label">سبب الرفض * <span style="font-size:11px;color:var(--text2)">(5 أحرف على الأقل)</span></label>
+        <label class="form-label" id="rj-lbl-reason">سبب الرفض * <span style="font-size:11px;color:var(--text2)">(5 أحرف على الأقل)</span></label>
         <textarea id="rj-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض هنا..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeRejectModal()">إلغاء</button>
-      <button class="btn btn-danger" onclick="confirmReject()">❌ تأكيد الرفض</button>
+      <button class="btn btn-ghost" id="rj-btn-cancel" onclick="closeRejectModal()">إلغاء</button>
+      <button class="btn btn-danger" id="rj-btn-confirm" onclick="confirmReject()">❌ تأكيد الرفض</button>
     </div>
   </div>
 </div>
@@ -68,6 +68,100 @@
 
 @push('scripts')
 <script>
+/* ══ CC Pending Bilingual Dictionary ══ */
+const PND = {
+  ar: {
+    tbTitle:'كروت CC الواردة', panelTitle:'📩 كروت CC الواردة',
+    refreshBtn:'🔄 تحديث',
+    limitTitle:'حد عمولات كروت CC:',
+    limitBody:' عمولة البروكر + عمولة المسوّق لا يجب أن تتجاوز <strong>5$ / lot</strong>',
+    limitSub:'سيتم رفض الحفظ إذا تجاوز مجموعهما 5$',
+    rjModalTitle:'❌ رفض الكرت',
+    rjLblReason:'سبب الرفض * <span style="font-size:11px;color:var(--text2)">(5 أحرف على الأقل)</span>',
+    rjPhReason:'اكتب سبب الرفض هنا...',
+    rjBtnCancel:'إلغاء', rjBtnConfirm:'❌ تأكيد الرفض',
+    errReason:'⚠️ يجب كتابة سبب الرفض (5 أحرف على الأقل)',
+    empty:'لا توجد كروت CC واردة حالياً',
+    statusPending:'📩 بانتظار القرار', statusAccepted:'✅ مقبول — أكمل البيانات',
+    kindSub:'🔀 Sub', kindNew:'🆕 New',
+    from:'من:', agent:'موظف:',  ccComm:'عمولة CC:',
+    btnAccept:'✅ قبول الكرت', btnReject:'❌ رفض',
+    completeTitle:'📋 استكمال بيانات الكرت',
+    lblBroker:'البروكر * <span style="font-size:10px;color:#dc3545">(مطلوب)</span>',
+    lblBComm:'عمولة البروكر ($/lot) *',
+    lblMktr:'المسوّق الرئيسي', lblMComm:'عمولة المسوّق ($/lot)',
+    totalComm:'إجمالي العمولات (بروكر + مسوّق)',
+    lblExt1:'مسوّق إضافي 1', lblEcomm1:'عمولة المسوّق الإضافي 1 ($/lot)',
+    lblExt2:'مسوّق إضافي 2', lblEcomm2:'عمولة المسوّق الإضافي 2 ($/lot)',
+    lblDep:'إيداع فتح الحساب *', lblMon:'الإيداع الشهري المتوقع',
+    btnComplete:'🏁 إتمام الكرت',
+    optBroker:'— اختر البروكر —', optNoMktr:'— لا يوجد —',
+    errBroker:'⚠️ يرجى اختيار البروكر',
+    confirmAccept:'قبول هذا الكرت؟',
+  },
+  en: {
+    tbTitle:'Incoming CC Cards', panelTitle:'📩 Incoming CC Cards',
+    refreshBtn:'🔄 Refresh',
+    limitTitle:'CC Card Commission Limit:',
+    limitBody:' Broker + Marketer commission must not exceed <strong>$5 / lot</strong>',
+    limitSub:'Save will be rejected if total exceeds $5',
+    rjModalTitle:'❌ Reject Card',
+    rjLblReason:'Rejection Reason * <span style="font-size:11px;color:var(--text2)">(min 5 characters)</span>',
+    rjPhReason:'Enter rejection reason here...',
+    rjBtnCancel:'Cancel', rjBtnConfirm:'❌ Confirm Rejection',
+    errReason:'⚠️ Please enter a rejection reason (min 5 characters)',
+    empty:'No incoming CC cards at the moment',
+    statusPending:'📩 Awaiting Decision', statusAccepted:'✅ Accepted — Complete Data',
+    kindSub:'🔀 Sub', kindNew:'🆕 New',
+    from:'From:', agent:'Agent:', ccComm:'CC Comm.:',
+    btnAccept:'✅ Accept Card', btnReject:'❌ Reject',
+    completeTitle:'📋 Complete Card Data',
+    lblBroker:'Broker * <span style="font-size:10px;color:#dc3545">(required)</span>',
+    lblBComm:'Broker Commission ($/lot) *',
+    lblMktr:'Main Marketer', lblMComm:'Marketer Commission ($/lot)',
+    totalComm:'Total Commissions (Broker + Marketer)',
+    lblExt1:'Additional Marketer 1', lblEcomm1:'Additional Marketer 1 Commission ($/lot)',
+    lblExt2:'Additional Marketer 2', lblEcomm2:'Additional Marketer 2 Commission ($/lot)',
+    lblDep:'Opening Deposit *', lblMon:'Expected Monthly Deposit',
+    btnComplete:'🏁 Complete Card',
+    optBroker:'— Select Broker —', optNoMktr:'— None —',
+    errBroker:'⚠️ Please select a broker',
+    confirmAccept:'Accept this card?',
+  }
+};
+function pndL()    { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
+function pnd(key)  { const l = pndL(); return PND[l]?.[key] ?? PND.ar[key] ?? key; }
+
+function pndApplyLang() {
+  const el = (id) => document.getElementById(id);
+  const t  = (id, key) => { const e = el(id); if (e) e.textContent = pnd(key); };
+  const h  = (id, key) => { const e = el(id); if (e) e.innerHTML  = pnd(key); };
+
+  t('pnd-panel-title', 'panelTitle');
+  // keep count badge inside panel title
+  const pt = el('pnd-panel-title');
+  if (pt) { const cs = el('pending-count'); pt.textContent = pnd('panelTitle') + ' '; if (cs) pt.appendChild(cs); }
+  t('pnd-refresh-btn', 'refreshBtn');
+  // limit notice
+  const ln = el('pnd-limit-notice');
+  if (ln) ln.innerHTML = `<strong style="color:#7b68ee">${pnd('limitTitle')}</strong><span style="font-size:13px">${pnd('limitBody')}</span><span style="font-size:11px;color:var(--text2);display:block;margin-top:2px">${pnd('limitSub')}</span>`;
+  // reject modal
+  t('rj-modal-title', 'rjModalTitle');
+  h('rj-lbl-reason', 'rjLblReason');
+  const rjPh = el('rj-reason'); if (rjPh) rjPh.placeholder = pnd('rjPhReason');
+  t('rj-btn-cancel', 'rjBtnCancel'); t('rj-btn-confirm', 'rjBtnConfirm');
+  // topbar
+  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = pnd('tbTitle');
+  // Re-render if loaded
+  if (_pendingData.length) renderPendingList(_pendingData);
+}
+const _pndOrigApplyLang = window.applyLang;
+window.applyLang = function(lang) {
+  if (_pndOrigApplyLang) _pndOrigApplyLang(lang);
+  pndApplyLang();
+};
+
+let _pendingData = [];
 let rejectCardId = null;
 
 // ── Reject modal helpers ───────────────────────────────────────
@@ -86,7 +180,7 @@ async function confirmReject() {
   const reason = document.getElementById('rj-reason').value.trim();
   if (!reason || reason.length < 5) {
     const e = document.getElementById('rj-err');
-    e.textContent = '⚠️ يجب كتابة سبب الرفض (5 أحرف على الأقل)';
+    e.textContent = pnd('errReason');
     e.classList.add('show');
     return;
   }
@@ -102,10 +196,21 @@ async function confirmReject() {
   }
 }
 
+function renderPendingList(data) {
+  const container = document.getElementById('pending-list');
+  document.getElementById('pending-count').textContent = data.length;
+  if (!data.length) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:40px;margin-bottom:8px">📭</div>${pnd('empty')}</div>`;
+    return;
+  }
+  container.innerHTML = data.map(c => cardHtml(c)).join('');
+  data.filter(c => c.cc_status === 'accepted').forEach(c => populateEmployeeSelects(c.id));
+}
+
 // ── Card HTML builder ──────────────────────────────────────────
 function cardHtml(c) {
-  const statusLabel = c.cc_status === 'branch_pending' ? '📩 بانتظار القرار' : '✅ مقبول — أكمل البيانات';
-  const kindLabel   = c.account_kind === 'sub' ? '🔀 Sub' : '🆕 New';
+  const statusLabel = c.cc_status === 'branch_pending' ? pnd('statusPending') : pnd('statusAccepted');
+  const kindLabel   = c.account_kind === 'sub' ? pnd('kindSub') : pnd('kindNew');
 
   const notesHtml = c.notes
     ? `<div class="cc-notes-box">💬 ${c.notes}</div>`
@@ -129,9 +234,9 @@ function cardHtml(c) {
           <span class="cc-chip ${c.cc_status}">${statusLabel}</span>
         </div>
         <div style="font-size:12px;color:var(--text2)">
-          من: <strong>${c.cc_branch?.name_ar ?? '—'}</strong>
-          &nbsp;|&nbsp; موظف: <strong>${c.cc_agent?.name ?? '—'}</strong>
-          &nbsp;|&nbsp; عمولة CC: <strong>${c.cc_agent_commission}$</strong>
+          ${pnd('from')} <strong>${c.cc_branch?.name_ar ?? '—'}</strong>
+          &nbsp;|&nbsp; ${pnd('agent')} <strong>${c.cc_agent?.name ?? '—'}</strong>
+          &nbsp;|&nbsp; ${pnd('ccComm')} <strong>${c.cc_agent_commission}$</strong>
         </div>
       </div>
       ${notesHtml}
@@ -141,8 +246,8 @@ function cardHtml(c) {
     <div style="padding:14px 16px">
       ${c.cc_status === 'branch_pending' ? `
         <div style="display:flex;gap:10px;margin-bottom:12px">
-          <button class="btn btn-primary btn-sm" onclick="acceptCard(${c.id})">✅ قبول الكرت</button>
-          <button class="btn btn-danger btn-sm"  onclick="openRejectModal(${c.id})">❌ رفض</button>
+          <button class="btn btn-primary btn-sm" onclick="acceptCard(${c.id})">${pnd('btnAccept')}</button>
+          <button class="btn btn-danger btn-sm"  onclick="openRejectModal(${c.id})">${pnd('btnReject')}</button>
         </div>
       ` : ''}
       ${c.cc_status === 'accepted' ? completeFormHtml(c) : ''}
@@ -154,18 +259,18 @@ function cardHtml(c) {
 function completeFormHtml(c) {
   return `
   <div class="complete-form" id="cf-${c.id}">
-    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--pri2)">📋 استكمال بيانات الكرت</div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--pri2)">${pnd('completeTitle')}</div>
 
     <!-- Row 1: Broker + broker commission -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">البروكر * <span style="font-size:10px;color:#dc3545">(مطلوب)</span></label>
+        <label class="form-label">${pnd('lblBroker')}</label>
         <select id="cf-broker-${c.id}" class="form-control broker-sel" data-card="${c.id}" onchange="checkLimit(${c.id})">
-          <option value="">— اختر البروكر —</option>
+          <option value="">${pnd('optBroker')}</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">عمولة البروكر ($/lot) *</label>
+        <label class="form-label">${pnd('lblBComm')}</label>
         <input type="number" id="cf-bcomm-${c.id}" class="form-control" value="2.5" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
       </div>
     </div>
@@ -173,13 +278,13 @@ function completeFormHtml(c) {
     <!-- Row 2: Main marketer + marketer commission -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">المسوّق الرئيسي</label>
+        <label class="form-label">${pnd('lblMktr')}</label>
         <select id="cf-mktr-${c.id}" class="form-control" onchange="onMarketerChange(${c.id})">
-          <option value="">— لا يوجد —</option>
+          <option value="">${pnd('optNoMktr')}</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">عمولة المسوّق ($/lot)</label>
+        <label class="form-label">${pnd('lblMComm')}</label>
         <input type="number" id="cf-mcomm-${c.id}" class="form-control" value="0" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})" disabled>
       </div>
     </div>
@@ -187,23 +292,23 @@ function completeFormHtml(c) {
     <!-- Commission limit progress bar -->
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
-        <span>إجمالي العمولات (بروكر + مسوّق)</span>
+        <span>${pnd('totalComm')}</span>
         <span id="cf-total-${c.id}" style="font-weight:700">0.0$ / 5.0$</span>
       </div>
       <div class="cc-limit-bar"><div id="cf-bar-${c.id}" class="cc-limit-fill" style="width:0%;background:#198754"></div></div>
-      <div id="cf-warn-${c.id}" style="font-size:11px;color:#dc3545;margin-top:4px;display:none">⛔ يتجاوز الحد المسموح (5$)</div>
+      <div id="cf-warn-${c.id}" style="font-size:11px;color:#dc3545;margin-top:4px;display:none">⛔ ${pndL()==='en'?'Exceeds the allowed limit ($5)':'يتجاوز الحد المسموح (5$)'}</div>
     </div>
 
     <!-- Row 3: Ext marketer 1 -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">مسوّق إضافي 1</label>
+        <label class="form-label">${pnd('lblExt1')}</label>
         <select id="cf-ext1-${c.id}" class="form-control">
-          <option value="">— لا يوجد —</option>
+          <option value="">${pnd('optNoMktr')}</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">عمولة المسوّق الإضافي 1 ($/lot)</label>
+        <label class="form-label">${pnd('lblEcomm1')}</label>
         <input type="number" id="cf-ecomm1-${c.id}" class="form-control" value="0" min="0" step="0.5">
       </div>
     </div>
@@ -211,13 +316,13 @@ function completeFormHtml(c) {
     <!-- Row 4: Ext marketer 2 -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">مسوّق إضافي 2</label>
+        <label class="form-label">${pnd('lblExt2')}</label>
         <select id="cf-ext2-${c.id}" class="form-control">
-          <option value="">— لا يوجد —</option>
+          <option value="">${pnd('optNoMktr')}</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">عمولة المسوّق الإضافي 2 ($/lot)</label>
+        <label class="form-label">${pnd('lblEcomm2')}</label>
         <input type="number" id="cf-ecomm2-${c.id}" class="form-control" value="0" min="0" step="0.5">
       </div>
     </div>
@@ -225,11 +330,11 @@ function completeFormHtml(c) {
     <!-- Row 5: Deposits -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">إيداع فتح الحساب *</label>
+        <label class="form-label">${pnd('lblDep')}</label>
         <input type="number" id="cf-dep-${c.id}" class="form-control" value="0" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">الإيداع الشهري المتوقع</label>
+        <label class="form-label">${pnd('lblMon')}</label>
         <input type="number" id="cf-mon-${c.id}" class="form-control" value="0" min="0">
       </div>
     </div>
@@ -247,7 +352,7 @@ function completeFormHtml(c) {
     </div>
 
     <div id="cf-err-${c.id}" class="alert alert-error"></div>
-    <button class="btn btn-primary" onclick="completeCard(${c.id})">🏁 إتمام الكرت</button>
+    <button class="btn btn-primary" onclick="completeCard(${c.id})">${pnd('btnComplete')}</button>
   </div>`;
 }
 
@@ -280,7 +385,7 @@ function checkLimit(cardId) {
 
 // ── Accept card ────────────────────────────────────────────────
 async function acceptCard(id) {
-  if (!confirm('قبول هذا الكرت؟')) return;
+  if (!confirm(pnd('confirmAccept'))) return;
   const r = await api('PUT', `/cc/cards/${id}/accept`);
   if (r.success) { showAlert('ok', r.message); loadPending(); }
   else showAlert('err', r.message);
@@ -294,7 +399,7 @@ async function completeCard(id) {
 
   // Broker is required
   if (!brokerId) {
-    errEl.textContent = '⚠️ يرجى اختيار البروكر';
+    errEl.textContent = pnd('errBroker');
     errEl.classList.add('show');
     return;
   }
@@ -349,25 +454,9 @@ function showAlert(type, msg) {
 
 // ── Load pending cards ─────────────────────────────────────────
 async function loadPending() {
-  const r         = await api('GET', '/cc/pending');
-  const container = document.getElementById('pending-list');
-  document.getElementById('pending-count').textContent = r.count ?? 0;
-
-  if (!r.success || !r.data?.length) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:40px;color:var(--text2)">
-        <div style="font-size:40px;margin-bottom:8px">📭</div>
-        لا توجد كروت CC واردة حالياً
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = r.data.map(c => cardHtml(c)).join('');
-
-  // Populate employee dropdowns for any accepted cards
-  r.data.filter(c => c.cc_status === 'accepted').forEach(c => {
-    populateEmployeeSelects(c.id);
-  });
+  const r = await api('GET', '/cc/pending');
+  _pendingData = r.success ? (r.data || []) : [];
+  renderPendingList(_pendingData);
 }
 
 // ── Load employees into memory, then populate selects ──────────
@@ -400,6 +489,7 @@ function populateEmployeeSelects(cardId) {
 
 // ── Init ───────────────────────────────────────────────────────
 async function init() {
+  pndApplyLang();
   await loadEmployees();
   await loadPending();
 }

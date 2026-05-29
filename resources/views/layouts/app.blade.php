@@ -343,12 +343,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   }
   .sidebar.mob-open{transform:translateX(0)!important;box-shadow:-8px 0 30px rgba(0,0,0,.5)}
 
-  /* Topbar */
-  .topbar{top:66px!important;padding:0 10px!important;height:46px!important;margin:0!important;border-radius:0!important}
-  .tb-title{font-size:12px}
-  .tb-sub{display:none}
-  /* Hide extra topbar buttons on mobile */
-  .tb-right .tb-btn:nth-child(n+3){display:none}
+  /* Topbar — hidden on mobile (mob-header replaces it) */
+  .topbar{display:none!important}
 
   /* Content */
   .main-wrap{padding-top:56px}
