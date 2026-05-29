@@ -597,7 +597,7 @@ html{font-size:16px}
       </div>
       {{-- Prominent logout button --}}
       <a href="{{ route('auth.logout') }}"
-         onclick="event.preventDefault(); document.getElementById('logout-form').submit()"
+         onclick="event.preventDefault(); doLogout()"
          style="
            display:flex;align-items:center;justify-content:center;gap:7px;
            margin-top:8px;padding:9px 14px;border-radius:9px;
@@ -664,6 +664,19 @@ html{font-size:16px}
 <script>
 const API = '{{ url("/api") }}';
 let API_TOKEN = localStorage.getItem('wg_token') || '{{ session("api_token","") }}';
+
+/* ══ SECURE LOGOUT — clears auth token from client storage BEFORE server POST ══
+   Prevents another person picking up the device and auto-logging in.
+   Language & theme preferences are kept (non-sensitive).
+   ══════════════════════════════════════════════════════════════════════════════ */
+function doLogout() {
+  try {
+    localStorage.removeItem('wg_token');   /* wipe Sanctum bearer token */
+    API_TOKEN = '';
+    sessionStorage.clear();                /* wipe splash flag + any temp state */
+  } catch(e) {}
+  document.getElementById('logout-form').submit();
+}
 @php $__cu = auth()->user() ? auth()->user()->only('id','name','email','role','branch_id') : []; @endphp
 const CURRENT_USER = @json($__cu);
 
@@ -1319,7 +1332,7 @@ setInterval(loadCcPendingCount, 60000);
       <div class="mob-sheet-ico">📥</div><div class="mob-sheet-lbl" data-i18n="mob.import">استيراد</div>
     </div>
     @endif
-    <div class="mob-sheet-item" onclick="document.getElementById('logout-form').submit()">
+    <div class="mob-sheet-item" onclick="doLogout()">
       <div class="mob-sheet-ico">🚪</div><div class="mob-sheet-lbl" data-i18n="mob.logout">خروج</div>
     </div>
   </div>

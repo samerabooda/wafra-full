@@ -605,7 +605,7 @@ body {
             <label class="form-label" id="lp-label-password">كلمة المرور</label>
             <div class="pw-wrap">
               <input class="form-input" type="password" name="password" id="pw"
-                     required autocomplete="current-password">
+                     required autocomplete="new-password">
               <button type="button" class="pw-toggle" onclick="togglePw('pw')">👁</button>
             </div>
           </div>
@@ -1137,6 +1137,30 @@ function lpToggleLang() {
 
 /* ── Apply immediately (script at end of body, DOM is ready) ── */
 lpApplyLang(lpLang);
+
+/* ══════════════════════════════════════════════════════════
+   SECURITY: Clear any saved session / token on login page load
+   Prevents auto-login after logout (another person picks up device)
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  /* Always wipe the API token — if user got here they need to re-auth */
+  localStorage.removeItem('wg_token');
+  sessionStorage.removeItem('wfr_shown');
+
+  /* Force the login form fields blank so browser-filled values are erased */
+  var emailEl = document.getElementById('inp-email');
+  var pwEl    = document.getElementById('pw');
+  if (emailEl) { emailEl.value = ''; emailEl.setAttribute('autocomplete','off'); }
+  if (pwEl)    { pwEl.value    = ''; }
+
+  /* Extra: briefly set type=text then back to password to defeat browser autofill timing */
+  if (pwEl) {
+    pwEl.setAttribute('autocomplete', 'new-password');
+    setTimeout(function(){
+      pwEl.value = '';
+    }, 150);
+  }
+})();
 </script>
 </body>
 </html>
