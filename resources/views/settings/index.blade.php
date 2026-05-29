@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','الإعدادات')
-@section('page-title','الإعدادات والإدارة')
+@section('title','Settings')
+@section('page-title','Settings')
 
 @section('topbar-actions')
 <div id="settings-topbar-actions" style="display:flex;gap:6px"></div>
