@@ -21,6 +21,7 @@ class CommissionCard extends Model
         'forex_commission',  'futures_commission',
         'initial_deposit',   'monthly_deposit',
         'status', 'notes', 'import_batch_id', 'created_by',
+        'client_phone', 'client_source',
         // ── Call Center fields ─────────────────────────────────
         'cc_branch_id', 'cc_agent_id', 'cc_agent_commission',
         'cc_status', 'cc_rejection_reason',

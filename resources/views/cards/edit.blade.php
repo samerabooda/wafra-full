@@ -2,7 +2,7 @@
 @section('title','Edit Account')
 @section('page-title','Edit Account')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'edit'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
@@ -269,6 +269,19 @@ async function saveEdit(){
   }
 }
 edtApplyLang();
+@if(isset($cardId) && $cardId)
+// Opening a specific card: hide the search panel INSTANTLY (no 5-second flash),
+// show the edit panel in a loading state, then load selects + card in the background.
+(function(){
+  var sp=document.getElementById('edt-title-search');
+  if(sp){ var pn=sp.closest('.panel'); if(pn) pn.style.display='none'; }
+  var ep=document.getElementById('ec-panel'); if(ep) ep.style.display='block';
+  var ttl=document.getElementById('ec-title');
+  if(ttl) ttl.textContent=((typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))==='en'?'Loading…':'جارٍ التحميل…');
+  Promise.resolve(initSelects()).catch(function(){}).then(function(){ ecLoad({{ (int)$cardId }}); });
+})();
+@else
 initSelects();
+@endif
 </script>
 @endpush

@@ -118,7 +118,7 @@ class WebController extends Controller
     }
 
     // ── Cards ──────────────────────────────────────────────────
-    public function cardsIndex()        { return view('cards.index'); }
+    public function cardsIndex()        { return view('cards.list'); }
     public function cardsCreate()       { return view('cards.create'); }
     public function cardsModified()     { return view('cards.modified'); }
     public function cardsSearch()       { return view('cards.search'); }
@@ -132,6 +132,7 @@ class WebController extends Controller
 
     // ── Reports ────────────────────────────────────────────────
     public function reports()              { return view('reports.index'); }
+    public function reportsTable()         { return view('reports.table'); }
     public function reportsDynamic()       { return view('reports.dynamic'); }
     public function reportsBranchMonthly() { return view('reports.branch-monthly'); }
 
@@ -184,12 +185,36 @@ class WebController extends Controller
     // ── Guide ──────────────────────────────────────────────────
     public function guide()
     {
-        return view('guide.index');
+        return view('guide.page');
+    }
+
+    public function profile()
+    {
+        return view('profile.index');
+    }
+
+    public function notificationsTracker()
+    {
+        abort_unless(auth()->user()?->isFinanceAdmin(), 403);
+        return view('notifications.tracker');
+    }
+
+    public function notificationsInbox()
+    {
+        return view('notifications.inbox');
     }
 
     // ── Call Center ────────────────────────────────────────────
     public function callcenterIndex()
     {
+        // Full CC hub (create/send cards) — Call-Center branch staff + Finance Admin only.
+        // Regular branch managers are redirected to their incoming-cards view.
+        $u = auth()->user();
+        if ($u && !$u->isCallCenterStaff()) {
+            return $u->isScopedToBranch()
+                ? redirect()->route('callcenter.pending')
+                : abort(403);
+        }
         return view('callcenter.index');
     }
 

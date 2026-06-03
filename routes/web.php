@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function(){
     Route::get('/cards/{id}/edit', [WebController::class,'cardsEdit'])->name('cards.edit');
     Route::get('/cards/tree',      [WebController::class,'cardsTree'])->name('cards.tree');
     Route::get('/reports',                [WebController::class,'reports'])->name('reports.index');
+    Route::get('/reports/table',          [WebController::class,'reportsTable'])->name('reports.table');
     Route::get('/reports/dynamic',        [WebController::class,'reportsDynamic'])->name('reports.dynamic');
     Route::get('/reports/branch-monthly', [WebController::class,'reportsBranchMonthly'])->name('reports.branch-monthly');
     Route::get('/employees',       [WebController::class,'employees'])->name('employees.index');
@@ -39,6 +40,11 @@ Route::middleware('auth')->group(function(){
     Route::get('/managers',        [WebController::class,'managers'])->name('managers.index');
     Route::get('/branches',        [WebController::class,'branches'])->name('branches.index');
     Route::get('/permissions',     [WebController::class,'permissions'])->name('permissions.index');
+    // Profile
+    Route::get('/profile', [WebController::class,'profile'])->name('profile.index');
+    // Notifications tracker (Finance Admin) + mailbox/inbox (all roles)
+    Route::get('/notifications/tracker', [WebController::class,'notificationsTracker'])->name('notifications.tracker');
+    Route::get('/notifications/inbox',   [WebController::class,'notificationsInbox'])->name('notifications.inbox');
     // Guide
     Route::get('/guide', [WebController::class,'guide'])->name('guide.index');
     // Call Center

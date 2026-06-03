@@ -47,7 +47,7 @@ class EmployeeController extends Controller
         $v = Validator::make($request->all(), [
             'name'                 => 'required|string|max:100',
             'email'                => 'nullable|email|max:150|unique:employees,email',
-            'role'                 => 'required|in:broker,marketing,external,other',
+            'role'                 => 'required|in:broker,marketing,broker_marketer,external,other',
             'branch_id'            => 'nullable|exists:branches,id',
             'broker_commission'    => 'nullable|numeric|min:0',
             'marketing_commission' => 'nullable|numeric|min:0',
@@ -65,8 +65,8 @@ class EmployeeController extends Controller
             'email'                => $request->email,
             'role'                 => $request->role,
             'branch_id'            => $request->branch_id ?? $user->branch_id,
-            'broker_commission'    => $request->broker_commission    ?? 4.00,
-            'marketing_commission' => $request->marketing_commission ?? 3.00,
+            'broker_commission'    => $request->broker_commission    ?? 0,
+            'marketing_commission' => $request->marketing_commission ?? 0,
             'status'               => $isPending ? 'pending' : 'approved',
             'added_by'             => $user->id,
             'approved_by'          => $isPending ? null : $user->id,
@@ -96,7 +96,7 @@ class EmployeeController extends Controller
         $v = Validator::make($request->all(), [
             'name'                 => 'sometimes|string|max:100',
             'email'                => "sometimes|nullable|email|unique:employees,email,{$id}",
-            'role'                 => 'sometimes|in:broker,marketing,external,other',
+            'role'                 => 'sometimes|in:broker,marketing,broker_marketer,external,other',
             'branch_id'            => 'nullable|exists:branches,id',
             'broker_commission'    => 'nullable|numeric|min:0',
             'marketing_commission' => 'nullable|numeric|min:0',

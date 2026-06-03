@@ -2,7 +2,7 @@
 @section('title','Modified Accounts')
 @section('page-title','Modified Accounts')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'modified'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
@@ -16,6 +16,12 @@
     <div style="display:flex;gap:6px">
       <button class="btn btn-sm" style="background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.25);color:var(--gr)" onclick="exportModExcel()">📗 Excel</button>
     </div>
+  </div>
+  {{-- Quick filter --}}
+  <div style="padding:10px 16px;border-bottom:1px solid var(--brd1);display:flex;gap:8px;align-items:center;background:var(--bg4)">
+    <span style="font-size:15px;opacity:.5">🔍</span>
+    <input type="text" id="mod-search" class="form-control" style="flex:1;font-size:14px;background:none;border:none;outline:none;padding:6px 4px" placeholder="ابحث برقم الحساب أو البروكر أو سبب التعديل..." oninput="filterMod(this.value)">
+    <span id="mod-result-count" style="font-size:12px;color:var(--mu);white-space:nowrap"></span>
   </div>
   <div class="table-scroll">
     <table class="data-table">
@@ -90,16 +96,46 @@ let _modCards=[];
 function renderModTable(cards){
   const isEn=modL()==='en';
   document.getElementById('mod-count').textContent=cards.length+' '+mod('records');
-  document.getElementById('mod-tbody').innerHTML=cards.map(c=>`
-    <tr class="row-modified">
-      <td><span class="ac-num">#${c.account_number}</span></td>
-      <td style="color:var(--mu)">${c.month}</td>
-      <td style="color:var(--pri2);font-weight:600">${c.broker?.name||'—'}</td>
-      <td class="mono c-green">${fmt(c.monthly_deposit)}</td>
-      <td style="color:var(--or)">${c.modifications?.[0]?.reason||'—'}</td>
-      <td style="color:var(--mu)">${c.modifications?.[0]?.modified_at?new Date(c.modifications[0].modified_at).toLocaleDateString():'—'}</td>
-      <td style="color:var(--mu)">${c.modifications?.[0]?.modified_by?.name||'—'}</td>
-    </tr>`).join()||`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">${mod('empty')}</td></tr>`;
+  if(!cards.length){
+    document.getElementById('mod-tbody').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">${mod('empty')}</td></tr>`;
+    return;
+  }
+  // Expand each card to show ALL its modifications (one row per modification)
+  const rows=[];
+  cards.forEach(c=>{
+    const mods=c.modifications||[];
+    if(!mods.length){
+      rows.push(`<tr class="row-modified">
+        <td><span class="ac-num">${esc(String(c.account_number))}</span></td>
+        <td style="color:var(--mu)">${esc(c.month||'—')}</td>
+        <td style="color:var(--pri2);font-weight:600">${esc(c.broker?.name||'—')}</td>
+        <td class="mono c-green">${fmt(c.monthly_deposit)}</td>
+        <td style="color:var(--mu)">—</td>
+        <td style="color:var(--mu)">—</td>
+        <td style="color:var(--mu)">—</td>
+      </tr>`);
+    } else {
+      mods.forEach((m,mi)=>{
+        const dt=m.modified_at?new Date(m.modified_at).toLocaleDateString(isEn?'en-GB':'ar-SA',{year:'numeric',month:'short',day:'numeric'}):'—';
+        const tm=m.modified_at?new Date(m.modified_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';
+        rows.push(`<tr class="row-modified">
+          ${mi===0?`<td rowspan="${mods.length}" style="vertical-align:top;border-right:3px solid var(--or)"><span class="ac-num">${esc(String(c.account_number))}</span>${mods.length>1?`<br><span style="font-size:10px;color:var(--mu)">${mods.length} ${isEn?'edits':'تعديل'}</span>`:''}</td>
+          <td rowspan="${mods.length}" style="vertical-align:top;color:var(--mu)">${esc(c.month||'—')}</td>
+          <td rowspan="${mods.length}" style="vertical-align:top;color:var(--pri2);font-weight:600">${esc(c.broker?.name||'—')}</td>
+          <td rowspan="${mods.length}" style="vertical-align:top" class="mono c-green">${fmt(c.monthly_deposit)}</td>`:''}
+          <td style="color:var(--or);font-weight:600">${esc(m.reason||'—')}</td>
+          <td>
+            <span style="color:var(--tx);font-weight:700">${esc(dt)}</span>
+            ${tm?`<span style="color:var(--mu);font-size:10px;display:block">${esc(tm)}</span>`:''}
+          </td>
+          <td>
+            <span style="color:var(--m2);font-weight:600">${esc(m.modified_by?.name||'—')}</span>
+          </td>
+        </tr>`);
+      });
+    }
+  });
+  document.getElementById('mod-tbody').innerHTML=rows.join('');
 }
 
 async function loadModified(){
@@ -126,6 +162,19 @@ function exportModExcel(){
   XLSX.utils.book_append_sheet(wb,ws,isEn?'Modified Accounts':'الحسابات المعدّلة');
   XLSX.writeFile(wb,'WafraGulf_Modified_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Excel ✅','success');
+}
+
+function filterMod(q){
+  q=(q||'').toLowerCase().trim();
+  const filtered=q?_modCards.filter(c=>{
+    const mods=c.modifications||[];
+    return String(c.account_number).includes(q)||
+      (c.broker?.name||'').toLowerCase().includes(q)||
+      mods.some(m=>(m.reason||'').toLowerCase().includes(q)||(m.modified_by?.name||'').toLowerCase().includes(q));
+  }):_modCards;
+  renderModTable(filtered);
+  const cnt=document.getElementById('mod-result-count');
+  if(cnt) cnt.textContent=q?(filtered.length+'/'+_modCards.length):'';
 }
 
 modApplyLang();

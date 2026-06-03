@@ -14,78 +14,20 @@
       اتبع الخطوات التالية لاستيراد كروت كل فرع من البيانات السابقة دون أي كتابة يدوية.
     </div>
 
-    {{-- خطوات مرقمة --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
-      @foreach([
-        ['1','📥','حمّل النموذج','اضغط "تحميل النموذج" للحصول على ملف Excel جاهز بالأعمدة الصحيحة'],
-        ['2','✏️','أدخل البيانات','افتح الملف وأدخل كروت الفرع — صف واحد لكل كرت. يمكن تكرار العملية لكل فرع في ملف منفصل'],
-        ['3','🏢','اختر الفرع','قبل الرفع حدد الفرع المستهدف — جميع الكروت في الملف ستُضاف لهذا الفرع'],
-        ['4','📤','ارفع الملف','اسحب الملف أو اضغط للاختيار — ستظهر معاينة قبل الحفظ النهائي'],
-        ['5','✅','راجع وتأكيد','راجع الأعداد: جديد / تحديث / أخطاء — ثم اضغط "استيراد" للحفظ'],
-        ['6','🔁','كرر للفروع','كرر من الخطوة 2 لكل فرع حتى تكتمل بيانات جميع الفروع'],
-      ] as [$n,$ico,$ttl,$desc])
-      <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1);position:relative">
-        <div style="position:absolute;top:-10px;right:12px;width:22px;height:22px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white">{{$n}}</div>
-        <div style="font-size:18px;margin-bottom:6px">{{$ico}}</div>
-        <div style="font-size:12px;font-weight:700;color:var(--pri2);margin-bottom:4px">{{$ttl}}</div>
-        <div style="font-size:11px;color:var(--mu);line-height:1.6">{{$desc}}</div>
-      </div>
-      @endforeach
-    </div>
+    {{-- خطوات مرقمة (مُولَّدة بـ JS للدعم الثنائي) --}}
+    <div id="imp-steps-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px"></div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      {{-- أعمدة Excel --}}
+      {{-- أعمدة Excel (JS-rendered) --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
         <div style="font-size:12px;font-weight:800;color:var(--pri2);margin-bottom:8px" id="imp-cols-title">📝 أعمدة ملف Excel (بالترتيب)</div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          @foreach([
-            ['A','AC No.','رقم الحساب — مطلوب','#e05050'],
-            ['B','Broker','اسم البروكر (يجب أن يطابق اسمه في الموظفين تماماً)','#f5a623'],
-            ['C','Broker Commission','عمولة البروكر لكل لوت — مثال: 4','#f5a623'],
-            ['D','Marketing','اسم المسوّق الداخلي','#22c97a'],
-            ['E','Marketing Commission','عمولة المسوّق — مثال: 3','#22c97a'],
-            ['F','Ext Marketer 1','المسوّق الخارجي الأول (اختياري)','#7b68ee'],
-            ['G','Ext Commission 1','عمولته','#7b68ee'],
-            ['H','Ext Marketer 2','المسوّق الخارجي الثاني (اختياري)','#7b68ee'],
-            ['I','Ext Commission 2','عمولته','#7b68ee'],
-            ['J','Month','الشهر — مثال: Jan 2025','#2e86ab'],
-            ['K','Initial Deposit $','إيداع فتح الحساب','#2e86ab'],
-            ['L','Monthly Deposit $','الإيداع الشهري المتوقع','#2e86ab'],
-            ['M','New Or Sub','NEW أو SUB','#3a9db5'],
-            ['N','Type','ECN أو STP أو غيره','#3a9db5'],
-          ] as [$col,$name,$note,$clr])
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-            <span style="background:{{$clr}};color:white;font-family:monospace;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0;min-width:16px;text-align:center">{{$col}}</span>
-            <span class="mono" style="color:var(--m2);font-size:10px;flex-shrink:0;min-width:120px">{{$name}}</span>
-            <span style="color:var(--mu);font-size:10px">{{$note}}</span>
-          </div>
-          @endforeach
-        </div>
+        <div style="display:flex;flex-direction:column;gap:3px" id="imp-cols-list"></div>
       </div>
 
-      {{-- ملاحظات مهمة --}}
+      {{-- ملاحظات مهمة (JS-rendered) --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
         <div style="font-size:12px;font-weight:800;color:var(--or);margin-bottom:8px" id="imp-notes-title">⚠️ ملاحظات مهمة</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
-          <div style="padding:8px;background:rgba(224,80,80,.08);border-radius:7px;border-right:3px solid var(--re)">
-            🔑 <strong>أسماء الموظفين</strong> يجب أن تطابق بالضبط الأسماء المسجّلة في قسم الموظفين — حرف بحرف
-          </div>
-          <div style="padding:8px;background:rgba(46,134,171,.08);border-radius:7px;border-right:3px solid var(--pri)">
-            📅 <strong>تنسيق الشهر:</strong> اكتب مثل <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> أو <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>
-          </div>
-          <div style="padding:8px;background:rgba(34,201,122,.08);border-radius:7px;border-right:3px solid var(--gr)">
-            🔄 <strong>التكرار محمي:</strong> إذا كان الحساب + الشهر موجوداً مسبقاً سيتم تحديثه فقط
-          </div>
-          <div style="padding:8px;background:rgba(245,166,35,.08);border-radius:7px;border-right:3px solid var(--or)">
-            🏢 <strong>ملف واحد = فرع واحد</strong> — حدد الفرع المستهدف قبل كل رفع
-          </div>
-          <div style="padding:8px;background:rgba(123,104,238,.08);border-radius:7px;border-right:3px solid #7b68ee">
-            📊 <strong>لا يوجد حد أقصى</strong> — يمكنك رفع أي عدد من السجلات في ملف واحد
-          </div>
-          <div style="padding:8px;background:rgba(46,134,171,.08);border-radius:7px;border-right:3px solid var(--pri)">
-            💾 <strong>النتيجة:</strong> بعد الاستيراد ستظهر تفاصيل كاملة — جديد / تحديث / أخطاء مع رقم الصف
-          </div>
-        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px" id="imp-notes-list"></div>
         <div style="margin-top:12px">
           <button class="btn btn-primary" id="imp-dl-btn" onclick="downloadTemplate()">⬇ تحميل نموذج Excel</button>
         </div>
@@ -210,6 +152,23 @@ const IMP = {
     summaryTotal:'إجمالي الصفوف', summaryNew:'حسابات جديدة',
     summaryUpdated:'سجلات محدّثة', summaryFailed:'صفوف فاشلة',
     rowLabel:'صف',
+    steps:[
+      ['📥','حمّل النموذج','اضغط "تحميل النموذج" للحصول على ملف Excel جاهز بالأعمدة الصحيحة'],
+      ['✏️','أدخل البيانات','افتح الملف وأدخل كروت الفرع — صف واحد لكل كرت. يمكن تكرار العملية لكل فرع في ملف منفصل'],
+      ['🏢','اختر الفرع','قبل الرفع حدد الفرع المستهدف — جميع الكروت في الملف ستُضاف لهذا الفرع'],
+      ['📤','ارفع الملف','اسحب الملف أو اضغط للاختيار — ستظهر معاينة قبل الحفظ النهائي'],
+      ['✅','راجع وتأكيد','راجع الأعداد: جديد / تحديث / أخطاء — ثم اضغط "استيراد" للحفظ'],
+      ['🔁','كرر للفروع','كرر من الخطوة 2 لكل فرع حتى تكتمل بيانات جميع الفروع'],
+    ],
+    colNotes:['رقم الحساب — مطلوب','اسم البروكر (يجب أن يطابق اسمه في الموظفين تماماً)','عمولة البروكر لكل لوت — مثال: 4','اسم المسوّق الداخلي','عمولة المسوّق — مثال: 3','المسوّق الخارجي الأول (اختياري)','عمولته','المسوّق الخارجي الثاني (اختياري)','عمولته','الشهر — مثال: Jan 2025','إيداع فتح الحساب','الإيداع الشهري المتوقع','NEW أو SUB','ECN أو STP أو غيره'],
+    notes:[
+      ['rgba(224,80,80,.08)','var(--re)','🔑 <strong>أسماء الموظفين</strong> يجب أن تطابق بالضبط الأسماء المسجّلة في قسم الموظفين — حرف بحرف'],
+      ['rgba(46,134,171,.08)','var(--pri)','📅 <strong>تنسيق الشهر:</strong> اكتب مثل <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> أو <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>'],
+      ['rgba(34,201,122,.08)','var(--gr)','🔄 <strong>التكرار محمي:</strong> إذا كان الحساب + الشهر موجوداً مسبقاً سيتم تحديثه فقط'],
+      ['rgba(245,166,35,.08)','var(--or)','🏢 <strong>ملف واحد = فرع واحد</strong> — حدد الفرع المستهدف قبل كل رفع'],
+      ['rgba(123,104,238,.08)','#7b68ee','📊 <strong>لا يوجد حد أقصى</strong> — يمكنك رفع أي عدد من السجلات في ملف واحد'],
+      ['rgba(46,134,171,.08)','var(--pri)','💾 <strong>النتيجة:</strong> بعد الاستيراد ستظهر تفاصيل كاملة — جديد / تحديث / أخطاء مع رقم الصف'],
+    ],
   },
   en: {
     tbTitle:'Import Data', planTitle:'📋 Import Plan — Previous Branch Cards',
@@ -239,14 +198,35 @@ const IMP = {
     summaryTotal:'Total Rows', summaryNew:'New Accounts',
     summaryUpdated:'Updated Records', summaryFailed:'Failed Rows',
     rowLabel:'Row',
+    steps:[
+      ['📥','Download Template','Click "Download Template" to get a ready Excel file with the correct columns'],
+      ['✏️','Enter Data','Open the file and enter the branch cards — one row per card. Repeat for each branch in a separate file'],
+      ['🏢','Select Branch','Before uploading select the target branch — all cards in the file will be added to this branch'],
+      ['📤','Upload File','Drag the file or click to select — a preview will appear before final save'],
+      ['✅','Review & Confirm','Review counts: new / updated / errors — then click "Import" to save'],
+      ['🔁','Repeat per Branch','Repeat from step 2 for each branch until all branch data is complete'],
+    ],
+    colNotes:['Account number — required','Broker name (must exactly match name in Employees)','Broker commission per lot — e.g. 4','Internal marketer name','Marketer commission — e.g. 3','External marketer 1 (optional)','Their commission','External marketer 2 (optional)','Their commission','Month — e.g. Jan 2025','Account opening deposit','Expected monthly deposit','NEW or SUB','ECN or STP or other'],
+    notes:[
+      ['rgba(224,80,80,.08)','var(--re)','🔑 <strong>Employee names</strong> must exactly match names registered in the Employees section — character by character'],
+      ['rgba(46,134,171,.08)','var(--pri)','📅 <strong>Month format:</strong> write like <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> or <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>'],
+      ['rgba(34,201,122,.08)','var(--gr)','🔄 <strong>Duplicate protection:</strong> if account + month already exists it will only be updated'],
+      ['rgba(245,166,35,.08)','var(--or)','🏢 <strong>One file = one branch</strong> — select the target branch before each upload'],
+      ['rgba(123,104,238,.08)','#7b68ee','📊 <strong>No maximum limit</strong> — you can upload any number of records in one file'],
+      ['rgba(46,134,171,.08)','var(--pri)','💾 <strong>Result:</strong> after import full details will appear — new / updated / errors with row numbers'],
+    ],
   }
 };
 function impL()    { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
 function imp(key)  { const l = impL(); return IMP[l]?.[key] ?? IMP.ar[key] ?? key; }
 
 function impApplyLang() {
-  const t = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = imp(key); };
-  const h = (id, key) => { const e = document.getElementById(id); if (e) e.innerHTML  = imp(key); };
+  const L  = impL();
+  const D  = IMP[L] || IMP.ar;
+  const t  = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = D[key] ?? IMP.ar[key] ?? key; };
+  const h  = (id, key) => { const e = document.getElementById(id); if (e) e.innerHTML  = D[key] ?? IMP.ar[key] ?? key; };
+  const el = (id) => document.getElementById(id);
+
   t('imp-plan-title','planTitle');
   h('imp-quick-start','quickStart');
   t('imp-cols-title','colsTitle');
@@ -265,7 +245,46 @@ function impApplyLang() {
   t('imp-err-th-row','errThRow');
   t('imp-err-th-ac','errThAc');
   t('imp-err-th-reason','errThReason');
-  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = imp('tbTitle');
+  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = D.tbTitle;
+
+  /* ── Render Steps ── */
+  const stepsGrid = el('imp-steps-grid');
+  if (stepsGrid && D.steps) {
+    stepsGrid.innerHTML = D.steps.map(([ico,ttl,desc], i) => `
+      <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1);position:relative">
+        <div style="position:absolute;top:-10px;right:12px;width:22px;height:22px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white">${i+1}</div>
+        <div style="font-size:18px;margin-bottom:6px">${ico}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--pri2);margin-bottom:4px">${ttl}</div>
+        <div style="font-size:11px;color:var(--mu);line-height:1.6">${desc}</div>
+      </div>`).join('');
+  }
+
+  /* ── Render Column Notes ── */
+  const colsList = el('imp-cols-list');
+  const colDefs = [
+    ['A','AC No.','#e05050'],['B','Broker','#f5a623'],['C','Broker Commission','#f5a623'],
+    ['D','Marketing','#22c97a'],['E','Marketing Commission','#22c97a'],
+    ['F','Ext Marketer 1','#7b68ee'],['G','Ext Commission 1','#7b68ee'],
+    ['H','Ext Marketer 2','#7b68ee'],['I','Ext Commission 2','#7b68ee'],
+    ['J','Month','#2e86ab'],['K','Initial Deposit $','#2e86ab'],['L','Monthly Deposit $','#2e86ab'],
+    ['M','New Or Sub','#3a9db5'],['N','Type','#3a9db5'],
+  ];
+  if (colsList && D.colNotes) {
+    colsList.innerHTML = colDefs.map(([col,name,clr], i) => `
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="background:${clr};color:white;font-family:monospace;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0;min-width:16px;text-align:center">${col}</span>
+        <span class="mono" style="color:var(--m2);font-size:10px;flex-shrink:0;min-width:120px">${name}</span>
+        <span style="color:var(--mu);font-size:10px">${D.colNotes[i] ?? ''}</span>
+      </div>`).join('');
+  }
+
+  /* ── Render Notes ── */
+  const notesList = el('imp-notes-list');
+  if (notesList && D.notes) {
+    notesList.innerHTML = D.notes.map(([bg,brd,html]) =>
+      `<div style="padding:8px;background:${bg};border-radius:7px;border-right:3px solid ${brd}">${html}</div>`
+    ).join('');
+  }
 }
 const _impOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {

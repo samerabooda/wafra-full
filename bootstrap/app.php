@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
 
+        // Always revalidate HTML pages so a deploy is never hidden by browser cache.
+        // Prepend so this middleware processes the response LAST and its header wins
+        // over the session middleware's default "no-cache, private".
+        $middleware->web(prepend: [\App\Http\Middleware\NoCacheHtml::class]);
+
         // Redirect unauthenticated users to the correct named login route
         $middleware->redirectGuestsTo(fn() => route('auth.login'));
 

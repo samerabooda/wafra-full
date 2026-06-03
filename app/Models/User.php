@@ -48,6 +48,22 @@ class User extends Authenticatable
             && $this->branch_id !== null;
     }
 
+    /** True if this user belongs to a Call-Center branch (or is Finance Admin). */
+    public function isCallCenterStaff(): bool
+    {
+        if ($this->isFinanceAdmin()) return true;
+        if (!$this->branch_id) return false;
+        if ($this->relationLoaded('branch')) return (bool) ($this->branch?->is_call_center);
+        return (bool) \App\Models\Branch::whereKey($this->branch_id)->value('is_call_center');
+    }
+
+    /** True only if this user is the MANAGER of a Call-Center branch. */
+    public function isCallCenterManager(): bool
+    {
+        return $this->isBranchManager() && $this->branch_id
+            && (bool) \App\Models\Branch::whereKey($this->branch_id)->value('is_call_center');
+    }
+
     // ── Password Reset ─────────────────────────────────────────
     public function sendPasswordResetNotification($token): void
     {

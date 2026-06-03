@@ -814,7 +814,7 @@ function renderTable() {
   numCols.forEach(col => {
     const total = displayData.reduce((s, r) => s + (parseFloat(getCellRawValue(r, col.id)) || 0), 0);
     if (total > 0) {
-      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '/lot';
+      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '';
       summaryParts.push(`<span class="mono">${colLabel(col)}: <b style="color:var(--pri2)">${formatted}</b></span>`);
     }
   });
@@ -865,7 +865,7 @@ function renderCell(row, col) {
     case 'currency':
       return `<span class="mono" style="color:var(--pri2);font-weight:600">${fmtK(v)}</span>`;
     case 'number':
-      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}/lot</span>`;
+      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}</span>`;
     case 'badge':
       return v === 'new'
         ? '<span class="badge badge-green">NEW</span>'
@@ -880,7 +880,7 @@ function renderCell(row, col) {
       return statusMap[v] || v;
     default:
       if (col.id === 'account_number')
-        return `<span class="ac-num">#${v}</span>`;
+        return `<span class="ac-num">${v}</span>`;
       return String(v);
   }
 }
@@ -1012,7 +1012,7 @@ function exportDynExcel() {
     cols.map(col => {
       const v = getCellRawValue(row, col.id);
       if (v === null || v === undefined) return '';
-      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '/lot';
+      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '';
       if (col.type === 'currency') return parseFloat(v) || 0;
       if (col.type === 'badge')    return v === 'new' ? 'NEW' : 'SUB';
       if (col.type === 'status')   return v === 'modified' ? dyn('xlsxStatusMod') : v === 'new_added' ? dyn('xlsxStatusNew') : dyn('xlsxStatusAct');

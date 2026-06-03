@@ -50,7 +50,7 @@
 @endpush
 
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'create'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 <div class="panel" style="max-width:860px">
@@ -196,13 +196,13 @@
         </div>
         <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:14px">
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext2">🌐 مسوّق خارجي 2</label>
+            <label class="form-label" id="crt-lbl-ext2">📢 مسوّق داخلي 2</label>
             <select id="f-ext2" class="form-control" onchange="onExt2Change()">
               <option value="" id="crt-opt-none3">— لا يوجد —</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext2-comm">عمولة مسوّق خارجي 2</label>
+            <label class="form-label" id="crt-lbl-ext2-comm">عمولة المسوّق الداخلي 2</label>
             <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="0.5" disabled>
           </div>
         </div>
@@ -211,7 +211,13 @@
       <!-- Section 3: Deposits & Commissions -->
       <div class="form-section">
         <div class="form-section-title" id="crt-sec3-title">الإيداعات والعمولات</div>
-        <div class="form-row-3">
+        <style>
+          .crt-cmp{display:flex;gap:10px;flex-wrap:wrap}
+          .crt-cmp .form-group{flex:1;min-width:115px;margin-bottom:10px}
+          .crt-cmp .form-label{font-size:11px;margin-bottom:4px}
+          .crt-cmp .form-control{height:36px;font-size:12.5px;padding:6px 10px}
+        </style>
+        <div class="crt-cmp">
           <div class="form-group">
             <label class="form-label" id="crt-lbl-dep">إيداع فتح الحساب</label>
             <input type="number" id="f-dep" class="form-control" value="0" min="0">
@@ -221,19 +227,17 @@
             <input type="number" id="f-mon" class="form-control" value="0" min="0">
           </div>
           <div class="form-group">
-            <label class="form-label">Forex Commission</label>
+            <label class="form-label">Forex</label>
             <input type="number" id="f-forex" class="form-control" value="8" min="0">
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Futures Commission</label>
+            <label class="form-label">Futures</label>
             <input type="number" id="f-futures" class="form-control" value="8" min="0">
           </div>
-          <div class="form-group">
-            <label class="form-label" id="crt-lbl-notes">ملاحظات</label>
-            <input type="text" id="f-notes" class="form-control" id="crt-inp-notes" placeholder="ملاحظات اختيارية">
-          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="crt-lbl-notes">ملاحظات</label>
+          <input type="text" id="f-notes" class="form-control" placeholder="ملاحظات اختيارية">
         </div>
       </div>
 
@@ -280,8 +284,8 @@ const CRT = {
     lblMktrComm:  'عمولة المسوّق الداخلي',
     lblExt1:      '🌐 مسوّق خارجي 1',
     lblExt1Comm:  'عمولة مسوّق خارجي 1',
-    lblExt2:      '🌐 مسوّق خارجي 2',
-    lblExt2Comm:  'عمولة مسوّق خارجي 2',
+    lblExt2:      '📢 مسوّق داخلي 2',
+    lblExt2Comm:  'عمولة المسوّق الداخلي 2',
     lblDep:       'إيداع فتح الحساب',
     lblMon:       'الإيداع الشهري المتوقع',
     lblNotes:     'ملاحظات',
@@ -321,8 +325,8 @@ const CRT = {
     lblMktrComm:  'Internal Marketer Commission',
     lblExt1:      '🌐 External Marketer 1',
     lblExt1Comm:  'External Marketer 1 Commission',
-    lblExt2:      '🌐 External Marketer 2',
-    lblExt2Comm:  'External Marketer 2 Commission',
+    lblExt2:      '📢 Internal Marketer 2',
+    lblExt2Comm:  'Internal Marketer 2 Commission',
     lblDep:       'Opening Deposit',
     lblMon:       'Expected Monthly Deposit',
     lblNotes:     'Notes',
@@ -562,6 +566,13 @@ async function loadFormOptions() {
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
       if (firstOpt) sel.appendChild(firstOpt);
+      // "Self" — for cards with no external broker/marketer (the account serves itself)
+      if (id === 'f-broker' || id === 'f-marketer') {
+        const so = document.createElement('option');
+        so.value = 'self';
+        so.textContent = '👤 — لنفسه / Self —';
+        sel.appendChild(so);
+      }
       employees.data.forEach(e => {
         const o = document.createElement('option');
         o.value = e.id;
@@ -617,7 +628,8 @@ async function submitCard() {
   const yyyy     = parts[1] ?? new Date().getFullYear();
   const monthDate = `${yyyy}-${mm}-01`;
 
-  const mktrId = parseInt(document.getElementById('f-marketer').value) || null;
+  const mktrVal = document.getElementById('f-marketer').value;
+  const mktrId = (mktrVal && mktrVal !== 'self') ? (parseInt(mktrVal) || null) : null;
   const ext1Id = parseInt(document.getElementById('f-ext1').value)     || null;
   const ext2Id = parseInt(document.getElementById('f-ext2').value)     || null;
 
@@ -631,7 +643,7 @@ async function submitCard() {
     trading_type_id:     parseInt(document.getElementById('f-trading').value)|| null,
     account_kind:        kind,
     parent_account_number: kind === 'sub' ? parentAc : null,
-    broker_id:           parseInt(broker),
+    broker_id:           (broker && broker !== 'self') ? (parseInt(broker) || null) : null,
     broker_commission:   parseFloat(document.getElementById('f-broker-comm').value) || 0,
     marketer_id:         mktrId,
     marketer_commission: mktrId ? (parseFloat(document.getElementById('f-marketer-comm').value) || 0) : 0,

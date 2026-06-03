@@ -13,6 +13,11 @@
   transition:all .18s;color:var(--mu)}
 .icon-btn:hover{border-color:var(--pri);background:rgba(26,173,186,.12);color:var(--pri2)}
 .icon-btn.danger:hover{border-color:var(--re);background:rgba(232,69,69,.1);color:var(--re)}
+.emp-chips-bar{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap}
+.emp-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;border:1px solid var(--brd1);background:var(--bg2);color:var(--mu);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Tajawal',sans-serif;transition:all .15s;flex-shrink:0}
+.emp-chip:hover{border-color:var(--pri);color:var(--pri2)}
+.emp-chip.on{background:rgba(26,173,186,.16);border-color:var(--pri);color:var(--pri2)}
+.emp-chip b{font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,.1);padding:0 6px;border-radius:9px;font-size:11px;line-height:1.6}
 </style>
 
 @section('content')
@@ -32,12 +37,15 @@
       <select id="f-role" class="form-control" style="width:auto;font-size:12px;padding:5px 9px" onchange="loadEmps()">
         <option value="" id="emp-opt-all">كل الأدوار</option>
         <option value="broker" id="emp-opt-broker">🏦 بروكر</option>
-        <option value="marketing" id="emp-opt-mkt">📢 مسوّق داخلي</option>
+        <option value="marketing" id="emp-opt-mkt">📢 مسوّق</option>
+        <option value="broker_marketer">🔁 بروكر ومسوّق</option>
         <option value="external" id="emp-opt-ext">🌐 مسوّق خارجي</option>
         <option value="other" id="emp-opt-other">📋 أخرى</option>
       </select>
     </div>
   </div>
+  {{-- Branch filter chips (with per-branch counts) --}}
+  <div class="emp-chips-bar" id="emp-branch-chips" style="padding:6px 14px 12px"></div>
   <div class="table-scroll">
     <table class="data-table">
       <thead>
@@ -71,23 +79,14 @@
           <input type="text" id="ae-name" class="form-control" placeholder="Ahmed Al-Sayed">
         </div>
         <div class="form-group">
-          <label class="form-label" id="ae-lbl-role">الدور الوظيفي</label>
+          <label class="form-label" id="ae-lbl-role">الدور الوظيفي / Role</label>
           <select id="ae-role" class="form-control">
-            <option value="broker" id="ae-opt-broker">🏦 بروكر</option>
-            <option value="marketing" id="ae-opt-mkt">📢 مسوّق داخلي</option>
-            <option value="external" id="ae-opt-ext">🌐 مسوّق خارجي</option>
-            <option value="other" id="ae-opt-other">📋 أخرى</option>
+            <option value="broker">🏦 بروكر / Broker</option>
+            <option value="marketing">📢 مسوّق / Marketer</option>
+            <option value="broker_marketer">🔁 بروكر ومسوّق / Broker + Marketer</option>
+            <option value="external">🌐 مسوّق خارجي / External Marketer</option>
+            <option value="other">📋 أخرى / Other</option>
           </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="ae-lbl-bc">عمولة البروكر ($/lot)</label>
-          <input type="number" id="ae-bc" class="form-control" value="4" min="0" step="0.5">
-        </div>
-        <div class="form-group">
-          <label class="form-label" id="ae-lbl-mc">عمولة التسويق ($/lot)</label>
-          <input type="number" id="ae-mc" class="form-control" value="3" min="0" step="0.5">
         </div>
       </div>
       <div class="form-group">
@@ -121,14 +120,14 @@ const EMP = {
     panelTitle:'👥 قائمة الموظفين',
     optAll:'كل الأدوار', optBroker:'🏦 بروكر', optMkt:'📢 مسوّق داخلي',
     optExt:'🌐 مسوّق خارجي', optOther:'📋 أخرى',
-    thName:'الموظف', thBranch:'الفرع', thComm:'العمولات', thStatus:'الحالة', thAct:'إجراءات',
+    thName:'الموظف', thBranch:'الفرع', thComm:'الدور', thStatus:'الحالة', thAct:'إجراءات',
     loading:'جاري التحميل...', empty:'لا يوجد موظفون',
     approved:'موظف معتمد', pending:'موظف بانتظار الاعتماد',
     brokerComm:'بروكر:', mktComm:'تسويق:',
     base:'أساسي', delete:'حذف الموظف',
     modalTitle:'➕ إضافة موظف جديد',
     lblName:'الاسم الكامل *', lblRole:'الدور الوظيفي',
-    lblBc:'عمولة البروكر ($/lot)', lblMc:'عمولة التسويق ($/lot)',
+    lblBc:'عمولة البروكر ($)', lblMc:'عمولة التسويق ($)',
     lblEmail:'البريد الإلكتروني', lblBranch:'الفرع',
     pendingInfo:'ℹ️ سيتم إضافة الموظف كـ <strong>قيد الانتظار</strong> — يحتاج اعتماد المدير المالي.',
     btnCancel:'إلغاء', btnAdd:'إضافة ←',
@@ -143,14 +142,14 @@ const EMP = {
     panelTitle:'👥 Employees List',
     optAll:'All Roles', optBroker:'🏦 Broker', optMkt:'📢 Internal Marketer',
     optExt:'🌐 External Marketer', optOther:'📋 Other',
-    thName:'Employee', thBranch:'Branch', thComm:'Commissions', thStatus:'Status', thAct:'Actions',
+    thName:'Employee', thBranch:'Branch', thComm:'Role', thStatus:'Status', thAct:'Actions',
     loading:'Loading...', empty:'No employees found',
     approved:'approved employee', pending:'awaiting approval',
     brokerComm:'Broker:', mktComm:'Marketing:',
     base:'Base', delete:'Delete Employee',
     modalTitle:'➕ Add New Employee',
     lblName:'Full Name *', lblRole:'Job Role',
-    lblBc:'Broker Commission ($/lot)', lblMc:'Marketing Commission ($/lot)',
+    lblBc:'Broker Commission ($)', lblMc:'Marketing Commission ($)',
     lblEmail:'Email Address', lblBranch:'Branch',
     pendingInfo:'ℹ️ Employee will be added as <strong>Pending</strong> — requires Finance Admin approval.',
     btnCancel:'Cancel', btnAdd:'Add ←',
@@ -192,7 +191,7 @@ function empApplyLang() {
   // Approve link
   const al = document.getElementById('emp-approve-link'); if (al) al.textContent = emp('approveLink');
   // Re-render if data already loaded
-  if (_empCache.length) renderEmps(_empCache);
+  if (_empCache.length) { buildBranchChips(); renderEmps(currentEmps()); }
 }
 const _empOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
@@ -202,8 +201,9 @@ window.applyLang = function(lang) {
 
 let _empCache = [];
 
-const roleLabels = {broker:'🏦 بروكر', marketing:'📢 مسوّق داخلي', external:'🌐 مسوّق خارجي', other:'📋 أخرى'};
-const roleLabelEn = {broker:'🏦 Broker', marketing:'📢 Internal Marketer', external:'🌐 External Marketer', other:'📋 Other'};
+const roleLabels = {broker:'🏦 بروكر', marketing:'📢 مسوّق', broker_marketer:'🔁 بروكر ومسوّق', external:'🌐 مسوّق خارجي', other:'📋 أخرى'};
+const roleLabelEn = {broker:'🏦 Broker', marketing:'📢 Marketer', broker_marketer:'🔁 Broker + Marketer', external:'🌐 External Marketer', other:'📋 Other'};
+function roleBadge(r){return r==='broker'?'badge-blue':r==='marketing'?'badge-green':r==='broker_marketer'?'badge-purple':r==='external'?'badge-orange':'badge-gray';}
 const statusBadge = s => ({
   approved: `<span class="badge badge-green">${emp('badgeApproved')}</span>`,
   pending:  `<span class="badge badge-orange">${emp('badgePending')}</span>`,
@@ -222,10 +222,7 @@ function renderEmps(emps) {
         ${e.email ? `<div style="font-size:10px;color:var(--mu);direction:ltr">${esc(e.email)}</div>` : ''}
       </td>
       <td style="font-size:12px;color:var(--mu)">${esc(isEn?(e.branch?.name_en||e.branch?.name_ar||'—'):(e.branch?.name_ar || '—'))}</td>
-      <td>
-        <span class="mono c-blue" style="font-size:11px">${emp('brokerComm')} $${esc(String(e.broker_commission))}</span><br>
-        <span class="mono c-green" style="font-size:11px">${emp('mktComm')} $${esc(String(e.marketing_commission))}</span>
-      </td>
+      <td><span class="badge ${roleBadge(e.role)}" style="font-size:10px">${esc(rl[e.role] || e.role)}</span></td>
       <td>${statusBadge(e.status)}</td>
       <td style="text-align:center">
         ${!e.is_base
@@ -234,6 +231,32 @@ function renderEmps(emps) {
       </td>
     </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--mu)">${emp('empty')}</td></tr>`;
 }
+
+let _branchFilter = '';
+function currentEmps() {
+  if (_branchFilter === '')     return _empCache;
+  if (_branchFilter === 'none') return _empCache.filter(e => !(e.branch && e.branch.id));
+  return _empCache.filter(e => e.branch && String(e.branch.id) === String(_branchFilter));
+}
+function buildBranchChips() {
+  const box = document.getElementById('emp-branch-chips'); if (!box) return;
+  const isEn = empL() === 'en';
+  const counts = {}; let noBranch = 0;
+  (_empCache || []).forEach(e => {
+    if (e.branch && e.branch.id) {
+      const k = e.branch.id;
+      if (!counts[k]) counts[k] = { n: 0, name: isEn ? (e.branch.name_en || e.branch.name_ar) : (e.branch.name_ar || e.branch.name_en), cc: !!e.branch.is_call_center };
+      counts[k].n++;
+    } else noBranch++;
+  });
+  let html = `<button class="emp-chip ${_branchFilter===''?'on':''}" onclick="filterByBranch('')">🏢 ${isEn?'All':'الكل'} <b>${(_empCache||[]).length}</b></button>`;
+  Object.keys(counts).sort((a,b)=>counts[b].n-counts[a].n).forEach(k => {
+    html += `<button class="emp-chip ${String(_branchFilter)===String(k)?'on':''}" onclick="filterByBranch('${k}')">${counts[k].cc?'📞 ':''}${esc(counts[k].name)} <b>${counts[k].n}</b></button>`;
+  });
+  if (noBranch > 0) html += `<button class="emp-chip ${_branchFilter==='none'?'on':''}" onclick="filterByBranch('none')">— ${isEn?'No branch':'بدون فرع'} <b>${noBranch}</b></button>`;
+  box.innerHTML = html;
+}
+function filterByBranch(id) { _branchFilter = id; buildBranchChips(); renderEmps(currentEmps()); }
 
 async function loadEmps() {
   const role = document.getElementById('f-role').value;
@@ -250,7 +273,8 @@ async function loadEmps() {
     if (pt) pt.textContent = r.pending_count + ' ' + emp('pending');
   }
 
-  renderEmps(_empCache);
+  buildBranchChips();
+  renderEmps(currentEmps());
 }
 
 async function loadBranches() {
@@ -271,8 +295,6 @@ async function addEmployee() {
     email:                  document.getElementById('ae-email').value || null,
     role:                   document.getElementById('ae-role').value,
     branch_id:              parseInt(document.getElementById('ae-branch').value) || null,
-    broker_commission:      parseFloat(document.getElementById('ae-bc').value) || 4,
-    marketing_commission:   parseFloat(document.getElementById('ae-mc').value) || 3,
   });
 
   if (r.success) {

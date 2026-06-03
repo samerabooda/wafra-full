@@ -15,3 +15,12 @@ yarn-error.log
 /.idea
 /.vscode
 .claude/
+
+# Temp and preview files
+*.tmp
+*_preview.html
+temp_*.blade.php
+tmp_*.php
+login-designs-preview.html
+temp_settings_restore.blade.php
+tmp_writer.php

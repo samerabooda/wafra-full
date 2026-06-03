@@ -85,7 +85,7 @@
         <div class="kpi-card kpi-orange">
           <div class="kpi-label" id="bm-k-lbl-comm">إجمالي العمولة</div>
           <div class="kpi-value" id="bm-k-comm">—</div>
-          <div class="kpi-sub">$/lot</div>
+          <div class="kpi-sub">$</div>
         </div>
         <div class="kpi-card kpi-purple">
           <div class="kpi-label" id="bm-k-lbl-mod">حسابات معدّلة</div>
@@ -322,7 +322,7 @@ function bmRenderTable(data) {
   data.forEach(c => {
     const isM = c.status === 'modified';
     html += `<tr${isM?' class="row-modified"':''}>
-      <td><span class="ac-num">#${c.account_number}</span></td>
+      <td><span class="ac-num">${c.account_number}</span></td>
       <td style="color:var(--mu)">${c.month}</td>
       <td style="font-weight:600">${c.broker?.name||'—'}</td>
       <td class="mono c-blue">$${c.broker_commission||0}</td>

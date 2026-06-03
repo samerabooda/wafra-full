@@ -3,7 +3,7 @@
 @section('page-title','Call Center')
 
 @section('topbar-actions')
-<button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openModal('modal-cc-create')">➕ كرت جديد</button>
+<button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openCcNew()">➕ كرت جديد</button>
 @endsection
 
 @push('styles')
@@ -321,6 +321,25 @@
           <select id="nc-trading" class="form-control"></select>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-phone">📱 رقم هاتف العميل / Client Phone</label>
+          <input type="tel" id="nc-phone" class="form-control" dir="ltr" placeholder="+965 0000 0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-source">📡 كيف تم التعرّف على العميل؟ / Client Source</label>
+          <select id="nc-source" class="form-control">
+            <option value="">— اختر / Select —</option>
+            <option value="إعلان">📢 إعلان / Advertisement</option>
+            <option value="توصية">🤝 توصية عميل أو صديق / Referral</option>
+            <option value="اتصال مباشر">📞 اتصال مباشر / Direct call</option>
+            <option value="سوشيال ميديا">🌐 سوشيال ميديا / Social media</option>
+            <option value="واتساب">💬 واتساب / WhatsApp</option>
+            <option value="معرض أو فعالية">🎪 معرض أو فعالية / Event</option>
+            <option value="أخرى">➕ أخرى / Other</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label" id="nc-lbl-notes"></label>
         <input type="text" id="nc-notes" class="form-control" placeholder="">
@@ -329,6 +348,30 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="nc-cancel-btn" onclick="closeModal('modal-cc-create')"></button>
       <button class="btn btn-primary" id="nc-save-btn" onclick="createCard()"></button>
+    </div>
+  </div>
+</div>
+
+{{-- Delete confirmation — requires the manager's own password --}}
+<div class="modal-overlay" id="modal-cc-delete">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🗑 حذف الكرت / Delete Card</div>
+      <button class="modal-close" onclick="closeModal('modal-cc-delete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="cc-del-err" class="alert alert-error"></div>
+      <p style="font-size:13px;color:var(--mu);line-height:1.8;margin-bottom:12px">
+        ⚠️ لتأكيد حذف الكرت نهائياً، أدخل <strong>كلمة مرور حسابك</strong>.<br>
+        To permanently delete this card, enter <strong>your account password</strong>.
+      </p>
+      <input type="password" id="cc-del-pass" class="form-control" dir="ltr"
+             placeholder="كلمة المرور / Password" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')ccConfirmDelete()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cc-delete')">إلغاء / Cancel</button>
+      <button class="btn" style="background:var(--re);color:#fff;border-color:var(--re)" onclick="ccConfirmDelete()">🗑 حذف نهائي / Delete</button>
     </div>
   </div>
 </div>
@@ -344,7 +387,7 @@
 const CCT = {
   ar: {
     navHdr:'📞 مركز الاتصال',
-    footer:'⚡ حد عمولات CC:\nبروكر + مسوّق ≤ 5$/lot',
+    footer:'⚡ حد عمولات CC:\nبروكر + مسوّق ≤ 5$',
     s_accounts_lbl:'حسابات CC',          s_accounts_sub:'كل كروت مركز الاتصال',
     s_reports_lbl:'تقارير CC',           s_reports_sub:'تحليل الحالات والفروع',
     s_modified_lbl:'الحسابات المعدّلة',  s_modified_sub:'كروت CC المُعدَّلة',
@@ -393,7 +436,7 @@ const CCT = {
     mon_th_comp:'مكتمل', mon_th_rej:'مرفوض', mon_empty:'لا توجد بيانات',
     // Modal
     modal_title:'📞 كرت CC جديد',
-    limit_hint:'⚠️ تنبيه: عمولة البروكر + عمولة المسوّق يجب ألا تتجاوز 5$/lot عند إتمام الكرت من الفرع.',
+    limit_hint:'⚠️ تنبيه: عمولة البروكر + عمولة المسوّق يجب ألا تتجاوز 5$ عند إتمام الكرت من الفرع.',
     nc_ac:'رقم الحساب *', nc_kind:'نوع الحساب', nc_month:'الشهر *',
     nc_branch:'الفرع المستهدف *', nc_agent:'موظف CC *',
     nc_acctype:'نوع الحساب (تصنيف)', nc_accstatus:'حالة الحساب',
@@ -406,7 +449,7 @@ const CCT = {
   },
   en: {
     navHdr:'📞 Call Center',
-    footer:'⚡ CC Commission Limit:\nBroker + Marketer ≤ $5/lot',
+    footer:'⚡ CC Commission Limit:\nBroker + Marketer ≤ $5',
     s_accounts_lbl:'CC Accounts',         s_accounts_sub:'All call center cards',
     s_reports_lbl:'CC Reports',           s_reports_sub:'Status & branch analysis',
     s_modified_lbl:'Modified Accounts',   s_modified_sub:'Modified CC cards',
@@ -450,7 +493,7 @@ const CCT = {
     mon_th_draft:'Draft', mon_th_sent:'Sent', mon_th_acc:'Accepted',
     mon_th_comp:'Completed', mon_th_rej:'Rejected', mon_empty:'No data',
     modal_title:'📞 New CC Card',
-    limit_hint:'⚠️ Note: Broker + Marketer commission must not exceed $5/lot when the branch completes the card.',
+    limit_hint:'⚠️ Note: Broker + Marketer commission must not exceed $5 when the branch completes the card.',
     nc_ac:'Account Number *', nc_kind:'Account Type', nc_month:'Month *',
     nc_branch:'Target Branch *', nc_agent:'CC Agent *',
     nc_acctype:'Account Type (classification)', nc_accstatus:'Account Status',
@@ -626,17 +669,23 @@ function ccRenderAccounts() {
       <td><span style="font-size:11px;color:var(--mu)">${c.account_kind==='sub'?cc('type_sub'):cc('type_new')}</span></td>
       <td>
         ${ccStatusChip(c.cc_status)}
-        ${c.cc_rejection_reason?`<div style="font-size:10px;color:#842029;margin-top:3px;max-width:180px">${cc('reason_lbl')} ${c.cc_rejection_reason}</div>`:''}
+        ${c.cc_rejection_reason?`<div style="font-size:10px;color:#842029;margin-top:3px;max-width:180px">${cc('reason_lbl')} ${esc(c.cc_rejection_reason)}</div>`:''}
       </td>
       <td>${ccActionButtons(c)}</td>
     </tr>`).join('');
 }
 function ccActionButtons(c) {
-  if (c.cc_status==='cc_pending')     return `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>`;
-  if (c.cc_status==='branch_pending') return `<span style="font-size:11px;color:var(--mu)">${cc('status_wait_branch')}</span>`;
-  if (c.cc_status==='accepted')       return `<span style="font-size:11px;color:var(--gr)">${cc('status_completing')}</span>`;
-  if (c.cc_status==='rejected')       return `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>`;
-  return '—';
+  let main = '';
+  if      (c.cc_status==='cc_pending')     main = `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>`;
+  else if (c.cc_status==='branch_pending') main = `<span style="font-size:11px;color:var(--mu)">${cc('status_wait_branch')}</span>`;
+  else if (c.cc_status==='accepted')       main = `<span style="font-size:11px;color:var(--gr)">${cc('status_completing')}</span>`;
+  else if (c.cc_status==='rejected')       main = `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>`;
+  // ✏️ edit only while the card is still a draft (before it is sent to the branch)
+  const edit = c.cc_status==='cc_pending'
+    ? `<button class="btn btn-ghost btn-sm" title="تعديل / Edit" onclick="openCcEdit(${c.id})" style="padding:4px 8px">✏️</button>` : '';
+  // 🗑 delete — requires the manager's password
+  const del = `<button class="btn btn-ghost btn-sm" title="حذف / Delete" onclick="ccDeleteCard(${c.id})" style="padding:4px 8px;color:var(--re);border-color:rgba(224,80,80,.3)">🗑</button>`;
+  return `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${main}${edit}${del}</div>`;
 }
 
 /* ─── REPORTS RENDER ────────────────────────────────────── */
@@ -746,7 +795,7 @@ function ccRenderModified() {
         <td>${c.month}</td>
         <td>${c.branch?.name_ar||'—'}</td>
         <td>${c.cc_agent?.name||c.ccAgent?.name||'—'}</td>
-        <td class="mono c-blue">${c.broker_commission?'$'+c.broker_commission+'/lot':'—'}</td>
+        <td class="mono c-blue">${c.broker_commission?'$'+c.broker_commission+'':'—'}</td>
         <td class="mono c-green">${c.initial_deposit?'$'+Number(c.initial_deposit).toLocaleString('en'):'—'}</td>
         <td>${ccStatusChip(c.cc_status)}</td>
       </tr>`).join('')
@@ -893,7 +942,7 @@ async function createCard() {
   const mMap  = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
   const mm    = String(mMap[parts[0]]??1).padStart(2,'0');
   const yyyy  = parts[1] ?? new Date().getFullYear();
-  const r = await api('POST', '/cc/cards', {
+  const payload = {
     account_number:    ac, month: monthV, month_date: `${yyyy}-${mm}-01`,
     target_branch_id:  parseInt(branch), cc_agent_id: parseInt(agent),
     account_kind:      document.getElementById('nc-kind').value,
@@ -901,18 +950,69 @@ async function createCard() {
     account_status_id: parseInt(document.getElementById('nc-acc-status').value)||null,
     trading_type_id:   parseInt(document.getElementById('nc-trading').value)||null,
     notes:             document.getElementById('nc-notes').value.trim()||null,
-  });
+    client_phone:      document.getElementById('nc-phone').value.trim()||null,
+    client_source:     document.getElementById('nc-source').value||null,
+  };
+  // Edit mode (draft) → PUT; otherwise create → POST
+  const r = window._ccEditId
+    ? await api('PUT', `/cc/cards/${window._ccEditId}`, payload)
+    : await api('POST', '/cc/cards', payload);
   if (r.success) {
     errEl.classList.remove('show');
+    window._ccEditId = null;
     closeModal('modal-cc-create');
     ccShowAlert('ok', '✅ ' + r.message);
-    ['nc-ac','nc-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    ['nc-ac','nc-notes','nc-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    var ns=document.getElementById('nc-source'); if(ns) ns.value='';
     await ccLoadAll();
   } else {
     errEl.textContent = '❌ ' + (r.errors?Object.values(r.errors).flat().join(' | '):r.message);
     errEl.classList.add('show');
   }
 }
+
+/* ─── New / Edit / Delete a CC card ──────────────────────── */
+function openCcNew(){
+  window._ccEditId = null;
+  ['nc-ac','nc-notes','nc-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['nc-kind','nc-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const err=document.getElementById('nc-err'); if(err) err.classList.remove('show');
+  const ttl=document.getElementById('cc-modal-create-title'); if(ttl) ttl.textContent='📞 كرت CC جديد / New CC Card';
+  openModal('modal-cc-create');
+}
+function openCcEdit(id){
+  const c = (_ccAllCards||[]).find(x=>x.id===id);
+  if(!c){ ccShowAlert('err','الكرت غير موجود'); return; }
+  window._ccEditId = id;
+  const setV=(eid,val)=>{const el=document.getElementById(eid); if(el) el.value=(val==null?'':val);};
+  setV('nc-ac', c.account_number); setV('nc-kind', c.account_kind||'new');
+  setV('nc-month', c.month); setV('nc-branch', c.branch_id);
+  setV('nc-agent', c.cc_agent_id); setV('nc-acc-type', c.account_type_id);
+  setV('nc-acc-status', c.account_status_id); setV('nc-trading', c.trading_type_id);
+  setV('nc-notes', c.notes); setV('nc-phone', c.client_phone); setV('nc-source', c.client_source);
+  const err=document.getElementById('nc-err'); if(err) err.classList.remove('show');
+  const ttl=document.getElementById('cc-modal-create-title'); if(ttl) ttl.textContent='✏️ تعديل كرت CC / Edit CC Card';
+  openModal('modal-cc-create');
+}
+function ccDeleteCard(id){
+  window._ccDelId = id;
+  const p=document.getElementById('cc-del-pass'); if(p) p.value='';
+  const e=document.getElementById('cc-del-err'); if(e) e.classList.remove('show');
+  openModal('modal-cc-delete');
+}
+async function ccConfirmDelete(){
+  const err=document.getElementById('cc-del-err');
+  const pass=(document.getElementById('cc-del-pass')||{}).value||'';
+  if(!pass){ err.textContent='⚠️ أدخل كلمة المرور / Enter password'; err.classList.add('show'); return; }
+  const r=await api('POST', `/cc/cards/${window._ccDelId}/delete-secure`, {password:pass});
+  if(r&&r.success){ closeModal('modal-cc-delete'); ccShowAlert('ok','✅ '+r.message); window._ccDelId=null; await ccLoadAll(); }
+  else { err.textContent='❌ '+((r&&r.message)||'فشل الحذف'); err.classList.add('show'); }
+}
+// One "new card" icon only: hide the global top-bar card buttons + the body duplicate on this screen.
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.topbar .tb-right > a.tb-btn').forEach(function(a){ a.style.display='none'; });
+  var dup=document.getElementById('ccs-acc-new'); if(dup) dup.style.display='none';
+});
 
 /* ─── Load form options ──────────────────────────────────── */
 async function loadFormOptions() {

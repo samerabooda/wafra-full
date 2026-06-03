@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\{
     ImportController,
     BranchController,
     SettingsController,
+    ProfileController,
+    NotificationController,
 };
 
 /*
@@ -20,8 +22,8 @@ use App\Http\Controllers\Api\{
 |──────────────────────────────────────────────────────────────
 */
 
-// ── Public routes (no authentication) ────────────────────────
-Route::prefix('auth')->group(function () {
+// ── Public routes (no authentication) — rate-limited to stop brute-force ──
+Route::prefix('auth')->middleware('throttle:12,1')->group(function () {
     Route::post('register',         [AuthController::class, 'register']);        // FA first-time only
     Route::post('login',            [AuthController::class, 'login']);
     Route::post('check-invite',     [AuthController::class, 'checkInvite']);     // validate invite email
@@ -48,11 +50,24 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         Route::get('me',               [AuthController::class, 'me']);
     });
 
+    // ── Own profile (any authenticated user) ──────────────────
+    Route::get('profile',           [ProfileController::class, 'show']);
+    Route::put('profile',           [ProfileController::class, 'update']);
+    Route::post('profile/photo',    [ProfileController::class, 'photo']);
+    Route::delete('profile/photo',  [ProfileController::class, 'removePhoto']);
+    Route::put('profile/password',  [ProfileController::class, 'password']);
+
     // ── Commission Cards ──────────────────────────────────────
     Route::prefix('cards')->group(function () {
 
         Route::get('tree',          [CommissionCardController::class, 'tree'])
              ->middleware('permission:cards');
+
+        Route::get('fast',          [CommissionCardController::class, 'fastList'])
+             ->middleware('permission:cards');
+
+        Route::get('summary',       [CommissionCardController::class, 'summary'])
+             ->middleware('permission:reports');
 
         Route::get('report',        [CommissionCardController::class, 'report'])
              ->middleware('permission:reports');
@@ -131,10 +146,12 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
 
     // ── Call Center ───────────────────────────────────────────
     Route::prefix('cc')->group(function () {
-        // CC creates / sends cards
-        Route::post('cards',              [CallCenterController::class, 'store']);
-        Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
-        Route::post('cards/{id}/resend',  [CallCenterController::class, 'resend']);
+        // CC creates / edits / sends cards
+        Route::post('cards',                  [CallCenterController::class, 'store']);
+        Route::put('cards/{id}',              [CallCenterController::class, 'update']);          // edit draft before send
+        Route::post('cards/{id}/delete-secure',[CallCenterController::class, 'deleteSecure']);   // delete w/ password
+        Route::post('cards/{id}/send',        [CallCenterController::class, 'send']);
+        Route::post('cards/{id}/resend',      [CallCenterController::class, 'resend']);
 
         // Branch responds to CC cards
         Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);
@@ -149,6 +166,18 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         Route::get('notifications',            [CallCenterController::class, 'notifications']);
         Route::put('notifications/read-all',   [CallCenterController::class, 'markAllRead']);
         Route::put('notifications/{id}/read',  [CallCenterController::class, 'markRead']);
+    });
+
+    // ── Manager Notifications (per-user, accurate tracker) ────
+    Route::prefix('notifications')->group(function () {
+        Route::get('/',              [NotificationController::class, 'index']);
+        Route::get('unread-count',   [NotificationController::class, 'unreadCount']);
+        Route::get('inbox',          [NotificationController::class, 'inbox']);
+        Route::post('read-all',      [NotificationController::class, 'readAll']);
+        Route::post('{id}/read',     [NotificationController::class, 'markRead']);
+        Route::post('{id}/act',      [NotificationController::class, 'act']);
+        Route::get('tracker',        [NotificationController::class, 'tracker'])
+             ->middleware('role:finance_admin');
     });
 
     // ── Import ────────────────────────────────────────────────

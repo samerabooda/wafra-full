@@ -2,7 +2,7 @@
 @section('title','Account Search')
 @section('page-title','Account Search')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'search'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
@@ -103,6 +103,9 @@ function srchApplyLang() {
   if (note) note.style.display = '';
   // re-render if there are results
   if (_srchData.length) renderResults(_srchData, _srchTerm);
+  // Placeholder
+  const inp = document.getElementById('srch-input');
+  if (inp) inp.placeholder = srchL()==='en' ? 'Enter account number...' : 'أدخل رقم الحساب...';
 }
 
 const _srchOrig = window.applyLang;
@@ -174,7 +177,7 @@ function renderResults(data, term) {
     <div class="panel" style="margin-bottom:14px;${isModified?'border-color:rgba(245,166,35,.35);':''}" >
       <div class="panel-header" style="background:${isModified?'rgba(245,166,35,.06)':'var(--bg3)'}">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span class="ac-num" style="font-size:15px">#${c.account_number}</span>
+          <span class="ac-num" style="font-size:15px">${c.account_number}</span>
           <span style="color:var(--mu);font-size:13px">📅 ${c.month}</span>
           ${c.branch ? `<span style="color:var(--mu);font-size:12px">🏢 ${c.branch.name_ar}</span>` : ''}
           ${isModified ? `<span class="badge badge-orange">${s('stMod')}</span>` : `<span class="badge badge-blue">${s('stNormal')}</span>`}
@@ -194,29 +197,29 @@ function renderResults(data, term) {
           <div style="background:rgba(46,134,171,.08);border-radius:10px;padding:12px 14px;border:1px solid rgba(46,134,171,.2)">
             <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🧑‍💼 ${s('thBroker')}</div>
             <div style="font-size:14px;font-weight:700;color:var(--pri2)">${c.broker?.name||'—'}</div>
-            <div class="mono c-blue" style="font-size:12px;margin-top:3px">$${c.broker_commission||0}/lot</div>
+            <div class="mono c-blue" style="font-size:12px;margin-top:3px">$${c.broker_commission||0}</div>
           </div>
           ${c.marketer && c.marketer.name !== c.broker?.name ? `
           <div style="background:rgba(34,201,122,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(34,201,122,.2)">
             <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">📢 ${s('thMktr')}</div>
             <div style="font-size:14px;font-weight:700;color:var(--gr)">${c.marketer.name}</div>
-            <div class="mono c-green" style="font-size:12px;margin-top:3px">$${c.marketer_commission||0}/lot</div>
+            <div class="mono c-green" style="font-size:12px;margin-top:3px">$${c.marketer_commission||0}</div>
           </div>` : ''}
           ${c.ext_marketer1 ? `
           <div style="background:rgba(138,120,240,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(138,120,240,.2)">
             <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🌐 ${s('thExt1')}</div>
             <div style="font-size:14px;font-weight:700;color:var(--pu)">${c.ext_marketer1.name}</div>
-            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission1||0}/lot</div>
+            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission1||0}</div>
           </div>` : ''}
           ${c.ext_marketer2 ? `
           <div style="background:rgba(138,120,240,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(138,120,240,.2)">
             <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🌐 ${s('thExt2')}</div>
             <div style="font-size:14px;font-weight:700;color:var(--pu)">${c.ext_marketer2.name}</div>
-            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission2||0}/lot</div>
+            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission2||0}</div>
           </div>` : ''}
           <div style="background:rgba(245,166,35,.08);border-radius:10px;padding:12px 14px;border:1px solid rgba(245,166,35,.2)">
             <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">💎 ${s('totalComm')}</div>
-            <div class="badge badge-orange" style="font-size:14px;padding:6px 14px">$${totalComm}/lot</div>
+            <div class="badge badge-orange" style="font-size:14px;padding:6px 14px">$${totalComm}</div>
           </div>
         </div>
       </div>

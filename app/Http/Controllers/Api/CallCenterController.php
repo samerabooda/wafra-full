@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{CommissionCard, CcNotification, ActivityLog, Employee};
+use App\Models\{CommissionCard, CcNotification, ActivityLog, Employee, ManagerNotification, User};
+use App\Http\Controllers\Api\CommissionCardController as CardCtrl;
 use Illuminate\Http\{Request, JsonResponse};
-use Illuminate\Support\Facades\{DB, Validator};
+use Illuminate\Support\Facades\{DB, Validator, Hash};
 
 /**
  * CallCenterController — CC ↔ Branch workflow
@@ -65,10 +66,28 @@ class CallCenterController extends Controller
         return null;
     }
 
+    /** Only Call-Center branch staff (or Finance Admin) may create/send CC cards. */
+    private function assertCcBranch(Request $request): ?JsonResponse
+    {
+        if (!$request->user()->isCallCenterStaff()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الصلاحية مقصورة على فرع مركز الاتصال.',
+            ], 403);
+        }
+        return null;
+    }
+
     // ── POST /api/cc/cards — CC creates card (draft) ──────────
     public function store(Request $request): JsonResponse
     {
+        if ($err = $this->assertCcBranch($request)) return $err;
         $user = $request->user();
+
+        // Target branch must be a DIFFERENT (real) branch — not the CC branch itself
+        if ((int)$request->target_branch_id === (int)$user->branch_id && !$user->isFinanceAdmin()) {
+            return response()->json(['success'=>false,'message'=>'اختر فرعاً وجهةً غير فرع مركز الاتصال.'], 422);
+        }
 
         $v = Validator::make($request->all(), [
             'account_number'    => 'required|string|max:30',
@@ -81,6 +100,8 @@ class CallCenterController extends Controller
             'trading_type_id'   => 'nullable|exists:trading_types,id',
             'account_kind'      => 'nullable|in:new,sub',
             'notes'             => 'nullable|string|max:2000',
+            'client_phone'      => 'nullable|string|max:30',
+            'client_source'     => 'nullable|string|max:60',
         ]);
         if ($v->fails()) {
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
@@ -116,6 +137,8 @@ class CallCenterController extends Controller
                 'trading_type_id'     => $request->trading_type_id,
                 'account_kind'        => $request->account_kind ?? 'new',
                 'notes'               => $request->notes,
+                'client_phone'        => $request->client_phone,
+                'client_source'       => $request->client_source,
                 'cc_status'           => 'cc_pending',
                 'status'              => 'new_added',
                 'created_by'          => $user->id,
@@ -127,6 +150,7 @@ class CallCenterController extends Controller
             return $card;
         });
 
+        CardCtrl::refreshBranchSummary($card->branch_id);
         return response()->json([
             'success' => true,
             'message' => "تم إنشاء الكرت #{$card->account_number}. اضغط «إرسال» لإبلاغ الفرع.",
@@ -134,9 +158,76 @@ class CallCenterController extends Controller
         ], 201);
     }
 
+    // ── PUT /api/cc/cards/{id} — edit a DRAFT card before sending ──
+    public function update(Request $request, int $id): JsonResponse
+    {
+        if ($err = $this->assertCcBranch($request)) return $err;
+        $card = CommissionCard::findOrFail($id);
+        $this->assertCcOwnership($card, $request);
+
+        if ($card->cc_status !== 'cc_pending') {
+            return response()->json([
+                'success' => false,
+                'message' => "لا يمكن تعديل الكرت بعد إرساله (الحالة: {$card->cc_status}).",
+            ], 422);
+        }
+
+        $v = Validator::make($request->all(), [
+            'account_number'    => 'sometimes|required|string|max:30',
+            'month'             => 'sometimes|required|string|max:20',
+            'month_date'        => 'sometimes|required|date',
+            'target_branch_id'  => 'sometimes|required|exists:branches,id',
+            'cc_agent_id'       => 'sometimes|required|exists:employees,id',
+            'account_type_id'   => 'nullable|exists:account_types,id',
+            'account_status_id' => 'nullable|exists:account_statuses,id',
+            'trading_type_id'   => 'nullable|exists:trading_types,id',
+            'account_kind'      => 'nullable|in:new,sub',
+            'notes'             => 'nullable|string|max:2000',
+            'client_phone'      => 'nullable|string|max:30',
+            'client_source'     => 'nullable|string|max:60',
+        ]);
+        if ($v->fails()) return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+
+        $fields = $request->only([
+            'account_number','month','month_date','account_type_id','account_status_id',
+            'trading_type_id','account_kind','notes','client_phone','client_source',
+        ]);
+        if ($request->filled('target_branch_id')) $fields['branch_id']   = (int)$request->target_branch_id;
+        if ($request->filled('cc_agent_id'))      $fields['cc_agent_id'] = (int)$request->cc_agent_id;
+
+        $card->update($fields);
+        ActivityLog::record('cc_card_edited', $card, ['by' => $request->user()->id]);
+        CardCtrl::refreshBranchSummary($card->branch_id);
+
+        return response()->json(['success' => true, 'message' => "تم تعديل الكرت #{$card->account_number}.", 'data' => $card->load(['branch'])]);
+    }
+
+    // ── POST /api/cc/cards/{id}/delete-secure — delete after password re-auth ──
+    public function deleteSecure(Request $request, int $id): JsonResponse
+    {
+        if ($err = $this->assertCcBranch($request)) return $err;
+        $user = $request->user();
+        $card = CommissionCard::findOrFail($id);
+        $this->assertCcOwnership($card, $request);
+
+        if (!$request->filled('password') || !Hash::check($request->password, $user->password)) {
+            return response()->json(['success' => false, 'message' => 'كلمة المرور غير صحيحة.'], 403);
+        }
+
+        $branchId = $card->branch_id;
+        $acc      = $card->account_number;
+        $card->update(['status' => 'inactive']);
+        $card->delete();
+        ActivityLog::record('cc_card_deleted', $card, ['by' => $user->id, 'account' => $acc]);
+        CardCtrl::refreshBranchSummary($branchId);
+
+        return response()->json(['success' => true, 'message' => "تم حذف الكرت #{$acc}."]);
+    }
+
     // ── POST /api/cc/cards/{id}/send — CC sends to branch ──────
     public function send(Request $request, int $id): JsonResponse
     {
+        if ($err = $this->assertCcBranch($request)) return $err;
         $card = CommissionCard::findOrFail($id);
         $this->assertCcOwnership($card, $request);
 
@@ -163,10 +254,46 @@ class CallCenterController extends Controller
             ActivityLog::record('cc_card_sent', $card, ['to_branch' => $card->branch_id]);
         });
 
+        // Per-manager notifications (accurate tracker) — fan out to the target branch's
+        // managers (+ Finance Admins so they see every incoming CC card).
+        $this->notifyManagers($card, $request->user());
+
         return response()->json([
             'success' => true,
             'message' => "✅ تم إرسال الكرت #{$card->account_number} للفرع — بانتظار الرد.",
         ]);
+    }
+
+    /** Create one notification row per recipient manager for a new CC card. */
+    private function notifyManagers(CommissionCard $card, User $actor): void
+    {
+        try {
+            $recipients = User::where('is_active', true)
+                ->where(function ($q) use ($card) {
+                    $q->where(function ($w) use ($card) {
+                        $w->where('role', 'branch_manager')->where('branch_id', $card->branch_id);
+                    })->orWhere('role', 'finance_admin');
+                })
+                ->where('id', '!=', $actor->id)
+                ->get(['id']);
+
+            if ($recipients->isEmpty()) return;
+
+            ManagerNotification::fanOut($recipients, [
+                'type'           => 'cc_new_card',
+                'card_id'        => $card->id,
+                'account_number' => $card->account_number,
+                'month'          => $card->month,
+                'from_user_id'   => $actor->id,
+                'from_branch_id' => $card->cc_branch_id,
+                'to_branch_id'   => $card->branch_id,
+                'title'          => "حساب جديد من مركز الاتصال: {$card->account_number}",
+                'body'           => "وصل حساب {$card->account_number} ({$card->month}) من مركز الاتصال — بانتظار مراجعتكم.",
+                'data'           => ['account_number' => $card->account_number, 'month' => $card->month],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('notifyManagers failed: '.$e->getMessage());
+        }
     }
 
     // ── PUT /api/cc/cards/{id}/accept — Branch accepts ─────────
@@ -327,6 +454,7 @@ class CallCenterController extends Controller
             ActivityLog::record('cc_card_completed', $card);
         });
 
+        CardCtrl::refreshBranchSummary($card->branch_id);
         return response()->json([
             'success' => true,
             'message' => "🏁 تم إكمال الكرت #{$card->account_number} بنجاح.",
@@ -337,6 +465,7 @@ class CallCenterController extends Controller
     // ── POST /api/cc/cards/{id}/resend — CC resends rejected card ─
     public function resend(Request $request, int $id): JsonResponse
     {
+        if ($err = $this->assertCcBranch($request)) return $err;
         $card = CommissionCard::findOrFail($id);
         $this->assertCcOwnership($card, $request);
 

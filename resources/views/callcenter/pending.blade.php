@@ -11,10 +11,10 @@
 .cc-row td:first-child{border-right:4px solid #7b68ee !important}
 .cc-row{background:linear-gradient(90deg,rgba(123,104,238,.05),transparent 60%) !important}
 .cc-row:hover{background:linear-gradient(90deg,rgba(123,104,238,.11),transparent 60%) !important}
-.complete-form{background:var(--surface2);border-radius:12px;padding:16px;margin-top:8px;border:1px solid var(--border)}
-.cc-limit-bar{height:6px;border-radius:3px;background:#e9ecef;margin-top:6px;overflow:hidden}
+.complete-form{background:var(--bg3);border-radius:12px;padding:16px;margin-top:8px;border:1px solid var(--brd1)}
+.cc-limit-bar{height:6px;border-radius:3px;background:var(--brd2);margin-top:6px;overflow:hidden}
 .cc-limit-fill{height:100%;border-radius:3px;transition:width .3s,background .3s}
-.cc-notes-box{font-size:12px;color:var(--text2);background:rgba(123,104,238,.06);border:1px solid rgba(123,104,238,.2);border-radius:8px;padding:6px 10px;margin-top:6px;max-width:500px}
+.cc-notes-box{font-size:12px;color:var(--mu);background:rgba(123,104,238,.06);border:1px solid rgba(123,104,238,.2);border-radius:8px;padding:6px 10px;margin-top:6px;max-width:500px}
 </style>
 
 <div class="panel" style="max-width:1060px">
@@ -35,7 +35,7 @@
       <div id="pnd-limit-notice">
         <strong style="color:#7b68ee">حد عمولات كروت CC:</strong>
         <span style="font-size:13px"> عمولة البروكر + عمولة المسوّق لا يجب أن تتجاوز <strong>5$ / lot</strong></span>
-        <span style="font-size:11px;color:var(--text2);display:block;margin-top:2px">سيتم رفض الحفظ إذا تجاوز مجموعهما 5$</span>
+        <span style="font-size:11px;color:var(--mu);display:block;margin-top:2px">سيتم رفض الحفظ إذا تجاوز مجموعهما 5$</span>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
     <div class="modal-body">
       <div id="rj-err" class="alert alert-error"></div>
       <div class="form-group">
-        <label class="form-label" id="rj-lbl-reason">سبب الرفض * <span style="font-size:11px;color:var(--text2)">(5 أحرف على الأقل)</span></label>
+        <label class="form-label" id="rj-lbl-reason">سبب الرفض * <span style="font-size:11px;color:var(--mu)">(5 أحرف على الأقل)</span></label>
         <textarea id="rj-reason" class="form-control" rows="3" placeholder="اكتب سبب الرفض هنا..."></textarea>
       </div>
     </div>
@@ -77,7 +77,7 @@ const PND = {
     limitBody:' عمولة البروكر + عمولة المسوّق لا يجب أن تتجاوز <strong>5$ / lot</strong>',
     limitSub:'سيتم رفض الحفظ إذا تجاوز مجموعهما 5$',
     rjModalTitle:'❌ رفض الكرت',
-    rjLblReason:'سبب الرفض * <span style="font-size:11px;color:var(--text2)">(5 أحرف على الأقل)</span>',
+    rjLblReason:'سبب الرفض * <span style="font-size:11px;color:var(--mu)">(5 أحرف على الأقل)</span>',
     rjPhReason:'اكتب سبب الرفض هنا...',
     rjBtnCancel:'إلغاء', rjBtnConfirm:'❌ تأكيد الرفض',
     errReason:'⚠️ يجب كتابة سبب الرفض (5 أحرف على الأقل)',
@@ -88,11 +88,11 @@ const PND = {
     btnAccept:'✅ قبول الكرت', btnReject:'❌ رفض',
     completeTitle:'📋 استكمال بيانات الكرت',
     lblBroker:'البروكر * <span style="font-size:10px;color:#dc3545">(مطلوب)</span>',
-    lblBComm:'عمولة البروكر ($/lot) *',
-    lblMktr:'المسوّق الرئيسي', lblMComm:'عمولة المسوّق ($/lot)',
+    lblBComm:'عمولة البروكر ($) *',
+    lblMktr:'المسوّق الرئيسي', lblMComm:'عمولة المسوّق ($)',
     totalComm:'إجمالي العمولات (بروكر + مسوّق)',
-    lblExt1:'مسوّق إضافي 1', lblEcomm1:'عمولة المسوّق الإضافي 1 ($/lot)',
-    lblExt2:'مسوّق إضافي 2', lblEcomm2:'عمولة المسوّق الإضافي 2 ($/lot)',
+    lblExt1:'مسوّق إضافي 1', lblEcomm1:'عمولة المسوّق الإضافي 1 ($)',
+    lblExt2:'مسوّق إضافي 2', lblEcomm2:'عمولة المسوّق الإضافي 2 ($)',
     lblDep:'إيداع فتح الحساب *', lblMon:'الإيداع الشهري المتوقع',
     btnComplete:'🏁 إتمام الكرت',
     optBroker:'— اختر البروكر —', optNoMktr:'— لا يوجد —',
@@ -106,7 +106,7 @@ const PND = {
     limitBody:' Broker + Marketer commission must not exceed <strong>$5 / lot</strong>',
     limitSub:'Save will be rejected if total exceeds $5',
     rjModalTitle:'❌ Reject Card',
-    rjLblReason:'Rejection Reason * <span style="font-size:11px;color:var(--text2)">(min 5 characters)</span>',
+    rjLblReason:'Rejection Reason * <span style="font-size:11px;color:var(--mu)">(min 5 characters)</span>',
     rjPhReason:'Enter rejection reason here...',
     rjBtnCancel:'Cancel', rjBtnConfirm:'❌ Confirm Rejection',
     errReason:'⚠️ Please enter a rejection reason (min 5 characters)',
@@ -117,11 +117,11 @@ const PND = {
     btnAccept:'✅ Accept Card', btnReject:'❌ Reject',
     completeTitle:'📋 Complete Card Data',
     lblBroker:'Broker * <span style="font-size:10px;color:#dc3545">(required)</span>',
-    lblBComm:'Broker Commission ($/lot) *',
-    lblMktr:'Main Marketer', lblMComm:'Marketer Commission ($/lot)',
+    lblBComm:'Broker Commission ($) *',
+    lblMktr:'Main Marketer', lblMComm:'Marketer Commission ($)',
     totalComm:'Total Commissions (Broker + Marketer)',
-    lblExt1:'Additional Marketer 1', lblEcomm1:'Additional Marketer 1 Commission ($/lot)',
-    lblExt2:'Additional Marketer 2', lblEcomm2:'Additional Marketer 2 Commission ($/lot)',
+    lblExt1:'Additional Marketer 1', lblEcomm1:'Additional Marketer 1 Commission ($)',
+    lblExt2:'Additional Marketer 2', lblEcomm2:'Additional Marketer 2 Commission ($)',
     lblDep:'Opening Deposit *', lblMon:'Expected Monthly Deposit',
     btnComplete:'🏁 Complete Card',
     optBroker:'— Select Broker —', optNoMktr:'— None —',
@@ -144,7 +144,7 @@ function pndApplyLang() {
   t('pnd-refresh-btn', 'refreshBtn');
   // limit notice
   const ln = el('pnd-limit-notice');
-  if (ln) ln.innerHTML = `<strong style="color:#7b68ee">${pnd('limitTitle')}</strong><span style="font-size:13px">${pnd('limitBody')}</span><span style="font-size:11px;color:var(--text2);display:block;margin-top:2px">${pnd('limitSub')}</span>`;
+  if (ln) ln.innerHTML = `<strong style="color:#7b68ee">${pnd('limitTitle')}</strong><span style="font-size:13px">${pnd('limitBody')}</span><span style="font-size:11px;color:var(--mu);display:block;margin-top:2px">${pnd('limitSub')}</span>`;
   // reject modal
   t('rj-modal-title', 'rjModalTitle');
   h('rj-lbl-reason', 'rjLblReason');
@@ -200,7 +200,7 @@ function renderPendingList(data) {
   const container = document.getElementById('pending-list');
   document.getElementById('pending-count').textContent = data.length;
   if (!data.length) {
-    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:40px;margin-bottom:8px">📭</div>${pnd('empty')}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:40px;margin-bottom:8px">📭</div>${pnd('empty')}</div>`;
     return;
   }
   container.innerHTML = data.map(c => cardHtml(c)).join('');
@@ -217,23 +217,23 @@ function cardHtml(c) {
     : '';
 
   const accountTypeHtml = c.account_type?.type
-    ? `<span style="font-size:11px;color:var(--text2)">| ${c.account_type.type}</span>`
+    ? `<span style="font-size:11px;color:var(--mu)">| ${c.account_type.type}</span>`
     : '';
 
   return `
-  <div id="card-${c.id}" style="border:1px solid var(--border);border-right:4px solid #7b68ee;border-radius:12px;margin-bottom:14px;overflow:hidden">
+  <div id="card-${c.id}" style="border:1px solid var(--brd1);border-right:4px solid #7b68ee;border-radius:12px;margin-bottom:14px;overflow:hidden">
     <!-- Card Header -->
-    <div style="background:var(--surface2);padding:14px 16px">
+    <div style="background:var(--bg2);padding:14px 16px">
       <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="cc-source-badge">📞 CC</span>
           <strong style="font-size:16px">${c.account_number}</strong>
-          <span style="color:var(--text2);font-size:13px">${c.month}</span>
+          <span style="color:var(--mu);font-size:13px">${c.month}</span>
           <span style="font-size:11px;color:var(--mu)">${kindLabel}</span>
           ${accountTypeHtml}
           <span class="cc-chip ${c.cc_status}">${statusLabel}</span>
         </div>
-        <div style="font-size:12px;color:var(--text2)">
+        <div style="font-size:12px;color:var(--mu)">
           ${pnd('from')} <strong>${c.cc_branch?.name_ar ?? '—'}</strong>
           &nbsp;|&nbsp; ${pnd('agent')} <strong>${c.cc_agent?.name ?? '—'}</strong>
           &nbsp;|&nbsp; ${pnd('ccComm')} <strong>${c.cc_agent_commission}$</strong>
@@ -342,11 +342,11 @@ function completeFormHtml(c) {
     <!-- Row 6: Commissions -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Forex Commission ($/lot)</label>
+        <label class="form-label">Forex Commission ($)</label>
         <input type="number" id="cf-forex-${c.id}" class="form-control" value="8" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Futures Commission ($/lot)</label>
+        <label class="form-label">Futures Commission ($)</label>
         <input type="number" id="cf-fut-${c.id}" class="form-control" value="8" min="0">
       </div>
     </div>
@@ -410,7 +410,7 @@ async function completeCard(id) {
 
   // Client-side commission limit check
   if (bComm + mComm > 5) {
-    errEl.textContent = `⛔ عمولة البروكر (${bComm}$) + عمولة المسوّق (${mComm}$) = ${(bComm+mComm).toFixed(1)}$ تتجاوز الحد المسموح (5$/lot)`;
+    errEl.textContent = `⛔ عمولة البروكر (${bComm}$) + عمولة المسوّق (${mComm}$) = ${(bComm+mComm).toFixed(1)}$ تتجاوز الحد المسموح (5$)`;
     errEl.classList.add('show');
     return;
   }

@@ -2,7 +2,7 @@
 @section('title','Managers')
 @section('page-title','Managers')
 @section('topbar-actions')
-<button class="tb-btn primary" id="mgr-tb-btn-add" onclick="openModal('modal-add-mgr')">👤 مدير جديد</button>
+<button class="tb-btn primary" id="mgr-tb-btn-add" onclick="['mg-phone','mg-email'].forEach(function(i){var e=document.getElementById(i);if(e)e.value='';});openModal('modal-add-mgr');setTimeout(function(){var p=document.getElementById('mg-phone');if(p)p.value=p.value.replace(/[^0-9]/g,'');},300)">👤 مدير جديد</button>
 <button class="tb-btn" id="mgr-tb-btn-invite" onclick="openModal('modal-add-invite')" style="margin-right:8px">📧 دعوة مدير فرع</button>
 @endsection
 
@@ -109,18 +109,22 @@
           <label class="form-label" id="mgr-lbl-phone">رقم التليفون</label>
           <div style="display:flex;gap:6px">
             <select id="mg-phone-code" class="form-control" style="width:150px;flex-shrink:0;font-size:12px;direction:ltr">
-              <option value="+965">🇰🇼 +965 الكويت</option>
-              <option value="+966">🇸🇦 +966 السعودية</option>
-              <option value="+971">🇦🇪 +971 الإمارات</option>
-              <option value="+973">🇧🇭 +973 البحرين</option>
-              <option value="+974">🇶🇦 +974 قطر</option>
-              <option value="+968">🇴🇲 +968 عُمان</option>
-              <option value="+962">🇯🇴 +962 الأردن</option>
-              <option value="+20">🇪🇬 +20 مصر</option>
-              <option value="+964">🇮🇶 +964 العراق</option>
-              <option value="+963">🇸🇾 +963 سوريا</option>
+              <option value="+965">🇰🇼 +965 Kuwait</option>
+              <option value="+966">🇸🇦 +966 Saudi Arabia</option>
+              <option value="+971">🇦🇪 +971 UAE</option>
+              <option value="+973">🇧🇭 +973 Bahrain</option>
+              <option value="+974">🇶🇦 +974 Qatar</option>
+              <option value="+968">🇴🇲 +968 Oman</option>
+              <option value="+962">🇯🇴 +962 Jordan</option>
+              <option value="+20">🇪🇬 +20 Egypt</option>
+              <option value="+964">🇮🇶 +964 Iraq</option>
+              <option value="+963">🇸🇾 +963 Syria</option>
             </select>
-            <input type="tel" id="mg-phone" class="form-control" placeholder="5XXXXXXXX" dir="ltr" style="flex:1">
+            <input type="text" id="mg-phone" name="x_contact_9931" class="form-control" placeholder="5XXXXXXXX" dir="ltr" style="flex:1" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" inputmode="numeric"
+                   readonly onfocus="this.removeAttribute('readonly')"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                   onchange="this.value=this.value.replace(/[^0-9]/g,'')"
+                   onblur="this.value=this.value.replace(/[^0-9]/g,'')">
           </div>
         </div>
         <div class="form-group">
@@ -166,6 +170,23 @@
       <div id="edit-mgr-err" class="alert alert-error"></div>
       <div id="edit-mgr-ok"  class="alert alert-success"></div>
       <input type="hidden" id="edit-mgr-id">
+
+      {{-- Profile photo row --}}
+      <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--bg3);border-radius:12px;border:1px solid var(--brd1);margin-bottom:14px">
+        <div id="edit-mgr-avatar-preview" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--pri2),var(--pri3));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;flex-shrink:0;overflow:hidden">
+          ?
+        </div>
+        <div style="flex:1">
+          <div class="form-label" id="mgr-edit-lbl-photo">صورة المدير (اختيارية)</div>
+          <input type="file" id="edit-mg-photo" accept="image/jpeg,image/png,image/gif,image/webp"
+            style="font-size:12px;color:var(--mu);margin-top:4px"
+            onchange="previewMgrPhoto(this)">
+          <div style="font-size:10px;color:var(--mu);margin-top:3px" id="mgr-edit-photo-hint">JPG / PNG — max 2 MB — سيُعرض في الواجهة الجانبية مستقبلاً</div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="mgr-photo-clear-btn" style="display:none"
+          onclick="clearMgrPhoto()">✕ <span id="mgr-photo-clear-lbl">حذف الصورة</span></button>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="mgr-edit-lbl-name">الاسم الكامل *</label>
@@ -173,7 +194,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" id="mgr-edit-lbl-phone">رقم التليفون</label>
-          <input type="tel" id="edit-mg-phone" class="form-control" dir="ltr">
+          <input type="tel" id="edit-mg-phone" class="form-control" dir="ltr" autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         </div>
       </div>
       <div class="form-row">
@@ -538,9 +559,14 @@ function renderMgrTable(data) {
     ? data.map(m => `
       <tr style="${!m.is_active ? 'opacity:.55' : ''}">
         <td>
-          <div class="mgr-name-cell">${esc(m.name)}</div>
-          <div class="mgr-email" title="${esc(m.email)}">${esc(m.email)}</div>
-          ${m.phone ? `<div class="mgr-phone">${esc(m.phone)}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:38px;height:38px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--pri2),var(--pri3))">${m.photo ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover">` : esc((m.name||'?').charAt(0).toUpperCase())}</div>
+            <div style="min-width:0">
+              <div class="mgr-name-cell">${esc(m.name)}</div>
+              <div class="mgr-email" title="${esc(m.email)}">${esc(m.email)}</div>
+              ${m.phone ? `<div class="mgr-phone">${esc(m.phone)}</div>` : ''}
+            </div>
+          </div>
         </td>
         <td style="font-size:12px">${esc(m.branch?.name_ar || '—')}</td>
         <td><span class="badge badge-blue" style="font-size:10px">${esc(roleLabel(m.role))}</span></td>
@@ -649,12 +675,53 @@ async function createManager() {
 
 // ── Edit Manager ──────────────────────────────────────────
 let _editMgrData = null;
+let _mgrPhoto;   // undefined = unchanged, string = new photo, null = remove
+/* ── Manager photo preview helpers ── */
+function previewMgrPhoto(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  const file = inp.files[0];
+  if (file.size > 2 * 1024 * 1024) {
+    toast(mgrL()==='en' ? 'Image must be under 2 MB' : 'الصورة يجب أن تكون أقل من 2 ميجا', 'error');
+    inp.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _mgrPhoto = e.target.result;   // base64 data URL — sent on save
+    const av = document.getElementById('edit-mgr-avatar-preview');
+    if (av) { av.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+    const clrBtn = document.getElementById('mgr-photo-clear-btn');
+    if (clrBtn) clrBtn.style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function clearMgrPhoto() {
+  const inp = document.getElementById('edit-mg-photo');
+  const av  = document.getElementById('edit-mgr-avatar-preview');
+  const clrBtn = document.getElementById('mgr-photo-clear-btn');
+  if (inp) inp.value = '';
+  _mgrPhoto = null;   // signal removal on save
+  if (av && _editMgrData) {
+    av.innerHTML = (_editMgrData.name || '?').charAt(0).toUpperCase();
+    av.style.background = 'linear-gradient(135deg,var(--pri2),var(--pri3))';
+  }
+  if (clrBtn) clrBtn.style.display = 'none';
+}
+
 async function editMgr(id) {
-  const r = await api('GET', '/managers');
-  if (!r.success) return;
-  const m = r.data.find(x => x.id === id);
-  if (!m) { toast(mgr('mgrNotFound'), 'error'); return; }
+  /* Use cached data first; fall back to fresh API call if cache empty */
+  let m = (_mgrData || []).find(x => x.id === id);
+  if (!m) {
+    const r = await api('GET', '/managers');
+    if (!r.success) { toast(mgr('mgrNotFound') || 'Manager not found', 'error'); return; }
+    _mgrData = r.data;
+    m = r.data.find(x => x.id === id);
+  }
+  if (!m) { toast(mgr('mgrNotFound') || 'Manager not found', 'error'); return; }
+
+  try {
   _editMgrData = m;
+  _mgrPhoto = undefined;   // reset photo-change tracking for this manager
   document.getElementById('edit-mgr-id').value    = m.id;
   document.getElementById('edit-mg-name').value   = m.name;
   document.getElementById('edit-mg-phone').value  = m.phone || '';
@@ -662,8 +729,37 @@ async function editMgr(id) {
   document.getElementById('edit-mg-active').value = m.is_active ? '1' : '0';
   document.getElementById('edit-mgr-err').classList.remove('show');
   document.getElementById('edit-mgr-ok').classList.remove('show');
-  setPerms(m.permissions || [], 'e-');
+
+  // Show existing photo or initials preview
+  const av = document.getElementById('edit-mgr-avatar-preview');
+  const clrBtn = document.getElementById('mgr-photo-clear-btn');
+  if (av) {
+    if (m.photo) { av.innerHTML = `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+    else { av.textContent = (m.name || '?').charAt(0).toUpperCase(); av.style.background = 'linear-gradient(135deg,var(--pri2),var(--pri3))'; av.style.fontSize = '24px'; }
+  }
+  if (clrBtn) clrBtn.style.display = m.photo ? '' : 'none';
+  const photoInp = document.getElementById('edit-mg-photo');
+  if (photoInp) photoInp.value = '';
+
+  // Also update label translations
+  const isEn = mgrL() === 'en';
+  const lbl = document.getElementById('mgr-edit-lbl-photo');
+  if (lbl) lbl.textContent = isEn ? 'Profile Photo (optional)' : 'صورة المدير (اختيارية)';
+  const hint = document.getElementById('mgr-edit-photo-hint');
+  if (hint) hint.textContent = isEn ? 'JPG / PNG — max 2 MB — Will display in sidebar in future' : 'JPG / PNG — max 2 MB — سيُعرض في القائمة الجانبية مستقبلاً';
+  const clearLbl = document.getElementById('mgr-photo-clear-lbl');
+  if (clearLbl) clearLbl.textContent = isEn ? 'Remove Photo' : 'حذف الصورة';
+
+  // API returns permissions as {key:bool} object — convert to array of granted keys
+  const permArr = Array.isArray(m.permissions)
+    ? m.permissions
+    : Object.entries(m.permissions || {}).filter(([,v])=>v).map(([k])=>k);
+  setPerms(permArr, 'e-');
   openModal('modal-edit-mgr');
+  } catch(err) {
+    console.error('editMgr error:', err);
+    toast('Error opening edit form: ' + err.message, 'error');
+  }
 }
 
 async function saveManager() {
@@ -679,7 +775,9 @@ async function saveManager() {
   if (!name) { errEl.textContent = mgr('errEnterName'); errEl.classList.add('show'); return; }
   const btn = document.getElementById('btn-save-mgr');
   btn.disabled = true; btn.textContent = mgr('btnSaving');
-  const r = await api('PUT', `/managers/${id}`, { name, phone, branch_id: parseInt(branch), is_active: active, permissions: perms });
+  const payload = { name, phone, branch_id: parseInt(branch), is_active: active, permissions: perms };
+  if (_mgrPhoto !== undefined) payload.photo = _mgrPhoto;   // new photo, or null to remove
+  const r = await api('PUT', `/managers/${id}`, payload);
   btn.disabled = false; btn.textContent = mgr('btnSave');
   if (r.success) {
     okEl.textContent = mgr('savedOk'); okEl.classList.add('show');

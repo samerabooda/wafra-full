@@ -36,6 +36,7 @@ class ManagerController extends Controller
                             'phone'       => $u->phone,
                             'role'        => $u->role,
                             'is_active'   => $u->is_active,
+                            'photo'       => $u->photo,
                             'branch'      => $u->branch?->only('id','code','name_ar','name_en'),
                             'permissions' => $u->allPermissions(),
                             'last_login'  => $u->last_login_at?->toDateTimeString(),
@@ -48,6 +49,15 @@ class ManagerController extends Controller
     public function store(Request $request): JsonResponse
     {
         if ($err = $this->requireFA($request)) return $err;
+
+        // Free a soft-deleted manager's email so the same address can be reused.
+        if ($email = trim((string)$request->email)) {
+            $trashed = User::onlyTrashed()->where('email', $email)->first();
+            if ($trashed) {
+                $trashed->email = 'deleted_'.$trashed->id.'_'.time().'@deleted.invalid';
+                $trashed->saveQuietly();
+            }
+        }
 
         $v = Validator::make($request->all(), [
             'name'          => 'required|string|max:100',
@@ -140,14 +150,31 @@ class ManagerController extends Controller
             'is_active'     => 'sometimes|boolean',
             'permissions'   => 'sometimes|array',
             'permissions.*' => 'string|in:dashboard,cards,modified,reports,create_card,edit_card,employees,import,export,branch_switch',
+            'photo'         => 'sometimes|nullable|string',
         ]);
 
         if ($v->fails()) {
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
         }
 
+        // Validate photo payload (data-URL, max ~2MB)
+        if ($request->filled('photo')) {
+            if (! preg_match('/^data:image\/(png|jpe?g|gif|webp);base64,/', $request->photo)) {
+                return response()->json(['success'=>false,'message'=>'Invalid image format'], 422);
+            }
+            if (strlen($request->photo) > 2_800_000) {
+                return response()->json(['success'=>false,'message'=>'Image too large (max ~2MB)'], 422);
+            }
+        }
+
         DB::transaction(function () use ($request, $manager) {
             $manager->update($request->only('name', 'phone', 'branch_id', 'is_active'));
+
+            // Photo: set when provided, clear when explicitly sent empty/null
+            if ($request->has('photo')) {
+                $manager->photo = $request->filled('photo') ? $request->photo : null;
+                $manager->save();
+            }
 
             if ($request->has('permissions')) {
                 // Replace all permissions
@@ -178,16 +205,27 @@ class ManagerController extends Controller
 
         $manager = User::whereIn('role', ['branch_manager','viewer'])->findOrFail($id);
 
-        // Soft delete
-        $manager->update(['is_active' => false]);
-        $manager->tokens()->delete();
-        $manager->delete();
+        $origEmail = $manager->email;
 
-        ActivityLog::record('delete_manager', $manager);
+        DB::transaction(function () use ($manager, $origEmail) {
+            $manager->is_active = false;
+            // Free the email slot (users.email has a UNIQUE index, and a soft-deleted
+            // row keeps occupying it). Rename it so the same address can be re-invited
+            // or re-registered later, while the row stays for the audit trail.
+            $manager->email = 'deleted_'.$manager->id.'_'.time().'@deleted.invalid';
+            $manager->save();
+            $manager->tokens()->delete();
+            $manager->delete(); // soft delete
+
+            // Remove any invite still occupying this email (manager_invites.email is UNIQUE)
+            \App\Models\ManagerInvite::where('email', $origEmail)->delete();
+        });
+
+        ActivityLog::record('delete_manager', $manager, ['freed_email' => $origEmail]);
 
         return response()->json([
             'success' => true,
-            'message' => "Manager {$manager->name} deactivated.",
+            'message' => "Manager {$manager->name} deactivated. Email {$origEmail} freed for reuse.",
         ]);
     }
 
@@ -221,6 +259,19 @@ class ManagerController extends Controller
     public function storeInvite(Request $request): JsonResponse
     {
         if ($err = $this->requireFA($request)) return $err;
+
+        // If the address belongs to a previously DELETED (soft-deleted) manager, free it
+        // so the Finance Admin can legitimately re-invite the same email. Active users are
+        // untouched (still blocked by the unique rule below). Also clears any stale invite
+        // row occupying this email (manager_invites.email is UNIQUE).
+        if ($email = trim((string)$request->email)) {
+            $trashed = User::onlyTrashed()->where('email', $email)->first();
+            if ($trashed) {
+                $trashed->email = 'deleted_'.$trashed->id.'_'.time().'@deleted.invalid';
+                $trashed->saveQuietly();
+            }
+            ManagerInvite::where('email', $email)->delete();
+        }
 
         $v = Validator::make($request->all(), [
             'email'     => 'required|email|max:150|unique:manager_invites,email|unique:users,email',
