@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\{
     ImportController,
     BranchController,
     SettingsController,
+    ExportController,
+    DashboardController,
 };
 
 /*
@@ -23,7 +25,7 @@ use App\Http\Controllers\Api\{
 // ── Public routes (no authentication) ────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('register',         [AuthController::class, 'register']);        // FA first-time only
-    Route::post('login',            [AuthController::class, 'login']);
+    Route::post('login',            [AuthController::class, 'login'])->middleware('throttle:10,1');
     Route::post('check-invite',     [AuthController::class, 'checkInvite']);     // validate invite email
     Route::post('register-invite',  [AuthController::class, 'registerViaInvite']); // branch manager self-signup
 });
@@ -39,7 +41,7 @@ Route::get('cards/stats', function () {
 });
 
 // ── Protected routes ──────────────────────────────────────────
-Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function () {
+Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1'])->group(function () {
 
     // Auth
     Route::prefix('auth')->group(function () {
@@ -151,7 +153,16 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         Route::put('notifications/{id}/read',  [CallCenterController::class, 'markRead']);
     });
 
-    // ── Import ────────────────────────────────────────────────
+    // ── Dashboard (stats + charts) ─────────────────────────────
+    Route::get('dashboard', [DashboardController::class, 'stats']);
+
+    // ── Export (Excel / PDF) ───────────────────────────────────
+    Route::prefix('export')->group(function () {
+        Route::get('excel', [ExportController::class, 'excel']);
+        Route::get('pdf',   [ExportController::class, 'pdf']);
+    });
+
+        // ── Import ────────────────────────────────────────────────
     // Import — Finance Admin ONLY
     Route::prefix('import')->middleware('role:finance_admin')->group(function () {
         Route::post('/',      [ImportController::class, 'import']);

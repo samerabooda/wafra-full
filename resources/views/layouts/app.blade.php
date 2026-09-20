@@ -12,9 +12,18 @@
 <title>{{ config('app.name', 'وفرة الخليجية') }} — @yield('title','لوحة المتابعة')</title>
 
 <!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = "'Tajawal', 'JetBrains Mono', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#6B849E';
+}
+</script>
 <!-- SheetJS (Excel import/export) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <!-- jsPDF -->
