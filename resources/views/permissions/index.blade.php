@@ -106,26 +106,76 @@ function prmRenderPending(data) {
     container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--mu)"><div style="font-size:32px;opacity:.3;margin-bottom:8px">✅</div><span id="prm-no-pending">${prm('noPending')}</span></div>`;
     return;
   }
-  container.innerHTML = data.map(e => `
+  container.innerHTML = data.map(e => {
+    const bc = parseFloat(e.broker_commission || 0);
+    const mc = parseFloat(e.marketing_commission || 0);
+    const zeroWarn = (bc === 0 && mc === 0)
+      ? '<div style="font-size:10px;color:var(--or);margin-top:3px">⚠ العمولات = $0.00 — يمكن تعديلها بعد الاعتماد</div>'
+      : '';
+    return `
     <div style="display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:8px;border:1px solid rgba(245,166,35,.3);border-radius:10px;background:rgba(245,166,35,.04)">
       <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--pri2),var(--pri3));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;flex-shrink:0">${e.name.charAt(0)}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:700">${e.name}</div><div style="font-size:11px;color:var(--mu);margin-top:2px">${e.role} · ${e.branch?.name_ar||'—'} · ${prm('addedBy')} ${e.added_by?.name||'—'}</div></div>
-      <button class="btn btn-sm" style="background:var(--gr);color:white" onclick="approveEmp(${e.id},'${e.name}')">${prm('btnApprove')}</button>
-      <button class="btn btn-sm" style="background:var(--re);color:white" onclick="rejectEmp(${e.id},'${e.name}')">${prm('btnReject')}</button>
-    </div>`).join('');
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700">${e.name}</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:2px">${e.role} · ${e.branch?.name_ar||'—'} · ${prm('addedBy')} ${e.added_by?.name||'—'}</div>
+        <div style="font-size:11px;margin-top:2px"><span style="color:var(--gr);font-family:monospace">بروكر: $${bc.toFixed(2)}</span> · <span style="color:var(--pri2);font-family:monospace">تسويق: $${mc.toFixed(2)}</span></div>
+        ${zeroWarn}
+      </div>
+      <button class="btn btn-sm" style="background:var(--gr);color:white" onclick="approveEmp(${e.id},'${(e.name||'').replace(/'/g,"\\'")}')">${prm('btnApprove')}</button>
+      <button class="btn btn-sm" style="background:var(--re);color:white" onclick="rejectEmp(${e.id},'${(e.name||'').replace(/'/g,"\\'")}')">${prm('btnReject')}</button>
+    </div>`;
+  }).join('');
 }
 
-async function approveEmp(id,name){
-  const r = await api('PUT', `/employees/${id}/approve`);
-  if (r.success) { toast(r.message,'success'); _prmPendingData = _prmPendingData.filter(e=>e.id!==id); prmRenderPending(_prmPendingData); }
-  else toast(r.message,'error');
+// Track in-flight requests so double-clicks don't spam errors
+const _prmBusy = new Set();
+
+async function approveEmp(id, name){
+  if (_prmBusy.has(id)) return;   // prevent double-submit
+  _prmBusy.add(id);
+  try {
+    const r = await api('PUT', `/employees/${id}/approve`);
+    if (r.success) {
+      toast(r.message, 'success');
+      // Remove from local list optimistically
+      _prmPendingData = _prmPendingData.filter(e => e.id !== id);
+      prmRenderPending(_prmPendingData);
+    } else {
+      toast(r.message || 'تعذر الاعتماد — حاول تحديث الصفحة', 'error');
+      // On 404 the employee no longer exists — reload to sync
+      if (r.message && r.message.includes('لم يتم العثور')) {
+        setTimeout(loadPending, 800);
+      }
+    }
+  } catch (err) {
+    toast('خطأ في الاتصال — أعد المحاولة', 'error');
+  } finally {
+    _prmBusy.delete(id);
+  }
 }
-async function rejectEmp(id,name){
+
+async function rejectEmp(id, name){
+  if (_prmBusy.has(id)) return;
   const reason = prompt(`${prm('promptReject')} ${name}`);
   if (reason === null) return;
-  const r = await api('PUT', `/employees/${id}/reject`, {reason});
-  if (r.success) { toast(r.message,'success'); _prmPendingData = _prmPendingData.filter(e=>e.id!==id); prmRenderPending(_prmPendingData); }
-  else toast(r.message,'error');
+  _prmBusy.add(id);
+  try {
+    const r = await api('PUT', `/employees/${id}/reject`, { reason });
+    if (r.success) {
+      toast(r.message, 'success');
+      _prmPendingData = _prmPendingData.filter(e => e.id !== id);
+      prmRenderPending(_prmPendingData);
+    } else {
+      toast(r.message || 'تعذر الرفض — حاول تحديث الصفحة', 'error');
+      if (r.message && r.message.includes('لم يتم العثور')) {
+        setTimeout(loadPending, 800);
+      }
+    }
+  } catch (err) {
+    toast('خطأ في الاتصال — أعد المحاولة', 'error');
+  } finally {
+    _prmBusy.delete(id);
+  }
 }
 
 prmApplyLang();

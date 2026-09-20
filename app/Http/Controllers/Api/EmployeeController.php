@@ -128,19 +128,53 @@ class EmployeeController extends Controller
             return response()->json(['success' => false, 'message' => 'Finance Admin only.'], 403);
         }
 
-        $emp = Employee::where('status', 'pending')->findOrFail($id);
+        // Include soft-deleted so we can give a clear message either way
+        $emp = Employee::withTrashed()->find($id);
 
-        $emp->update([
-            'status'      => 'approved',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-        ]);
+        if (!$emp) {
+            return response()->json([
+                'success' => false,
+                'message' => "لم يتم العثور على الموظف رقم {$id}. قد يكون قد حُذف — حدّث الصفحة.",
+            ], 404);
+        }
+
+        if ($emp->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => "الموظف \"{$emp->name}\" محذوف. أعد إنشاءه لاعتماده.",
+            ], 409);
+        }
+
+        if ($emp->status === 'approved') {
+            return response()->json([
+                'success' => true,
+                'message' => "الموظف \"{$emp->name}\" معتمد مسبقاً.",
+                'data'    => $emp->fresh(['branch', 'approvedBy']),
+            ]);
+        }
+
+        if ($emp->status === 'rejected') {
+            // Allow re-approving a rejected employee — that's a valid case
+            $emp->update([
+                'status'          => 'approved',
+                'approved_by'     => $request->user()->id,
+                'approved_at'     => now(),
+                'rejected_reason' => null,
+            ]);
+        } else {
+            // status = pending (or anything else) → approve
+            $emp->update([
+                'status'      => 'approved',
+                'approved_by' => $request->user()->id,
+                'approved_at' => now(),
+            ]);
+        }
 
         ActivityLog::record('approve_employee', $emp);
 
         return response()->json([
             'success' => true,
-            'message' => "Employee {$emp->name} has been approved.",
+            'message' => "✅ تم اعتماد الموظف \"{$emp->name}\" بنجاح.",
             'data'    => $emp->fresh(['branch', 'approvedBy']),
         ]);
     }
@@ -155,8 +189,33 @@ class EmployeeController extends Controller
         $v = Validator::make($request->all(), [
             'reason' => 'nullable|string|max:500',
         ]);
+        if ($v->fails()) {
+            return response()->json(['success' => false, 'errors' => $v->errors()], 422);
+        }
 
-        $emp = Employee::where('status', 'pending')->findOrFail($id);
+        $emp = Employee::withTrashed()->find($id);
+
+        if (!$emp) {
+            return response()->json([
+                'success' => false,
+                'message' => "لم يتم العثور على الموظف رقم {$id}. قد يكون قد حُذف — حدّث الصفحة.",
+            ], 404);
+        }
+
+        if ($emp->trashed()) {
+            return response()->json([
+                'success' => false,
+                'message' => "الموظف \"{$emp->name}\" محذوف.",
+            ], 409);
+        }
+
+        if ($emp->status === 'rejected') {
+            return response()->json([
+                'success' => true,
+                'message' => "الموظف \"{$emp->name}\" مرفوض مسبقاً.",
+            ]);
+        }
+
         $emp->update([
             'status'          => 'rejected',
             'rejected_reason' => $request->reason ?? 'No reason provided',
@@ -166,7 +225,7 @@ class EmployeeController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Employee {$emp->name} has been rejected.",
+            'message' => "❌ تم رفض الموظف \"{$emp->name}\".",
         ]);
     }
 
