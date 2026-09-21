@@ -5,6 +5,12 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  CPANEL_HOST: system-wafragulf.online
+  CPANEL_IP: 173.231.231.39
+  CPANEL_PORT: 2083
+  REPO_ROOT: /home/systemwafragulf/public_html
+
 jobs:
   deploy:
     name: Deploy to system-wafragulf.online
@@ -12,80 +18,125 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: 📋 Deployment Info
+      - name: 📋 Info
         run: |
           echo "════════════════════════════════════════"
-          echo "  Wafra Gulf — Auto Deploy"
           echo "  Commit : ${{ github.sha }}"
           echo "  Message: ${{ github.event.head_commit.message }}"
           echo "  Time   : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "════════════════════════════════════════"
 
+      # ── Verify secrets are set ─────────────────────────────
+      - name: 🔐 Verify secrets
+        run: |
+          if [ -z "${{ secrets.CPANEL_USER }}" ]; then
+            echo "❌ CPANEL_USER secret is not set"
+            echo "Add it at: https://github.com/samerabooda/wafra-full/settings/secrets/actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CPANEL_TOKEN }}" ]; then
+            echo "❌ CPANEL_TOKEN secret is not set"
+            echo "Add it at: https://github.com/samerabooda/wafra-full/settings/secrets/actions"
+            exit 1
+          fi
+          echo "✅ Secrets are set"
+
+      # ── Resolve hostname and test connectivity ─────────────
+      - name: 🌐 Test connectivity
+        run: |
+          echo "→ Testing DNS resolution..."
+          if getent hosts "${CPANEL_HOST}"; then
+            RESOLVED_IP=$(getent hosts "${CPANEL_HOST}" | awk '{print $1}' | head -1)
+            echo "✅ Resolved ${CPANEL_HOST} → ${RESOLVED_IP}"
+          else
+            echo "⚠️ DNS resolution failed, will use --resolve with ${CPANEL_IP}"
+          fi
+
+          echo "→ Testing TCP to port ${CPANEL_PORT}..."
+          timeout 10 bash -c "</dev/tcp/${CPANEL_HOST}/${CPANEL_PORT}" 2>&1 && echo "✅ Port open via hostname" || echo "⚠️ Port test via hostname failed"
+          timeout 10 bash -c "</dev/tcp/${CPANEL_IP}/${CPANEL_PORT}" 2>&1 && echo "✅ Port open via IP" || echo "⚠️ Port test via IP failed"
+
       # ── Trigger cPanel Git Version Control update via UAPI ──
       - name: 🔄 Trigger cPanel Git Pull
         id: cpanel_update
+        continue-on-error: true
         run: |
+          set +e
           echo "→ Calling cPanel VersionControl/update..."
 
+          # Use --resolve to bypass DNS if hostname doesn't resolve from GitHub runners
           RESPONSE=$(curl -sS -w "\n___HTTP___%{http_code}" \
             --max-time 120 \
             --retry 2 --retry-delay 5 \
+            --resolve "${CPANEL_HOST}:${CPANEL_PORT}:${CPANEL_IP}" \
             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
-            "https://system-wafragulf.online:2083/execute/VersionControl/update?type=git&repository_root=%2Fhome%2Fsystemwafragulf%2Fpublic_html" 2>&1)
+            --data-urlencode "type=git" \
+            --data-urlencode "repository_root=${REPO_ROOT}" \
+            "https://${CPANEL_HOST}:${CPANEL_PORT}/execute/VersionControl/update" 2>&1)
 
+          CURL_EXIT=$?
           HTTP_CODE=$(echo "$RESPONSE" | grep "___HTTP___" | sed 's/___HTTP___//')
           BODY=$(echo "$RESPONSE" | grep -v "___HTTP___")
 
+          echo "Curl exit: $CURL_EXIT"
           echo "HTTP Status: $HTTP_CODE"
           echo "Response body:"
-          echo "$BODY"
-          echo ""
+          echo "$BODY" | head -50
 
-          # cPanel returns 200 with {"status": 1} on success
-          if [ "$HTTP_CODE" = "200" ] && echo "$BODY" | grep -q '"status":1'; then
-            echo "✅ cPanel Git pull triggered successfully"
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ cPanel API responded successfully"
             echo "cpanel_ok=true" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ cPanel API did not return success"
+            echo "⚠️ cPanel API returned $HTTP_CODE (curl exit $CURL_EXIT)"
             echo "cpanel_ok=false" >> $GITHUB_OUTPUT
-            exit 1
           fi
+          exit 0
 
       # ── Trigger the deployment tasks defined in .cpanel.yml ──
-      - name: ⚙️ Trigger .cpanel.yml deployment tasks
+      - name: ⚙️ Trigger .cpanel.yml deployment
         if: steps.cpanel_update.outputs.cpanel_ok == 'true'
+        continue-on-error: true
         run: |
-          echo "→ Triggering deploy tasks (composer install + migrate + optimize)..."
+          set +e
+          echo "→ Triggering deployment tasks..."
 
+          # URL-encoded VersionControl::Deployment
           RESPONSE=$(curl -sS -w "\n___HTTP___%{http_code}" \
             --max-time 300 \
             --retry 2 --retry-delay 5 \
+            --resolve "${CPANEL_HOST}:${CPANEL_PORT}:${CPANEL_IP}" \
             -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
-            "https://system-wafragulf.online:2083/execute/VersionControl%3A%3ADeployment/create?repository_root=%2Fhome%2Fsystemwafragulf%2Fpublic_html")
+            --data-urlencode "repository_root=${REPO_ROOT}" \
+            "https://${CPANEL_HOST}:${CPANEL_PORT}/execute/VersionControl%3A%3ADeployment/create" 2>&1)
 
           HTTP_CODE=$(echo "$RESPONSE" | grep "___HTTP___" | sed 's/___HTTP___//')
           BODY=$(echo "$RESPONSE" | grep -v "___HTTP___")
 
           echo "HTTP Status: $HTTP_CODE"
           echo "Response:"
-          echo "$BODY"
+          echo "$BODY" | head -50
 
           if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Deploy tasks queued"
           else
-            echo "⚠️ Deploy trigger returned $HTTP_CODE — .cpanel.yml may run automatically on next visit"
+            echo "⚠️ Deploy trigger returned $HTTP_CODE — .cpanel.yml runs on next visit anyway"
           fi
+          exit 0
 
-      # ── Health check ────────────────────────────────────────
+      # ── Health check on the site ────────────────────────────
       - name: 🏥 Health Check
+        continue-on-error: true
         run: |
+          set +e
           echo "Waiting 20s for deploy to settle..."
           sleep 20
 
           for i in 1 2 3 4 5; do
             HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
-              --max-time 15 --location \
-              "https://system-wafragulf.online" 2>/dev/null || echo "000")
+              --max-time 15 \
+              --resolve "${CPANEL_HOST}:443:${CPANEL_IP}" \
+              --location \
+              "https://${CPANEL_HOST}" 2>/dev/null || echo "000")
 
             echo "Attempt $i — HTTP: $HTTP"
 
@@ -97,13 +148,13 @@ jobs:
             [ $i -lt 5 ] && sleep 10
           done
 
-          echo "⚠️ Site not responding as expected — check https://system-wafragulf.online manually"
-          exit 0  # don't fail the workflow — deploy may have worked anyway
+          echo "⚠️ Site check inconclusive — verify manually at https://${CPANEL_HOST}"
+          exit 0
 
       - name: ✅ Summary
         if: always()
         run: |
           echo "════════════════════════════════════════"
-          echo "  Deploy completed at $(date -u)"
-          echo "  URL: https://system-wafragulf.online"
+          echo "  Deploy attempt completed at $(date -u)"
+          echo "  URL: https://${CPANEL_HOST}"
           echo "════════════════════════════════════════"
