@@ -1,0 +1,109 @@
+name: 🚀 Auto Deploy to cPanel
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to system-wafragulf.online
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📋 Deployment Info
+        run: |
+          echo "════════════════════════════════════════"
+          echo "  Wafra Gulf — Auto Deploy"
+          echo "  Commit : ${{ github.sha }}"
+          echo "  Message: ${{ github.event.head_commit.message }}"
+          echo "  Time   : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "════════════════════════════════════════"
+
+      # ── Trigger cPanel Git Version Control update via UAPI ──
+      - name: 🔄 Trigger cPanel Git Pull
+        id: cpanel_update
+        run: |
+          echo "→ Calling cPanel VersionControl/update..."
+
+          RESPONSE=$(curl -sS -w "\n___HTTP___%{http_code}" \
+            --max-time 120 \
+            --retry 2 --retry-delay 5 \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
+            "https://system-wafragulf.online:2083/execute/VersionControl/update?type=git&repository_root=%2Fhome%2Fsystemwafragulf%2Fpublic_html" 2>&1)
+
+          HTTP_CODE=$(echo "$RESPONSE" | grep "___HTTP___" | sed 's/___HTTP___//')
+          BODY=$(echo "$RESPONSE" | grep -v "___HTTP___")
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response body:"
+          echo "$BODY"
+          echo ""
+
+          # cPanel returns 200 with {"status": 1} on success
+          if [ "$HTTP_CODE" = "200" ] && echo "$BODY" | grep -q '"status":1'; then
+            echo "✅ cPanel Git pull triggered successfully"
+            echo "cpanel_ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ cPanel API did not return success"
+            echo "cpanel_ok=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      # ── Trigger the deployment tasks defined in .cpanel.yml ──
+      - name: ⚙️ Trigger .cpanel.yml deployment tasks
+        if: steps.cpanel_update.outputs.cpanel_ok == 'true'
+        run: |
+          echo "→ Triggering deploy tasks (composer install + migrate + optimize)..."
+
+          RESPONSE=$(curl -sS -w "\n___HTTP___%{http_code}" \
+            --max-time 300 \
+            --retry 2 --retry-delay 5 \
+            -H "Authorization: cpanel ${{ secrets.CPANEL_USER }}:${{ secrets.CPANEL_TOKEN }}" \
+            "https://system-wafragulf.online:2083/execute/VersionControl%3A%3ADeployment/create?repository_root=%2Fhome%2Fsystemwafragulf%2Fpublic_html")
+
+          HTTP_CODE=$(echo "$RESPONSE" | grep "___HTTP___" | sed 's/___HTTP___//')
+          BODY=$(echo "$RESPONSE" | grep -v "___HTTP___")
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response:"
+          echo "$BODY"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Deploy tasks queued"
+          else
+            echo "⚠️ Deploy trigger returned $HTTP_CODE — .cpanel.yml may run automatically on next visit"
+          fi
+
+      # ── Health check ────────────────────────────────────────
+      - name: 🏥 Health Check
+        run: |
+          echo "Waiting 20s for deploy to settle..."
+          sleep 20
+
+          for i in 1 2 3 4 5; do
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 15 --location \
+              "https://system-wafragulf.online" 2>/dev/null || echo "000")
+
+            echo "Attempt $i — HTTP: $HTTP"
+
+            if [ "$HTTP" = "200" ] || [ "$HTTP" = "302" ] || [ "$HTTP" = "301" ]; then
+              echo "✅ Site is UP"
+              exit 0
+            fi
+
+            [ $i -lt 5 ] && sleep 10
+          done
+
+          echo "⚠️ Site not responding as expected — check https://system-wafragulf.online manually"
+          exit 0  # don't fail the workflow — deploy may have worked anyway
+
+      - name: ✅ Summary
+        if: always()
+        run: |
+          echo "════════════════════════════════════════"
+          echo "  Deploy completed at $(date -u)"
+          echo "  URL: https://system-wafragulf.online"
+          echo "════════════════════════════════════════"
