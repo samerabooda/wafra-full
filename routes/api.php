@@ -137,6 +137,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
         Route::post('cards',              [CallCenterController::class, 'store']);
         Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
         Route::post('cards/{id}/resend',  [CallCenterController::class, 'resend']);
+        Route::delete('cards/{id}',       [CallCenterController::class, 'cancel']); // CC cancel draft/rejected
 
         // Branch responds to CC cards
         Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);

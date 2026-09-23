@@ -31,7 +31,7 @@ class CallCenterController extends Controller
         $user = $request->user();
         if ($user->isFinanceAdmin()) return;
         if ($card->cc_branch_id !== $user->branch_id) {
-            abort(403, 'Only the CC branch that created this card can perform this action.');
+            abort(403, 'فقط فرع مركز الاتصال الذي أنشأ الكرت يمكنه تنفيذ هذا الإجراء.');
         }
     }
 
@@ -40,8 +40,27 @@ class CallCenterController extends Controller
         $user = $request->user();
         if ($user->isFinanceAdmin()) return;
         if ($card->branch_id !== $user->branch_id) {
-            abort(403, 'This card is not assigned to your branch.');
+            abort(403, 'هذا الكرت غير مخصص لفرعك.');
         }
+    }
+
+    // ── Find a CC card with a friendly error message ─────────
+    private function findCcCard(int $id): array
+    {
+        $card = CommissionCard::withTrashed()->find($id);
+        if (!$card) {
+            return [null, response()->json([
+                'success' => false,
+                'message' => "لم يتم العثور على الكرت رقم {$id}. قد يكون قد حُذف — حدّث الصفحة.",
+            ], 404)];
+        }
+        if ($card->trashed()) {
+            return [null, response()->json([
+                'success' => false,
+                'message' => "الكرت رقم {$id} محذوف.",
+            ], 409)];
+        }
+        return [$card, null];
     }
 
     // ── Validate CC commission limit (broker + marketer ≤ $5) ─
@@ -137,13 +156,14 @@ class CallCenterController extends Controller
     // ── POST /api/cc/cards/{id}/send — CC sends to branch ──────
     public function send(Request $request, int $id): JsonResponse
     {
-        $card = CommissionCard::findOrFail($id);
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
         $this->assertCcOwnership($card, $request);
 
         if ($card->cc_status !== 'cc_pending') {
             return response()->json([
                 'success' => false,
-                'message' => "حالة الكرت '{$card->cc_status}' — لا يمكن إرساله مجدداً.",
+                'message' => "لا يمكن الإرسال — الكرت في حالة '{$card->cc_status}'. للإرسال يجب أن يكون مسوّدة (cc_pending).",
             ], 422);
         }
 
@@ -172,13 +192,22 @@ class CallCenterController extends Controller
     // ── PUT /api/cc/cards/{id}/accept — Branch accepts ─────────
     public function accept(Request $request, int $id): JsonResponse
     {
-        $card = CommissionCard::findOrFail($id);
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
         $this->assertBranchOwnership($card, $request);
+
+        if ($card->cc_status === 'accepted') {
+            return response()->json([
+                'success' => true,
+                'message' => "الكرت #{$card->account_number} مقبول مسبقاً.",
+                'data'    => $card,
+            ]);
+        }
 
         if ($card->cc_status !== 'branch_pending') {
             return response()->json([
                 'success' => false,
-                'message' => "حالة الكرت '{$card->cc_status}' — لا يمكن قبوله.",
+                'message' => "لا يمكن القبول — الكرت في حالة '{$card->cc_status}'. للقبول يجب أن يكون بانتظار الفرع (branch_pending).",
             ], 422);
         }
 
@@ -209,7 +238,8 @@ class CallCenterController extends Controller
     // ── PUT /api/cc/cards/{id}/reject — Branch rejects ─────────
     public function reject(Request $request, int $id): JsonResponse
     {
-        $card = CommissionCard::findOrFail($id);
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
         $this->assertBranchOwnership($card, $request);
 
         $v = Validator::make($request->all(), [
@@ -222,10 +252,18 @@ class CallCenterController extends Controller
             return response()->json(['success' => false, 'errors' => $v->errors()], 422);
         }
 
+        if ($card->cc_status === 'rejected') {
+            return response()->json([
+                'success' => true,
+                'message' => "الكرت #{$card->account_number} مرفوض مسبقاً.",
+                'data'    => $card,
+            ]);
+        }
+
         if (!in_array($card->cc_status, ['branch_pending', 'accepted'])) {
             return response()->json([
                 'success' => false,
-                'message' => "لا يمكن رفض كرت بحالة '{$card->cc_status}'.",
+                'message' => "لا يمكن الرفض — الكرت في حالة '{$card->cc_status}'. للرفض يجب أن يكون بانتظار الفرع أو مقبولاً.",
             ], 422);
         }
 
@@ -259,13 +297,22 @@ class CallCenterController extends Controller
     // ⚠️ RULE: broker_commission + marketer_commission ≤ $5
     public function complete(Request $request, int $id): JsonResponse
     {
-        $card = CommissionCard::findOrFail($id);
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
         $this->assertBranchOwnership($card, $request);
+
+        if ($card->cc_status === 'completed') {
+            return response()->json([
+                'success' => true,
+                'message' => "الكرت #{$card->account_number} مكتمل مسبقاً.",
+                'data'    => $card,
+            ]);
+        }
 
         if ($card->cc_status !== 'accepted') {
             return response()->json([
                 'success' => false,
-                'message' => "يجب قبول الكرت أولاً (الحالة الحالية: '{$card->cc_status}').",
+                'message' => "يجب قبول الكرت أولاً قبل الإكمال (الحالة الحالية: '{$card->cc_status}').",
             ], 422);
         }
 
@@ -337,17 +384,20 @@ class CallCenterController extends Controller
     // ── POST /api/cc/cards/{id}/resend — CC resends rejected card ─
     public function resend(Request $request, int $id): JsonResponse
     {
-        $card = CommissionCard::findOrFail($id);
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
         $this->assertCcOwnership($card, $request);
 
         if ($card->cc_status !== 'rejected') {
             return response()->json([
                 'success' => false,
-                'message' => "لا يمكن إعادة إرسال كرت بحالة '{$card->cc_status}'. يجب أن يكون مرفوضاً.",
+                'message' => "لا يمكن إعادة الإرسال — الكرت في حالة '{$card->cc_status}'. يجب أن يكون مرفوضاً.",
             ], 422);
         }
 
-        DB::transaction(function () use ($card, $request) {
+        $priorReason = $card->cc_rejection_reason;
+
+        DB::transaction(function () use ($card, $request, $priorReason) {
             $card->update([
                 'cc_status'           => 'branch_pending',
                 'cc_rejection_reason' => null,
@@ -363,12 +413,46 @@ class CallCenterController extends Controller
                 'message'        => "🔁 إعادة إرسال الحساب #{$card->account_number} ({$card->month}) من مركز الاتصال — بانتظار قراركم",
             ]);
 
-            ActivityLog::record('cc_card_resent', $card, ['to_branch' => $card->branch_id]);
+            ActivityLog::record('cc_card_resent', $card, [
+                'to_branch'       => $card->branch_id,
+                'prior_rejection' => $priorReason,
+            ]);
         });
 
         return response()->json([
             'success' => true,
             'message' => "✅ تمت إعادة إرسال الكرت #{$card->account_number} للفرع.",
+        ]);
+    }
+
+    // ── DELETE /api/cc/cards/{id} — CC Manager cancels a draft ─
+    public function cancel(Request $request, int $id): JsonResponse
+    {
+        [$card, $err] = $this->findCcCard($id);
+        if ($err) return $err;
+        $this->assertCcOwnership($card, $request);
+
+        if (!in_array($card->cc_status, ['cc_pending', 'rejected'])) {
+            return response()->json([
+                'success' => false,
+                'message' => "لا يمكن إلغاء كرت بحالة '{$card->cc_status}'. للإلغاء يجب أن يكون مسوّدة أو مرفوض.",
+            ], 422);
+        }
+
+        $accountNumber = $card->account_number;
+        $priorStatus   = $card->cc_status;
+
+        DB::transaction(function () use ($card, $request, $priorStatus) {
+            ActivityLog::record('cc_card_cancelled', $card, [
+                'prior_status'    => $priorStatus,
+                'prior_rejection' => $card->cc_rejection_reason,
+            ]);
+            $card->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "🗑️ تم إلغاء الكرت #{$accountNumber}.",
         ]);
     }
 
@@ -436,8 +520,14 @@ class CallCenterController extends Controller
     // ── PUT /api/cc/notifications/{id}/read ───────────────────
     public function markRead(Request $request, int $id): JsonResponse
     {
-        $notif = CcNotification::findOrFail($id);
-        $user  = $request->user();
+        $notif = CcNotification::find($id);
+        if (!$notif) {
+            return response()->json([
+                'success' => false,
+                'message' => "لم يتم العثور على الإشعار رقم {$id}.",
+            ], 404);
+        }
+        $user = $request->user();
 
         if ($user->isScopedToBranch() && $notif->to_branch_id !== $user->branch_id) {
             return response()->json(['success' => false, 'message' => 'ليس لديك صلاحية.'], 403);
