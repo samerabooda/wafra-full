@@ -142,6 +142,23 @@ class CommissionCardController extends Controller
             if ($request->user()->isBranchManager()) unset($fields['branch_id']);
 
             $card->update(array_merge($fields, ['status'=>'modified']));
+
+            // Recompute is_over_limit after edit — clear the red flag once the
+            // total commission drops back within the $7 ceiling.
+            $fresh = $card->fresh();
+            $total = (float)$fresh->broker_commission
+                   + (float)$fresh->marketer_commission
+                   + (float)$fresh->ext_commission1
+                   + (float)$fresh->ext_commission2
+                   + (float)$fresh->referral_commission;
+            $limit = \App\Http\Controllers\Api\ImportController::COMMISSION_LIMIT;
+            if ($fresh->is_over_limit && $total <= $limit) {
+                $fresh->update(['is_over_limit' => false]);
+                $card = $fresh;
+            } elseif (!$fresh->is_over_limit && $total > $limit) {
+                $fresh->update(['is_over_limit' => true]);
+                $card = $fresh;
+            }
             $newData = $card->fresh()->only(array_keys($oldData));
 
             CardModification::create([
@@ -267,6 +284,82 @@ class CommissionCardController extends Controller
             $query->whereHas('card', fn($q) => $q->where('branch_id', $user->branch_id));
         if ($ac = $request->account_number) $query->where('account_number',$ac);
         return response()->json(['success'=>true,'data'=>$query->paginate(50)]);
+    }
+
+    // ── GET /api/cards/needs-review ────────────────────────────
+    // Cards flagged by the import: over the $7 commission ceiling
+    // OR duplicate account+month. Painted red in the main list
+    // and shown here as an editable review queue for the FA.
+    public function needsReview(Request $request): JsonResponse
+    {
+        $query = CommissionCard::with(['branch','broker','marketer','extMarketer1','extMarketer2'])
+                               ->where(function($q) {
+                                   $q->where('is_over_limit', true)
+                                     ->orWhere('is_duplicate', true);
+                               });
+
+        $query = $this->applyBranchScope($query, $request);
+
+        if ($only = $request->only_flag) {
+            if ($only === 'over_limit') $query->where('is_over_limit', true);
+            if ($only === 'duplicate')  $query->where('is_duplicate', true);
+        }
+
+        if ($ac = $request->search) {
+            $query->where(function($q) use ($ac) {
+                $q->where('account_number', 'like', "%{$ac}%")
+                  ->orWhere('month', 'like', "%{$ac}%");
+            });
+        }
+
+        // Summary counts — computed BEFORE pagination so limit/offset don't leak in
+        $overLimitCount = (clone $query)->where('is_over_limit', true)->count();
+        $duplicateCount = (clone $query)->where('is_duplicate',  true)->count();
+
+        $cards = $query->orderByDesc('created_at')->paginate(50);
+
+        $summary = [
+            'over_limit_count' => $overLimitCount,
+            'duplicate_count'  => $duplicateCount,
+            'total'            => $cards->total(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'summary' => $summary,
+            'data'    => $cards,
+            'limit'   => \App\Http\Controllers\Api\ImportController::COMMISSION_LIMIT,
+        ]);
+    }
+
+    // POST /api/cards/{id}/clear-review
+    // FA-only: mark the flags on this card as resolved.
+    // Body: { flag: 'over_limit'|'duplicate'|'both' }
+    public function clearReviewFlags(Request $request, int $id): JsonResponse
+    {
+        if (!$request->user()->isFinanceAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Finance Admin only.'], 403);
+        }
+
+        $card = CommissionCard::findOrFail($id);
+        $flag = $request->input('flag', 'both');
+
+        $update = [];
+        if ($flag === 'over_limit' || $flag === 'both') $update['is_over_limit'] = false;
+        if ($flag === 'duplicate'  || $flag === 'both') $update['is_duplicate']  = false;
+
+        if (!$update) {
+            return response()->json(['success' => false, 'message' => 'Invalid flag.'], 422);
+        }
+
+        $card->update($update);
+        ActivityLog::record('clear_review', $card, ['flag' => $flag]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Card #{$card->account_number} review flag cleared.",
+            'data'    => $card->fresh(),
+        ]);
     }
 
     // ── Helpers ──

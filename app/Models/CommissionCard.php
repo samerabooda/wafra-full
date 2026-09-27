@@ -21,6 +21,12 @@ class CommissionCard extends Model
         'forex_commission',  'futures_commission',
         'initial_deposit',   'monthly_deposit',
         'status', 'notes', 'import_batch_id', 'created_by',
+        // ── Referral (numeric account referring the client) ────
+        'referral_account', 'referral_commission',
+        // ── Rebate ─────────────────────────────────────────────
+        'has_rebate', 'rebate_amount',
+        // ── Import flags ───────────────────────────────────────
+        'is_over_limit', 'is_duplicate',
         // ── Call Center fields ─────────────────────────────────
         'cc_branch_id', 'cc_agent_id', 'cc_agent_commission',
         'cc_status', 'cc_rejection_reason',
@@ -37,6 +43,11 @@ class CommissionCard extends Model
         'initial_deposit'       => 'decimal:2',
         'monthly_deposit'       => 'decimal:2',
         'cc_agent_commission'   => 'decimal:2',
+        'referral_commission'   => 'decimal:2',
+        'rebate_amount'         => 'decimal:2',
+        'has_rebate'            => 'boolean',
+        'is_over_limit'         => 'boolean',
+        'is_duplicate'          => 'boolean',
     ];
 
     // ── Relationships ──────────────────────────────────────────
@@ -83,6 +94,9 @@ class CommissionCard extends Model
     public function scopeForMonth($q, string $m) { return $q->where('month', $m); }
     public function scopeForBroker($q, int $id)  { return $q->where('broker_id', $id); }
     public function scopeCcCards($q)             { return $q->whereNotNull('cc_branch_id'); }
+    public function scopeOverLimit($q)            { return $q->where('is_over_limit', true); }
+    public function scopeDuplicates($q)           { return $q->where('is_duplicate', true); }
+    public function scopeNeedsReview($q)          { return $q->where(function($qq){ $qq->where('is_over_limit', true)->orWhere('is_duplicate', true); }); }
 
     public function scopeSearch($q, string $term)
     {

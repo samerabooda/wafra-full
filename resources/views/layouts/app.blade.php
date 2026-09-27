@@ -577,6 +577,7 @@ html{font-size:16px}
       <a href="{{ route('cards.index') }}" class="nav-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
         <span>🗂</span> <span data-i18n="nav.cards">كروت العمولة</span>
         <span class="nav-badge" id="sb-cards-count">—</span>
+        <span class="nav-badge" id="sb-cards-review" style="display:none;background:#e04848;color:#fff;margin-inline-start:4px" title="كروت تحتاج مراجعة">⚠ 0</span>
       </a>
 
       <div class="nav-section" data-i18n="nav.sec.cc">📞 مركز الاتصال</div>
@@ -1352,6 +1353,25 @@ async function loadCcPendingCount() {
 // Load once on page ready, then refresh every 60s
 document.addEventListener('DOMContentLoaded', loadCcPendingCount);
 setInterval(loadCcPendingCount, 60000);
+
+// ── Cards needing review badge (over-limit or duplicate flags from import) ─
+async function loadCardsReviewCount() {
+  try {
+    const r = await api('GET', '/cards/needs-review?per_page=1');
+    if (!r?.success) return;
+    const badge = document.getElementById('sb-cards-review');
+    if (!badge) return;
+    const t = r?.summary?.total ?? r?.data?.total ?? 0;
+    if (t > 0) {
+      badge.textContent = '⚠ ' + t;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) { /* silent */ }
+}
+document.addEventListener('DOMContentLoaded', loadCardsReviewCount);
+setInterval(loadCardsReviewCount, 120000);
 </script>
 
 @stack('scripts')

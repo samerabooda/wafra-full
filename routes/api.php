@@ -62,6 +62,10 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
         Route::get('modifications', [CommissionCardController::class, 'modifications'])
              ->middleware('permission:modified');
 
+        // Cards needing review — over-limit ($>7) or duplicates from import
+        Route::get('needs-review',  [CommissionCardController::class, 'needsReview'])
+             ->middleware('permission:cards');
+
         Route::get('/',             [CommissionCardController::class, 'index'])
              ->middleware('permission:cards');
 
@@ -75,6 +79,10 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
              ->middleware('permission:edit_card');
 
         Route::delete('{id}',       [CommissionCardController::class, 'destroy'])
+             ->middleware('role:finance_admin');
+
+        // Clear review flags (over-limit / duplicate) — FA only
+        Route::post('{id}/clear-review', [CommissionCardController::class, 'clearReviewFlags'])
              ->middleware('role:finance_admin');
     });
 
