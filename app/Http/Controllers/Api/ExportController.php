@@ -17,13 +17,15 @@ class ExportController extends Controller
         $user = $request->user();
         $q    = CommissionCard::query()->with(['broker','marketer','branch','extMarketer1','extMarketer2']);
 
-        if (method_exists(CommissionCard::class, 'applyBranchScope')) {
-            $q = CommissionCard::applyBranchScope($q, $user);
+        // Branch scoping — scoped users can only export their own branch
+        if (method_exists($user, 'isScopedToBranch') && $user->isScopedToBranch() && !empty($user->branch_id)) {
+            $q->where('branch_id', $user->branch_id);
+        } elseif ($request->filled('branch_id')) {
+            $q->where('branch_id', $request->branch_id);
         }
 
-        if ($request->filled('branch_id')) $q->where('branch_id', $request->branch_id);
-        if ($request->filled('from'))      $q->where('created_at', '>=', $request->from);
-        if ($request->filled('to'))        $q->where('created_at', '<=', $request->to);
+        if ($request->filled('from')) $q->where('created_at', '>=', $request->from);
+        if ($request->filled('to'))   $q->where('created_at', '<=', $request->to);
 
         $filename = 'wafra-cards-' . now()->format('Y-m-d-Hi') . '.csv';
 
@@ -45,9 +47,9 @@ class ExportController extends Controller
             $q->chunk(500, function ($rows) use ($out) {
                 foreach ($rows as $r) {
                     fputcsv($out, [
-                        $r->account_no ?? '',
+                        $r->account_number ?? '',
                         $r->month ?? '',
-                        $r->branch->name_en ?? '',
+                        $r->branch->name_en ?? ($r->branch->name_ar ?? ''),
                         $r->broker->name ?? '',
                         $r->broker_commission ?? 0,
                         $r->marketer->name ?? '',
@@ -86,13 +88,15 @@ class ExportController extends Controller
         $user = $request->user();
         $q    = CommissionCard::query()->with(['broker','marketer','branch']);
 
-        if (method_exists(CommissionCard::class, 'applyBranchScope')) {
-            $q = CommissionCard::applyBranchScope($q, $user);
+        // Branch scoping — scoped users can only export their own branch
+        if (method_exists($user, 'isScopedToBranch') && $user->isScopedToBranch() && !empty($user->branch_id)) {
+            $q->where('branch_id', $user->branch_id);
+        } elseif ($request->filled('branch_id')) {
+            $q->where('branch_id', $request->branch_id);
         }
 
-        if ($request->filled('branch_id')) $q->where('branch_id', $request->branch_id);
-        if ($request->filled('from'))      $q->where('created_at', '>=', $request->from);
-        if ($request->filled('to'))        $q->where('created_at', '<=', $request->to);
+        if ($request->filled('from')) $q->where('created_at', '>=', $request->from);
+        if ($request->filled('to'))   $q->where('created_at', '<=', $request->to);
 
         $cards = $q->orderByDesc('created_at')->limit(1000)->get();
 
@@ -114,9 +118,9 @@ class ExportController extends Controller
         $rows = '';
         foreach ($cards as $c) {
             $rows .= '<tr>'
-                . '<td>' . e($c->account_no) . '</td>'
+                . '<td>' . e($c->account_number) . '</td>'
                 . '<td>' . e($c->month) . '</td>'
-                . '<td>' . e($c->branch->name_en ?? '') . '</td>'
+                . '<td>' . e($c->branch->name_en ?? ($c->branch->name_ar ?? '')) . '</td>'
                 . '<td>' . e($c->broker->name ?? '') . '</td>'
                 . '<td>' . e($c->broker_commission) . '</td>'
                 . '<td>' . e($c->marketer->name ?? '') . '</td>'

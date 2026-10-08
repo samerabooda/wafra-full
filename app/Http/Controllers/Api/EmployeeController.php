@@ -15,8 +15,9 @@ class EmployeeController extends Controller
         $user  = $request->user();
         $query = Employee::with(['branch', 'addedBy', 'approvedBy']);
 
-        if ($user->isBranchManager()) {
-            // Branch managers see only their branch approved employees
+        // Any branch-scoped user (branch_manager OR viewer) sees only
+        // their own branch's approved employees.
+        if ($user->isScopedToBranch()) {
             $query->where('branch_id', $user->branch_id)
                   ->where('status', 'approved');
         }
@@ -27,17 +28,29 @@ class EmployeeController extends Controller
             $query->where('branch_id', $request->branch_id);
         }
 
+        // Only FA sees the global pending count
+        $pendingCount = $user->isFinanceAdmin()
+            ? Employee::where('status', 'pending')->count()
+            : 0;
+
         return response()->json([
             'success'       => true,
             'data'          => $query->orderBy('name')->get(),
-            'pending_count' => Employee::where('status', 'pending')->count(),
+            'pending_count' => $pendingCount,
         ]);
     }
 
     // ── GET /api/employees/{id} ───────────────────────────────
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $emp = Employee::with(['branch', 'addedBy', 'approvedBy'])->findOrFail($id);
+
+        // Branch-scoped users can only see their own branch's employees
+        $user = $request->user();
+        if ($user->isScopedToBranch() && $emp->branch_id !== $user->branch_id) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         return response()->json(['success' => true, 'data' => $emp]);
     }
 

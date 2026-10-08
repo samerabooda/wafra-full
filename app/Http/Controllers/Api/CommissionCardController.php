@@ -132,6 +132,17 @@ class CommissionCardController extends Controller
             ['reason'=>'required|string|max:200','notes'=>'nullable|string|max:2000']));
         if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
 
+        // ── Repair legacy cards that somehow landed in the DB with a NULL month ──
+        // Without this, every subsequent edit of such a card dies with
+        // SQLSTATE[23000] 'month' cannot be null when we try to log a modification.
+        if (empty($card->month)) {
+            $fallback = $card->month_date
+                ? \Carbon\Carbon::parse($card->month_date)->format('M Y')
+                : now()->format('M Y');
+            $card->update(['month' => $fallback]);
+            $card->refresh();
+        }
+
         DB::transaction(function() use ($request, $card) {
             $oldData = $card->only(['broker_id','broker_commission','marketer_id','marketer_commission',
                 'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
@@ -140,6 +151,13 @@ class CommissionCardController extends Controller
             $fields = $this->extractFields($request);
             // Branch managers cannot relocate a card to another branch
             if ($request->user()->isBranchManager()) unset($fields['branch_id']);
+
+            // Defensive: never let an incoming request null-out identity columns
+            foreach (['account_number','month','month_date','branch_id'] as $kId) {
+                if (array_key_exists($kId, $fields) && $fields[$kId] === null) {
+                    unset($fields[$kId]);
+                }
+            }
 
             $card->update(array_merge($fields, ['status'=>'modified']));
 
@@ -150,7 +168,7 @@ class CommissionCardController extends Controller
                    + (float)$fresh->marketer_commission
                    + (float)$fresh->ext_commission1
                    + (float)$fresh->ext_commission2
-                   + (float)$fresh->referral_commission;
+                   + (float)($fresh->referral_commission ?? 0);
             $limit = \App\Http\Controllers\Api\ImportController::COMMISSION_LIMIT;
             if ($fresh->is_over_limit && $total <= $limit) {
                 $fresh->update(['is_over_limit' => false]);
@@ -161,11 +179,21 @@ class CommissionCardController extends Controller
             }
             $newData = $card->fresh()->only(array_keys($oldData));
 
+            // Last-line defence: compute a safe month even if something unexpected
+            // slipped through. card_modifications.month is NOT NULL in the schema.
+            $monthForLog = $card->month
+                ?: ($card->month_date ? \Carbon\Carbon::parse($card->month_date)->format('M Y') : now()->format('M Y'));
+
             CardModification::create([
-                'card_id'=>$card->id,'account_number'=>$card->account_number,'month'=>$card->month,
-                'reason'=>$request->reason,'notes'=>$request->notes,
-                'old_data'=>$oldData,'new_data'=>$newData,
-                'modified_by'=>$request->user()->id,'modified_at'=>now(),
+                'card_id'=>$card->id,
+                'account_number'=>$card->account_number,
+                'month'=>$monthForLog,
+                'reason'=>$request->reason,
+                'notes'=>$request->notes,
+                'old_data'=>$oldData,
+                'new_data'=>$newData,
+                'modified_by'=>$request->user()->id,
+                'modified_at'=>now(),
             ]);
             ActivityLog::record('edit_card', $card, ['reason'=>$request->reason,'account'=>$card->account_number]);
         });
@@ -371,6 +399,7 @@ class CommissionCardController extends Controller
             'branch_id'=>'nullable|exists:branches,id','account_type_id'=>'nullable|exists:account_types,id',
             'account_status_id'=>'nullable|exists:account_statuses,id','trading_type_id'=>'nullable|exists:trading_types,id',
             'account_kind'=>'nullable|in:new,sub',
+            'parent_account'=>'nullable|string|max:30',
             'broker_id'=>'nullable|exists:employees,id','broker_commission'=>'nullable|numeric|min:0',
             'marketer_id'=>'nullable|exists:employees,id','marketer_commission'=>'nullable|numeric|min:0',
             'ext_marketer1_id'=>'nullable|exists:employees,id','ext_commission1'=>'nullable|numeric|min:0',
@@ -386,6 +415,7 @@ class CommissionCardController extends Controller
         $fields = $request->only([
             'account_number','month','month_date','branch_id',
             'account_type_id','account_status_id','trading_type_id','account_kind',
+            'parent_account',
             'broker_id','broker_commission','marketer_id','marketer_commission',
             'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
             'forex_commission','futures_commission','initial_deposit','monthly_deposit','notes',

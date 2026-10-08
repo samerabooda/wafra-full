@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\{CommissionCard, Branch, Employee};
 use Illuminate\Http\{Request, JsonResponse};
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\{DB, Schema};
 
 class DashboardController extends Controller
 {
@@ -18,8 +18,14 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $q = CommissionCard::query();
-        if (method_exists(CommissionCard::class, 'applyBranchScope')) {
-            $q = CommissionCard::applyBranchScope($q, $user);
+
+        // Branch scoping — anyone scoped to a branch (branch_manager or
+        // branch viewer) sees only their branch's cards. Finance Admin and
+        // Call Center see everything.
+        if (method_exists($user, 'isScopedToBranch') ? $user->isScopedToBranch() : false) {
+            if (!empty($user->branch_id)) {
+                $q->where('branch_id', $user->branch_id);
+            }
         }
 
         // ── Top KPIs ──────────────────────────────────────────
@@ -74,9 +80,12 @@ class DashboardController extends Controller
             ]);
 
         // ── Scenario breakdown ────────────────────────────────
+        // Defensive: before migration 15 the rebate/referral columns may not exist
         $scenarios = [
-            'rebate'         => (clone $q)->where('has_rebate', true)->count(),
-            'referral'       => (clone $q)->whereNotNull('referral_account')->count(),
+            'rebate'         => Schema::hasColumn('commission_cards','has_rebate')
+                                ? (clone $q)->where('has_rebate', true)->count() : 0,
+            'referral'       => Schema::hasColumn('commission_cards','referral_account')
+                                ? (clone $q)->whereNotNull('referral_account')->count() : 0,
             'cc'             => (clone $q)->whereNotNull('cc_branch_id')->count(),
             'with_marketer'  => (clone $q)->whereNotNull('marketer_id')->count(),
             'external_mkt'   => (clone $q)->whereNotNull('ext_marketer1_id')->count(),

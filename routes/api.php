@@ -140,12 +140,16 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
     });
 
     // ── Call Center ───────────────────────────────────────────
-    Route::prefix('cc')->group(function () {
+    // Only FA and branch managers may touch CC endpoints. Viewers are
+    // read-only elsewhere and have no business creating / accepting / etc.
+    Route::prefix('cc')->middleware('role:finance_admin,branch_manager')->group(function () {
         // CC creates / sends cards
         Route::post('cards',              [CallCenterController::class, 'store']);
         Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
         Route::post('cards/{id}/resend',  [CallCenterController::class, 'resend']);
         Route::delete('cards/{id}',       [CallCenterController::class, 'cancel']); // CC cancel draft/rejected
+        // Restore a cancelled CC card
+        Route::post('cards/{id}/restore', [CallCenterController::class, 'restoreCancelled']);
 
         // Branch responds to CC cards
         Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);

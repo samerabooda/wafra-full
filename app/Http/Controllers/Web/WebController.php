@@ -164,12 +164,14 @@ class WebController extends Controller
     }
 
     // ── Branches ───────────────────────────────────────────────
+    // Branches live inside the Settings page (branches tab). Redirect
+    // so the URL ?s=branches auto-opens that tab.
     public function branches()
     {
         if (!Auth::user()->isFinanceAdmin()) {
             return redirect()->route('dashboard')->with('error', 'Access denied.');
         }
-        return view('settings.index');
+        return redirect()->route('settings.index', ['s' => 'branches']);
     }
 
     // ── Permissions ────────────────────────────────────────────

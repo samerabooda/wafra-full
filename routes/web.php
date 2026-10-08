@@ -7,9 +7,13 @@ use App\Http\Controllers\Web\PasswordController;
 // Public
 Route::get('/', fn() => redirect()->route('auth.login'));
 Route::get('/login',  [WebController::class,'loginPage'])->name('auth.login');
-Route::post('/login', [WebController::class,'loginPost'])->name('auth.login.submit');
+Route::post('/login', [WebController::class,'loginPost'])
+     ->middleware('throttle:10,1')
+     ->name('auth.login.submit');
 Route::get('/register',  fn()=>redirect()->route('auth.login'))->name('auth.register');
-Route::post('/register', [WebController::class,'registerPost'])->name('auth.register.submit');
+Route::post('/register', [WebController::class,'registerPost'])
+     ->middleware('throttle:5,1')
+     ->name('auth.register.submit');
 
 // Password Reset
 Route::post('/forgot-password',          [PasswordController::class,'sendResetLink'])->name('auth.password.email');
@@ -19,8 +23,18 @@ Route::post('/reset-password',           [PasswordController::class,'reset'])->n
 // Auth check endpoint (public)
 Route::get('/api-fa-check', [WebController::class,'faCheck'])->name('auth.fa-check');
 
+// CSRF refresh endpoint — the SPA calls this on 419 to pick up a fresh
+// token so long-open pages don't fail with "Page Expired"
+Route::get('/csrf-refresh', function (Request $request) {
+    $request->session()->regenerateToken();
+    return response()->json([
+        'success'    => true,
+        'csrf_token' => csrf_token(),
+    ]);
+})->name('csrf.refresh');
+
 // Authenticated
-Route::middleware('auth')->group(function(){
+Route::middleware(['auth','active.user','force.pwd'])->group(function(){
     Route::post('/logout',         [WebController::class,'logout'])->name('auth.logout');
     Route::get('/dashboard',       [WebController::class,'dashboard'])->name('dashboard');
     Route::get('/cards',           [WebController::class,'cardsIndex'])->name('cards.index');

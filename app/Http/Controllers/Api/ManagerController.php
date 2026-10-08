@@ -51,7 +51,7 @@ class ManagerController extends Controller
 
         $v = Validator::make($request->all(), [
             'name'          => 'required|string|max:100',
-            'email'         => 'required|email|max:150|unique:users,email',
+            'email'         => 'required|email|max:150|unique:users,email,NULL,id,deleted_at,NULL',
             'phone'         => 'nullable|string|max:30',
             'branch_id'     => 'required|exists:branches,id',
             'role'          => 'nullable|in:branch_manager,viewer',
@@ -223,7 +223,7 @@ class ManagerController extends Controller
         if ($err = $this->requireFA($request)) return $err;
 
         $v = Validator::make($request->all(), [
-            'email'     => 'required|email|max:150|unique:manager_invites,email|unique:users,email',
+            'email'     => 'required|email|max:150|unique:manager_invites,email|unique:users,email,NULL,id,deleted_at,NULL',
             'branch_id' => 'nullable|exists:branches,id',
             'role'      => 'nullable|in:branch_manager,viewer',
             'note'      => 'nullable|string|max:255',

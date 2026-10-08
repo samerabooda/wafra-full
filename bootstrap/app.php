@@ -29,7 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->wantsJson()) {
                 $status = 500;
-                if (method_exists($e, 'getStatusCode')) {
+                if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+                    // CSRF token mismatch — SPA will catch this and refresh
+                    $status = 419;
+                } elseif (method_exists($e, 'getStatusCode')) {
                     $status = $e->getStatusCode();
                 } elseif ($e instanceof \Illuminate\Validation\ValidationException) {
                     $status = 422;
@@ -43,7 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage() ?: 'Server Error',
+                    'message' => $status === 419
+                                 ? 'انتهت الجلسة — يرجى تحديث الصفحة.'
+                                 : ($e->getMessage() ?: 'Server Error'),
                     'errors'  => $e instanceof \Illuminate\Validation\ValidationException
                                  ? $e->errors() : null,
                 ], $status);

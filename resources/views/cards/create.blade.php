@@ -46,6 +46,53 @@
 @keyframes fadeSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
 #parent-ac-row.show { display:block }
 /* ── end parent ─────────────────────────────────────────── */
+
+/* ── Searchable Employee Combobox ─────────────────────── */
+.emp-combo { position:relative }
+.emp-combo-input {
+  background:var(--inp-bg);border:1px solid var(--inp-brd);border-radius:9px;
+  padding:10px 36px 10px 14px;font-size:13px;font-family:'Tajawal',sans-serif;
+  color:var(--tx);width:100%;cursor:text;transition:all .15s
+}
+.emp-combo-input:focus { border-color:var(--pri2);outline:none;box-shadow:0 0 0 2px rgba(26,173,186,.18) }
+.emp-combo-input::placeholder { color:var(--mu);opacity:.7 }
+.emp-combo-caret {
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  color:var(--mu);pointer-events:none;font-size:12px;transition:transform .15s
+}
+.emp-combo.open .emp-combo-caret { transform:translateY(-50%) rotate(180deg);color:var(--pri2) }
+.emp-combo-clear {
+  position:absolute;left:30px;top:50%;transform:translateY(-50%);
+  background:transparent;border:none;color:var(--mu);cursor:pointer;
+  font-size:14px;padding:2px 6px;border-radius:4px;display:none
+}
+.emp-combo-clear:hover { background:var(--bg2);color:var(--re) }
+.emp-combo.has-value .emp-combo-clear { display:block }
+.emp-combo-list {
+  position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
+  background:var(--bg3);border:1px solid var(--brd2);border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);max-height:260px;overflow-y:auto;
+  display:none;animation:fadeSlide .12s ease
+}
+.emp-combo.open .emp-combo-list { display:block }
+.emp-combo-item {
+  padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx);
+  border-bottom:1px solid rgba(255,255,255,.03);display:flex;align-items:center;gap:8px
+}
+.emp-combo-item:last-child { border-bottom:none }
+.emp-combo-item:hover,.emp-combo-item.active { background:rgba(26,173,186,.15);color:var(--pri2) }
+.emp-combo-item .ico { font-size:14px;width:22px;text-align:center;flex-shrink:0 }
+.emp-combo-item .nm { flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
+.emp-combo-item .rl { font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;flex-shrink:0 }
+.emp-combo-empty { padding:14px;text-align:center;color:var(--mu);font-size:11px }
+.emp-combo-group {
+  padding:6px 12px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--mu);font-weight:700;background:var(--bg2);border-bottom:1px solid var(--brd1);
+  position:sticky;top:0
+}
+/* Hide the underlying native select but keep it in the DOM so the rest of the form sees .value */
+.emp-combo select { position:absolute;left:-9999px;width:1px;height:1px;opacity:0 }
+/* ── end combobox ─────────────────────────────────────── */
 </style>
 @endpush
 
@@ -161,9 +208,15 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" id="crt-lbl-broker">🧑‍💼 البروكر *</label>
-            <select id="f-broker" class="form-control" required>
-              <option value="" id="crt-opt-broker">— اختر البروكر —</option>
-            </select>
+            <div class="emp-combo" data-emp-combo="f-broker">
+              <input type="text" class="emp-combo-input" id="f-broker-search" placeholder="ابحث بالاسم..." autocomplete="off">
+              <button type="button" class="emp-combo-clear" title="مسح">✕</button>
+              <span class="emp-combo-caret">▾</span>
+              <div class="emp-combo-list"></div>
+              <select id="f-broker" required>
+                <option value="" id="crt-opt-broker">— اختر البروكر —</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" id="crt-lbl-broker-comm">عمولة البروكر</label>
@@ -173,9 +226,15 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label" id="crt-lbl-mktr">📢 مسوّق داخلي</label>
-            <select id="f-marketer" class="form-control" onchange="onMktrChange()">
-              <option value="" id="crt-opt-none1">— لا يوجد —</option>
-            </select>
+            <div class="emp-combo" data-emp-combo="f-marketer">
+              <input type="text" class="emp-combo-input" id="f-marketer-search" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
+              <button type="button" class="emp-combo-clear" title="مسح">✕</button>
+              <span class="emp-combo-caret">▾</span>
+              <div class="emp-combo-list"></div>
+              <select id="f-marketer" onchange="onMktrChange()">
+                <option value="" id="crt-opt-none1">— لا يوجد —</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label" id="crt-lbl-mktr-comm">عمولة المسوّق الداخلي</label>
@@ -185,9 +244,15 @@
         <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:14px;margin-bottom:10px">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext1">🌐 مسوّق خارجي 1</label>
-            <select id="f-ext1" class="form-control" onchange="onExt1Change()">
-              <option value="" id="crt-opt-none2">— لا يوجد —</option>
-            </select>
+            <div class="emp-combo" data-emp-combo="f-ext1">
+              <input type="text" class="emp-combo-input" id="f-ext1-search" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
+              <button type="button" class="emp-combo-clear" title="مسح">✕</button>
+              <span class="emp-combo-caret">▾</span>
+              <div class="emp-combo-list"></div>
+              <select id="f-ext1" onchange="onExt1Change()">
+                <option value="" id="crt-opt-none2">— لا يوجد —</option>
+              </select>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext1-comm">عمولة مسوّق خارجي 1</label>
@@ -197,9 +262,15 @@
         <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:14px">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext2">🌐 مسوّق خارجي 2</label>
-            <select id="f-ext2" class="form-control" onchange="onExt2Change()">
-              <option value="" id="crt-opt-none3">— لا يوجد —</option>
-            </select>
+            <div class="emp-combo" data-emp-combo="f-ext2">
+              <input type="text" class="emp-combo-input" id="f-ext2-search" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
+              <button type="button" class="emp-combo-clear" title="مسح">✕</button>
+              <span class="emp-combo-caret">▾</span>
+              <div class="emp-combo-list"></div>
+              <select id="f-ext2" onchange="onExt2Change()">
+                <option value="" id="crt-opt-none3">— لا يوجد —</option>
+              </select>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext2-comm">عمولة مسوّق خارجي 2</label>
@@ -524,6 +595,144 @@ function onExt2Change() {
   if (!has) inp.value = '0';
 }
 
+// ── Searchable Employee Combobox ─────────────────────────────
+// Mounts a search layer over an existing <select>. The <select>
+// remains the source of truth for .value / .onchange so every
+// place that reads f-broker.value keeps working.
+function mountEmpCombo(wrap) {
+  const sel  = wrap.querySelector('select');
+  const inp  = wrap.querySelector('.emp-combo-input');
+  const list = wrap.querySelector('.emp-combo-list');
+  const clr  = wrap.querySelector('.emp-combo-clear');
+  if (!sel || !inp || !list) return;
+
+  // Build the pickable items from the <select> options (skip the placeholder)
+  const options = Array.from(sel.options).slice(1).map(o => ({
+    id: o.value,
+    text: o.textContent,
+    role: o.dataset.role || '',
+    base: o.dataset.base === '1',
+  }));
+
+  let activeIdx = -1;
+
+  function roleLabel(r) {
+    if (r === 'broker')    return 'بروكر';
+    if (r === 'marketing') return 'مسوّق';
+    if (r === 'external')  return 'خارجي';
+    return '';
+  }
+  function roleIcon(r) {
+    if (r === 'external')  return '🌐';
+    if (r === 'marketing') return '📢';
+    if (r === 'broker')    return '🏦';
+    return '👤';
+  }
+
+  function render(filter = '') {
+    const q = filter.trim().toLowerCase();
+    const matches = q
+      ? options.filter(o => (o.text || '').toLowerCase().includes(q))
+      : options;
+
+    if (!matches.length) {
+      list.innerHTML = `<div class="emp-combo-empty">لا توجد نتائج لـ "${filter.replace(/</g,'&lt;')}"</div>`;
+      return;
+    }
+
+    // Group by role so the dropdown is scannable
+    const groups = { broker: [], marketing: [], external: [], other: [] };
+    matches.forEach(o => (groups[o.role] || groups.other).push(o));
+
+    const html = [];
+    const addGroup = (label, items) => {
+      if (!items.length) return;
+      html.push(`<div class="emp-combo-group">${label} (${items.length})</div>`);
+      items.forEach(o => {
+        const nmOnly = (o.text || '').replace(/\s[🌐📢🏦]$/u, '');
+        html.push(`
+          <div class="emp-combo-item" data-id="${o.id}" role="option">
+            <span class="ico">${roleIcon(o.role)}</span>
+            <span class="nm">${nmOnly.replace(/</g,'&lt;')}</span>
+            <span class="rl">${roleLabel(o.role)}</span>
+          </div>`);
+      });
+    };
+    addGroup('🏦 البروكرات',    groups.broker);
+    addGroup('📢 المسوّقون',     groups.marketing);
+    addGroup('🌐 المسوّقون الخارجيون', groups.external);
+    addGroup('👤 أخرى',          groups.other);
+    list.innerHTML = html.join('');
+    activeIdx = -1;
+  }
+
+  function open() {
+    wrap.classList.add('open');
+    render(inp.value);
+  }
+  function close() {
+    wrap.classList.remove('open');
+    activeIdx = -1;
+  }
+  function pick(id) {
+    sel.value = id || '';
+    // Fire the native change event so existing onchange handlers (onMktrChange, etc.) run
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    syncDisplay();
+    close();
+  }
+  function syncDisplay() {
+    const opt = sel.selectedOptions[0];
+    if (opt && opt.value) {
+      inp.value = opt.textContent;
+      wrap.classList.add('has-value');
+    } else {
+      inp.value = '';
+      wrap.classList.remove('has-value');
+    }
+  }
+
+  // Events
+  inp.addEventListener('focus',  open);
+  inp.addEventListener('click',  open);
+  inp.addEventListener('input',  () => { open(); render(inp.value); });
+  inp.addEventListener('keydown', (e) => {
+    const items = Array.from(list.querySelectorAll('.emp-combo-item'));
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); open();
+      activeIdx = Math.min(items.length - 1, activeIdx + 1);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIdx));
+      items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIdx = Math.max(0, activeIdx - 1);
+      items.forEach((it, i) => it.classList.toggle('active', i === activeIdx));
+      items[activeIdx]?.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIdx >= 0 && items[activeIdx]) pick(items[activeIdx].dataset.id);
+      else if (items.length === 1) pick(items[0].dataset.id);
+    } else if (e.key === 'Escape') {
+      close(); inp.blur();
+    }
+  });
+  list.addEventListener('click', (e) => {
+    const it = e.target.closest('.emp-combo-item');
+    if (it) pick(it.dataset.id);
+  });
+  clr?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pick('');
+    inp.focus();
+  });
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) close();
+  });
+
+  // Initial state: reflect the current selected option (if any)
+  syncDisplay();
+}
+
 // ── Load dropdowns ────────────────────────────────────────────
 async function loadFormOptions() {
   const [settings, employees, branches] = await Promise.all([
@@ -553,22 +762,31 @@ async function loadFormOptions() {
     fill('f-trading', settings.data.trading_types);
   }
 
-  // Employees
+  // Employees — sort alphabetically (base brokers first within each role)
+  // then feed both the hidden <select> and the visible combobox.
   if (employees.success) {
+    const emps = (employees.data || []).slice().sort((a, b) => {
+      // Base brokers (is_base=true, role=broker) float to top for brokers
+      if (a.is_base !== b.is_base) return (b.is_base ? 1 : 0) - (a.is_base ? 1 : 0);
+      return (a.name || '').localeCompare(b.name || '', 'ar');
+    });
     ['f-broker','f-marketer','f-ext1','f-ext2'].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
-      // Keep first option
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
       if (firstOpt) sel.appendChild(firstOpt);
-      employees.data.forEach(e => {
+      emps.forEach(e => {
         const o = document.createElement('option');
         o.value = e.id;
         o.textContent = e.name + (e.role === 'external' ? ' 🌐' : e.role === 'marketing' ? ' 📢' : ' 🏦');
+        o.dataset.role = e.role || '';
+        o.dataset.base = e.is_base ? '1' : '0';
         sel.appendChild(o);
       });
     });
+    // Mount the combobox search layer now that options are in place
+    document.querySelectorAll('.emp-combo').forEach(mountEmpCombo);
   }
 
   // Branches (FA only — scoped users have hidden input)
@@ -630,7 +848,7 @@ async function submitCard() {
     account_status_id:   parseInt(document.getElementById('f-status').value) || null,
     trading_type_id:     parseInt(document.getElementById('f-trading').value)|| null,
     account_kind:        kind,
-    parent_account_number: kind === 'sub' ? parentAc : null,
+    parent_account:      kind === 'sub' ? parentAc : null,
     broker_id:           parseInt(broker),
     broker_commission:   parseFloat(document.getElementById('f-broker-comm').value) || 0,
     marketer_id:         mktrId,

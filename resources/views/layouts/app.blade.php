@@ -1080,16 +1080,40 @@ function toast(msg, type = 'success') {
   setTimeout(() => t.remove(), 3500);
 }
 
-// ── API Helper ─────────────────────────────────────────────
-async function api(method, url, body = null) {
+// ── CSRF token helpers ─────────────────────────────────────
+function getCsrfToken() {
+  const m = document.querySelector('meta[name="csrf-token"]');
+  return m ? m.content : '';
+}
+function setCsrfToken(t) {
+  const m = document.querySelector('meta[name="csrf-token"]');
+  if (m && t) m.content = t;
+}
+async function refreshCsrfToken() {
+  try {
+    const r = await fetch('/csrf-refresh', {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (j && j.csrf_token) { setCsrfToken(j.csrf_token); return true; }
+  } catch (e) { /* fall through */ }
+  return false;
+}
+
+// ── API Helper (auto-retries on 419 CSRF expiry) ───────────
+async function api(method, url, body = null, _retried = false) {
   let res;
   try {
     res = await fetch(API + url, {
       method,
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'X-CSRF-TOKEN': getCsrfToken(),
         ...(API_TOKEN ? {'Authorization': 'Bearer ' + API_TOKEN} : {}),
       },
       body: body ? JSON.stringify(body) : null,
@@ -1101,12 +1125,21 @@ async function api(method, url, body = null) {
     window.location.href = '{{ route("auth.login") }}';
     return { success: false, message: 'غير مصرح.' };
   }
+  // 419 Page Expired → silently refresh CSRF and retry ONCE
+  if (res.status === 419 && !_retried) {
+    const ok = await refreshCsrfToken();
+    if (ok) return api(method, url, body, true);
+  }
   try {
     return await res.json();
   } catch (e) {
     return { success: false, message: 'خطأ في الخادم (' + res.status + ').' };
   }
 }
+
+// Keep the token warm — a lightweight ping every 30 minutes so pages
+// left open all day never hit 419 in the first place.
+setInterval(refreshCsrfToken, 30 * 60 * 1000);
 
 // ── Sidebar user info ──────────────────────────────────────
 function updateUserChip() {

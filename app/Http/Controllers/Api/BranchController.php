@@ -12,19 +12,30 @@ use Illuminate\Validation\Rule;
 class BranchController extends Controller
 {
     // GET /api/branches
+    // Branch-scoped users (branch_manager / viewer) see ONLY their own branch.
+    // Finance Admin and call-center staff see all.
     public function index(Request $request): JsonResponse
     {
-        $branches = Branch::withCount(['employees', 'commissionCards'])
-                          ->orderBy('code')
-                          ->get();
+        $user  = $request->user();
+        $query = Branch::withCount(['employees', 'commissionCards'])->orderBy('code');
 
-        return response()->json(['success' => true, 'data' => $branches]);
+        if ($user->isScopedToBranch() && $user->branch_id) {
+            $query->where('id', $user->branch_id);
+        }
+
+        return response()->json(['success' => true, 'data' => $query->get()]);
     }
 
     // GET /api/branches/{id}
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
+        $user   = $request->user();
         $branch = Branch::withCount(['employees', 'commissionCards'])->findOrFail($id);
+
+        if ($user->isScopedToBranch() && $branch->id !== $user->branch_id) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         return response()->json(['success' => true, 'data' => $branch]);
     }
 

@@ -210,13 +210,16 @@ class ImportController extends Controller
         $overLimit  = $totalComm > self::COMMISSION_LIMIT;
         if ($overLimit) $stats['over_limit']++;
 
-        // ── Check duplicate ──────────────────────────────────────
-        $existing = CommissionCard::where('account_number', $acNo)
+        // ── Check duplicate (both live and soft-deleted so we don't crash
+        //    the unique constraint on insert) ────────────────────
+        $existing = CommissionCard::withTrashed()
+                                  ->where('account_number', $acNo)
                                   ->where('month', $month)
-                                  ->whereNull('deleted_at')
                                   ->first();
 
-        $isDuplicate = (bool) $existing;
+        // Only flag "duplicate" when the existing row is LIVE — a soft-deleted
+        // row being resurrected is a legitimate re-import, not a dupe.
+        $isDuplicate = $existing && $existing->deleted_at === null;
         if ($isDuplicate) $stats['duplicates']++;
 
         // ── Build the card data ──────────────────────────────────
@@ -244,9 +247,17 @@ class ImportController extends Controller
         ];
 
         if ($existing) {
-            // Overwrite fields (keep created_by from original)
-            $data['status'] = $existing->status === 'inactive' ? 'active' : $existing->status;
+            // Overwrite fields (keep created_by from original).
+            // Reset the duplicate flag on UPDATE — a re-import of the same
+            // card shouldn't be marked as "needs review" every time.
+            $data['status']       = $existing->status === 'inactive' ? 'active' : $existing->status;
+            $data['is_duplicate'] = false;
             unset($data['created_by']);
+
+            // Resurrect if it was soft-deleted (so the unique constraint is happy)
+            if ($existing->deleted_at !== null) {
+                $existing->restore();
+            }
             $existing->update($data);
             return 'updated';
         }

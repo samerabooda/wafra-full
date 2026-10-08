@@ -14,6 +14,8 @@ class CommissionCard extends Model
         'account_number', 'month', 'month_date',
         'branch_id', 'account_type_id', 'account_status_id',
         'trading_type_id', 'account_kind',
+        // Parent AC when account_kind=sub
+        'parent_account',
         'broker_id',         'broker_commission',
         'marketer_id',       'marketer_commission',
         'ext_marketer1_id',  'ext_commission1',

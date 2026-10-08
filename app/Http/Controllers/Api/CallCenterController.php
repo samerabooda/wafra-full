@@ -111,18 +111,22 @@ class CallCenterController extends Controller
             return response()->json(['success' => false, 'message' => 'يجب أن ينتمي الموظف لفرعك.'], 403);
         }
 
-        // Check duplicate
-        if (CommissionCard::where('account_number', $request->account_number)
-                          ->where('month', $request->month)
-                          ->whereNull('deleted_at')->exists()) {
+        // Check duplicate — live row blocks; a soft-deleted row is quietly
+        // restored and reused so the unique constraint (account_number,month)
+        // doesn't crash the insert.
+        $existing = CommissionCard::withTrashed()
+                                  ->where('account_number', $request->account_number)
+                                  ->where('month', $request->month)
+                                  ->first();
+        if ($existing && $existing->deleted_at === null) {
             return response()->json([
                 'success' => false,
                 'message' => "الحساب #{$request->account_number} موجود مسبقاً لشهر {$request->month}.",
             ], 409);
         }
 
-        $card = DB::transaction(function () use ($request, $agent, $user) {
-            $card = CommissionCard::create([
+        $card = DB::transaction(function () use ($request, $agent, $user, $existing) {
+            $data = [
                 'account_number'      => $request->account_number,
                 'month'               => $request->month,
                 'month_date'          => $request->month_date,
@@ -138,7 +142,17 @@ class CallCenterController extends Controller
                 'cc_status'           => 'cc_pending',
                 'status'              => 'new_added',
                 'created_by'          => $user->id,
-            ]);
+            ];
+
+            if ($existing) {
+                // Resurrect — this (account_number, month) was previously cancelled
+                $existing->restore();
+                $existing->update($data);
+                $card = $existing->fresh();
+            } else {
+                $card = CommissionCard::create($data);
+            }
+
             ActivityLog::record('cc_card_created', $card, [
                 'agent'         => $agent->name,
                 'target_branch' => $request->target_branch_id,
@@ -343,7 +357,10 @@ class CallCenterController extends Controller
         }
 
         DB::transaction(function () use ($request, $card) {
-            $card->update([
+            // Preserve a 'modified' status if the card was edited after
+            // acceptance — do NOT reset back to 'new_added' on completion.
+            $preserveStatus = in_array($card->status, ['modified', 'inactive']);
+            $update = [
                 'broker_id'           => $request->broker_id,
                 'broker_commission'   => $request->broker_commission,
                 'marketer_id'         => $request->marketer_id,
@@ -357,8 +374,11 @@ class CallCenterController extends Controller
                 'forex_commission'    => $request->forex_commission ?? 0,
                 'futures_commission'  => $request->futures_commission ?? 0,
                 'cc_status'           => 'completed',
-                'status'              => 'new_added',
-            ]);
+            ];
+            if (!$preserveStatus) {
+                $update['status'] = 'new_added';
+            }
+            $card->update($update);
 
             CcNotification::create([
                 'card_id'        => $card->id,
@@ -398,9 +418,22 @@ class CallCenterController extends Controller
         $priorReason = $card->cc_rejection_reason;
 
         DB::transaction(function () use ($card, $request, $priorReason) {
+            // Reset any broker/marketer data the branch may have filled in
+            // during a previous acceptance before rejecting — the branch
+            // should see a clean form on resend.
             $card->update([
                 'cc_status'           => 'branch_pending',
                 'cc_rejection_reason' => null,
+                'broker_id'           => null,
+                'broker_commission'   => 0,
+                'marketer_id'         => null,
+                'marketer_commission' => 0,
+                'ext_marketer1_id'    => null,
+                'ext_commission1'     => 0,
+                'ext_marketer2_id'    => null,
+                'ext_commission2'     => 0,
+                'initial_deposit'     => 0,
+                'monthly_deposit'     => 0,
             ]);
 
             CcNotification::create([
@@ -453,6 +486,40 @@ class CallCenterController extends Controller
         return response()->json([
             'success' => true,
             'message' => "🗑️ تم إلغاء الكرت #{$accountNumber}.",
+        ]);
+    }
+
+    // ── POST /api/cc/cards/{id}/restore — undo a cancellation ──
+    public function restoreCancelled(Request $request, int $id): JsonResponse
+    {
+        $card = CommissionCard::withTrashed()->find($id);
+        if (!$card) {
+            return response()->json(['success' => false, 'message' => 'Card not found.'], 404);
+        }
+        if ($card->deleted_at === null) {
+            return response()->json(['success' => false, 'message' => 'Card is not cancelled.'], 422);
+        }
+        $this->assertCcOwnership($card, $request);
+
+        // Make sure (account_number, month) is still free — someone may have
+        // created a new live card for the same slot in the meantime.
+        $clash = CommissionCard::where('account_number', $card->account_number)
+                               ->where('month', $card->month)
+                               ->exists();
+        if ($clash) {
+            return response()->json([
+                'success' => false,
+                'message' => "لا يمكن استعادة الكرت — يوجد كرت نشط بنفس الرقم والشهر.",
+            ], 409);
+        }
+
+        $card->restore();
+        ActivityLog::record('cc_card_restored', $card, []);
+
+        return response()->json([
+            'success' => true,
+            'message' => "✅ تم استعادة الكرت #{$card->account_number}.",
+            'data'    => $card->fresh(),
         ]);
     }
 
