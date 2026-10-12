@@ -748,12 +748,6 @@ body {
       <span id="lp-status">النظام نشط ومتصل</span>
     </div>
 
-    {{-- Live stats pill — fetched from /api/cards/stats on page load --}}
-    <div class="brand-pill" id="lp-stats-pill" style="display:none;margin-top:8px;background:rgba(26,173,186,.08);border-color:rgba(26,173,186,.25)">
-      <span style="font-size:14px">🗂</span>
-      <span id="lp-stats-text" style="font-size:11px;color:var(--mu,#8899aa)">—</span>
-    </div>
-
     <div class="brand-headline" id="lp-headline">
       إدارة<br><em>كروت العمولات</em>
     </div>
@@ -1143,30 +1137,6 @@ function lpToggleLang() {
 
 /* ── Apply immediately (script at end of body, DOM is ready) ── */
 lpApplyLang(lpLang);
-
-/* ══════════════════════════════════════════════════════════
-   Live Stats — fetch total cards + deposit from the public endpoint
-   so the login page shows real activity, not a static sales line.
-   ══════════════════════════════════════════════════════════ */
-(function loadLoginStats(){
-  fetch('/api/cards/stats', { credentials: 'same-origin', cache: 'no-store' })
-    .then(function(r){ return r.ok ? r.json() : null; })
-    .then(function(d){
-      if (!d || !d.success) return;
-      var pill = document.getElementById('lp-stats-pill');
-      var txt  = document.getElementById('lp-stats-text');
-      if (!pill || !txt) return;
-      var isEn = (lpLang === 'en');
-      var cards = (d.total || 0).toLocaleString(isEn ? 'en-US' : 'ar-SA');
-      var dep   = (d.initial_deposit || 0).toLocaleString(isEn ? 'en-US' : 'ar-SA',
-                   { maximumFractionDigits: 0 });
-      txt.textContent = isEn
-        ? (cards + ' commission cards · $' + dep + ' in deposits')
-        : (cards + ' كرت عمولة · $' + dep + ' إجمالي الإيداعات');
-      pill.style.display = '';
-    })
-    .catch(function(){ /* silent — stats pill stays hidden */ });
-})();
 
 /* ══════════════════════════════════════════════════════════
    SECURITY: Clear any saved session / token on login page load
