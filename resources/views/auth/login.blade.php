@@ -1161,7 +1161,7 @@ lpApplyLang(lpLang);
       var dep   = (d.initial_deposit || 0).toLocaleString(isEn ? 'en-US' : 'ar-SA',
                    { maximumFractionDigits: 0 });
       txt.textContent = isEn
-        ? (cards + ' commission cards · $' + dep + ' total deposits')
+        ? (cards + ' commission cards · $' + dep + ' in deposits')
         : (cards + ' كرت عمولة · $' + dep + ' إجمالي الإيداعات');
       pill.style.display = '';
     })
