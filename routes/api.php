@@ -42,31 +42,27 @@ Route::get('cards/stats', function () {
 
 // TEMP DEBUG — remove after dashboard issue solved
 Route::get('_debug/report-tryout', function () {
-    try {
-        $q = \App\Models\CommissionCard::with(['broker','marketer','extMarketer1','extMarketer2','branch']);
-        $count = $q->count();
-        $sumInit = (float) $q->sum('initial_deposit');
-        $sumMon = (float) $q->sum('monthly_deposit');
-        $data = $q->orderBy('month_date','desc')->limit(5)->get();
-        return response()->json([
-            'ok' => true,
-            'count' => $count,
-            'sum_initial' => $sumInit,
-            'sum_monthly' => $sumMon,
-            'first_rows' => $data,
-            'log_tail' => file_exists(storage_path('logs/laravel.log'))
-                ? array_slice(file(storage_path('logs/laravel.log')), -50)
-                : null,
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'ok' => false,
-            'error_class' => get_class($e),
-            'error_msg' => $e->getMessage(),
-            'file' => $e->getFile() . ':' . $e->getLine(),
-            'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 15),
-        ], 500);
+    // Return just the last 80 lines of laravel.log — grep for ERROR/Exception
+    $log = storage_path('logs/laravel.log');
+    if (!file_exists($log)) {
+        return response()->json(['log' => 'no log file']);
     }
+    $lines = file($log);
+    $tail = array_slice($lines, -300);
+    // Keep only lines after the last "ERROR" marker + a few after
+    $errors = [];
+    foreach ($tail as $i => $line) {
+        if (stripos($line, 'ERROR') !== false || stripos($line, 'Exception') !== false || stripos($line, 'Stack trace') !== false) {
+            // Grab this line + next 10 lines (stack trace preview)
+            $slice = array_slice($tail, $i, 12);
+            $errors[] = implode('', $slice);
+        }
+    }
+    return response()->json([
+        'ok' => true,
+        'error_blocks_last_300_lines' => array_slice(array_values(array_unique($errors)), -5),
+        'total_log_lines' => count($lines),
+    ]);
 });
 
 // ── Protected routes ──────────────────────────────────────────
