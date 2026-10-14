@@ -255,11 +255,13 @@ class CommissionCardController extends Controller
     public function report(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = CommissionCard::with(['broker','marketer','extMarketer1','extMarketer2','branch']);
+        // Base query — NO eager loads here. We only load relations on the small
+        // tail of recent rows (sent as $data). Heavy groupings are done in SQL.
+        $query = CommissionCard::query();
         $this->applyBranchScope($query, $request);
 
-        if ($from = $request->month_from) { try { $query->whereDate('month_date','>=',Carbon::parse("01 {$from}")); } catch(\Exception $e){} }
-        if ($to   = $request->month_to)   { try { $query->whereDate('month_date','<=',Carbon::parse("01 {$to}")->endOfMonth()); } catch(\Exception $e){} }
+        if ($from = $request->month_from) { try { $query->whereDate('month_date','>=',\Carbon\Carbon::parse("01 {$from}")); } catch(\Exception $e){} }
+        if ($to   = $request->month_to)   { try { $query->whereDate('month_date','<=',\Carbon\Carbon::parse("01 {$to}")->endOfMonth()); } catch(\Exception $e){} }
         if ($br   = $request->broker_id)   $query->forBroker((int)$br);
         if ($brN  = $request->broker_name) $query->whereHas('broker', fn($q) => $q->where('name','like',"%{$brN}%"));
         if ($s    = $request->status)       $query->where('status',$s);
@@ -268,7 +270,6 @@ class CommissionCardController extends Controller
         if ($q    = $request->search)       $query->search($q);
 
         // ── Exact aggregates via DB queries (no memory limit) ──────────
-        // Clone query BEFORE adding limit so aggregates reflect true totals.
         $aggQ              = clone $query;
         $exactCount        = (clone $aggQ)->count();
         $totalInitial      = round((clone $aggQ)->sum('initial_deposit'), 2);
@@ -280,9 +281,57 @@ class CommissionCardController extends Controller
         $modifiedCount     = (clone $aggQ)->where('status','modified')->count();
         $newAddedCount     = (clone $aggQ)->where('status','new_added')->count();
 
-        // Safety cap: data payload for charts/tables
-        $limit = min((int)($request->per_page ?? 5000), 10000);
-        $data  = $query->orderBy('month_date','desc')->orderBy('account_number')->limit($limit)->get();
+        // ── GROUP BY aggregates for dashboard charts (SQL-side, cheap) ──
+        $byBranch = (clone $query)
+            ->selectRaw('branch_id, COUNT(*) as cnt')
+            ->groupBy('branch_id')
+            ->with('branch:id,name_ar,name_en')
+            ->get()
+            ->map(fn($r) => [
+                'branch_id' => $r->branch_id,
+                'name_ar'   => $r->branch?->name_ar ?? '—',
+                'name_en'   => $r->branch?->name_en ?? '—',
+                'count'     => (int) $r->cnt,
+            ])
+            ->sortByDesc('count')
+            ->values();
+
+        $byBroker = (clone $query)
+            ->selectRaw('broker_id, COUNT(*) as cnt, SUM(monthly_deposit) as mdep')
+            ->whereNotNull('broker_id')
+            ->groupBy('broker_id')
+            ->with('broker:id,name')
+            ->orderByDesc('cnt')
+            ->limit(20)
+            ->get()
+            ->map(fn($r) => [
+                'name'            => $r->broker?->name ?? '—',
+                'count'           => (int) $r->cnt,
+                'monthly_deposit' => (float) $r->mdep,
+            ])
+            ->values();
+
+        $byMarketer = (clone $query)
+            ->selectRaw('marketer_id, COUNT(*) as cnt')
+            ->whereNotNull('marketer_id')
+            ->groupBy('marketer_id')
+            ->with('marketer:id,name')
+            ->orderByDesc('cnt')
+            ->limit(20)
+            ->get()
+            ->map(fn($r) => [
+                'name'  => $r->marketer?->name ?? '—',
+                'count' => (int) $r->cnt,
+            ])
+            ->values();
+
+        // Small tail of recent cards — ONLY for the table view (older behavior).
+        // Capped low because full dataset is now sent via grouped aggregates above.
+        $limit = min((int) ($request->per_page ?? 500), 2000);
+        $data  = (clone $query)
+            ->with(['broker:id,name','marketer:id,name','extMarketer1:id,name','extMarketer2:id,name','branch:id,name_ar,name_en'])
+            ->orderBy('month_date','desc')->orderBy('account_number')
+            ->limit($limit)->get();
 
         return response()->json([
             'success'        => true,
@@ -299,7 +348,10 @@ class CommissionCardController extends Controller
                 'modified_count'        => $modifiedCount,
                 'new_added_count'       => $newAddedCount,
             ],
-            'data' => $data,
+            'by_branch'   => $byBranch,
+            'by_broker'   => $byBroker,
+            'by_marketer' => $byMarketer,
+            'data'        => $data,
         ]);
     }
 

@@ -176,14 +176,22 @@ async function loadDashboard() {
   const data = r.data || [];
 
   // ── Per-branch count chart ──
-  const branchMap = {};
-  data.forEach(row => {
-    const name = (lang === 'en' ? row.branch?.name_en : row.branch?.name_ar)
-               || row.branch?.name_ar || row.branch?.name_en || d('unknown');
-    branchMap[name] = (branchMap[name] || 0) + 1;
-  });
-  const bLabels = Object.keys(branchMap).sort((a,b) => branchMap[b] - branchMap[a]);
-  const bVals   = bLabels.map(b => branchMap[b]);
+  // Prefer SQL-side pre-aggregated grouping (r.by_branch); fall back to client-side group.
+  let bLabels, bVals;
+  if (Array.isArray(r.by_branch) && r.by_branch.length) {
+    const rows = r.by_branch.slice().sort((a,b) => b.count - a.count);
+    bLabels = rows.map(x => (lang === 'en' ? x.name_en : x.name_ar) || x.name_ar || x.name_en || d('unknown'));
+    bVals   = rows.map(x => x.count);
+  } else {
+    const branchMap = {};
+    data.forEach(row => {
+      const name = (lang === 'en' ? row.branch?.name_en : row.branch?.name_ar)
+                 || row.branch?.name_ar || row.branch?.name_en || d('unknown');
+      branchMap[name] = (branchMap[name] || 0) + 1;
+    });
+    bLabels = Object.keys(branchMap).sort((a,b) => branchMap[b] - branchMap[a]);
+    bVals   = bLabels.map(b => branchMap[b]);
+  }
   const totalBr = bVals.reduce((a,v) => a+v, 0);
   document.getElementById('branch-total-lbl').textContent = d('total') + totalBr.toLocaleString('en') + d('account');
 
@@ -214,14 +222,20 @@ async function loadDashboard() {
     }
   });
 
-  // ── Broker count table ──
-  const brokerCount = {};
-  data.forEach(row => {
-    const n = row.broker?.name || d('unknown');
-    brokerCount[n] = (brokerCount[n] || 0) + 1;
-  });
-  const sortedBrCnt = Object.entries(brokerCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
   const medals = ['🥇','🥈','🥉','4','5','6','7','8','9','10'];
+
+  // ── Broker count table — prefer SQL grouping ──
+  let sortedBrCnt;
+  if (Array.isArray(r.by_broker) && r.by_broker.length) {
+    sortedBrCnt = r.by_broker.slice(0, 10).map(x => [x.name, x.count]);
+  } else {
+    const brokerCount = {};
+    data.forEach(row => {
+      const n = row.broker?.name || d('unknown');
+      brokerCount[n] = (brokerCount[n] || 0) + 1;
+    });
+    sortedBrCnt = Object.entries(brokerCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  }
   document.getElementById('broker-cnt-tb').innerHTML = sortedBrCnt.map(([name,cnt],i) => `
     <tr>
       <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
@@ -229,14 +243,19 @@ async function loadDashboard() {
       <td class="mono c-teal" style="font-weight:800">${cnt.toLocaleString('en')}</td>
     </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nodata')}</td></tr>`;
 
-  // ── Marketer count table ──
-  const mktMap = {};
-  data.forEach(row => {
-    if (row.marketer?.name) {
-      mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
-    }
-  });
-  const sortedMkt = Object.entries(mktMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  // ── Marketer count table — prefer SQL grouping ──
+  let sortedMkt;
+  if (Array.isArray(r.by_marketer) && r.by_marketer.length) {
+    sortedMkt = r.by_marketer.slice(0, 10).map(x => [x.name, x.count]);
+  } else {
+    const mktMap = {};
+    data.forEach(row => {
+      if (row.marketer?.name) {
+        mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
+      }
+    });
+    sortedMkt = Object.entries(mktMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  }
   document.getElementById('marketer-cnt-tb').innerHTML = sortedMkt.length
     ? sortedMkt.map(([name,cnt],i) => `
       <tr>
@@ -246,13 +265,21 @@ async function loadDashboard() {
       </tr>`).join('')
     : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nomkt')}</td></tr>`;
 
-  // ── Broker deposit table ──
-  const brokerDep = {};
-  data.forEach(row => {
-    const n = row.broker?.name || d('unknown');
-    brokerDep[n] = (brokerDep[n] || 0) + parseFloat(row.monthly_deposit || 0);
-  });
-  const sortedBrDep = Object.entries(brokerDep).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  // ── Broker deposit table — prefer SQL grouping ──
+  let sortedBrDep;
+  if (Array.isArray(r.by_broker) && r.by_broker.length) {
+    sortedBrDep = r.by_broker.slice()
+      .sort((a,b) => (b.monthly_deposit||0) - (a.monthly_deposit||0))
+      .slice(0, 10)
+      .map(x => [x.name, x.monthly_deposit || 0]);
+  } else {
+    const brokerDep = {};
+    data.forEach(row => {
+      const n = row.broker?.name || d('unknown');
+      brokerDep[n] = (brokerDep[n] || 0) + parseFloat(row.monthly_deposit || 0);
+    });
+    sortedBrDep = Object.entries(brokerDep).sort((a,b) => b[1] - a[1]).slice(0, 10);
+  }
   document.getElementById('broker-dep-tb').innerHTML = sortedBrDep.map(([name,dep],i) => `
     <tr>
       <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
