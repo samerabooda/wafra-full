@@ -40,6 +40,35 @@ Route::get('cards/stats', function () {
     ]);
 });
 
+// TEMP DEBUG — remove after dashboard issue solved
+Route::get('_debug/report-tryout', function () {
+    try {
+        $q = \App\Models\CommissionCard::with(['broker','marketer','extMarketer1','extMarketer2','branch']);
+        $count = $q->count();
+        $sumInit = (float) $q->sum('initial_deposit');
+        $sumMon = (float) $q->sum('monthly_deposit');
+        $data = $q->orderBy('month_date','desc')->limit(5)->get();
+        return response()->json([
+            'ok' => true,
+            'count' => $count,
+            'sum_initial' => $sumInit,
+            'sum_monthly' => $sumMon,
+            'first_rows' => $data,
+            'log_tail' => file_exists(storage_path('logs/laravel.log'))
+                ? array_slice(file(storage_path('logs/laravel.log')), -50)
+                : null,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'error_class' => get_class($e),
+            'error_msg' => $e->getMessage(),
+            'file' => $e->getFile() . ':' . $e->getLine(),
+            'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 15),
+        ], 500);
+    }
+});
+
 // ── Protected routes ──────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1'])->group(function () {
 
