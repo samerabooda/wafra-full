@@ -1174,13 +1174,23 @@ function esc(s) {
 }
 
 // ── Helpers ────────────────────────────────────────────────
-const fmt = n => n > 0 ? Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
-const fmtK = n => {
+// NOTE: Use `function` declarations (NOT const/let). Lexical declarations at
+// the top of a classic <script> tag are scoped to THAT script only, so other
+// script tags on the page (like dashboard/index.blade.php's inline JS) cannot
+// see them and get "fmtK is not defined". Function declarations hoist to
+// the global object and ARE accessible across script tags.
+function fmt(n) {
+  return n > 0 ? Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
+}
+function fmtK(n) {
   if (!n || isNaN(n)) return '—';
-  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e6)  return (n/1e6).toFixed(1) + 'M';
   if (n >= 1000) return (n/1000).toFixed(0) + 'K';
   return Number(n).toLocaleString('en', {maximumFractionDigits:0});
-};
+}
+// Also expose on window for maximum safety (e.g. module script contexts)
+window.fmt = fmt;
+window.fmtK = fmtK;
 
 // ── Modal helpers ──────────────────────────────────────────
 function openModal(id){ document.getElementById(id)?.classList.add('open'); }
