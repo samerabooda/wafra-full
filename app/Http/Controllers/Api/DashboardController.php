@@ -85,7 +85,7 @@ class DashboardController extends Controller
             'rebate'         => Schema::hasColumn('commission_cards','has_rebate')
                                 ? (clone $q)->where('has_rebate', true)->count() : 0,
             'referral'       => Schema::hasColumn('commission_cards','referral_account')
-                                ? (clone $q)->whereNotNull('referral_account')->count() : 0,
+                                ? (clone $q)->whereNotNull('referral_account')->where('referral_account','!=','')->count() : 0,
             'cc'             => (clone $q)->whereNotNull('cc_branch_id')->count(),
             'with_marketer'  => (clone $q)->whereNotNull('marketer_id')->count(),
             'external_mkt'   => (clone $q)->whereNotNull('ext_marketer1_id')->count(),

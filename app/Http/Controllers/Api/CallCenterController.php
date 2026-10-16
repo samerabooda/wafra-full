@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\{CommissionCard, CcNotification, ActivityLog, Employee};
+use App\Models\{CommissionCard, CcNotification, ActivityLog, Employee, Branch};
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\{DB, Validator};
 
@@ -545,30 +545,187 @@ class CallCenterController extends Controller
     }
 
     // ── GET /api/cc/sent — CC: my sent cards ───────────────────
+    // Supports filters: cc_status, branch_id, cc_agent_id, month, search, from, to, include_cancelled
+    // Supports pagination: per_page (default 100, max 2000)
     public function sent(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = CommissionCard::with(['ccAgent', 'branch'])
-                               ->whereNotNull('cc_branch_id');
+
+        // ── Base query ───────────────────────────────────────
+        // When include_cancelled=1 we also return soft-deleted CC cards so the
+        // user can see history / restore them.
+        $base = $request->boolean('include_cancelled')
+            ? CommissionCard::withTrashed()
+            : CommissionCard::query();
+
+        $query = $base->with(['ccAgent:id,name,role', 'branch:id,name_ar,name_en', 'ccBranch:id,name_ar,name_en'])
+                      ->whereNotNull('cc_branch_id');
+
+        // Branch scoping — a CC manager sees only their own branch's sent cards
+        if ($user->isScopedToBranch()) {
+            $query->where('cc_branch_id', $user->branch_id);
+        }
+
+        // Filters
+        if ($s  = $request->cc_status)   $query->where('cc_status', $s);
+        if ($b  = $request->branch_id)   $query->where('branch_id', (int)$b);
+        if ($a  = $request->cc_agent_id) $query->where('cc_agent_id', (int)$a);
+        if ($m  = $request->month)       $query->where('month', $m);
+        if ($f  = $request->from) {
+            try { $query->whereDate('month_date', '>=', \Carbon\Carbon::parse('01 ' . $f)); } catch (\Exception $e) {}
+        }
+        if ($t  = $request->to) {
+            try { $query->whereDate('month_date', '<=', \Carbon\Carbon::parse('01 ' . $t)->endOfMonth()); } catch (\Exception $e) {}
+        }
+        if ($q = $request->search) {
+            $query->where(function ($qq) use ($q) {
+                $qq->where('account_number', 'like', "%{$q}%")
+                   ->orWhere('month', 'like', "%{$q}%")
+                   ->orWhere('notes', 'like', "%{$q}%");
+            });
+        }
+
+        // Summary aggregates for the WHOLE filtered set — not just the current page.
+        $sumQ = clone $query;
+        $summary = [
+            'total'          => (clone $sumQ)->count(),
+            'cc_pending'     => (clone $sumQ)->where('cc_status', 'cc_pending')->count(),
+            'branch_pending' => (clone $sumQ)->where('cc_status', 'branch_pending')->count(),
+            'accepted'       => (clone $sumQ)->where('cc_status', 'accepted')->count(),
+            'completed'      => (clone $sumQ)->where('cc_status', 'completed')->count(),
+            'rejected'       => (clone $sumQ)->where('cc_status', 'rejected')->count(),
+            'cancelled'      => $request->boolean('include_cancelled')
+                                ? (clone $sumQ)->whereNotNull('deleted_at')->count()
+                                : 0,
+        ];
+
+        $perPage = min((int)($request->per_page ?? 100), 2000);
+        $cards   = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'summary' => $summary,
+            'data'    => $cards,
+        ]);
+    }
+
+    // ── GET /api/cc/report — Aggregated CC report (server-side) ─
+    // Avoids pulling thousands of rows down just to count them client-side.
+    public function report(Request $request): JsonResponse
+    {
+        $user  = $request->user();
+        $query = CommissionCard::whereNotNull('cc_branch_id');
 
         if ($user->isScopedToBranch()) {
             $query->where('cc_branch_id', $user->branch_id);
         }
 
-        if ($s = $request->cc_status) {
-            $query->where('cc_status', $s);
+        if ($m = $request->month) $query->where('month', $m);
+        if ($f = $request->from) {
+            try { $query->whereDate('month_date', '>=', \Carbon\Carbon::parse('01 ' . $f)); } catch (\Exception $e) {}
+        }
+        if ($t = $request->to) {
+            try { $query->whereDate('month_date', '<=', \Carbon\Carbon::parse('01 ' . $t)->endOfMonth()); } catch (\Exception $e) {}
         }
 
-        $cards = $query->orderBy('created_at', 'desc')->paginate(50);
+        // ── Status counts (one query) ────────────────────────
+        $statusRows = (clone $query)
+            ->selectRaw('cc_status, COUNT(*) as cnt')
+            ->groupBy('cc_status')
+            ->pluck('cnt', 'cc_status');
 
-        return response()->json(['success' => true, 'data' => $cards]);
+        $kpis = [
+            'total'          => (int) $statusRows->sum(),
+            'cc_pending'     => (int) ($statusRows['cc_pending']     ?? 0),
+            'branch_pending' => (int) ($statusRows['branch_pending'] ?? 0),
+            'accepted'       => (int) ($statusRows['accepted']       ?? 0),
+            'completed'      => (int) ($statusRows['completed']      ?? 0),
+            'rejected'       => (int) ($statusRows['rejected']       ?? 0),
+        ];
+
+        // ── By target branch ──────────────────────────────────
+        $byBranch = (clone $query)
+            ->selectRaw('branch_id,
+                COUNT(*) as total,
+                SUM(CASE WHEN cc_status="accepted"  THEN 1 ELSE 0 END) as acc,
+                SUM(CASE WHEN cc_status="completed" THEN 1 ELSE 0 END) as comp,
+                SUM(CASE WHEN cc_status="rejected"  THEN 1 ELSE 0 END) as rej')
+            ->groupBy('branch_id')
+            ->with('branch:id,name_ar,name_en')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn($r) => [
+                'branch_id' => $r->branch_id,
+                'name_ar'   => $r->branch?->name_ar ?? '—',
+                'name_en'   => $r->branch?->name_en ?? '—',
+                'total'     => (int) $r->total,
+                'accepted'  => (int) $r->acc,
+                'completed' => (int) $r->comp,
+                'rejected'  => (int) $r->rej,
+            ])
+            ->values();
+
+        // ── By CC agent ───────────────────────────────────────
+        $byAgent = (clone $query)
+            ->selectRaw('cc_agent_id,
+                COUNT(*) as total,
+                SUM(CASE WHEN cc_status="completed" THEN 1 ELSE 0 END) as comp,
+                SUM(CASE WHEN cc_status="rejected"  THEN 1 ELSE 0 END) as rej')
+            ->whereNotNull('cc_agent_id')
+            ->groupBy('cc_agent_id')
+            ->with('ccAgent:id,name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn($r) => [
+                'agent_id'  => $r->cc_agent_id,
+                'name'      => $r->ccAgent?->name ?? '—',
+                'total'     => (int) $r->total,
+                'completed' => (int) $r->comp,
+                'rejected'  => (int) $r->rej,
+                'rate'      => $r->total > 0 ? round(($r->comp / $r->total) * 100) : 0,
+            ])
+            ->values();
+
+        // ── Monthly stats (last 24 months) ────────────────────
+        $monthly = (clone $query)
+            ->selectRaw("DATE_FORMAT(month_date, '%Y-%m') as ym,
+                COUNT(*) as total,
+                SUM(CASE WHEN cc_status='cc_pending'     THEN 1 ELSE 0 END) as draft,
+                SUM(CASE WHEN cc_status='branch_pending' THEN 1 ELSE 0 END) as sent,
+                SUM(CASE WHEN cc_status='accepted'       THEN 1 ELSE 0 END) as acc,
+                SUM(CASE WHEN cc_status='completed'      THEN 1 ELSE 0 END) as comp,
+                SUM(CASE WHEN cc_status='rejected'       THEN 1 ELSE 0 END) as rej")
+            ->whereNotNull('month_date')
+            ->where('month_date', '>=', now()->subMonths(24))
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->get()
+            ->map(fn($r) => [
+                'ym'        => $r->ym,
+                'total'     => (int) $r->total,
+                'draft'     => (int) $r->draft,
+                'sent'      => (int) $r->sent,
+                'accepted'  => (int) $r->acc,
+                'completed' => (int) $r->comp,
+                'rejected'  => (int) $r->rej,
+            ])
+            ->values();
+
+        return response()->json([
+            'success'    => true,
+            'kpis'       => $kpis,
+            'by_branch'  => $byBranch,
+            'by_agent'   => $byAgent,
+            'monthly'    => $monthly,
+        ]);
     }
 
     // ── GET /api/cc/notifications ──────────────────────────────
     public function notifications(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = CcNotification::with(['card', 'fromBranch', 'sentBy'])->latest();
+        $query = CcNotification::with(['card:id,account_number,month', 'fromBranch:id,name_ar,name_en', 'sentBy:id,name'])
+                               ->latest();
 
         if ($user->isScopedToBranch()) {
             $query->forBranch($user->branch_id);

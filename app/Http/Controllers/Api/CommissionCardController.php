@@ -49,11 +49,16 @@ class CommissionCardController extends Controller
         if ($q  = $request->search)       $query->search($q);
         if ($request->modified_only)      $query->modified();
         if ($min = $request->min_deposit) $query->where('initial_deposit', '>=', (float)$min);
+        if ($cc  = $request->cc_source) {
+            if ($cc === 'cc')      $query->whereNotNull('cc_branch_id');
+            if ($cc === 'regular') $query->whereNull('cc_branch_id');
+        }
+        if ($ccs = $request->cc_status)   $query->where('cc_status', $ccs);
 
         // Snapshot for summary aggregates (no eager loads, no pagination)
         $summaryQuery = clone $query;
 
-        $perPage = min((int)($request->per_page ?? 50), 200);
+        $perPage = min((int)($request->per_page ?? 50), 500);
         $cards   = (clone $query)->with($this->with)
                                  ->orderBy('month_date', 'desc')
                                  ->orderBy('account_number')

@@ -422,15 +422,75 @@ async function loadCards(){
   if(kind)   params.set('kind',kind);
   if(status) params.set('status',status);
   if(search) params.set('search',search);
-  params.set('per_page',200);
+  if(source) params.set('cc_source',source);
+  params.set('per_page',300);
 
   const r=await api('GET','/cards?'+params);
   if(!r.success){ toast(idx('loadErr'),'error'); return; }
   allCards=r.data?.data||[];
   filteredCards=source==='cc'?allCards.filter(c=>!!c.cc_branch_id):source==='regular'?allCards.filter(c=>!c.cc_branch_id):allCards;
+
+  // Pagination state — expose last_page info for load-more
+  window._cardsPager = {
+    current: r.data?.current_page || 1,
+    last:    r.data?.last_page || 1,
+    total:   r.data?.total || filteredCards.length,
+    per:     r.data?.per_page || 200,
+  };
+  _lastLoadParams = params.toString();
+
   updateKpis(filteredCards);
   renderTable(filteredCards);
+  renderLoadMore();
 }
+
+let _lastLoadParams = '';
+async function loadMoreCards() {
+  if (!window._cardsPager) return;
+  if (window._cardsPager.current >= window._cardsPager.last) return;
+  const btn = document.getElementById('cards-loadmore-btn');
+  if (btn) { btn.disabled = true; btn.textContent = idx('loading'); }
+  const nextPage = window._cardsPager.current + 1;
+  const r = await api('GET', '/cards?' + _lastLoadParams + '&page=' + nextPage);
+  if (!r.success) { if (btn) btn.disabled = false; toast(idx('loadErr'),'error'); return; }
+  const newItems = r.data?.data || [];
+  const source = document.getElementById('f-source')?.value || '';
+  const filteredNew = source==='cc' ? newItems.filter(c=>!!c.cc_branch_id)
+                     : source==='regular' ? newItems.filter(c=>!c.cc_branch_id)
+                     : newItems;
+  allCards = allCards.concat(newItems);
+  filteredCards = filteredCards.concat(filteredNew);
+  window._cardsPager.current = r.data?.current_page || nextPage;
+  updateKpis(filteredCards);
+  renderTable(filteredCards);
+  renderLoadMore();
+}
+function renderLoadMore() {
+  const info = document.getElementById('pagination-info');
+  const btns = document.getElementById('pagination-btns');
+  const pg = window._cardsPager; if (!pg || !info || !btns) return;
+  const curL = idxL();
+  if (pg.last > 1) {
+    info.textContent = (curL==='en'?'Showing ':'عرض ') + filteredCards.length +
+                       (curL==='en'?' of ':' من ') + pg.total.toLocaleString();
+    btns.innerHTML = pg.current < pg.last
+      ? `<button id="cards-loadmore-btn" class="btn btn-sm" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);color:#1AADBA" onclick="loadMoreCards()">${curL==='en'?'Load more':'تحميل المزيد'} (${pg.current}/${pg.last})</button>`
+      : `<span style="font-size:11px;color:var(--gr)">${curL==='en'?'All loaded':'تم تحميل الكل'}</span>`;
+  } else {
+    info.textContent = filteredCards.length + ' ' + idx('records');
+    btns.innerHTML = '';
+  }
+}
+// Auto load-more when the user scrolls near the bottom of the table scroll
+(function initCardsInfinite(){
+  const el = document.querySelector('.table-scroll');
+  if (!el) return;
+  el.addEventListener('scroll', () => {
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
+      if (window._cardsPager && window._cardsPager.current < window._cardsPager.last) loadMoreCards();
+    }
+  });
+})();
 
 function updateKpis(cards){
   const total=cards.length;

@@ -546,6 +546,32 @@ html{font-size:16px}
 }
 .lang-toggle-btn:hover{background:rgba(26,173,186,.22);border-color:var(--pri2)}
 .lang-toggle-btn .lang-flag{font-size:15px}
+
+/* Notification Bell */
+.notif-bell-wrap{position:relative;display:inline-block}
+.notif-bell{background:rgba(123,104,238,.1);border:1px solid rgba(123,104,238,.3);border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;color:#7b68ee;transition:all .18s;position:relative;line-height:1}
+.notif-bell:hover{background:rgba(123,104,238,.22);border-color:#7b68ee}
+.notif-bell .notif-dot{position:absolute;top:-4px;right:-4px;background:#e04848;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:800;min-width:16px;text-align:center;border:2px solid var(--card-bg);display:none}
+.notif-bell .notif-dot.show{display:inline-block}
+.notif-panel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:380px;max-width:92vw;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.25);z-index:1000;display:none;overflow:hidden;max-height:70vh}
+.notif-panel.open{display:flex;flex-direction:column}
+.notif-panel-header{padding:12px 16px;border-bottom:1px solid var(--brd1);display:flex;justify-content:space-between;align-items:center;background:var(--bg2)}
+.notif-panel-title{font-weight:800;font-size:13px}
+.notif-mark-all{font-size:11px;color:var(--pri2);background:none;border:none;cursor:pointer;font-weight:700;padding:4px 8px;border-radius:6px}
+.notif-mark-all:hover{background:rgba(26,173,186,.1)}
+.notif-list{overflow-y:auto;padding:6px 8px;flex:1}
+.notif-item{padding:10px 12px;border-radius:9px;margin:3px 0;cursor:pointer;transition:all .15s;border-left:3px solid transparent;text-decoration:none;color:inherit;display:block}
+.notif-item:hover{background:var(--bg2)}
+.notif-item.unread{background:rgba(123,104,238,.06);border-left-color:#7b68ee}
+.notif-item.unread:hover{background:rgba(123,104,238,.12)}
+.notif-item .n-msg{font-size:12px;line-height:1.4;color:var(--tx);margin-bottom:4px}
+.notif-item .n-meta{font-size:10px;color:var(--mu);display:flex;justify-content:space-between;align-items:center}
+.notif-item .n-type{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase}
+.notif-item .n-type.card_sent{background:rgba(26,173,186,.15);color:#1AADBA}
+.notif-item .n-type.card_accepted{background:rgba(34,201,122,.15);color:var(--gr)}
+.notif-item .n-type.card_rejected{background:rgba(224,72,72,.15);color:var(--re)}
+.notif-item .n-type.card_completed{background:rgba(123,104,238,.15);color:#7b68ee}
+.notif-empty{text-align:center;padding:30px;color:var(--mu);font-size:12px}
 </style>
 
 @stack('styles')
@@ -664,6 +690,20 @@ html{font-size:16px}
         @yield('topbar-actions')
         <a href="{{ route('cards.create') }}" class="tb-btn success">➕ <span data-i18n="btn.newcard">كرت جديد</span></a>
         <a href="{{ route('cards.edit-search') }}" class="tb-btn" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ <span data-i18n="btn.edit">تعديل</span></a>
+        <div class="notif-bell-wrap" id="notif-wrap">
+          <button class="notif-bell" onclick="toggleNotif(event)" id="notif-bell-btn" title="الإشعارات / Notifications">
+            🔔<span class="notif-dot" id="notif-dot">0</span>
+          </button>
+          <div class="notif-panel" id="notif-panel">
+            <div class="notif-panel-header">
+              <div class="notif-panel-title" id="notif-title">🔔 الإشعارات</div>
+              <button class="notif-mark-all" onclick="markAllNotif(event)" id="notif-mark-all-btn">قراءة الكل</button>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty" id="notif-empty-msg">— لا توجد إشعارات —</div>
+            </div>
+          </div>
+        </div>
         <button class="lang-toggle-btn" onclick="toggleLang()" id="lang-btn" title="Switch Language / تغيير اللغة">
           <span class="lang-flag" id="lang-flag">🇬🇧</span><span id="lang-label">EN</span>
         </button>
@@ -949,6 +989,15 @@ function applyLang(lang) {
   const logoutBtn = document.querySelector('.logout-btn');
   if (logoutBtn) logoutBtn.textContent = isEn ? '➡' : '⬅';
 
+  /* Notification bell texts */
+  const nt = document.getElementById('notif-title');
+  if (nt) nt.textContent = isEn ? '🔔 Notifications' : '🔔 الإشعارات';
+  const nma = document.getElementById('notif-mark-all-btn');
+  if (nma) nma.textContent = isEn ? 'Mark all read' : 'قراءة الكل';
+  const nem = document.getElementById('notif-empty-msg');
+  if (nem) nem.textContent = isEn ? '— No notifications —' : '— لا توجد إشعارات —';
+  if (typeof renderNotifications === 'function') renderNotifications();
+
   /* Save preference */
   localStorage.setItem('wg_lang', lang);
   curLang = lang;
@@ -1191,6 +1240,98 @@ function fmtK(n) {
 // Also expose on window for maximum safety (e.g. module script contexts)
 window.fmt = fmt;
 window.fmtK = fmtK;
+
+// ══ CC Notification Bell ═══════════════════════════════════
+let _notifData = [];
+let _notifUnread = 0;
+let _notifPollTimer = null;
+
+async function loadNotifications(opts) {
+  opts = opts || {};
+  try {
+    const r = await api('GET', '/cc/notifications');
+    if (!r || !r.success) return;
+    _notifData = r.data || [];
+    _notifUnread = r.unread_count || 0;
+    renderNotifications();
+  } catch(e) { /* silent — bell is best-effort */ }
+}
+function renderNotifications() {
+  const dot = document.getElementById('notif-dot');
+  const list = document.getElementById('notif-list');
+  const emptyMsg = document.getElementById('notif-empty-msg');
+  if (dot) {
+    if (_notifUnread > 0) { dot.textContent = _notifUnread > 99 ? '99+' : _notifUnread; dot.classList.add('show'); }
+    else dot.classList.remove('show');
+  }
+  if (!list) return;
+  if (!_notifData.length) {
+    list.innerHTML = '<div class="notif-empty">— ' + ((localStorage.getItem('wg_lang')||'ar')==='en'?'No notifications':'لا توجد إشعارات') + ' —</div>';
+    return;
+  }
+  const curL = localStorage.getItem('wg_lang')||'ar';
+  list.innerHTML = _notifData.map(n => {
+    const unreadCls = n.status === 'unread' ? ' unread' : '';
+    const ts = n.created_at ? new Date(n.created_at).toLocaleString(curL==='en'?'en-GB':'ar') : '';
+    const url = n.card_id ? '/callcenter/pending' : '/callcenter';
+    return `
+      <a class="notif-item${unreadCls}" href="${url}" onclick="markNotifRead(${n.id})">
+        <div class="n-msg">${n.message || '—'}</div>
+        <div class="n-meta">
+          <span class="n-type ${n.type||''}">${(n.type||'').replace('card_','').toUpperCase()}</span>
+          <span>${ts}</span>
+        </div>
+      </a>`;
+  }).join('');
+}
+function toggleNotif(e) {
+  if (e) e.stopPropagation();
+  const p = document.getElementById('notif-panel');
+  if (p) {
+    const willOpen = !p.classList.contains('open');
+    p.classList.toggle('open');
+    if (willOpen) loadNotifications();  // refresh on open
+  }
+}
+async function markNotifRead(id) {
+  try { await api('PUT', '/cc/notifications/' + id + '/read'); } catch(e){}
+  // decrement optimistically
+  const n = _notifData.find(x => x.id === id);
+  if (n && n.status === 'unread') { n.status = 'read'; _notifUnread = Math.max(0, _notifUnread-1); }
+  renderNotifications();
+}
+async function markAllNotif(e) {
+  if (e) e.stopPropagation();
+  try {
+    const r = await api('PUT', '/cc/notifications/read-all');
+    if (r && r.success) {
+      _notifData.forEach(n => n.status = 'read');
+      _notifUnread = 0;
+      renderNotifications();
+    }
+  } catch(err){}
+}
+// Close panel when clicking outside
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('notif-wrap');
+  const panel = document.getElementById('notif-panel');
+  if (!wrap || !panel) return;
+  if (!wrap.contains(e.target)) panel.classList.remove('open');
+});
+// Keep tabs on new notifications — poll every 45 s while the tab is visible.
+function _notifStartPoll() {
+  if (_notifPollTimer) return;
+  _notifPollTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') loadNotifications();
+  }, 45000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadNotifications();
+});
+// Kick off once DOM is ready
+if (API_TOKEN) {
+  setTimeout(() => { loadNotifications(); _notifStartPoll(); }, 1200);
+}
 
 // ── Modal helpers ──────────────────────────────────────────
 function openModal(id){ document.getElementById(id)?.classList.add('open'); }

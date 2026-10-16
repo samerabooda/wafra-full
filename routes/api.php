@@ -160,6 +160,7 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
         // Listings
         Route::get('pending',             [CallCenterController::class, 'pending']);   // branch: incoming
         Route::get('sent',                [CallCenterController::class, 'sent']);      // cc: sent cards
+        Route::get('report',              [CallCenterController::class, 'report']);    // cc: aggregated report
 
         // Notifications
         Route::get('notifications',            [CallCenterController::class, 'notifications']);
