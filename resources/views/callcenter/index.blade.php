@@ -14,17 +14,13 @@
 .cc-chip.accepted      {background:#d1e7dd;color:#0a5c36}
 .cc-chip.completed     {background:#d1fae5;color:#065f46}
 .cc-chip.rejected      {background:#f8d7da;color:#842029}
-.cc-chip.cancelled     {background:#e2e3e5;color:#495057;text-decoration:line-through}
 .cc-row td{background:linear-gradient(90deg,rgba(123,104,238,.06),transparent 70%)!important}
 .cc-row:hover td{background:linear-gradient(90deg,rgba(123,104,238,.12),rgba(123,104,238,.04) 70%)!important}
-.cc-row-cancelled td{opacity:.55;background:rgba(120,120,120,.04)!important}
 .limit-hint{font-size:12px;color:#7b68ee;background:rgba(123,104,238,.07);border:1px solid rgba(123,104,238,.2);border-radius:8px;padding:8px 12px;margin-bottom:12px}
 .cc-status-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.cc-sf{padding:6px 14px;border-radius:20px;border:1px solid var(--brd2);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);font-family:'Tajawal',sans-serif;transition:all .18s;position:relative}
+.cc-sf{padding:6px 14px;border-radius:20px;border:1px solid var(--brd2);background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);font-family:'Tajawal',sans-serif;transition:all .18s}
 .cc-sf:hover,.cc-sf.on{background:rgba(123,104,238,.15);border-color:#7b68ee;color:#a898ff}
 .cc-sf.on{font-weight:700}
-.cc-sf .cnt{display:inline-block;background:rgba(0,0,0,.1);border-radius:10px;padding:1px 7px;font-size:10px;margin-inline-start:4px;font-weight:700}
-.cc-sf.on .cnt{background:rgba(123,104,238,.3)}
 .cc-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
 @media(max-width:900px){.cc-kpi-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:550px){.cc-kpi-grid{grid-template-columns:repeat(2,1fr)}}
@@ -42,16 +38,6 @@
 .cc-chart-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:18px}
 @media(max-width:768px){.cc-chart-grid{grid-template-columns:1fr}}
 .monthly-table-wrap{overflow-x:auto}
-.cc-filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;padding:12px 14px;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:12px;margin-bottom:12px}
-.cc-filter-group{display:flex;flex-direction:column;gap:3px;min-width:120px}
-.cc-filter-group .form-control{min-width:120px;font-size:12px;padding:6px 10px}
-.cc-filter-label{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
-.cc-table-wrap{max-height:60vh;overflow-y:auto}
-.cc-table-wrap table{position:relative}
-.cc-table-wrap thead{position:sticky;top:0;background:var(--card-bg);z-index:2;box-shadow:0 1px 0 var(--brd1)}
-#cc-loadmore{text-align:center;padding:14px;color:var(--mu);font-size:12px}
-#cc-loadmore button{background:rgba(123,104,238,.1);color:#7b68ee;border:1px solid rgba(123,104,238,.3);padding:6px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12px}
-#cc-loadmore button:hover{background:rgba(123,104,238,.2)}
 </style>
 @endpush
 
@@ -111,7 +97,7 @@
 
     {{-- ══ SECTION: ACCOUNTS ══ --}}
     <div id="ccsec-accounts" class="cc-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
         <div>
           <h2 id="ccs-acc-h2" style="font-size:18px;font-weight:800;margin-bottom:4px"></h2>
           <p  id="ccs-acc-p"  style="font-size:12px;color:var(--mu)"></p>
@@ -119,58 +105,14 @@
         <button class="btn btn-primary" id="ccs-acc-new" onclick="openModal('modal-cc-create')"></button>
       </div>
 
-      {{-- Filter chips (status) --}}
       <div class="cc-status-chips" id="cc-filter-chips"></div>
 
-      {{-- Advanced filter bar --}}
-      <div class="cc-filter-bar">
-        <div class="cc-filter-group">
-          <span class="cc-filter-label" id="cc-fl-branch">الفرع المستهدف</span>
-          <select id="cc-f-branch" class="form-control" onchange="ccLoadAll()">
-            <option value="" id="cc-opt-allbr">كل الفروع</option>
-          </select>
-        </div>
-        <div class="cc-filter-group">
-          <span class="cc-filter-label" id="cc-fl-agent">موظف CC</span>
-          <select id="cc-f-agent" class="form-control" onchange="ccLoadAll()">
-            <option value="" id="cc-opt-allag">كل الموظفين</option>
-          </select>
-        </div>
-        <div class="cc-filter-group">
-          <span class="cc-filter-label" id="cc-fl-month">الشهر</span>
-          <select id="cc-f-month" class="form-control" onchange="ccLoadAll()">
-            <option value="" id="cc-opt-allmon">كل الشهور</option>
-          </select>
-        </div>
-        <div class="cc-filter-group" style="flex:1;min-width:180px">
-          <span class="cc-filter-label" id="cc-fl-search">بحث</span>
-          <input type="text" id="cc-f-search" class="form-control" placeholder="رقم حساب / شهر / ملاحظات..." oninput="ccDebounceLoad()">
-        </div>
-        <div class="cc-filter-group">
-          <span class="cc-filter-label">&nbsp;</span>
-          <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mu);cursor:pointer">
-            <input type="checkbox" id="cc-f-cancelled" onchange="ccLoadAll()">
-            <span id="cc-opt-incl-cancelled">عرض الملغاة</span>
-          </label>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <span class="cc-filter-label">&nbsp;</span>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" onclick="ccClearFilters()" title="مسح الفلاتر">✕</button>
-            <button class="btn btn-sm" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);color:#1AADBA" onclick="ccLoadAll()">🔄</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="padding:0">
+      <div class="panel">
         <div class="panel-header">
-          <div class="panel-title" id="ccs-acc-tbl-title">
-            <span id="ccs-tbl-h"></span>
-            <span id="cc-tbl-count" style="font-size:11px;color:var(--mu);font-weight:400;margin-right:8px"></span>
-          </div>
-          <div style="font-size:11px;color:var(--mu)" id="cc-tbl-summary"></div>
+          <div class="panel-title" id="ccs-acc-tbl-title"></div>
+          <button class="btn btn-ghost btn-sm" onclick="ccLoadAll()">🔄</button>
         </div>
-        <div class="cc-table-wrap">
+        <div class="table-scroll">
           <table class="data-table">
             <thead><tr>
               <th>#</th>
@@ -183,10 +125,6 @@
               <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)" id="cc-loading-cell"></td></tr>
             </tbody>
           </table>
-        </div>
-        <div id="cc-loadmore" style="display:none">
-          <button onclick="ccLoadMore()" id="cc-loadmore-btn">تحميل المزيد</button>
-          <span id="cc-loadmore-info" style="margin-inline-start:12px;font-size:11px;color:var(--mu)"></span>
         </div>
       </div>
     </div>
@@ -411,6 +349,7 @@ const CCT = {
     s_reports_lbl:'تقارير CC',           s_reports_sub:'تحليل الحالات والفروع',
     s_modified_lbl:'الحسابات المعدّلة',  s_modified_sub:'كروت CC المُعدَّلة',
     s_monthly_lbl:'إحصائيات شهرية',      s_monthly_sub:'عدد الحسابات بالشهر',
+    // Accounts
     acc_h2:'📋 حسابات مركز الاتصال',
     acc_p:'جميع كروت CC — أنشئها وأرسلها للفروع وتابع الردود',
     acc_newBtn:'➕ كرت جديد',
@@ -425,6 +364,7 @@ const CCT = {
     type_new:'🆕 جديد', type_sub:'🔀 فرعي',
     confirm_send:'إرسال هذا الكرت للفرع؟', confirm_resend:'إعادة إرسال هذا الكرت للفرع؟',
     reason_lbl:'سبب:',
+    // Reports
     rpt_h2:'📊 تقارير مركز الاتصال',
     rpt_p:'تحليل توزيع الكروت حسب الحالة والفروع والموظفين',
     kpi_total:'إجمالي الكروت', kpi_draft:'مسودة', kpi_sent:'مُرسل للفرع',
@@ -435,12 +375,14 @@ const CCT = {
     ag_title:'👤 تفصيل موظفي CC',
     ath_agent:'الموظف', ath_total:'الكل', ath_comp:'مكتمل', ath_rej:'مرفوض', ath_rate:'معدل الإنجاز',
     empty_rpt:'لا توجد بيانات بعد',
+    // Modified
     mod_h2:'✏️ الحسابات المعدّلة من CC',
     mod_p:'كروت CC التي تم تعديلها بعد اكتمالها بالفرع',
     mod_title:'الكروت المعدّلة',
     mod_th_acnum:'رقم الحساب', mod_th_month:'الشهر', mod_th_branch:'الفرع',
     mod_th_agent:'موظف CC', mod_th_broker:'البروكر/عمولة', mod_th_deposit:'الإيداع',
     mod_th_status:'الحالة', mod_empty:'لا توجد حسابات معدّلة من CC',
+    // Monthly
     mon_h2:'📅 إحصائيات شهرية — CC',
     mon_p:'عدد الحسابات التي أنشأها مركز الاتصال شهرياً',
     year_lbl:'السنة:',
@@ -449,6 +391,7 @@ const CCT = {
     mon_th_month:'الشهر', mon_th_total:'الإجمالي',
     mon_th_draft:'مسودة', mon_th_sent:'مُرسل', mon_th_acc:'مقبول',
     mon_th_comp:'مكتمل', mon_th_rej:'مرفوض', mon_empty:'لا توجد بيانات',
+    // Modal
     modal_title:'📞 كرت CC جديد',
     limit_hint:'⚠️ تنبيه: عمولة البروكر + عمولة المسوّق يجب ألا تتجاوز 5$/lot عند إتمام الكرت من الفرع.',
     nc_ac:'رقم الحساب *', nc_kind:'نوع الحساب', nc_month:'الشهر *',
@@ -460,11 +403,6 @@ const CCT = {
     nc_err_required:'يرجى ملء جميع الحقول المطلوبة (رقم الحساب، الشهر، الفرع، الموظف)',
     topbar_btn:'➕ كرت جديد',
     opt_optional:'— اختياري —', opt_branch:'— اختر الفرع —', opt_agent:'— اختر الموظف —',
-    fl_branch:'الفرع المستهدف', fl_agent:'موظف CC', fl_month:'الشهر', fl_search:'بحث',
-    all_branches:'كل الفروع', all_agents:'كل الموظفين', all_months:'كل الشهور',
-    incl_cancelled:'عرض الملغاة',
-    ph_search:'رقم حساب / شهر / ملاحظات...',
-    load_more:'تحميل المزيد', showing:'عرض', of:'من',
   },
   en: {
     navHdr:'📞 Call Center',
@@ -522,11 +460,6 @@ const CCT = {
     nc_err_required:'Please fill in all required fields (account number, month, branch, agent)',
     topbar_btn:'➕ New Card',
     opt_optional:'— Optional —', opt_branch:'— Select Branch —', opt_agent:'— Select Agent —',
-    fl_branch:'Target Branch', fl_agent:'CC Agent', fl_month:'Month', fl_search:'Search',
-    all_branches:'All Branches', all_agents:'All Agents', all_months:'All Months',
-    incl_cancelled:'Show cancelled',
-    ph_search:'Account # / month / notes...',
-    load_more:'Load More', showing:'Showing', of:'of',
   }
 };
 
@@ -534,10 +467,11 @@ function ccL()    { return (typeof curLang!=='undefined'?curLang:localStorage.ge
 function cc(key)  { return CCT[ccL()]?.[key] ?? CCT.ar[key] ?? key; }
 function _t(id,v) { const e=document.getElementById(id); if(e&&v!==undefined) e.textContent=v; }
 
+/* ─── Apply language ─────────────────────────────────────── */
 function ccApplyLang() {
   const L = ccL();
   _t('ccnav-hdr', CCT[L].navHdr);
-  _t('ccnav-footer', '');
+  _t('ccnav-footer', ''); // will be set with innerHTML
   const fn = document.getElementById('ccnav-footer');
   if (fn) fn.innerHTML = CCT[L].footer.replace('\n','<br>');
 
@@ -546,24 +480,15 @@ function ccApplyLang() {
     _t('ccnav-sub-' + id, CCT[L]['s_' + id + '_sub'] || '');
   });
 
+  // Accounts section
   _t('ccs-acc-h2', cc('acc_h2')); _t('ccs-acc-p', cc('acc_p'));
-  _t('ccs-acc-new', cc('acc_newBtn'));
-  _t('ccs-tbl-h', cc('acc_tbl_title'));
+  _t('ccs-acc-new', cc('acc_newBtn')); _t('ccs-acc-tbl-title', cc('acc_tbl_title'));
   _t('cc-th-acnum', cc('th_acnum')); _t('cc-th-month', cc('th_month'));
   _t('cc-th-branch', cc('th_branch')); _t('cc-th-agent', cc('th_agent'));
   _t('cc-th-type', cc('th_type')); _t('cc-th-status', cc('th_status'));
   _t('cc-th-act', cc('th_act'));
 
-  // Filter labels
-  _t('cc-fl-branch', cc('fl_branch')); _t('cc-fl-agent', cc('fl_agent'));
-  _t('cc-fl-month', cc('fl_month')); _t('cc-fl-search', cc('fl_search'));
-  _t('cc-opt-allbr', cc('all_branches')); _t('cc-opt-allag', cc('all_agents'));
-  _t('cc-opt-allmon', cc('all_months'));
-  _t('cc-opt-incl-cancelled', cc('incl_cancelled'));
-  _t('cc-loadmore-btn', cc('load_more'));
-  const srchEl = document.getElementById('cc-f-search');
-  if (srchEl) srchEl.placeholder = cc('ph_search');
-
+  // Reports section
   _t('ccs-rpt-h2', cc('rpt_h2')); _t('ccs-rpt-p', cc('rpt_p'));
   _t('kpi-lbl-total', cc('kpi_total')); _t('kpi-lbl-draft', cc('kpi_draft'));
   _t('kpi-lbl-sent', cc('kpi_sent')); _t('kpi-lbl-acc', cc('kpi_acc'));
@@ -576,6 +501,7 @@ function ccApplyLang() {
   _t('rpt-ath-comp', cc('ath_comp')); _t('rpt-ath-rej', cc('ath_rej'));
   _t('rpt-ath-rate', cc('ath_rate'));
 
+  // Modified section
   _t('ccs-mod-h2', cc('mod_h2')); _t('ccs-mod-p', cc('mod_p'));
   _t('ccs-mod-title', cc('mod_title'));
   _t('mod-th-acnum', cc('mod_th_acnum')); _t('mod-th-month', cc('mod_th_month'));
@@ -583,6 +509,7 @@ function ccApplyLang() {
   _t('mod-th-broker', cc('mod_th_broker')); _t('mod-th-deposit', cc('mod_th_deposit'));
   _t('mod-th-status', cc('mod_th_status'));
 
+  // Monthly section
   _t('ccs-mon-h2', cc('mon_h2')); _t('ccs-mon-p', cc('mon_p'));
   _t('mon-year-lbl', cc('year_lbl'));
   _t('mon-chart-title', cc('mon_chart_title'));
@@ -592,6 +519,7 @@ function ccApplyLang() {
   _t('mon-th-acc', cc('mon_th_acc')); _t('mon-th-comp', cc('mon_th_comp'));
   _t('mon-th-rej', cc('mon_th_rej'));
 
+  // Modal
   _t('cc-modal-create-title', cc('modal_title'));
   const lh = document.getElementById('cc-modal-limit-hint'); if (lh) lh.textContent = cc('limit_hint');
   _t('nc-lbl-ac', cc('nc_ac')); _t('nc-lbl-kind', cc('nc_kind'));
@@ -603,10 +531,14 @@ function ccApplyLang() {
   _t('nc-cancel-btn', cc('nc_cancel')); _t('nc-save-btn', cc('nc_save'));
   _t('cc-topbar-new-btn', cc('topbar_btn'));
 
+  // Status filter chips
   buildFilterChips();
+
+  // Re-render current section if data loaded
   if (_ccAllCards.length) ccRenderCurrentSection();
 }
 
+/* Hook into global applyLang */
 const _ccOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
   if (_ccOrigApplyLang) _ccOrigApplyLang(lang);
@@ -614,17 +546,11 @@ window.applyLang = function(lang) {
 };
 
 /* ─── State ──────────────────────────────────────────────── */
-let _ccAllCards    = [];
-let _ccFilter      = '';
-let _ccSection     = 'accounts';
+let _ccAllCards   = [];
+let _ccFilter     = '';   // active status filter for accounts section
+let _ccSection    = 'accounts';
 let _ccStatusChart = null;
-let _ccMonChart    = null;
-let _ccPage        = 1;
-let _ccHasMore     = false;
-let _ccLoading     = false;
-let _ccSummary     = {};
-let _ccServerPaging= false;
-const CC_PAGE_SIZE = 300;
+let _ccMonChart   = null;
 
 /* ─── Nav ────────────────────────────────────────────────── */
 function ccShowSection(name) {
@@ -644,9 +570,6 @@ function ccShowSection(name) {
   _ccSection = name;
   history.replaceState(null,'',window.location.pathname + '#' + name);
   ccRenderCurrentSection();
-
-  // When switching to reports, fetch server-side aggregates (fast, exact)
-  if (name === 'reports') ccLoadReport();
 }
 
 function ccRenderCurrentSection() {
@@ -660,8 +583,7 @@ function ccRenderCurrentSection() {
 const CC_STATUS_COLORS = {
   cc_pending:'#f5a828', branch_pending:'#1AADBA', accepted:'#1ECC80', completed:'#0E7A88', rejected:'#E84545'
 };
-function ccStatusChip(s, deleted) {
-  if (deleted) return `<span class="cc-chip cancelled">🗑️ ${ccL()==='ar'?'ملغي':'Cancelled'}</span>`;
+function ccStatusChip(s) {
   const labels = {
     cc_pending:cc('sf_draft'), branch_pending:cc('sf_sent'),
     accepted:cc('sf_acc'), completed:cc('sf_comp'), rejected:cc('sf_rej'),
@@ -673,32 +595,29 @@ function ccStatusChip(s, deleted) {
 function buildFilterChips() {
   const wrap = document.getElementById('cc-filter-chips'); if (!wrap) return;
   const chips = [
-    {v:'',   lk:'sf_all',   ck:'total'},
-    {v:'cc_pending', lk:'sf_draft', ck:'cc_pending'},
-    {v:'branch_pending', lk:'sf_sent', ck:'branch_pending'},
-    {v:'accepted', lk:'sf_acc', ck:'accepted'},
-    {v:'completed', lk:'sf_comp', ck:'completed'},
-    {v:'rejected', lk:'sf_rej', ck:'rejected'},
+    {v:'',   lk:'sf_all'},
+    {v:'cc_pending', lk:'sf_draft'},
+    {v:'branch_pending', lk:'sf_sent'},
+    {v:'accepted', lk:'sf_acc'},
+    {v:'completed', lk:'sf_comp'},
+    {v:'rejected', lk:'sf_rej'},
   ];
-  wrap.innerHTML = chips.map(ch => {
-    const cnt = _ccSummary[ch.ck];
-    const cntHtml = (cnt !== undefined) ? `<span class="cnt">${cnt.toLocaleString()}</span>` : '';
-    return `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${cc(ch.lk)}${cntHtml}</button>`;
-  }).join('');
+  wrap.innerHTML = chips.map(ch =>
+    `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${cc(ch.lk)}</button>`
+  ).join('');
 }
-function setFilter(v) { _ccFilter = v; buildFilterChips(); ccLoadAll(); }
+function setFilter(v) { _ccFilter = v; buildFilterChips(); ccRenderAccounts(); }
 
 /* ─── ACCOUNTS RENDER ────────────────────────────────────── */
 function ccRenderAccounts() {
-  const tbody = document.getElementById('cc-tbody'); if (!tbody) return;
-  if (!_ccAllCards.length) {
+  const filtered = _ccFilter ? _ccAllCards.filter(c => c.cc_status === _ccFilter) : _ccAllCards;
+  const tbody    = document.getElementById('cc-tbody'); if (!tbody) return;
+  if (!filtered.length) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">${cc('empty')}</td></tr>`;
     return;
   }
-  tbody.innerHTML = _ccAllCards.map(c => {
-    const isCancelled = !!c.deleted_at;
-    return `
-    <tr class="cc-row${isCancelled?' cc-row-cancelled':''}">
+  tbody.innerHTML = filtered.map(c => `
+    <tr class="cc-row">
       <td style="color:var(--mu);font-size:11px">${c.id}</td>
       <td><strong>${c.account_number}</strong></td>
       <td>${c.month}</td>
@@ -706,125 +625,110 @@ function ccRenderAccounts() {
       <td>${c.cc_agent?.name ?? c.ccAgent?.name ?? '—'}</td>
       <td><span style="font-size:11px;color:var(--mu)">${c.account_kind==='sub'?cc('type_sub'):cc('type_new')}</span></td>
       <td>
-        ${ccStatusChip(c.cc_status, isCancelled)}
+        ${ccStatusChip(c.cc_status)}
         ${c.cc_rejection_reason?`<div style="font-size:10px;color:#842029;margin-top:3px;max-width:180px">${cc('reason_lbl')} ${c.cc_rejection_reason}</div>`:''}
       </td>
       <td>${ccActionButtons(c)}</td>
-    </tr>`;
-  }).join('');
-
-  // Counts & summary
-  const totalEl = document.getElementById('cc-tbl-count');
-  const sumEl   = document.getElementById('cc-tbl-summary');
-  if (totalEl) totalEl.textContent = _ccAllCards.length + (_ccHasMore?'+':'');
-  if (sumEl && _ccSummary.total !== undefined) {
-    sumEl.textContent = `${cc('showing')} ${_ccAllCards.length} ${cc('of')} ${_ccSummary.total.toLocaleString()}`;
-  }
-
-  // Load-more button
-  const lm = document.getElementById('cc-loadmore');
-  if (lm) lm.style.display = _ccHasMore ? '' : 'none';
+    </tr>`).join('');
 }
 function ccActionButtons(c) {
-  if (c.deleted_at)                   return `<button class="btn btn-sm" style="background:rgba(123,104,238,.1);color:#7b68ee;border:1px solid rgba(123,104,238,.3)" onclick="restoreCardCC(${c.id})" title="استعادة">↺</button>`;
-  if (c.cc_status==='cc_pending')     return `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>
-                                                <button class="btn btn-ghost btn-sm" onclick="cancelCardCC(${c.id})" style="margin-inline-start:4px" title="إلغاء">🗑️</button>`;
+  if (c.cc_status==='cc_pending')     return `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>`;
   if (c.cc_status==='branch_pending') return `<span style="font-size:11px;color:var(--mu)">${cc('status_wait_branch')}</span>`;
   if (c.cc_status==='accepted')       return `<span style="font-size:11px;color:var(--gr)">${cc('status_completing')}</span>`;
-  if (c.cc_status==='rejected')       return `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>
-                                                <button class="btn btn-ghost btn-sm" onclick="cancelCardCC(${c.id})" style="margin-inline-start:4px" title="إلغاء">🗑️</button>`;
+  if (c.cc_status==='rejected')       return `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>`;
   return '—';
 }
 
 /* ─── REPORTS RENDER ────────────────────────────────────── */
-let _ccReport = null;
-async function ccLoadReport() {
-  const r = await api('GET', '/cc/report');
-  if (!r.success) return;
-  _ccReport = r;
-  ccRenderReports();
-}
 function ccRenderReports() {
-  // Prefer server-side report (fast, exact over the entire DB)
-  const k = _ccReport?.kpis;
-  if (k) {
-    document.getElementById('kpi-val-total').textContent = k.total.toLocaleString();
-    document.getElementById('kpi-val-draft').textContent = k.cc_pending.toLocaleString();
-    document.getElementById('kpi-val-sent').textContent  = k.branch_pending.toLocaleString();
-    document.getElementById('kpi-val-acc').textContent   = k.accepted.toLocaleString();
-    document.getElementById('kpi-val-comp').textContent  = k.completed.toLocaleString();
-    document.getElementById('kpi-val-rej').textContent   = k.rejected.toLocaleString();
-
-    // Doughnut
-    if (_ccStatusChart) _ccStatusChart.destroy();
-    const ctx = document.getElementById('cc-status-chart')?.getContext('2d');
-    if (ctx && k.total) {
-      _ccStatusChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: [cc('kpi_draft'),cc('kpi_sent'),cc('kpi_acc'),cc('kpi_comp'),cc('kpi_rej')],
-          datasets: [{
-            data: [k.cc_pending, k.branch_pending, k.accepted, k.completed, k.rejected],
-            backgroundColor: ['#f5a828','#1AADBA','#1ECC80','#0E7A88','#E84545'],
-            borderWidth: 2, borderColor: 'var(--bg3)',
-          }]
-        },
-        options: { responsive:true, maintainAspectRatio:false, plugins: {
-          legend: { position:'bottom', labels: { color:'#7AABCA', font:{size:11} } }
-        }}
-      });
-    }
-
-    // By Branch (server)
-    const brTbody = document.getElementById('rpt-branch-tbody');
-    if (brTbody) {
-      const rows = _ccReport.by_branch || [];
-      brTbody.innerHTML = rows.length
-        ? rows.map(r => `<tr>
-            <td style="font-weight:700">${r.name_ar || r.name_en || '—'}</td>
-            <td><span class="badge badge-blue">${r.total}</span></td>
-            <td><span style="color:var(--gr)">${r.accepted}</span></td>
-            <td><span style="color:var(--pri)">${r.completed}</span></td>
-            <td><span style="color:var(--re)">${r.rejected}</span></td>
-          </tr>`).join('')
-        : `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">${cc('empty_rpt')}</td></tr>`;
-    }
-
-    // By Agent (server)
-    const agTbody = document.getElementById('rpt-agent-tbody');
-    if (agTbody) {
-      const rows = _ccReport.by_agent || [];
-      agTbody.innerHTML = rows.length
-        ? rows.map(r => `<tr>
-            <td style="font-weight:700">${r.name}</td>
-            <td>${r.total}</td>
-            <td><span style="color:var(--pri)">${r.completed}</span></td>
-            <td><span style="color:var(--re)">${r.rejected}</span></td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="flex:1;height:6px;background:var(--brd1);border-radius:3px;overflow:hidden">
-                  <div style="width:${r.rate}%;height:100%;background:var(--gr);border-radius:3px"></div>
-                </div>
-                <span style="font-size:11px;font-weight:700;color:var(--gr)">${r.rate}%</span>
-              </div>
-            </td>
-          </tr>`).join('')
-        : `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">${cc('empty_rpt')}</td></tr>`;
-    }
-    return;
-  }
-
-  // Fallback — local calc on currently loaded page
   const data = _ccAllCards;
   const count = (s) => data.filter(c => c.cc_status === s).length;
   const draft = count('cc_pending'), sent = count('branch_pending'),
         acc   = count('accepted'),   comp = count('completed'), rej = count('rejected');
+
   document.getElementById('kpi-val-total').textContent = data.length;
   document.getElementById('kpi-val-draft').textContent = draft;
   document.getElementById('kpi-val-sent').textContent  = sent;
   document.getElementById('kpi-val-acc').textContent   = acc;
   document.getElementById('kpi-val-comp').textContent  = comp;
   document.getElementById('kpi-val-rej').textContent   = rej;
+
+  // Doughnut chart
+  if (_ccStatusChart) _ccStatusChart.destroy();
+  const ctx = document.getElementById('cc-status-chart')?.getContext('2d');
+  if (ctx && data.length) {
+    _ccStatusChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: [cc('kpi_draft'),cc('kpi_sent'),cc('kpi_acc'),cc('kpi_comp'),cc('kpi_rej')],
+        datasets: [{
+          data: [draft, sent, acc, comp, rej],
+          backgroundColor: ['#f5a828','#1AADBA','#1ECC80','#0E7A88','#E84545'],
+          borderWidth: 2, borderColor: 'var(--bg3)',
+        }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins: {
+        legend: { position:'bottom', labels: { color:'#7AABCA', font:{size:11} } }
+      }}
+    });
+  }
+
+  // By Branch
+  const branchMap = {};
+  data.forEach(c => {
+    const bName = c.branch?.name_ar || '—';
+    if (!branchMap[bName]) branchMap[bName] = {total:0,acc:0,comp:0,rej:0};
+    branchMap[bName].total++;
+    if (c.cc_status==='accepted')  branchMap[bName].acc++;
+    if (c.cc_status==='completed') branchMap[bName].comp++;
+    if (c.cc_status==='rejected')  branchMap[bName].rej++;
+  });
+  const brTbody = document.getElementById('rpt-branch-tbody');
+  if (brTbody) {
+    const rows = Object.entries(branchMap).sort((a,b)=>b[1].total-a[1].total);
+    brTbody.innerHTML = rows.length
+      ? rows.map(([br,s]) => `<tr>
+          <td style="font-weight:700">${br}</td>
+          <td><span class="badge badge-blue">${s.total}</span></td>
+          <td><span style="color:var(--gr)">${s.acc}</span></td>
+          <td><span style="color:var(--pri)">${s.comp}</span></td>
+          <td><span style="color:var(--re)">${s.rej}</span></td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">${cc('empty_rpt')}</td></tr>`;
+  }
+
+  // By Agent
+  const agentMap = {};
+  data.forEach(c => {
+    const aName = c.cc_agent?.name || c.ccAgent?.name || '—';
+    if (!agentMap[aName]) agentMap[aName] = {total:0,comp:0,rej:0};
+    agentMap[aName].total++;
+    if (c.cc_status==='completed') agentMap[aName].comp++;
+    if (c.cc_status==='rejected')  agentMap[aName].rej++;
+  });
+  const agTbody = document.getElementById('rpt-agent-tbody');
+  if (agTbody) {
+    const rows = Object.entries(agentMap).sort((a,b)=>b[1].total-a[1].total);
+    agTbody.innerHTML = rows.length
+      ? rows.map(([ag,s]) => {
+          const rate = s.total > 0 ? Math.round((s.comp/s.total)*100) : 0;
+          return `<tr>
+            <td style="font-weight:700">${ag}</td>
+            <td>${s.total}</td>
+            <td><span style="color:var(--pri)">${s.comp}</span></td>
+            <td><span style="color:var(--re)">${s.rej}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:6px;background:var(--brd1);border-radius:3px;overflow:hidden">
+                  <div style="width:${rate}%;height:100%;background:var(--gr);border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:var(--gr)">${rate}%</span>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--mu)">${cc('empty_rpt')}</td></tr>`;
+  }
 }
 
 /* ─── MODIFIED RENDER ────────────────────────────────────── */
@@ -851,215 +755,104 @@ function ccRenderModified() {
 
 /* ─── MONTHLY RENDER ────────────────────────────────────── */
 function ccRenderMonthly() {
-  // Use server monthly if available
-  if (_ccReport?.monthly) {
-    const mArr = _ccReport.monthly;
-    // Year list
-    const years = [...new Set(mArr.map(m => m.ym.slice(0,4)))].sort((a,b)=>b-a);
-    const sel = document.getElementById('mon-year-sel');
-    if (sel) {
-      // Rebuild only if options empty or stale
-      if (!sel.options.length || sel.options.length !== years.length) {
-        sel.innerHTML = '';
-        years.forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; sel.appendChild(o); });
-      }
+  // Build year selector
+  const years = [...new Set(_ccAllCards.map(c => c.month_date?.slice(0,4) || c.month?.slice(-4)).filter(Boolean))].sort((a,b)=>b-a);
+  const sel = document.getElementById('mon-year-sel');
+  if (sel && years.length && !sel.options.length) {
+    years.forEach(y => { const o = document.createElement('option'); o.value = o.textContent = y; sel.appendChild(o); });
+  }
+  const selYear = sel?.value || years[0] || String(new Date().getFullYear());
+
+  // Filter cards for selected year
+  const yearCards = _ccAllCards.filter(c => {
+    const y = c.month_date?.slice(0,4) || c.month?.match(/(\d{4})/)?.[1];
+    return y === selYear;
+  });
+
+  // Group by month
+  const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthData = {};
+  for (let m = 1; m <= 12; m++) {
+    const key = selYear + '-' + String(m).padStart(2,'0');
+    monthData[key] = {label: ccL()==='ar'?MONTHS_AR[m-1]:MONTHS_EN[m-1], total:0, cc_pending:0, branch_pending:0, accepted:0, completed:0, rejected:0};
+  }
+  yearCards.forEach(c => {
+    const key = (c.month_date||'').slice(0,7);
+    if (monthData[key]) {
+      monthData[key].total++;
+      if (monthData[key].hasOwnProperty(c.cc_status)) monthData[key][c.cc_status]++;
     }
-    const selYear = sel?.value || years[0] || String(new Date().getFullYear());
+  });
 
-    const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const monthData = {};
-    for (let m = 1; m <= 12; m++) {
-      const key = selYear + '-' + String(m).padStart(2,'0');
-      monthData[key] = { label: ccL()==='ar'?MONTHS_AR[m-1]:MONTHS_EN[m-1], total:0, draft:0, sent:0, accepted:0, completed:0, rejected:0 };
-    }
-    mArr.forEach(r => {
-      if (monthData[r.ym]) monthData[r.ym] = { ...monthData[r.ym], ...r, label: monthData[r.ym].label };
-    });
+  const keys   = Object.keys(monthData);
+  const labels = keys.map(k => monthData[k].label);
+  const totals = keys.map(k => monthData[k].total);
 
-    const keys   = Object.keys(monthData);
-    const labels = keys.map(k => monthData[k].label);
-
-    if (_ccMonChart) _ccMonChart.destroy();
-    const ctx = document.getElementById('cc-monthly-chart')?.getContext('2d');
-    if (ctx) {
-      _ccMonChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: cc('kpi_comp'), data: keys.map(k=>monthData[k].completed||0), backgroundColor:'#0E7A88' },
-            { label: cc('kpi_acc'),  data: keys.map(k=>monthData[k].accepted||0),  backgroundColor:'#1ECC80' },
-            { label: cc('kpi_sent'), data: keys.map(k=>monthData[k].sent||0),      backgroundColor:'#1AADBA' },
-            { label: cc('kpi_rej'),  data: keys.map(k=>monthData[k].rejected||0),  backgroundColor:'#E84545' },
-            { label: cc('kpi_draft'),data: keys.map(k=>monthData[k].draft||0),     backgroundColor:'#f5a828' },
-          ]
-        },
-        options: {
-          responsive:true, maintainAspectRatio:false,
-          plugins: { legend:{ position:'bottom', labels:{ color:'#7AABCA', font:{size:11} } } },
-          scales: {
-            x: { stacked:true, ticks:{ color:'#5A80A0', font:{size:10} }, grid:{ color:'rgba(46,134,171,.1)' } },
-            y: { stacked:true, ticks:{ color:'#5A80A0', font:{size:10} }, grid:{ color:'rgba(46,134,171,.1)' }, beginAtZero:true }
-          }
+  // Bar chart
+  if (_ccMonChart) _ccMonChart.destroy();
+  const ctx = document.getElementById('cc-monthly-chart')?.getContext('2d');
+  if (ctx) {
+    _ccMonChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: cc('kpi_comp'), data: keys.map(k=>monthData[k].completed),    backgroundColor:'#0E7A88' },
+          { label: cc('kpi_acc'),  data: keys.map(k=>monthData[k].accepted),     backgroundColor:'#1ECC80' },
+          { label: cc('kpi_sent'), data: keys.map(k=>monthData[k].branch_pending),backgroundColor:'#1AADBA' },
+          { label: cc('kpi_rej'),  data: keys.map(k=>monthData[k].rejected),     backgroundColor:'#E84545' },
+          { label: cc('kpi_draft'),data: keys.map(k=>monthData[k].cc_pending),   backgroundColor:'#f5a828' },
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'bottom', labels:{ color:'#7AABCA', font:{size:11} } } },
+        scales: {
+          x: { stacked:true, ticks:{ color:'#5A80A0', font:{size:10} }, grid:{ color:'rgba(46,134,171,.1)' } },
+          y: { stacked:true, ticks:{ color:'#5A80A0', font:{size:10} }, grid:{ color:'rgba(46,134,171,.1)' }, beginAtZero:true }
         }
-      });
-    }
-
-    const tbody = document.getElementById('mon-tbody'); if (!tbody) return;
-    const hasData = keys.some(k => monthData[k].total > 0);
-    tbody.innerHTML = hasData
-      ? keys.map(k => {
-          const d = monthData[k];
-          return d.total > 0
-            ? `<tr>
-                <td style="font-weight:700">${d.label} ${selYear}</td>
-                <td><span class="badge badge-blue">${d.total}</span></td>
-                <td style="color:var(--or)">${d.draft||'—'}</td>
-                <td style="color:var(--pri2)">${d.sent||'—'}</td>
-                <td style="color:var(--gr)">${d.accepted||'—'}</td>
-                <td style="color:var(--pri)">${d.completed||'—'}</td>
-                <td style="color:var(--re)">${d.rejected||'—'}</td>
-              </tr>`
-            : '';
-        }).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mu)">${cc('mon_empty')}</td></tr>`
-      : `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mu)">${cc('mon_empty')}</td></tr>`;
+      }
+    });
   }
+
+  // Monthly table
+  const tbody = document.getElementById('mon-tbody'); if (!tbody) return;
+  const hasData = keys.some(k => monthData[k].total > 0);
+  tbody.innerHTML = hasData
+    ? keys.map(k => {
+        const d = monthData[k];
+        return d.total > 0
+          ? `<tr>
+              <td style="font-weight:700">${d.label} ${selYear}</td>
+              <td><span class="badge badge-blue">${d.total}</span></td>
+              <td style="color:var(--or)">${d.cc_pending||'—'}</td>
+              <td style="color:var(--pri2)">${d.branch_pending||'—'}</td>
+              <td style="color:var(--gr)">${d.accepted||'—'}</td>
+              <td style="color:var(--pri)">${d.completed||'—'}</td>
+              <td style="color:var(--re)">${d.rejected||'—'}</td>
+            </tr>`
+          : '';
+      }).join('') || `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mu)">${cc('mon_empty')}</td></tr>`
+    : `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mu)">${cc('mon_empty')}</td></tr>`;
 }
 
-/* ─── Build filter dropdown options (from loaded data + server metadata) ─── */
-function ccBuildFilterOptions(branches, agents) {
-  const bSel = document.getElementById('cc-f-branch');
-  if (bSel && branches) {
-    const cur = bSel.value;
-    bSel.innerHTML = `<option value="">${cc('all_branches')}</option>`;
-    branches.forEach(b => { const o=document.createElement('option'); o.value=b.id; o.textContent=b.name_ar||b.name_en; bSel.appendChild(o); });
-    bSel.value = cur;
-  }
-  const aSel = document.getElementById('cc-f-agent');
-  if (aSel && agents) {
-    const cur = aSel.value;
-    aSel.innerHTML = `<option value="">${cc('all_agents')}</option>`;
-    agents.forEach(a => { const o=document.createElement('option'); o.value=a.id; o.textContent=a.name; aSel.appendChild(o); });
-    aSel.value = cur;
-  }
-  // Build month list from last 36 months
-  const mSel = document.getElementById('cc-f-month');
-  if (mSel && !mSel.options.length>1) {
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const now = new Date();
-    for (let i = 0; i < 36; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const label = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
-      const o = document.createElement('option'); o.value = o.textContent = label; mSel.appendChild(o);
-    }
-  }
-}
-
-/* ─── Load all CC data (page 1, server-paginated) ─── */
+/* ─── Load all CC data ───────────────────────────────────── */
 async function ccLoadAll() {
-  _ccPage = 1;
-  _ccAllCards = [];
-  await _ccFetchPage();
-  ccRenderCurrentSection();
-}
-async function ccLoadMore() {
-  _ccPage += 1;
-  await _ccFetchPage();
-  ccRenderCurrentSection();
-}
-async function _ccFetchPage() {
-  if (_ccLoading) return; _ccLoading = true;
   const loading = document.getElementById('cc-loading-cell');
-  if (loading && _ccPage===1) loading.textContent = cc('loading');
-
-  const p = new URLSearchParams();
-  p.set('per_page', CC_PAGE_SIZE);
-  p.set('page', _ccPage);
-  if (_ccFilter) p.set('cc_status', _ccFilter);
-  const br = document.getElementById('cc-f-branch')?.value; if (br) p.set('branch_id', br);
-  const ag = document.getElementById('cc-f-agent')?.value;  if (ag) p.set('cc_agent_id', ag);
-  const mo = document.getElementById('cc-f-month')?.value;  if (mo) p.set('month', mo);
-  const sq = document.getElementById('cc-f-search')?.value?.trim(); if (sq) p.set('search', sq);
-  const inc = document.getElementById('cc-f-cancelled')?.checked; if (inc) p.set('include_cancelled', 1);
-
-  const r = await api('GET', '/cc/sent?' + p.toString());
-  _ccLoading = false;
+  if (loading) loading.textContent = cc('loading');
+  const r = await api('GET', '/cc/sent?per_page=1000');
   if (!r.success) {
     const eb = document.getElementById('cc-alert-err');
-    if (eb) { eb.textContent = r.message || 'Load error'; eb.classList.add('show'); }
+    if (eb) { eb.textContent = r.message; eb.classList.add('show'); }
     return;
   }
-  const pg = r.data || {};
-  const items = pg.data || [];
-  if (_ccPage === 1) _ccAllCards = items;
-  else _ccAllCards = _ccAllCards.concat(items);
-  _ccHasMore = (pg.current_page < pg.last_page);
-
-  // Summary
-  _ccSummary = r.summary || {};
-  buildFilterChips();
-
-  // Navbar badge for incoming (sent to branch)
+  _ccAllCards = r.data?.data || r.data || [];
+  // Badge for accounts section
   const nb = document.getElementById('ccnav-badge-accounts');
-  const pending = _ccSummary.branch_pending || 0;
-  if (nb) {
-    if (pending > 0) { nb.textContent = pending; nb.style.display = ''; }
-    else nb.style.display = 'none';
-  }
-}
-
-/* ─── Load form options for the create modal + filter bar ─── */
-async function loadFormOptions() {
-  const [emps, branches, settings] = await Promise.all([
-    api('GET', '/employees?status=approved'),
-    api('GET', '/branches'),
-    api('GET', '/settings'),
-  ]);
-  // Months (create modal)
-  const mSel = document.getElementById('nc-month');
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const now = new Date();
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
-    const o = document.createElement('option'); o.value = o.textContent = label; mSel.appendChild(o);
-  }
-  // Branches
-  const branchList = branches.success ? branches.data : [];
-  if (branches.success) {
-    const bSel = document.getElementById('nc-branch');
-    bSel.innerHTML = `<option value="">${cc('opt_branch')}</option>`;
-    branches.data.forEach(b => {
-      const o = document.createElement('option'); o.value = b.id;
-      o.textContent = b.name_ar + (b.name_en?' / '+b.name_en:''); bSel.appendChild(o);
-    });
-  }
-  // Employees
-  const empList = emps.success ? emps.data : [];
-  if (emps.success) {
-    const aSel = document.getElementById('nc-agent');
-    aSel.innerHTML = `<option value="">${cc('opt_agent')}</option>`;
-    emps.data.forEach(e => {
-      const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; aSel.appendChild(o);
-    });
-  }
-  // Settings
-  if (settings.success) {
-    const fill = (selId, items) => {
-      const sel = document.getElementById(selId); if (!sel) return;
-      sel.innerHTML = `<option value="">${cc('opt_optional')}</option>`;
-      items?.forEach(item => {
-        const o = document.createElement('option'); o.value = item.id;
-        o.textContent = (item.name_en||'')+(item.name_ar?' / '+item.name_ar:''); sel.appendChild(o);
-      });
-    };
-    fill('nc-acc-type',   settings.data?.account_types);
-    fill('nc-acc-status', settings.data?.account_statuses);
-    fill('nc-trading',    settings.data?.trading_types);
-  }
-  // Build CC filter bar options too
-  ccBuildFilterOptions(branchList, empList);
+  const pending = _ccAllCards.filter(c=>c.cc_status==='branch_pending').length;
+  if (nb && pending > 0) { nb.textContent = pending; nb.style.display = ''; }
+  ccRenderCurrentSection();
 }
 
 /* ─── Actions ────────────────────────────────────────────── */
@@ -1075,18 +868,6 @@ async function resendCard(id) {
   ccShowAlert(r.success?'ok':'err', r.message);
   if (r.success) { await ccLoadAll(); }
 }
-async function cancelCardCC(id) {
-  if (!confirm(ccL()==='ar'?'إلغاء هذا الكرت؟':'Cancel this card?')) return;
-  const r = await api('DELETE', `/cc/cards/${id}`);
-  ccShowAlert(r.success?'ok':'err', r.message);
-  if (r.success) { await ccLoadAll(); }
-}
-async function restoreCardCC(id) {
-  if (!confirm(ccL()==='ar'?'استعادة الكرت الملغي؟':'Restore cancelled card?')) return;
-  const r = await api('POST', `/cc/cards/${id}/restore`);
-  ccShowAlert(r.success?'ok':'err', r.message);
-  if (r.success) { await ccLoadAll(); }
-}
 function ccShowAlert(type, msg) {
   const e = document.getElementById('cc-alert-err');
   const o = document.getElementById('cc-alert-ok');
@@ -1095,17 +876,6 @@ function ccShowAlert(type, msg) {
   if (type==='err' && e) { e.textContent=msg; e.classList.add('show'); window.scrollTo(0,0); }
   else if (o)             { o.textContent=msg; o.classList.add('show'); window.scrollTo(0,0); }
 }
-function ccClearFilters() {
-  ['cc-f-branch','cc-f-agent','cc-f-month','cc-f-search'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  const chk = document.getElementById('cc-f-cancelled'); if (chk) chk.checked = false;
-  _ccFilter = '';
-  buildFilterChips();
-  ccLoadAll();
-}
-let _ccDebounce;
-function ccDebounceLoad() { clearTimeout(_ccDebounce); _ccDebounce = setTimeout(ccLoadAll, 380); }
 
 /* ─── Create card ────────────────────────────────────────── */
 async function createCard() {
@@ -1144,15 +914,54 @@ async function createCard() {
   }
 }
 
-/* ─── Scroll handler for infinite loading inside the table wrap ─── */
-(function initInfiniteScroll(){
-  const wrap = document.querySelector('.cc-table-wrap');
-  if (!wrap) return;
-  wrap.addEventListener('scroll', () => {
-    if (_ccLoading || !_ccHasMore) return;
-    if (wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 60) ccLoadMore();
-  });
-})();
+/* ─── Load form options ──────────────────────────────────── */
+async function loadFormOptions() {
+  const [emps, branches, settings] = await Promise.all([
+    api('GET', '/employees?status=approved'),
+    api('GET', '/branches'),
+    api('GET', '/settings'),
+  ]);
+  // Months
+  const mSel = document.getElementById('nc-month');
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    const o = document.createElement('option'); o.value = o.textContent = label; mSel.appendChild(o);
+  }
+  // Branches
+  if (branches.success) {
+    const bSel = document.getElementById('nc-branch');
+    bSel.innerHTML = `<option value="">${cc('opt_branch')}</option>`;
+    branches.data.forEach(b => {
+      const o = document.createElement('option'); o.value = b.id;
+      o.textContent = b.name_ar + (b.name_en?' / '+b.name_en:''); bSel.appendChild(o);
+    });
+  }
+  // Employees
+  if (emps.success) {
+    const aSel = document.getElementById('nc-agent');
+    aSel.innerHTML = `<option value="">${cc('opt_agent')}</option>`;
+    emps.data.forEach(e => {
+      const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; aSel.appendChild(o);
+    });
+  }
+  // Settings
+  if (settings.success) {
+    const fill = (selId, items) => {
+      const sel = document.getElementById(selId); if (!sel) return;
+      sel.innerHTML = `<option value="">${cc('opt_optional')}</option>`;
+      items?.forEach(item => {
+        const o = document.createElement('option'); o.value = item.id;
+        o.textContent = (item.name_en||'')+(item.name_ar?' / '+item.name_ar:''); sel.appendChild(o);
+      });
+    };
+    fill('nc-acc-type',   settings.data?.account_types);
+    fill('nc-acc-status', settings.data?.account_statuses);
+    fill('nc-trading',    settings.data?.trading_types);
+  }
+}
 
 /* ─── Init ───────────────────────────────────────────────── */
 (async function init() {
@@ -1161,8 +970,6 @@ async function createCard() {
   await ccLoadAll();
   const hash = window.location.hash.replace('#','') || 'accounts';
   ccShowSection(['accounts','reports','modified','monthly'].includes(hash) ? hash : 'accounts');
-  // Preload the report in the background so Reports section opens instantly
-  ccLoadReport();
 })();
 </script>
 @endpush

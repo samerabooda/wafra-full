@@ -24,9 +24,11 @@
 .data-table tr.row-modified td:first-child{border-right:3px solid #f5a623}
 .data-table tr.row-new_added td:first-child{border-right:3px solid #22c97a}
 .data-table tr.row-inactive td{opacity:.65}
+/* Flagged rows: red background + red left border for over_limit or duplicate */
 .data-table tr.row-flagged td{background:rgba(224,72,72,.08)!important}
 .data-table tr.row-flagged td:first-child{border-right:3px solid #e04848!important}
 .data-table tr.row-flagged:hover td{background:rgba(224,72,72,.15)!important}
+/* Review banner shown when filter=needs_review is active */
 .review-banner{background:linear-gradient(135deg,rgba(224,72,72,.10),rgba(224,72,72,.04));border:1px solid rgba(224,72,72,.30);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .comm-low{color:#22c97a}.comm-mid{color:#f5a623}.comm-high{color:#e05050}
 .kpi-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
@@ -39,48 +41,6 @@
 .filter-bar .form-control{min-width:110px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:8px 16px;background:var(--bg2);border-radius:10px;margin-bottom:10px;font-size:11px;color:var(--mu)}
 .legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block}
-
-/* ─── Column header sort + filter controls ─────────────── */
-.data-table thead{position:sticky;top:0;z-index:30;background:var(--bg2);box-shadow:0 2px 0 var(--brd1)}
-.data-table thead th{position:relative;padding:0!important;background:var(--bg2)}
-.th-content{display:flex;align-items:center;gap:6px;padding:10px 12px;cursor:default;user-select:none;white-space:nowrap}
-.th-label{flex:1;font-weight:700;font-size:11.5px;color:var(--tx)}
-.th-ctrls{display:flex;align-items:center;gap:2px}
-.th-btn{background:none;border:none;padding:2px 5px;border-radius:5px;cursor:pointer;color:var(--mu);font-size:11px;line-height:1;transition:all .15s;font-family:inherit}
-.th-btn:hover{background:var(--card-bg);color:var(--pri2)}
-.th-btn.active{background:rgba(26,173,186,.18);color:var(--pri2);font-weight:800}
-.th-btn.filtered{background:rgba(245,166,35,.2);color:#f5a623}
-.th-sort{font-size:12px;min-width:16px;text-align:center}
-.th-filter{font-size:10px}
-.th-pop{position:absolute;top:calc(100% - 2px);inset-inline-start:0;min-width:230px;max-width:280px;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:10px;box-shadow:0 10px 32px rgba(0,0,0,.35);z-index:60;display:none;overflow:hidden}
-.th-pop.open{display:block;animation:popFade .15s ease-out}
-@keyframes popFade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.th-pop-head{padding:8px 10px;border-bottom:1px solid var(--brd1);display:flex;gap:6px;align-items:center;background:var(--bg2)}
-.th-pop-head input{flex:1;background:var(--bg3);border:1px solid var(--brd1);border-radius:6px;padding:5px 8px;font-size:11px;color:var(--tx);font-family:inherit}
-.th-pop-head .th-pop-close{background:none;border:none;color:var(--mu);cursor:pointer;font-size:13px;padding:3px 6px;border-radius:4px}
-.th-pop-head .th-pop-close:hover{background:var(--card-bg);color:var(--re)}
-.th-pop-list{max-height:260px;overflow-y:auto;padding:4px 0}
-.th-pop-opt{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;transition:background .12s;font-size:11.5px;color:var(--tx)}
-.th-pop-opt:hover{background:var(--bg2)}
-.th-pop-opt input[type=checkbox]{margin:0;cursor:pointer}
-.th-pop-opt .opt-cnt{margin-inline-start:auto;color:var(--mu);font-size:10px;font-family:'JetBrains Mono',monospace}
-.th-pop-foot{padding:8px 10px;border-top:1px solid var(--brd1);display:flex;gap:6px;justify-content:space-between;background:var(--bg2)}
-.th-pop-foot button{background:var(--bg3);border:1px solid var(--brd1);color:var(--mu);font-size:10px;padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit;font-weight:700}
-.th-pop-foot button:hover{background:var(--card-bg);color:var(--tx)}
-.th-pop-foot .b-apply{background:rgba(26,173,186,.15);border-color:rgba(26,173,186,.35);color:var(--pri2)}
-.th-pop-foot .b-apply:hover{background:var(--pri2);color:#fff}
-.th-pop-empty{text-align:center;padding:20px;color:var(--mu);font-size:11px}
-
-/* Column resize affordance */
-.data-table th{min-width:70px}
-.data-table thead tr{background:var(--bg2)}
-
-/* Active filter indicator on top-level filter bar */
-.active-filters-strip{display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px;margin-bottom:10px;align-items:center;font-size:11px;color:var(--mu)}
-.active-filters-strip:empty{display:none}
-.active-filter-chip{background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);color:var(--pri2);padding:3px 10px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;font-weight:700}
-.active-filter-chip button{background:none;border:none;color:var(--pri2);cursor:pointer;font-size:11px;padding:0;line-height:1}
-.active-filter-chip button:hover{color:var(--re)}
 </style>
 
 <!-- Account Number Quick Search -->
@@ -148,7 +108,7 @@
   </div>
 </div>
 
-<!-- Filter Bar (global quick filters) -->
+<!-- Filter Bar -->
 <div class="filter-bar">
   <div class="filter-group">
     <span class="filter-label" id="idx-fl-month">الشهر</span>
@@ -202,9 +162,6 @@
   </div>
 </div>
 
-<!-- Active column-level filters strip -->
-<div class="active-filters-strip" id="active-cols-strip"></div>
-
 <!-- Legend -->
 <div class="legend">
   <strong style="color:var(--tx)" id="idx-legend-title">دليل الألوان:</strong>
@@ -223,134 +180,25 @@
     <div class="panel-title" id="idx-panel-title">🗂 كروت العمولات <span id="cards-count" style="font-size:11px;color:var(--mu);font-weight:400;margin-right:8px"></span></div>
     <div id="cards-summary" style="font-size:11px;color:var(--mu)"></div>
   </div>
-  <div class="table-scroll" style="max-height:62vh">
+  <div class="table-scroll">
     <table class="data-table" id="cards-table">
       <thead>
         <tr>
-          <th data-col="account_number">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-ac">رقم الحساب</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('account_number', this)" title="فرز">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('account_number', this)" title="فلترة">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="month">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-month">الشهر</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('month', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('month', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="branch">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-branch">الفرع</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('branch', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('branch', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="broker">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-broker">البروكر</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('broker', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('broker', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="broker_commission">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-bcomm">ع. البروكر</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('broker_commission', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('broker_commission', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="marketer">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-mktr">المسوّق</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('marketer', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('marketer', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="marketer_commission">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-mcomm">ع. المسوّق</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('marketer_commission', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('marketer_commission', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="ext1">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-ext1">خارجي 1</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('ext1', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('ext1', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="ext2">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-ext2">خارجي 2</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('ext2', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('ext2', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="total_comm">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-total">إجمالي ع.</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('total_comm', this)">↕</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="initial_deposit">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-dep">إيداع أولي</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('initial_deposit', this)">↕</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="monthly_deposit">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-mon">إيداع شهري</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('monthly_deposit', this)">↕</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="account_kind">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-kind">نوع</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('account_kind', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('account_kind', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th data-col="status">
-            <div class="th-content">
-              <span class="th-label" id="idx-th-status">الحالة</span>
-              <div class="th-ctrls">
-                <button class="th-btn th-sort" onclick="colSort('status', this)">↕</button>
-                <button class="th-btn th-filter" onclick="colFilterOpen('status', this)">▾</button>
-              </div>
-            </div>
-          </th>
-          <th><div class="th-content"><span class="th-label" id="idx-th-actions">إجراءات</span></div></th>
+          <th id="idx-th-ac">رقم الحساب</th>
+          <th id="idx-th-month">الشهر</th>
+          <th id="idx-th-branch">الفرع</th>
+          <th id="idx-th-broker">البروكر</th>
+          <th id="idx-th-bcomm">ع. البروكر</th>
+          <th id="idx-th-mktr">المسوّق</th>
+          <th id="idx-th-mcomm">ع. المسوّق</th>
+          <th id="idx-th-ext1">خارجي 1</th>
+          <th id="idx-th-ext2">خارجي 2</th>
+          <th id="idx-th-total">إجمالي ع.</th>
+          <th id="idx-th-dep">إيداع أولي</th>
+          <th id="idx-th-mon">إيداع شهري</th>
+          <th id="idx-th-kind">نوع</th>
+          <th id="idx-th-status">الحالة</th>
+          <th id="idx-th-actions">إجراءات</th>
         </tr>
       </thead>
       <tbody id="cards-tbody">
@@ -425,10 +273,6 @@ const IDX = {
     histTitle:'📋 سجل التعديلات', histEmpty:'لا توجد تعديلات مسجّلة', histBy:'بواسطة',
     noData:'لا توجد بيانات للتصدير', excelDone:'تم تحميل Excel ✅', pdfDone:'تم تحميل PDF ✅',
     loadErr:'خطأ في تحميل البيانات',
-    popSearch:'ابحث في القيم...', popApply:'تطبيق', popClear:'مسح', popSelAll:'الكل', popEmpty:'لا توجد قيم',
-    sortedAsc:'↑ تصاعدي', sortedDesc:'↓ تنازلي',
-    unassigned:'— بدون —',
-    filterOn:'فلتر:',
   },
   en: {
     tbTitle:'Commission Cards', btnNew:'➕ New Card',
@@ -456,10 +300,6 @@ const IDX = {
     histTitle:'📋 Modification History', histEmpty:'No modifications recorded', histBy:'by',
     noData:'No data to export', excelDone:'Excel downloaded ✅', pdfDone:'PDF downloaded ✅',
     loadErr:'Error loading data',
-    popSearch:'Search values...', popApply:'Apply', popClear:'Clear', popSelAll:'Select All', popEmpty:'No values',
-    sortedAsc:'↑ Asc', sortedDesc:'↓ Desc',
-    unassigned:'— None —',
-    filterOn:'Filter:',
   }
 };
 function idxL()   { return (typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))||'ar'; }
@@ -495,14 +335,16 @@ function idxApplyLang() {
   const searchEl=document.getElementById('f-search');
   if(searchEl) searchEl.placeholder=idx('phSearch');
 
+  // Panel title
   const pt=document.getElementById('idx-panel-title');
   if(pt){ const cs=document.getElementById('cards-count'); pt.textContent=idx('panelTitle')+' '; if(cs) pt.appendChild(cs); }
 
+  // Topbar
   const tb=document.querySelector('.tb-title'); if(tb) tb.textContent=idx('tbTitle');
 
+  // Re-render table
   if(filteredCards.length>0) renderTable(filteredCards);
   if(filteredCards.length>0) updateKpis(filteredCards);
-  renderActiveFiltersStrip();
 }
 
 const _idxOrigApplyLang = window.applyLang;
@@ -511,12 +353,8 @@ window.applyLang = function(lang) {
   idxApplyLang();
 };
 
-let allCards=[], filteredCards=[], viewCards=[];
-// Column-level sort + filter state
-let _colSortCol = null;
-let _colSortDir = null;  // 'asc' | 'desc' | null
-let _colFilters = {};    // { colKey: Set<string value> }
-
+let allCards=[], filteredCards=[];
+// Read ?filter=needs_review from URL — turns on the flag-only review mode
 function getReviewMode(){
   try { return new URLSearchParams(location.search).get('filter') === 'needs_review'; }
   catch(e){ return false; }
@@ -545,14 +383,16 @@ async function loadCards(){
   const reviewMode = getReviewMode();
   document.getElementById('cards-tbody').innerHTML=`<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:28px;opacity:.3;margin-bottom:8px">⏳</div>${idx('loading')}</td></tr>`;
 
+  // Review-mode: hit dedicated endpoint returning flagged cards
   if (reviewMode) {
     const rp = new URLSearchParams();
     const s = document.getElementById('f-search').value; if (s) rp.set('search', s);
-    rp.set('per_page', 500);
+    rp.set('per_page', 200);
     const rr = await api('GET','/cards/needs-review?'+rp);
     if (!rr.success) { toast(idx('loadErr'),'error'); return; }
     allCards = rr.data?.data || [];
     filteredCards = allCards;
+    // Show banner with summary counts
     const banner = document.getElementById('review-banner');
     const counts = document.getElementById('review-banner-counts');
     if (banner) {
@@ -562,10 +402,12 @@ async function loadCards(){
         `<span class="chip chip-overlimit">⚠ ${idxL()==='en'?'Over $7':'تجاوز 7$'}: ${sum.over_limit_count||0}</span>`+
         `<span class="chip chip-duplicate">🔁 ${idxL()==='en'?'Duplicate':'مكرّر'}: ${sum.duplicate_count||0}</span>`;
     }
-    applyColSortFilterAndRender();
+    updateKpis(filteredCards);
+    renderTable(filteredCards);
     return;
   }
 
+  // Normal mode
   const banner = document.getElementById('review-banner');
   if (banner) banner.style.display = 'none';
 
@@ -580,306 +422,14 @@ async function loadCards(){
   if(kind)   params.set('kind',kind);
   if(status) params.set('status',status);
   if(search) params.set('search',search);
-  if(source) params.set('cc_source',source);
-  params.set('per_page',300);
+  params.set('per_page',200);
 
   const r=await api('GET','/cards?'+params);
   if(!r.success){ toast(idx('loadErr'),'error'); return; }
   allCards=r.data?.data||[];
   filteredCards=source==='cc'?allCards.filter(c=>!!c.cc_branch_id):source==='regular'?allCards.filter(c=>!c.cc_branch_id):allCards;
-
-  window._cardsPager = {
-    current: r.data?.current_page || 1,
-    last:    r.data?.last_page || 1,
-    total:   r.data?.total || filteredCards.length,
-    per:     r.data?.per_page || 300,
-  };
-  _lastLoadParams = params.toString();
-
-  applyColSortFilterAndRender();
-  renderLoadMore();
-}
-
-let _lastLoadParams = '';
-async function loadMoreCards() {
-  if (!window._cardsPager) return;
-  if (window._cardsPager.current >= window._cardsPager.last) return;
-  const btn = document.getElementById('cards-loadmore-btn');
-  if (btn) { btn.disabled = true; btn.textContent = idx('loading'); }
-  const nextPage = window._cardsPager.current + 1;
-  const r = await api('GET', '/cards?' + _lastLoadParams + '&page=' + nextPage);
-  if (!r.success) { if (btn) btn.disabled = false; toast(idx('loadErr'),'error'); return; }
-  const newItems = r.data?.data || [];
-  const source = document.getElementById('f-source')?.value || '';
-  const filteredNew = source==='cc' ? newItems.filter(c=>!!c.cc_branch_id)
-                     : source==='regular' ? newItems.filter(c=>!c.cc_branch_id)
-                     : newItems;
-  allCards = allCards.concat(newItems);
-  filteredCards = filteredCards.concat(filteredNew);
-  window._cardsPager.current = r.data?.current_page || nextPage;
-  applyColSortFilterAndRender();
-  renderLoadMore();
-}
-function renderLoadMore() {
-  const info = document.getElementById('pagination-info');
-  const btns = document.getElementById('pagination-btns');
-  const pg = window._cardsPager; if (!pg || !info || !btns) return;
-  const curL = idxL();
-  if (pg.last > 1) {
-    info.textContent = (curL==='en'?'Showing ':'عرض ') + viewCards.length +
-                       (curL==='en'?' of ':' من ') + pg.total.toLocaleString();
-    btns.innerHTML = pg.current < pg.last
-      ? `<button id="cards-loadmore-btn" class="btn btn-sm" style="background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.3);color:#1AADBA" onclick="loadMoreCards()">${curL==='en'?'Load more':'تحميل المزيد'} (${pg.current}/${pg.last})</button>`
-      : `<span style="font-size:11px;color:var(--gr)">${curL==='en'?'All loaded':'تم تحميل الكل'}</span>`;
-  } else {
-    info.textContent = viewCards.length + ' ' + idx('records');
-    btns.innerHTML = '';
-  }
-}
-(function initCardsInfinite(){
-  const el = document.querySelector('.table-scroll');
-  if (!el) return;
-  el.addEventListener('scroll', () => {
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
-      if (window._cardsPager && window._cardsPager.current < window._cardsPager.last) loadMoreCards();
-    }
-  });
-})();
-
-/* ══════════════════════════════════════════════════════════
-   COLUMN SORT + FILTER (per-column dropdown)
-   ══════════════════════════════════════════════════════════ */
-
-// Pull a comparable value from a card for a given column key
-function colValueFor(c, col) {
-  const L = idxL();
-  switch (col) {
-    case 'account_number':   return c.account_number ?? '';
-    case 'month':            return c.month ?? '';
-    case 'branch':           return (L==='en' ? c.branch?.name_en : c.branch?.name_ar) || c.branch?.name_ar || c.branch?.name_en || '';
-    case 'broker':           return c.broker?.name || '';
-    case 'broker_commission':return Number(c.broker_commission) || 0;
-    case 'marketer':         return c.marketer?.name || '';
-    case 'marketer_commission':return Number(c.marketer_commission) || 0;
-    case 'ext1':             return c.ext_marketer1?.name || '';
-    case 'ext2':             return c.ext_marketer2?.name || '';
-    case 'total_comm':       return (parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
-    case 'initial_deposit':  return Number(c.initial_deposit) || 0;
-    case 'monthly_deposit':  return Number(c.monthly_deposit) || 0;
-    case 'account_kind':     return c.account_kind || '';
-    case 'status':           return c.status || '';
-    default: return '';
-  }
-}
-function colIsNumeric(col) {
-  return ['broker_commission','marketer_commission','total_comm','initial_deposit','monthly_deposit','account_number'].includes(col);
-}
-function colDisplayValue(col, raw) {
-  if (raw === '' || raw === null || raw === undefined) return idx('unassigned');
-  if (col === 'account_kind') return raw === 'new' ? '🟢 NEW' : raw === 'sub' ? '🔵 SUB' : raw;
-  if (col === 'status') return ({modified:idx('chipMod'),new_added:idx('chipNew'),active:idx('chipActive'),inactive:idx('chipInact')}[raw] || raw);
-  if (colIsNumeric(col)) return (typeof raw === 'number' ? raw.toLocaleString('en', {maximumFractionDigits: 2}) : String(raw));
-  return String(raw);
-}
-
-function colSort(col, btn) {
-  // Cycle: null/other → asc → desc → off
-  if (_colSortCol !== col) {
-    _colSortCol = col; _colSortDir = 'asc';
-  } else if (_colSortDir === 'asc') {
-    _colSortDir = 'desc';
-  } else {
-    _colSortCol = null; _colSortDir = null;
-  }
-  // Reset all sort buttons visual
-  document.querySelectorAll('.th-sort').forEach(b => { b.textContent = '↕'; b.classList.remove('active'); });
-  if (_colSortCol === col && _colSortDir) {
-    btn.textContent = _colSortDir === 'asc' ? '↑' : '↓';
-    btn.classList.add('active');
-  }
-  applyColSortFilterAndRender();
-}
-
-function colFilterOpen(col, btn) {
-  // Close any other open popovers
-  document.querySelectorAll('.th-pop.open').forEach(p => p.classList.remove('open'));
-
-  const th = btn.closest('th');
-  if (!th) return;
-  let pop = th.querySelector('.th-pop');
-  if (!pop) {
-    pop = document.createElement('div');
-    pop.className = 'th-pop';
-    th.appendChild(pop);
-  }
-  // Build value counts from filteredCards (not already-column-filtered — more useful)
-  // Use allCards base so counts show what's available
-  const base = filteredCards;
-  const counts = new Map();
-  base.forEach(c => {
-    const v = colValueFor(c, col);
-    const key = (v === null || v === undefined || v === '') ? '' : String(v);
-    counts.set(key, (counts.get(key) || 0) + 1);
-  });
-  const sel = _colFilters[col] || new Set();
-  const keys = [...counts.keys()].sort((a, b) => {
-    if (colIsNumeric(col)) return (parseFloat(a)||0) - (parseFloat(b)||0);
-    return String(a).localeCompare(String(b));
-  });
-
-  pop.innerHTML = `
-    <div class="th-pop-head">
-      <input type="text" placeholder="${idx('popSearch')}" oninput="colPopSearch(this,'${col}')">
-      <button class="th-pop-close" onclick="colFilterClose(event,this)">✕</button>
-    </div>
-    <div class="th-pop-list" id="pop-list-${col}">
-      ${keys.length ? keys.map(k => {
-        const checked = sel.has(k) ? 'checked' : '';
-        const label = colDisplayValue(col, colIsNumeric(col) ? parseFloat(k) : k);
-        return `<label class="th-pop-opt">
-          <input type="checkbox" value="${encodeURIComponent(k)}" ${checked}>
-          <span>${esc(label)}</span>
-          <span class="opt-cnt">${counts.get(k)}</span>
-        </label>`;
-      }).join('') : `<div class="th-pop-empty">${idx('popEmpty')}</div>`}
-    </div>
-    <div class="th-pop-foot">
-      <button onclick="colFilterSelectAll(event,'${col}')">${idx('popSelAll')}</button>
-      <button onclick="colFilterClear('${col}')">${idx('popClear')}</button>
-      <button class="b-apply" onclick="colFilterApply(event,'${col}')">${idx('popApply')}</button>
-    </div>
-  `;
-  pop.classList.add('open');
-
-  // Position fix for RTL — ensure popover stays within viewport
-  requestAnimationFrame(() => {
-    const r = pop.getBoundingClientRect();
-    const vw = document.documentElement.clientWidth;
-    if (r.right > vw - 8) {
-      pop.style.insetInlineStart = 'auto';
-      pop.style.insetInlineEnd = '0';
-    }
-  });
-}
-
-function colPopSearch(input, col) {
-  const q = (input.value || '').toLowerCase().trim();
-  const list = document.getElementById('pop-list-' + col);
-  if (!list) return;
-  list.querySelectorAll('.th-pop-opt').forEach(opt => {
-    const txt = opt.textContent.toLowerCase();
-    opt.style.display = (!q || txt.includes(q)) ? '' : 'none';
-  });
-}
-function colFilterSelectAll(ev, col) {
-  ev.stopPropagation();
-  const list = document.getElementById('pop-list-' + col);
-  if (!list) return;
-  const visible = [...list.querySelectorAll('.th-pop-opt')].filter(o => o.style.display !== 'none');
-  const allChecked = visible.every(o => o.querySelector('input').checked);
-  visible.forEach(o => { o.querySelector('input').checked = !allChecked; });
-}
-function colFilterClear(col) {
-  delete _colFilters[col];
-  // Close popover
-  document.querySelectorAll('.th-pop.open').forEach(p => p.classList.remove('open'));
-  // Reset the filter button indicator
-  const btn = document.querySelector(`th[data-col="${col}"] .th-filter`);
-  if (btn) btn.classList.remove('filtered');
-  applyColSortFilterAndRender();
-}
-function colFilterApply(ev, col) {
-  ev.stopPropagation();
-  const list = document.getElementById('pop-list-' + col);
-  if (!list) return;
-  const checked = [...list.querySelectorAll('input:checked')].map(i => decodeURIComponent(i.value));
-  if (checked.length) {
-    _colFilters[col] = new Set(checked);
-    const btn = document.querySelector(`th[data-col="${col}"] .th-filter`);
-    if (btn) btn.classList.add('filtered');
-  } else {
-    delete _colFilters[col];
-    const btn = document.querySelector(`th[data-col="${col}"] .th-filter`);
-    if (btn) btn.classList.remove('filtered');
-  }
-  document.querySelectorAll('.th-pop.open').forEach(p => p.classList.remove('open'));
-  applyColSortFilterAndRender();
-}
-function colFilterClose(ev, btn) {
-  ev.stopPropagation();
-  const pop = btn.closest('.th-pop'); if (pop) pop.classList.remove('open');
-}
-
-// Close popover on outside click / Esc
-document.addEventListener('click', (e) => {
-  if (e.target.closest('.th-pop') || e.target.closest('.th-filter')) return;
-  document.querySelectorAll('.th-pop.open').forEach(p => p.classList.remove('open'));
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') document.querySelectorAll('.th-pop.open').forEach(p => p.classList.remove('open'));
-});
-
-function applyColSortFilterAndRender() {
-  let out = filteredCards.slice();
-  // Apply column filters
-  for (const [col, set] of Object.entries(_colFilters)) {
-    if (!set || !set.size) continue;
-    out = out.filter(c => {
-      const v = colValueFor(c, col);
-      const key = (v === null || v === undefined || v === '') ? '' : String(v);
-      return set.has(key);
-    });
-  }
-  // Apply sort
-  if (_colSortCol && _colSortDir) {
-    const dir = _colSortDir === 'asc' ? 1 : -1;
-    const numeric = colIsNumeric(_colSortCol);
-    out.sort((a, b) => {
-      const va = colValueFor(a, _colSortCol);
-      const vb = colValueFor(b, _colSortCol);
-      if (numeric) return (va - vb) * dir;
-      return String(va).localeCompare(String(vb)) * dir;
-    });
-  }
-  viewCards = out;
-  updateKpis(viewCards);
-  renderTable(viewCards);
-  renderActiveFiltersStrip();
-  renderLoadMore();
-}
-
-function renderActiveFiltersStrip() {
-  const strip = document.getElementById('active-cols-strip');
-  if (!strip) return;
-  const chips = [];
-  if (_colSortCol && _colSortDir) {
-    const sortLabel = _colSortDir === 'asc' ? idx('sortedAsc') : idx('sortedDesc');
-    chips.push(`<span class="active-filter-chip" style="background:rgba(26,173,186,.1);border-color:rgba(26,173,186,.3);color:var(--pri2)">
-      <span>${colHeaderLabel(_colSortCol)}: ${sortLabel}</span>
-      <button onclick="clearColSort()">✕</button>
-    </span>`);
-  }
-  Object.entries(_colFilters).forEach(([col, set]) => {
-    const n = set.size;
-    chips.push(`<span class="active-filter-chip" style="background:rgba(245,166,35,.1);border-color:rgba(245,166,35,.3);color:#f5a623">
-      <span>${idx('filterOn')} ${colHeaderLabel(col)} (${n})</span>
-      <button onclick="colFilterClear('${col}')">✕</button>
-    </span>`);
-  });
-  strip.innerHTML = chips.length ? chips.join('') : '';
-}
-function colHeaderLabel(col) {
-  const map = { account_number:'thAc', month:'thMonth', branch:'thBranch', broker:'thBroker',
-    broker_commission:'thBComm', marketer:'thMktr', marketer_commission:'thMComm',
-    ext1:'thExt1', ext2:'thExt2', total_comm:'thTotal',
-    initial_deposit:'thDep', monthly_deposit:'thMon',
-    account_kind:'thKind', status:'thStatus' };
-  return idx(map[col] || col);
-}
-function clearColSort() {
-  _colSortCol = null; _colSortDir = null;
-  document.querySelectorAll('.th-sort').forEach(b => { b.textContent = '↕'; b.classList.remove('active'); });
-  applyColSortFilterAndRender();
+  updateKpis(filteredCards);
+  renderTable(filteredCards);
 }
 
 function updateKpis(cards){
@@ -920,6 +470,7 @@ function renderTable(cards){
     const isDuplicate = !!c.is_duplicate;
     const isFlagged = isOverLimit || isDuplicate;
     const totalComm=(parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
+    // Flagged rows take priority over CC / status color coding
     const rowClass = isFlagged ? 'row-flagged'
       : (isCc ? 'row-cc-card'
       : (c.status==='modified' ? 'row-modified'
@@ -966,13 +517,7 @@ function renderTable(cards){
 
 function clearFilters(){
   ['f-month','f-broker','f-kind','f-status','f-source'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-search').value='';
-  // Also clear per-column
-  _colFilters = {};
-  _colSortCol = null; _colSortDir = null;
-  document.querySelectorAll('.th-filter').forEach(b => b.classList.remove('filtered'));
-  document.querySelectorAll('.th-sort').forEach(b => { b.textContent = '↕'; b.classList.remove('active'); });
-  loadCards();
+  document.getElementById('f-search').value=''; loadCards();
 }
 let debounceTimer;
 function debounceLoad(){ clearTimeout(debounceTimer); debounceTimer=setTimeout(loadCards,380); }
@@ -992,10 +537,10 @@ async function viewHistory(id){
 }
 
 function exportExcel(){
-  if(!viewCards.length){ toast(idx('noData'),'error'); return; }
+  if(!filteredCards.length){ toast(idx('noData'),'error'); return; }
   const isEn=idxL()==='en';
   const hdr=isEn?['AC No.','Month','Branch','Broker','B.Comm','Marketer','M.Comm','Ext 1','Ext 1C','Ext 2','Ext 2C','Total Comm.','Initial Dep.','Monthly Dep.','Kind','Status','Source']:['رقم الحساب','الشهر','الفرع','البروكر','ع.البروكر','المسوّق','ع.المسوّق','خارجي 1','ع.خ1','خارجي 2','ع.خ2','إجمالي ع.','إيداع أولي','إيداع شهري','نوع','الحالة','المصدر'];
-  const rows=[hdr,...viewCards.map(c=>{
+  const rows=[hdr,...filteredCards.map(c=>{
     const tot=(parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
     return [c.account_number,c.month,isEn?(c.branch?.name_en||c.branch?.name_ar||''):(c.branch?.name_ar||''),c.broker?.name||'','$'+c.broker_commission+'/lot',c.marketer?.name||'—','$'+c.marketer_commission+'/lot',c.ext_marketer1?.name||'—','$'+(c.ext_commission1||0)+'/lot',c.ext_marketer2?.name||'—','$'+(c.ext_commission2||0)+'/lot','$'+tot.toFixed(2)+'/lot',c.initial_deposit,c.monthly_deposit,c.account_kind==='new'?'NEW':'SUB',c.status,c.cc_branch_id?'CC':(isEn?'Regular':'عادي')];
   })];
@@ -1008,7 +553,7 @@ function exportExcel(){
 }
 
 function exportPdf(){
-  if(!viewCards.length){ toast(idx('noData'),'error'); return; }
+  if(!filteredCards.length){ toast(idx('noData'),'error'); return; }
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a3'});
   doc.setFontSize(14);doc.setTextColor(46,134,171);
@@ -1018,7 +563,7 @@ function exportPdf(){
   doc.autoTable({
     startY:22,
     head:[['AC No.','Month','Branch','Broker','B.Comm','Marketer','M.Comm','Ext1','Ext2','Total','Initial','Monthly','Kind','Status','Src']],
-    body:viewCards.map(c=>{
+    body:filteredCards.map(c=>{
       const tot=(parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
       return [c.account_number,c.month,c.branch?.name_ar||'',c.broker?.name||'—','$'+c.broker_commission,c.marketer?.name||'—','$'+c.marketer_commission,c.ext_marketer1?.name||'—',c.ext_marketer2?.name||'—','$'+tot.toFixed(1),fmt(c.initial_deposit),fmt(c.monthly_deposit),c.account_kind?.toUpperCase(),c.status,c.cc_branch_id?'CC':'-'];
     }),
@@ -1040,9 +585,11 @@ function acSearch() {
   const val = (inp?.value || '').trim();
   if (!val) { toast('أدخل رقم الحساب', 'error'); return; }
 
+  // Put the value into the main search filter and reload
   const mainSearch = document.getElementById('f-search');
   if (mainSearch) mainSearch.value = val;
 
+  // Also clear other filters for a clean search
   const monthSel = document.getElementById('f-month');
   const brokerSel = document.getElementById('f-broker');
   const kindSel = document.getElementById('f-kind');
@@ -1054,12 +601,13 @@ function acSearch() {
   if (statusSel) statusSel.value = '';
   if (sourceSel) sourceSel.value = '';
 
+  currentPage = 1;
   loadCards().then(() => {
     const clearBtn = document.getElementById('idx-acsearch-clear');
     const lbl = document.getElementById('ac-search-result-lbl');
     if (clearBtn) clearBtn.style.display = '';
     if (lbl) {
-      const cnt = viewCards.length;
+      const cnt = filteredCards.length;
       lbl.textContent = cnt > 0
         ? (cnt + ' كرت ' + (cnt > 1 ? 'مسجّل' : 'مسجّل') + ' لهذا الحساب')
         : 'لا توجد نتائج لهذا الرقم';
@@ -1078,6 +626,7 @@ function acSearchClear() {
   clearFilters();
 }
 
+// Clear an over-limit or duplicate review flag on a card (FA only)
 async function clearReviewFlag(id) {
   const msg = idxL()==='en'
     ? 'Mark this card as reviewed and clear its flags?'

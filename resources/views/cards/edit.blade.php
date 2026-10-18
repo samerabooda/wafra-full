@@ -1,44 +1,6 @@
 @extends('layouts.app')
 @section('title','Edit Account')
 @section('page-title','Edit Account')
-
-@push('styles')
-<style>
-/* Searchable employee combobox (shared visual with Create) */
-.emp-combo { position:relative }
-.emp-combo-input {
-  background:var(--inp-bg);border:1px solid var(--inp-brd);border-radius:9px;
-  padding:10px 36px 10px 14px;font-size:13px;font-family:'Tajawal',sans-serif;
-  color:var(--tx);width:100%;cursor:text;transition:all .15s
-}
-.emp-combo-input:focus { border-color:var(--pri2);outline:none;box-shadow:0 0 0 2px rgba(26,173,186,.18) }
-.emp-combo-input::placeholder { color:var(--mu);opacity:.7 }
-.emp-combo-caret { position:absolute;left:12px;top:50%;transform:translateY(-50%);
-  color:var(--mu);pointer-events:none;font-size:12px;transition:transform .15s }
-.emp-combo.open .emp-combo-caret { transform:translateY(-50%) rotate(180deg);color:var(--pri2) }
-.emp-combo-clear { position:absolute;left:30px;top:50%;transform:translateY(-50%);
-  background:transparent;border:none;color:var(--mu);cursor:pointer;
-  font-size:14px;padding:2px 6px;border-radius:4px;display:none }
-.emp-combo-clear:hover { background:var(--bg2);color:var(--re) }
-.emp-combo.has-value .emp-combo-clear { display:block }
-.emp-combo-list { position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:50;
-  background:var(--bg3);border:1px solid var(--brd2);border-radius:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,.3);max-height:260px;overflow-y:auto;display:none }
-.emp-combo.open .emp-combo-list { display:block }
-.emp-combo-item { padding:9px 12px;cursor:pointer;font-size:12px;color:var(--tx);
-  border-bottom:1px solid rgba(255,255,255,.03);display:flex;align-items:center;gap:8px }
-.emp-combo-item:last-child { border-bottom:none }
-.emp-combo-item:hover,.emp-combo-item.active { background:rgba(26,173,186,.15);color:var(--pri2) }
-.emp-combo-item .ico { font-size:14px;width:22px;text-align:center;flex-shrink:0 }
-.emp-combo-item .nm { flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis }
-.emp-combo-item .rl { font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;flex-shrink:0 }
-.emp-combo-empty { padding:14px;text-align:center;color:var(--mu);font-size:11px }
-.emp-combo-group { padding:6px 12px;font-size:9px;text-transform:uppercase;letter-spacing:.5px;
-  color:var(--mu);font-weight:700;background:var(--bg2);border-bottom:1px solid var(--brd1);position:sticky;top:0 }
-.emp-combo select { position:absolute;left:-9999px;width:1px;height:1px;opacity:0 }
-</style>
-@endpush
-
 @section('content')
 <div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'edit'])
@@ -79,13 +41,7 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" id="edt-lbl-broker">البروكر</label>
-        <div class="emp-combo" data-emp-combo="ec-broker">
-          <input type="text" class="emp-combo-input" placeholder="ابحث بالاسم..." autocomplete="off">
-          <button type="button" class="emp-combo-clear" title="مسح">✕</button>
-          <span class="emp-combo-caret">▾</span>
-          <div class="emp-combo-list"></div>
-          <select id="ec-broker"></select>
-        </div>
+        <select id="ec-broker" class="form-control"></select>
       </div>
       <div class="form-group">
         <label class="form-label" id="edt-lbl-bcomm">عمولة البروكر</label>
@@ -95,13 +51,7 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" id="edt-lbl-mktr">المسوّق الداخلي</label>
-        <div class="emp-combo" data-emp-combo="ec-marketer">
-          <input type="text" class="emp-combo-input" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
-          <button type="button" class="emp-combo-clear" title="مسح">✕</button>
-          <span class="emp-combo-caret">▾</span>
-          <div class="emp-combo-list"></div>
-          <select id="ec-marketer"></select>
-        </div>
+        <select id="ec-marketer" class="form-control"></select>
       </div>
       <div class="form-group">
         <label class="form-label" id="edt-lbl-mcomm">عمولة المسوّق الداخلي</label>
@@ -111,13 +61,7 @@
     <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:12px">
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-ext1">🌐 مسوّق خارجي 1</label>
-        <div class="emp-combo" data-emp-combo="ec-ext1">
-          <input type="text" class="emp-combo-input" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
-          <button type="button" class="emp-combo-clear" title="مسح">✕</button>
-          <span class="emp-combo-caret">▾</span>
-          <div class="emp-combo-list"></div>
-          <select id="ec-ext1"></select>
-        </div>
+        <select id="ec-ext1" class="form-control"></select>
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-ext1c">عمولة خارجي 1</label>
@@ -127,13 +71,7 @@
     <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:12px;margin-bottom:12px">
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-ext2">🌐 مسوّق خارجي 2</label>
-        <div class="emp-combo" data-emp-combo="ec-ext2">
-          <input type="text" class="emp-combo-input" placeholder="ابحث بالاسم أو اتركه فارغاً..." autocomplete="off">
-          <button type="button" class="emp-combo-clear" title="مسح">✕</button>
-          <span class="emp-combo-caret">▾</span>
-          <div class="emp-combo-list"></div>
-          <select id="ec-ext2"></select>
-        </div>
+        <select id="ec-ext2" class="form-control"></select>
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-ext2c">عمولة خارجي 2</label>
@@ -251,107 +189,14 @@ const _edtOrig=window.applyLang;
 window.applyLang=function(lang){if(_edtOrig)_edtOrig(lang);edtApplyLang();};
 
 let ecCardId=null;
-
-// Mount searchable combobox over an existing <select>
-function mountEmpCombo(wrap) {
-  const sel  = wrap.querySelector('select');
-  const inp  = wrap.querySelector('.emp-combo-input');
-  const list = wrap.querySelector('.emp-combo-list');
-  const clr  = wrap.querySelector('.emp-combo-clear');
-  if (!sel || !inp || !list) return;
-  // Idempotent — if already mounted, refresh options and syncDisplay only
-  const alreadyMounted = wrap.dataset.empMounted === '1';
-  const options = Array.from(sel.options).filter(o => o.value !== '').map(o => ({
-    id: o.value, text: o.textContent, role: o.dataset.role || '', base: o.dataset.base === '1',
-  }));
-  let activeIdx = -1;
-  const roleLabel = r => r==='broker'?'بروكر':r==='marketing'?'مسوّق':r==='external'?'خارجي':'';
-  const roleIcon  = r => r==='external'?'🌐':r==='marketing'?'📢':r==='broker'?'🏦':'👤';
-
-  function render(filter = '') {
-    const q = filter.trim().toLowerCase();
-    const matches = q ? options.filter(o => (o.text||'').toLowerCase().includes(q)) : options;
-    if (!matches.length) { list.innerHTML = `<div class="emp-combo-empty">لا توجد نتائج</div>`; return; }
-    const g = { broker:[], marketing:[], external:[], other:[] };
-    matches.forEach(o => (g[o.role]||g.other).push(o));
-    const h = [];
-    const add = (lbl, items) => {
-      if (!items.length) return;
-      h.push(`<div class="emp-combo-group">${lbl} (${items.length})</div>`);
-      items.forEach(o => {
-        const nm = (o.text||'').replace(/\s[🌐📢🏦]$/u,'').replace(/</g,'&lt;');
-        h.push(`<div class="emp-combo-item" data-id="${o.id}"><span class="ico">${roleIcon(o.role)}</span><span class="nm">${nm}</span><span class="rl">${roleLabel(o.role)}</span></div>`);
-      });
-    };
-    add('🏦 البروكرات', g.broker);
-    add('📢 المسوّقون', g.marketing);
-    add('🌐 المسوّقون الخارجيون', g.external);
-    add('👤 أخرى', g.other);
-    list.innerHTML = h.join(''); activeIdx = -1;
-  }
-  function open(){ wrap.classList.add('open'); render(inp.value); }
-  function close(){ wrap.classList.remove('open'); activeIdx = -1; }
-  function pick(id) {
-    sel.value = id || '';
-    sel.dispatchEvent(new Event('change', { bubbles: true }));
-    syncDisplay(); close();
-  }
-  function syncDisplay() {
-    const opt = sel.selectedOptions[0];
-    if (opt && opt.value) { inp.value = opt.textContent; wrap.classList.add('has-value'); }
-    else { inp.value = ''; wrap.classList.remove('has-value'); }
-  }
-
-  if (!alreadyMounted) {
-    inp.addEventListener('focus', open);
-    inp.addEventListener('click', open);
-    inp.addEventListener('input', () => { open(); render(inp.value); });
-    inp.addEventListener('keydown', e => {
-      const items = Array.from(list.querySelectorAll('.emp-combo-item'));
-      if (e.key === 'ArrowDown') { e.preventDefault(); open();
-        activeIdx = Math.min(items.length-1, activeIdx+1);
-        items.forEach((it,i)=>it.classList.toggle('active', i===activeIdx));
-        items[activeIdx]?.scrollIntoView({block:'nearest'});
-      } else if (e.key === 'ArrowUp') { e.preventDefault();
-        activeIdx = Math.max(0, activeIdx-1);
-        items.forEach((it,i)=>it.classList.toggle('active', i===activeIdx));
-        items[activeIdx]?.scrollIntoView({block:'nearest'});
-      } else if (e.key === 'Enter') { e.preventDefault();
-        if (activeIdx >= 0 && items[activeIdx]) pick(items[activeIdx].dataset.id);
-        else if (items.length === 1) pick(items[0].dataset.id);
-      } else if (e.key === 'Escape') { close(); inp.blur(); }
-    });
-    list.addEventListener('click', e => { const it = e.target.closest('.emp-combo-item'); if (it) pick(it.dataset.id); });
-    clr?.addEventListener('click', e => { e.stopPropagation(); pick(''); inp.focus(); });
-    document.addEventListener('click', e => { if (!wrap.contains(e.target)) close(); });
-    wrap.dataset.empMounted = '1';
-  }
-  // Re-attach render fn and sync so re-mounts after options refresh work
-  wrap._empRender = render; wrap._empSync = syncDisplay;
-  syncDisplay();
-}
-
 async function initSelects(){
   const emps=await api('GET','/employees?status=approved');
   if(!emps.success)return;
-  const sorted = (emps.data||[]).slice().sort((a,b)=>{
-    if (a.is_base !== b.is_base) return (b.is_base?1:0)-(a.is_base?1:0);
-    return (a.name||'').localeCompare(b.name||'', 'ar');
-  });
   ['ec-broker','ec-marketer','ec-ext1','ec-ext2'].forEach(id=>{
     const s=document.getElementById(id);
-    if (!s) return;
-    s.innerHTML = id==='ec-broker' ? '' : `<option value="">${edt('optNone')}</option>`;
-    sorted.forEach(e => {
-      const o = document.createElement('option');
-      o.value = e.id;
-      o.textContent = e.name + (e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');
-      o.dataset.role = e.role || '';
-      o.dataset.base = e.is_base ? '1' : '0';
-      s.appendChild(o);
-    });
+    s.innerHTML=id==='ec-broker'?'':`<option value="">${edt('optNone')}</option>`;
+    emps.data.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name+(e.role==='external'?' 🌐':e.role==='marketing'?' 📢':' 🏦');s.appendChild(o);});
   });
-  document.querySelectorAll('.emp-combo').forEach(mountEmpCombo);
 }
 async function ecSearch(q){
   if(q.length<2)return;
@@ -385,8 +230,6 @@ async function ecLoad(id){
   document.getElementById('ec-ec1').value=c.ext_commission1||0;
   document.getElementById('ec-ext2').value=c.ext_marketer2_id||'';
   document.getElementById('ec-ec2').value=c.ext_commission2||0;
-  // Sync combobox displays to reflect the new values
-  document.querySelectorAll('.emp-combo').forEach(w => w._empSync?.());
   document.getElementById('ec-dep').value=c.initial_deposit||0;
   document.getElementById('ec-mon').value=c.monthly_deposit||0;
   document.getElementById('ec-reason').value='';
