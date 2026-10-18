@@ -2,9 +2,9 @@
 @section('title','Account Tree')
 @section('page-title','Account Tree')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'tree'])
-<div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
+<div style="padding:24px">
 
 <!-- KPI Strip -->
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">

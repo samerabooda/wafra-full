@@ -54,24 +54,18 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
     // ── Commission Cards ──────────────────────────────────────
     Route::prefix('cards')->group(function () {
 
-        Route::get('tree',          [CommissionCardController::class, 'tree'])
-             ->middleware('permission:cards');
+        Route::get('tree',          [CommissionCardController::class, 'tree']);
 
-        Route::get('report',        [CommissionCardController::class, 'report'])
-             ->middleware('permission:reports');
+        Route::get('report',        [CommissionCardController::class, 'report']);
 
-        Route::get('modifications', [CommissionCardController::class, 'modifications'])
-             ->middleware('permission:modified');
+        Route::get('modifications', [CommissionCardController::class, 'modifications']);
 
         // Cards needing review — over-limit ($>7) or duplicates from import
-        Route::get('needs-review',  [CommissionCardController::class, 'needsReview'])
-             ->middleware('permission:cards');
+        Route::get('needs-review',  [CommissionCardController::class, 'needsReview']);
 
-        Route::get('/',             [CommissionCardController::class, 'index'])
-             ->middleware('permission:cards');
+        Route::get('/',             [CommissionCardController::class, 'index']);
 
-        Route::get('{id}',          [CommissionCardController::class, 'show'])
-             ->middleware('permission:cards');
+        Route::get('{id}',          [CommissionCardController::class, 'show']);
 
         Route::post('/',            [CommissionCardController::class, 'store'])
              ->middleware('permission:create_card');

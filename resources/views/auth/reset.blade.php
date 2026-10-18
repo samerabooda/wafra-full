@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" id="reset-html">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>تغيير كلمة المرور — وفرة الخليجية</title>
+<title id="reset-title">تغيير كلمة المرور — وفرة الخليجية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--pri:#2E86AB;--pri2:#3A9DB5;--bg:#0A1628;--bg2:#142240;--bg3:#1A2B4E;--brd1:#253A63;--tx:#EDF4F8;--mu:#5A7A9A;--gr:#22C97A;--re:#E05050;}
@@ -61,8 +61,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
       @include('partials.globe', ['size'=>'sm','showText'=>false,'gid'=>'reset_logo','whiteBg'=>true])
     </div>
 
-    <div class="card-title">تغيير كلمة المرور</div>
-    <div class="card-sub">أدخل كلمة المرور الجديدة لحسابك</div>
+    <div class="card-title" id="rst-title">تغيير كلمة المرور</div>
+    <div class="card-sub" id="rst-sub">أدخل كلمة المرور الجديدة لحسابك</div>
 
     {{-- Errors --}}
     @if($errors->any())
@@ -74,17 +74,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
       <input type="hidden" name="token" value="{{ $token }}">
 
       <div class="form-group">
-        <label class="form-label">البريد الإلكتروني</label>
+        <label class="form-label" id="rst-lbl-email">البريد الإلكتروني</label>
         <input class="form-input" type="email" name="email"
                value="{{ old('email', $email ?? '') }}"
                placeholder="your@wafragulf.com" required autocomplete="email">
       </div>
 
       <div class="form-group">
-        <label class="form-label">كلمة المرور الجديدة</label>
+        <label class="form-label" id="rst-lbl-pw">كلمة المرور الجديدة</label>
         <div class="pw-wrap">
           <input class="form-input" type="password" name="password" id="pw"
-                 placeholder="8 أحرف على الأقل" required autocomplete="new-password"
+                 placeholder="8 أحرف على الأقل" id="rst-ph-pw" required autocomplete="new-password"
                  oninput="checkStrength(this)">
           <button type="button" class="pw-toggle" onclick="togglePw('pw',this)">👁</button>
         </div>
@@ -92,7 +92,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
       </div>
 
       <div class="form-group">
-        <label class="form-label">تأكيد كلمة المرور</label>
+        <label class="form-label" id="rst-lbl-pw2">تأكيد كلمة المرور</label>
         <div class="pw-wrap">
           <input class="form-input" type="password" name="password_confirmation" id="pw2"
                  placeholder="أعد كتابة كلمة المرور" required autocomplete="new-password">
@@ -100,14 +100,63 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background:ra
         </div>
       </div>
 
-      <button type="submit" class="btn">تغيير كلمة المرور ←</button>
+      <button type="submit" class="btn" id="rst-btn">تغيير كلمة المرور ←</button>
     </form>
 
-    <a class="back-link" href="{{ route('auth.login') }}">← رجوع لتسجيل الدخول</a>
+    <a class="back-link" href="{{ route('auth.login') }}" id="rst-back">← رجوع لتسجيل الدخول</a>
   </div>
 </div>
 
 <script>
+const RST = {
+  ar: {
+    title:'تغيير كلمة المرور — وفرة الخليجية',
+    heading:'تغيير كلمة المرور',
+    sub:'أدخل كلمة المرور الجديدة لحسابك',
+    lblEmail:'البريد الإلكتروني',
+    lblPw:'كلمة المرور الجديدة',
+    lblPw2:'تأكيد كلمة المرور',
+    phPw:'8 أحرف على الأقل',
+    phPw2:'أعد كتابة كلمة المرور',
+    btn:'تغيير كلمة المرور ←',
+    back:'← رجوع لتسجيل الدخول',
+  },
+  en: {
+    title:'Reset Password — Wafra Gulf',
+    heading:'Reset Password',
+    sub:'Enter your new password below',
+    lblEmail:'Email Address',
+    lblPw:'New Password',
+    lblPw2:'Confirm Password',
+    phPw:'At least 8 characters',
+    phPw2:'Re-enter your password',
+    btn:'Reset Password →',
+    back:'← Back to Login',
+  }
+};
+function rstApplyLang() {
+  var lang = localStorage.getItem('wg_lang') || 'ar';
+  var t = RST[lang] || RST.ar;
+  var isEn = lang === 'en';
+  var html = document.getElementById('reset-html');
+  if (html) { html.setAttribute('lang', lang); html.setAttribute('dir', isEn ? 'ltr' : 'rtl'); }
+  document.title = t.title;
+  var _s = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+  var _p = function(id, v) { var el = document.getElementById(id); if (el) el.placeholder = v; };
+  _s('rst-title', t.heading);
+  _s('rst-sub', t.sub);
+  _s('rst-lbl-email', t.lblEmail);
+  _s('rst-lbl-pw', t.lblPw);
+  _s('rst-lbl-pw2', t.lblPw2);
+  _s('rst-btn', t.btn);
+  _s('rst-back', t.back);
+  var pw = document.getElementById('pw');
+  if (pw) pw.placeholder = t.phPw;
+  var pw2 = document.getElementById('pw2');
+  if (pw2) pw2.placeholder = t.phPw2;
+}
+rstApplyLang();
+
 function togglePw(id, btn) {
   const i = document.getElementById(id);
   i.type = i.type === 'password' ? 'text' : 'password';

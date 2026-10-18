@@ -12,9 +12,18 @@
 <title>{{ config('app.name', 'وفرة الخليجية') }} — @yield('title','لوحة المتابعة')</title>
 
 <!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = "'Tajawal', 'JetBrains Mono', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = '#6B849E';
+}
+</script>
 <!-- SheetJS (Excel import/export) -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <!-- jsPDF -->
@@ -436,13 +445,34 @@ html{font-size:16px}
 .user-role{font-size:11px!important;color:rgba(255,255,255,.6)!important}
 .logout-btn{font-size:14px!important;color:rgba(255,255,255,.5)!important}
 /* Topbar — always light text on dark topbar */
-.tb-title{font-size:17px!important;font-weight:800!important;color:rgba(255,255,255,.95)!important}
-.tb-sub{font-size:13px!important;color:rgba(255,255,255,.5)!important}
-.tb-logo{width:48px!important;height:48px!important}
-/* Header 1cm from top */
-.main-wrap{padding-top:10px!important}
-.topbar{top:10px!important;margin:0 10px;border-radius:14px!important}
-.tb-btn{font-size:13px!important;padding:8px 14px!important}
+.tb-title{font-size:18px!important;font-weight:800!important;color:rgba(255,255,255,.98)!important}
+.tb-sub{font-size:12px!important;color:rgba(255,255,255,.5)!important}
+.tb-logo{width:52px!important;height:52px!important;border-radius:14px!important}
+/* Header ~1cm (38px) from top — wider, more beautiful */
+.main-wrap{padding-top:14px!important}
+.topbar{
+  top:14px!important;
+  margin:0 14px!important;
+  border-radius:16px!important;
+  height:62px!important;
+  background:linear-gradient(135deg,rgba(10,22,40,.97) 0%,rgba(14,32,56,.97) 60%,rgba(8,28,50,.97) 100%)!important;
+  border:1px solid rgba(26,173,186,.22)!important;
+  border-bottom:1px solid rgba(26,173,186,.18)!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.45),0 2px 0 rgba(26,173,186,.15),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  backdrop-filter:blur(20px)!important;
+  -webkit-backdrop-filter:blur(20px)!important;
+  padding:0 22px!important;
+}
+.tb-btn{font-size:13px!important;padding:8px 14px!important;border-radius:9px!important}
+.tb-btn.success{
+  background:rgba(34,201,122,.12)!important;
+  border:1px solid rgba(34,201,122,.3)!important;
+  color:var(--gr)!important;
+}
+.tb-btn:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 4px 12px rgba(26,173,186,.2)!important;
+}
 /* KPI */
 .kpi-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important;font-weight:700!important;margin-bottom:8px!important}
 .kpi-value{font-size:1.8rem!important;font-weight:900!important}
@@ -516,6 +546,32 @@ html{font-size:16px}
 }
 .lang-toggle-btn:hover{background:rgba(26,173,186,.22);border-color:var(--pri2)}
 .lang-toggle-btn .lang-flag{font-size:15px}
+
+/* Notification Bell */
+.notif-bell-wrap{position:relative;display:inline-block}
+.notif-bell{background:rgba(123,104,238,.1);border:1px solid rgba(123,104,238,.3);border-radius:8px;padding:6px 10px;font-size:16px;cursor:pointer;color:#7b68ee;transition:all .18s;position:relative;line-height:1}
+.notif-bell:hover{background:rgba(123,104,238,.22);border-color:#7b68ee}
+.notif-bell .notif-dot{position:absolute;top:-4px;right:-4px;background:#e04848;color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:800;min-width:16px;text-align:center;border:2px solid var(--card-bg);display:none}
+.notif-bell .notif-dot.show{display:inline-block}
+.notif-panel{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:380px;max-width:92vw;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.25);z-index:1000;display:none;overflow:hidden;max-height:70vh}
+.notif-panel.open{display:flex;flex-direction:column}
+.notif-panel-header{padding:12px 16px;border-bottom:1px solid var(--brd1);display:flex;justify-content:space-between;align-items:center;background:var(--bg2)}
+.notif-panel-title{font-weight:800;font-size:13px}
+.notif-mark-all{font-size:11px;color:var(--pri2);background:none;border:none;cursor:pointer;font-weight:700;padding:4px 8px;border-radius:6px}
+.notif-mark-all:hover{background:rgba(26,173,186,.1)}
+.notif-list{overflow-y:auto;padding:6px 8px;flex:1}
+.notif-item{padding:10px 12px;border-radius:9px;margin:3px 0;cursor:pointer;transition:all .15s;border-left:3px solid transparent;text-decoration:none;color:inherit;display:block}
+.notif-item:hover{background:var(--bg2)}
+.notif-item.unread{background:rgba(123,104,238,.06);border-left-color:#7b68ee}
+.notif-item.unread:hover{background:rgba(123,104,238,.12)}
+.notif-item .n-msg{font-size:12px;line-height:1.4;color:var(--tx);margin-bottom:4px}
+.notif-item .n-meta{font-size:10px;color:var(--mu);display:flex;justify-content:space-between;align-items:center}
+.notif-item .n-type{display:inline-block;padding:1px 7px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase}
+.notif-item .n-type.card_sent{background:rgba(26,173,186,.15);color:#1AADBA}
+.notif-item .n-type.card_accepted{background:rgba(34,201,122,.15);color:var(--gr)}
+.notif-item .n-type.card_rejected{background:rgba(224,72,72,.15);color:var(--re)}
+.notif-item .n-type.card_completed{background:rgba(123,104,238,.15);color:#7b68ee}
+.notif-empty{text-align:center;padding:30px;color:var(--mu);font-size:12px}
 </style>
 
 @stack('styles')
@@ -547,6 +603,7 @@ html{font-size:16px}
       <a href="{{ route('cards.index') }}" class="nav-item {{ request()->routeIs('cards.*') ? 'active' : '' }}">
         <span>🗂</span> <span data-i18n="nav.cards">كروت العمولة</span>
         <span class="nav-badge" id="sb-cards-count">—</span>
+        <span class="nav-badge" id="sb-cards-review" style="display:none;background:#e04848;color:#fff;margin-inline-start:4px" title="كروت تحتاج مراجعة">⚠ 0</span>
       </a>
 
       <div class="nav-section" data-i18n="nav.sec.cc">📞 مركز الاتصال</div>
@@ -633,6 +690,20 @@ html{font-size:16px}
         @yield('topbar-actions')
         <a href="{{ route('cards.create') }}" class="tb-btn success">➕ <span data-i18n="btn.newcard">كرت جديد</span></a>
         <a href="{{ route('cards.edit-search') }}" class="tb-btn" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ <span data-i18n="btn.edit">تعديل</span></a>
+        <div class="notif-bell-wrap" id="notif-wrap">
+          <button class="notif-bell" onclick="toggleNotif(event)" id="notif-bell-btn" title="الإشعارات / Notifications">
+            🔔<span class="notif-dot" id="notif-dot">0</span>
+          </button>
+          <div class="notif-panel" id="notif-panel">
+            <div class="notif-panel-header">
+              <div class="notif-panel-title" id="notif-title">🔔 الإشعارات</div>
+              <button class="notif-mark-all" onclick="markAllNotif(event)" id="notif-mark-all-btn">قراءة الكل</button>
+            </div>
+            <div class="notif-list" id="notif-list">
+              <div class="notif-empty" id="notif-empty-msg">— لا توجد إشعارات —</div>
+            </div>
+          </div>
+        </div>
         <button class="lang-toggle-btn" onclick="toggleLang()" id="lang-btn" title="Switch Language / تغيير اللغة">
           <span class="lang-flag" id="lang-flag">🇬🇧</span><span id="lang-label">EN</span>
         </button>
@@ -763,8 +834,8 @@ const I18N = {
     'page.cc.pending': 'كروت CC الواردة',
     'page.guide':      'دليل التشغيل',
     /* Dashboard */
-    'dash.kpi.total':     'إجمالي الحسابات',
-    'dash.kpi.total.sub': 'سجل مسجّل',
+    'dash.kpi.total':     'إجمالي كروت العمولة',
+    'dash.kpi.total.sub': 'كرت مسجّل (حساب × شهر)',
     'dash.kpi.dep':       'إيداع فتح الحساب',
     'dash.kpi.dep.sub':   'إجمالي الإيداع الأولي',
     'dash.kpi.mon':       'الإيداع الشهري المتوقع',
@@ -856,8 +927,8 @@ const I18N = {
     'page.guide':      'User Guide',
     'role.viewer':     'Viewer 👁',
     /* Dashboard */
-    'dash.kpi.total':     'Total Accounts',
-    'dash.kpi.total.sub': 'Registered records',
+    'dash.kpi.total':     'Total Commission Cards',
+    'dash.kpi.total.sub': 'cards (account × month)',
     'dash.kpi.dep':       'Account Opening Deposit',
     'dash.kpi.dep.sub':   'Total initial deposit',
     'dash.kpi.mon':       'Expected Monthly Deposit',
@@ -917,6 +988,15 @@ function applyLang(lang) {
   /* Logout arrow direction */
   const logoutBtn = document.querySelector('.logout-btn');
   if (logoutBtn) logoutBtn.textContent = isEn ? '➡' : '⬅';
+
+  /* Notification bell texts */
+  const nt = document.getElementById('notif-title');
+  if (nt) nt.textContent = isEn ? '🔔 Notifications' : '🔔 الإشعارات';
+  const nma = document.getElementById('notif-mark-all-btn');
+  if (nma) nma.textContent = isEn ? 'Mark all read' : 'قراءة الكل';
+  const nem = document.getElementById('notif-empty-msg');
+  if (nem) nem.textContent = isEn ? '— No notifications —' : '— لا توجد إشعارات —';
+  if (typeof renderNotifications === 'function') renderNotifications();
 
   /* Save preference */
   localStorage.setItem('wg_lang', lang);
@@ -1049,16 +1129,40 @@ function toast(msg, type = 'success') {
   setTimeout(() => t.remove(), 3500);
 }
 
-// ── API Helper ─────────────────────────────────────────────
-async function api(method, url, body = null) {
+// ── CSRF token helpers ─────────────────────────────────────
+function getCsrfToken() {
+  const m = document.querySelector('meta[name="csrf-token"]');
+  return m ? m.content : '';
+}
+function setCsrfToken(t) {
+  const m = document.querySelector('meta[name="csrf-token"]');
+  if (m && t) m.content = t;
+}
+async function refreshCsrfToken() {
+  try {
+    const r = await fetch('/csrf-refresh', {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-store',
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    if (j && j.csrf_token) { setCsrfToken(j.csrf_token); return true; }
+  } catch (e) { /* fall through */ }
+  return false;
+}
+
+// ── API Helper (auto-retries on 419 CSRF expiry) ───────────
+async function api(method, url, body = null, _retried = false) {
   let res;
   try {
     res = await fetch(API + url, {
       method,
+      credentials: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'X-CSRF-TOKEN': getCsrfToken(),
         ...(API_TOKEN ? {'Authorization': 'Bearer ' + API_TOKEN} : {}),
       },
       body: body ? JSON.stringify(body) : null,
@@ -1070,12 +1174,21 @@ async function api(method, url, body = null) {
     window.location.href = '{{ route("auth.login") }}';
     return { success: false, message: 'غير مصرح.' };
   }
+  // 419 Page Expired → silently refresh CSRF and retry ONCE
+  if (res.status === 419 && !_retried) {
+    const ok = await refreshCsrfToken();
+    if (ok) return api(method, url, body, true);
+  }
   try {
     return await res.json();
   } catch (e) {
     return { success: false, message: 'خطأ في الخادم (' + res.status + ').' };
   }
 }
+
+// Keep the token warm — a lightweight ping every 30 minutes so pages
+// left open all day never hit 419 in the first place.
+setInterval(refreshCsrfToken, 30 * 60 * 1000);
 
 // ── Sidebar user info ──────────────────────────────────────
 function updateUserChip() {
@@ -1110,13 +1223,115 @@ function esc(s) {
 }
 
 // ── Helpers ────────────────────────────────────────────────
-const fmt = n => n > 0 ? Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
-const fmtK = n => {
+// NOTE: Use `function` declarations (NOT const/let). Lexical declarations at
+// the top of a classic <script> tag are scoped to THAT script only, so other
+// script tags on the page (like dashboard/index.blade.php's inline JS) cannot
+// see them and get "fmtK is not defined". Function declarations hoist to
+// the global object and ARE accessible across script tags.
+function fmt(n) {
+  return n > 0 ? Number(n).toLocaleString('en', {maximumFractionDigits:0}) : '—';
+}
+function fmtK(n) {
   if (!n || isNaN(n)) return '—';
-  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e6)  return (n/1e6).toFixed(1) + 'M';
   if (n >= 1000) return (n/1000).toFixed(0) + 'K';
   return Number(n).toLocaleString('en', {maximumFractionDigits:0});
-};
+}
+// Also expose on window for maximum safety (e.g. module script contexts)
+window.fmt = fmt;
+window.fmtK = fmtK;
+
+// ══ CC Notification Bell ═══════════════════════════════════
+let _notifData = [];
+let _notifUnread = 0;
+let _notifPollTimer = null;
+
+async function loadNotifications(opts) {
+  opts = opts || {};
+  try {
+    const r = await api('GET', '/cc/notifications');
+    if (!r || !r.success) return;
+    _notifData = r.data || [];
+    _notifUnread = r.unread_count || 0;
+    renderNotifications();
+  } catch(e) { /* silent — bell is best-effort */ }
+}
+function renderNotifications() {
+  const dot = document.getElementById('notif-dot');
+  const list = document.getElementById('notif-list');
+  const emptyMsg = document.getElementById('notif-empty-msg');
+  if (dot) {
+    if (_notifUnread > 0) { dot.textContent = _notifUnread > 99 ? '99+' : _notifUnread; dot.classList.add('show'); }
+    else dot.classList.remove('show');
+  }
+  if (!list) return;
+  if (!_notifData.length) {
+    list.innerHTML = '<div class="notif-empty">— ' + ((localStorage.getItem('wg_lang')||'ar')==='en'?'No notifications':'لا توجد إشعارات') + ' —</div>';
+    return;
+  }
+  const curL = localStorage.getItem('wg_lang')||'ar';
+  list.innerHTML = _notifData.map(n => {
+    const unreadCls = n.status === 'unread' ? ' unread' : '';
+    const ts = n.created_at ? new Date(n.created_at).toLocaleString(curL==='en'?'en-GB':'ar') : '';
+    const url = n.card_id ? '/callcenter/pending' : '/callcenter';
+    return `
+      <a class="notif-item${unreadCls}" href="${url}" onclick="markNotifRead(${n.id})">
+        <div class="n-msg">${n.message || '—'}</div>
+        <div class="n-meta">
+          <span class="n-type ${n.type||''}">${(n.type||'').replace('card_','').toUpperCase()}</span>
+          <span>${ts}</span>
+        </div>
+      </a>`;
+  }).join('');
+}
+function toggleNotif(e) {
+  if (e) e.stopPropagation();
+  const p = document.getElementById('notif-panel');
+  if (p) {
+    const willOpen = !p.classList.contains('open');
+    p.classList.toggle('open');
+    if (willOpen) loadNotifications();  // refresh on open
+  }
+}
+async function markNotifRead(id) {
+  try { await api('PUT', '/cc/notifications/' + id + '/read'); } catch(e){}
+  // decrement optimistically
+  const n = _notifData.find(x => x.id === id);
+  if (n && n.status === 'unread') { n.status = 'read'; _notifUnread = Math.max(0, _notifUnread-1); }
+  renderNotifications();
+}
+async function markAllNotif(e) {
+  if (e) e.stopPropagation();
+  try {
+    const r = await api('PUT', '/cc/notifications/read-all');
+    if (r && r.success) {
+      _notifData.forEach(n => n.status = 'read');
+      _notifUnread = 0;
+      renderNotifications();
+    }
+  } catch(err){}
+}
+// Close panel when clicking outside
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('notif-wrap');
+  const panel = document.getElementById('notif-panel');
+  if (!wrap || !panel) return;
+  if (!wrap.contains(e.target)) panel.classList.remove('open');
+});
+// Keep tabs on new notifications — poll every 45 s while the tab is visible.
+function _notifStartPoll() {
+  if (_notifPollTimer) return;
+  _notifPollTimer = setInterval(() => {
+    if (document.visibilityState === 'visible') loadNotifications();
+  }, 45000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadNotifications();
+});
+// Kick off once DOM is ready
+if (API_TOKEN) {
+  setTimeout(() => { loadNotifications(); _notifStartPoll(); }, 1200);
+}
 
 // ── Modal helpers ──────────────────────────────────────────
 function openModal(id){ document.getElementById(id)?.classList.add('open'); }
@@ -1322,6 +1537,25 @@ async function loadCcPendingCount() {
 // Load once on page ready, then refresh every 60s
 document.addEventListener('DOMContentLoaded', loadCcPendingCount);
 setInterval(loadCcPendingCount, 60000);
+
+// ── Cards needing review badge (over-limit or duplicate flags from import) ─
+async function loadCardsReviewCount() {
+  try {
+    const r = await api('GET', '/cards/needs-review?per_page=1');
+    if (!r?.success) return;
+    const badge = document.getElementById('sb-cards-review');
+    if (!badge) return;
+    const t = r?.summary?.total ?? r?.data?.total ?? 0;
+    if (t > 0) {
+      badge.textContent = '⚠ ' + t;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) { /* silent */ }
+}
+document.addEventListener('DOMContentLoaded', loadCardsReviewCount);
+setInterval(loadCardsReviewCount, 120000);
 </script>
 
 @stack('scripts')
