@@ -35,6 +35,12 @@
     <div class="kpi-sub" data-i18n="dash.kpi.new.sub">مضافة حديثاً</div>
     <div class="kpi-icon">🆕</div>
   </div>
+  <a href="/cards?filter=needs_review" class="kpi-card" style="background:linear-gradient(135deg,rgba(224,72,72,.08),rgba(224,72,72,.03));border:1px solid rgba(224,72,72,.3);text-decoration:none;color:inherit;cursor:pointer">
+    <div class="kpi-label" data-i18n="dash.kpi.rev" style="color:#e04848">تحتاج مراجعة</div>
+    <div class="kpi-value" id="kpi-rev" style="color:#e04848">—</div>
+    <div class="kpi-sub" data-i18n="dash.kpi.rev.sub">تجاوز 7$ أو مكرّر</div>
+    <div class="kpi-icon">⚠️</div>
+  </a>
 </div>
 
 <!-- Branches Chart -->
@@ -124,6 +130,49 @@
         </tr></thead>
         <tbody id="modifications-tb"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+<!-- Needs Review: Duplicates + Over-$7 -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="sgd">
+  <div class="panel" style="margin-bottom:0;border:1px solid rgba(224,72,72,.25)">
+    <div class="panel-header" style="background:linear-gradient(135deg,rgba(224,72,72,.08),transparent)">
+      <div class="panel-title" data-i18n="dash.rev.over.title">⚠️ حسابات تجاوزت 7$ عمولة</div>
+      <span class="badge" id="rev-over-badge" style="background:rgba(224,72,72,.15);color:#e04848;border:1px solid rgba(224,72,72,.3);display:none">0</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr>
+          <th data-i18n="dash.th.acno">رقم الحساب</th>
+          <th data-i18n="dash.th.broker">البروكر</th>
+          <th data-i18n="dash.th.comm">عمولة</th>
+          <th data-i18n="dash.th.month">الشهر</th>
+        </tr></thead>
+        <tbody id="rev-over-tb"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 20px;border-top:1px solid var(--brd1)">
+      <a href="/cards?filter=needs_review" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" data-i18n="dash.rev.viewall">عرض الكل ←</a>
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:0;border:1px solid rgba(245,152,32,.25)">
+    <div class="panel-header" style="background:linear-gradient(135deg,rgba(245,152,32,.08),transparent)">
+      <div class="panel-title" data-i18n="dash.rev.dup.title">🔁 الحسابات المكررة</div>
+      <span class="badge" id="rev-dup-badge" style="background:rgba(245,152,32,.15);color:#f59820;border:1px solid rgba(245,152,32,.3);display:none">0</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr>
+          <th data-i18n="dash.th.acno">رقم الحساب</th>
+          <th data-i18n="dash.th.month">الشهر</th>
+          <th data-i18n="dash.th.branch">الفرع</th>
+          <th data-i18n="dash.th.broker">البروكر</th>
+        </tr></thead>
+        <tbody id="rev-dup-tb"></tbody>
+      </table>
+    </div>
+    <div style="padding:10px 20px;border-top:1px solid var(--brd1)">
+      <a href="/cards?filter=needs_review" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" data-i18n="dash.rev.viewall">عرض الكل ←</a>
     </div>
   </div>
 </div>
@@ -296,9 +345,75 @@ async function loadModifications() {
     </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">${d('noedit')}</td></tr>`;
 }
 
+// ── Needs Review (duplicates + over-limit) ──
+async function loadNeedsReview() {
+  const r = await api('GET', '/cards/needs-review?per_page=6');
+  if (!r.success) return;
+  const sum = r.summary || {};
+  const data = r.data?.data || [];
+
+  // KPI value
+  const kpiEl = document.getElementById('kpi-rev');
+  if (kpiEl) kpiEl.textContent = (sum.total ?? data.length ?? 0).toLocaleString('en');
+
+  const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
+  const esc_ = (typeof esc === 'function') ? esc : (s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+
+  // Over-$7
+  const overRows = data.filter(c => c.is_over_limit).slice(0, 6);
+  const overBadge = document.getElementById('rev-over-badge');
+  const overCount = sum.over_limit_count ?? overRows.length;
+  if (overBadge) {
+    if (overCount) { overBadge.textContent = overCount; overBadge.style.display = ''; }
+    else overBadge.style.display = 'none';
+  }
+  const overTB = document.getElementById('rev-over-tb');
+  if (overTB) {
+    if (!overRows.length) {
+      overTB.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${lang==='en'?'None':'لا يوجد'}</td></tr>`;
+    } else {
+      overTB.innerHTML = overRows.map(c => {
+        const tot = (parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
+        return `<tr>
+          <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc_(c.account_number)}</span></a></td>
+          <td style="font-size:12px">${esc_(c.broker?.name || '—')}</td>
+          <td class="mono" style="color:#e04848;font-weight:800">$${tot.toFixed(1)}</td>
+          <td style="color:var(--mu);font-size:11px">${esc_(c.month)}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // Duplicates
+  const dupRows = data.filter(c => c.is_duplicate).slice(0, 6);
+  const dupBadge = document.getElementById('rev-dup-badge');
+  const dupCount = sum.duplicate_count ?? dupRows.length;
+  if (dupBadge) {
+    if (dupCount) { dupBadge.textContent = dupCount; dupBadge.style.display = ''; }
+    else dupBadge.style.display = 'none';
+  }
+  const dupTB = document.getElementById('rev-dup-tb');
+  if (dupTB) {
+    if (!dupRows.length) {
+      dupTB.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${lang==='en'?'None':'لا يوجد'}</td></tr>`;
+    } else {
+      dupTB.innerHTML = dupRows.map(c => {
+        const brN = lang==='en' ? (c.branch?.name_en||c.branch?.name_ar||'—') : (c.branch?.name_ar||'—');
+        return `<tr>
+          <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc_(c.account_number)}</span></a></td>
+          <td style="color:var(--mu);font-size:11px">${esc_(c.month)}</td>
+          <td style="font-size:11px">${esc_(brN)}</td>
+          <td style="font-size:12px">${esc_(c.broker?.name || '—')}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+}
+
 loadDashboard();
 loadModifications();
 loadCcPending();
+loadNeedsReview();
 
 /* Re-render when language is toggled (re-runs fetches with new lang) */
 const _dashOrigApplyLang = window.applyLang;
@@ -308,6 +423,7 @@ window.applyLang = function(lang) {
   loadDashboard();
   loadCcPending();
   loadModifications();
+  loadNeedsReview();
 };
 </script>
 @endpush

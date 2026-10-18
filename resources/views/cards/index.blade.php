@@ -3,9 +3,9 @@
 @section('page-title', 'Commission Cards')
 
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'index'])
-<div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
+<div style="padding:24px">
 <style>
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
 .chip-new      {background:rgba(34,201,122,.12);color:#22c97a;border:1px solid rgba(34,201,122,.25)}
