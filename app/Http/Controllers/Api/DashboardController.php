@@ -112,8 +112,8 @@ class DashboardController extends Controller
                 DB::raw('SUM(monthly_deposit) as monthly')
             )
             ->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('month')
-            ->orderBy('month')
+            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m')"))
+            ->orderBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m')"))
             ->get();
 
         // ── Top Brokers (count + deposit) ─────────────────────

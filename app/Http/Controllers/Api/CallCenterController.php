@@ -697,8 +697,8 @@ class CallCenterController extends Controller
                 SUM(CASE WHEN cc_status='rejected'       THEN 1 ELSE 0 END) as rej")
             ->whereNotNull('month_date')
             ->where('month_date', '>=', now()->subMonths(24))
-            ->groupBy('ym')
-            ->orderBy('ym')
+            ->groupBy(DB::raw("DATE_FORMAT(month_date, '%Y-%m')"))
+            ->orderBy(DB::raw("DATE_FORMAT(month_date, '%Y-%m')"))
             ->get()
             ->map(fn($r) => [
                 'ym'        => $r->ym,
