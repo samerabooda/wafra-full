@@ -133,6 +133,7 @@
     </div>
   </div>
 </div>
+
 <!-- Needs Review: Duplicates + Over-$7 -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="sgd">
   <div class="panel" style="margin-bottom:0;border:1px solid rgba(224,72,72,.25)">
@@ -192,6 +193,7 @@ function d(key) {
       'nodata': 'لا توجد بيانات', 'nomkt': 'لا يوجد مسوّقون',
       'noedit': 'لا توجد تعديلات', 'nocc': 'لا توجد كروت CC معلّقة',
       'pending': ' معلّق', 'review': 'قيد المراجعة',
+      'empty_ok': 'لا يوجد',
     },
     en: {
       'total': 'Total: ', 'account': ' accounts',
@@ -199,231 +201,204 @@ function d(key) {
       'nodata': 'No data available', 'nomkt': 'No marketers found',
       'noedit': 'No modifications', 'nocc': 'No pending CC cards',
       'pending': ' pending', 'review': 'Under Review',
+      'empty_ok': 'None',
     },
   };
   const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
   return D[lang]?.[key] ?? D.ar[key] ?? key;
 }
 
+/* ──────────────────────────────────────────────────────────
+   ONE endpoint — /api/dashboard — serves every tile below.
+   Available to every authenticated user (FA, branch manager,
+   viewer) with no permission:* middleware. Branch-scoped
+   users get auto-filtered to their branch_id.
+   ────────────────────────────────────────────────────────── */
 async function loadDashboard() {
-  const r = await api('GET', '/cards/report');
-  if (!r.success) return;
-  const s = r.summary;
+  const r = await api('GET', '/dashboard');
+  if (!r || !r.success) {
+    const msg = r?.message || 'تعذّر تحميل لوحة المتابعة';
+    if (typeof toast === 'function') toast(msg, 'error');
+    return;
+  }
   const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
-  const locale = lang === 'en' ? 'en-US' : 'ar-EG';
+  const k    = r.kpis || {};
 
-  document.getElementById('kpi-total').textContent = r.count.toLocaleString('en');
-  document.getElementById('kpi-dep').textContent   = fmtK(s.total_initial_deposit);
-  document.getElementById('kpi-mon').textContent   = fmtK(s.total_monthly_deposit);
-  document.getElementById('kpi-mod').textContent   = s.modified_count;
-  document.getElementById('kpi-new').textContent   = s.new_added_count;
+  // ── KPIs ──
+  document.getElementById('kpi-total').textContent = Number(k.total_cards || 0).toLocaleString('en');
+  document.getElementById('kpi-dep').textContent   = fmtK(k.total_initial_dep);
+  document.getElementById('kpi-mon').textContent   = fmtK(k.total_monthly_dep);
+  document.getElementById('kpi-mod').textContent   = Number(k.modified_count || 0).toLocaleString('en');
+  document.getElementById('kpi-new').textContent   = Number(k.new_added_count || 0).toLocaleString('en');
+  document.getElementById('kpi-rev').textContent   = Number(k.needs_review_count || 0).toLocaleString('en');
 
-  document.getElementById('sb-cards-count').textContent = r.count;
-  if (document.getElementById('sb-mod-count'))
-    document.getElementById('sb-mod-count').textContent = s.modified_count;
+  const sbCards = document.getElementById('sb-cards-count');
+  if (sbCards) sbCards.textContent = Number(k.total_cards || 0).toLocaleString('en');
+  const sbMod = document.getElementById('sb-mod-count');
+  if (sbMod) sbMod.textContent = Number(k.modified_count || 0).toLocaleString('en');
 
-  const data = r.data || [];
-
-  // ── Per-branch count chart ──
-  const branchMap = {};
-  data.forEach(row => {
-    const name = (lang === 'en' ? row.branch?.name_en : row.branch?.name_ar)
-               || row.branch?.name_ar || row.branch?.name_en || d('unknown');
-    branchMap[name] = (branchMap[name] || 0) + 1;
-  });
-  const bLabels = Object.keys(branchMap).sort((a,b) => branchMap[b] - branchMap[a]);
-  const bVals   = bLabels.map(b => branchMap[b]);
-  const totalBr = bVals.reduce((a,v) => a+v, 0);
-  document.getElementById('branch-total-lbl').textContent = d('total') + totalBr.toLocaleString('en') + d('account');
+  // ── Branches chart ──
+  const branches = r.by_branch || [];
+  const bLabels  = branches.map(b => (lang === 'en' ? b.name_en : b.name_ar) || b.name_ar || b.name_en || d('unknown'));
+  const bVals    = branches.map(b => Number(b.count || 0));
+  const totalBr  = bVals.reduce((a,v) => a+v, 0);
+  const branchTotalEl = document.getElementById('branch-total-lbl');
+  if (branchTotalEl) branchTotalEl.textContent = d('total') + totalBr.toLocaleString('en') + d('account');
 
   if (branchChart) branchChart.destroy();
-  branchChart = new Chart(document.getElementById('chart-branches'), {
-    type: 'bar',
-    data: {
-      labels: bLabels,
-      datasets: [{
-        label: d('accounts'),
-        data: bVals,
-        backgroundColor: bLabels.map((_,i) => COLORS[i % COLORS.length] + 'CC'),
-        borderColor:     bLabels.map((_,i) => COLORS[i % COLORS.length]),
-        borderWidth: 2,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, indexAxis: bLabels.length > 6 ? 'y' : 'x',
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('en') + ' ' + d('account').trim() } }
+  const ctxB = document.getElementById('chart-branches');
+  if (ctxB) {
+    branchChart = new Chart(ctxB, {
+      type: 'bar',
+      data: {
+        labels: bLabels,
+        datasets: [{
+          label: d('accounts'),
+          data: bVals,
+          backgroundColor: bLabels.map((_,i) => COLORS[i % COLORS.length] + 'CC'),
+          borderColor:     bLabels.map((_,i) => COLORS[i % COLORS.length]),
+          borderWidth: 2,
+          borderRadius: 8,
+        }]
       },
-      scales: {
-        x: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'} },
-        y: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'}, beginAtZero:true }
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: bLabels.length > 6 ? 'y' : 'x',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('en') + ' ' + d('account').trim() } }
+        },
+        scales: {
+          x: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'} },
+          y: { ticks:{color:'#7AABCA',font:{size:12}}, grid:{color:'rgba(30,54,80,.5)'}, beginAtZero:true }
+        }
       }
-    }
-  });
+    });
+  }
+
+  const medals = ['🥇','🥈','🥉','4','5','6','7','8','9','10'];
 
   // ── Broker count table ──
-  const brokerCount = {};
-  data.forEach(row => {
-    const n = row.broker?.name || d('unknown');
-    brokerCount[n] = (brokerCount[n] || 0) + 1;
-  });
-  const sortedBrCnt = Object.entries(brokerCount).sort((a,b) => b[1] - a[1]).slice(0, 10);
-  const medals = ['🥇','🥈','🥉','4','5','6','7','8','9','10'];
-  document.getElementById('broker-cnt-tb').innerHTML = sortedBrCnt.map(([name,cnt],i) => `
-    <tr>
-      <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
-      <td style="font-weight:700">${esc(name)}</td>
-      <td class="mono c-teal" style="font-weight:800">${cnt.toLocaleString('en')}</td>
-    </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nodata')}</td></tr>`;
-
-  // ── Marketer count table ──
-  const mktMap = {};
-  data.forEach(row => {
-    if (row.marketer?.name) {
-      mktMap[row.marketer.name] = (mktMap[row.marketer.name] || 0) + 1;
-    }
-  });
-  const sortedMkt = Object.entries(mktMap).sort((a,b) => b[1] - a[1]).slice(0, 10);
-  document.getElementById('marketer-cnt-tb').innerHTML = sortedMkt.length
-    ? sortedMkt.map(([name,cnt],i) => `
+  const brokers = r.top_brokers || [];
+  const brkCntEl = document.getElementById('broker-cnt-tb');
+  if (brkCntEl) {
+    brkCntEl.innerHTML = brokers.length ? brokers.slice(0,10).map((x,i) => `
       <tr>
         <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
-        <td style="font-weight:700">${esc(name)}</td>
-        <td class="mono c-green" style="font-weight:800">${cnt.toLocaleString('en')}</td>
+        <td style="font-weight:700">${esc(x.name)}</td>
+        <td class="mono c-teal" style="font-weight:800">${Number(x.count||0).toLocaleString('en')}</td>
       </tr>`).join('')
-    : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nomkt')}</td></tr>`;
-
-  // ── Broker deposit table ──
-  const brokerDep = {};
-  data.forEach(row => {
-    const n = row.broker?.name || d('unknown');
-    brokerDep[n] = (brokerDep[n] || 0) + parseFloat(row.monthly_deposit || 0);
-  });
-  const sortedBrDep = Object.entries(brokerDep).sort((a,b) => b[1] - a[1]).slice(0, 10);
-  document.getElementById('broker-dep-tb').innerHTML = sortedBrDep.map(([name,dep],i) => `
-    <tr>
-      <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
-      <td style="font-weight:700">${esc(name)}</td>
-      <td class="mono c-green" style="font-weight:800">${fmtK(dep)}</td>
-    </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nodata')}</td></tr>`;
-}
-
-// ── CC Pending ──
-async function loadCcPending() {
-  const r = await api('GET', '/cc/pending');
-  if (!r.success) return;
-  const items = r.data?.data || r.items || [];
-  const count = r.count ?? items.length;
-  const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
-  if (count > 0) {
-    const badge = document.getElementById('cc-badge');
-    badge.textContent = count + d('pending');
-    badge.style.display = '';
+      : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nodata')}</td></tr>`;
   }
-  document.getElementById('cc-tb').innerHTML = items.slice(0, 6).map(cc => `
-    <tr>
-      <td><span class="ac-num">#${esc(String(cc.account_number || '—'))}</span></td>
-      <td><span class="badge badge-orange">${esc(cc.cc_status || d('review'))}</span></td>
-      <td style="color:var(--mu);font-size:13px">${cc.created_at ? new Date(cc.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-EG') : '—'}</td>
-    </tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nocc')}</td></tr>`;
-}
 
-// ── Modifications ──
-async function loadModifications() {
-  const r = await api('GET', '/cards/modifications');
-  if (!r.success) return;
-  const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
-  const rows = (r.data?.data || []).slice(0, 8);
-  document.getElementById('modifications-tb').innerHTML = rows.map(m => `
-    <tr>
-      <td><span class="ac-num">#${esc(String(m.account_number))}</span></td>
-      <td style="color:var(--or);font-size:13px">${esc(m.reason)}</td>
-      <td style="color:var(--mu)">${new Date(m.modified_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-EG')}</td>
-      <td style="color:var(--mu)">${esc(m.modified_by?.name || '—')}</td>
-    </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">${d('noedit')}</td></tr>`;
-}
+  // ── Marketer count table ──
+  const markters = r.top_marketers || [];
+  const mktEl = document.getElementById('marketer-cnt-tb');
+  if (mktEl) {
+    mktEl.innerHTML = markters.length ? markters.slice(0,10).map((x,i) => `
+      <tr>
+        <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
+        <td style="font-weight:700">${esc(x.name)}</td>
+        <td class="mono c-green" style="font-weight:800">${Number(x.count||0).toLocaleString('en')}</td>
+      </tr>`).join('')
+      : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nomkt')}</td></tr>`;
+  }
 
-// ── Needs Review (duplicates + over-limit) ──
-async function loadNeedsReview() {
-  const r = await api('GET', '/cards/needs-review?per_page=6');
-  if (!r.success) return;
-  const sum = r.summary || {};
-  const data = r.data?.data || [];
+  // ── CC Pending ──
+  const ccPending = r.cc_pending || [];
+  const ccCount   = Number(k.cc_pending_count || 0);
+  const ccBadge   = document.getElementById('cc-badge');
+  if (ccBadge) {
+    if (ccCount > 0) { ccBadge.textContent = ccCount + d('pending'); ccBadge.style.display = ''; }
+    else ccBadge.style.display = 'none';
+  }
+  const ccTB = document.getElementById('cc-tb');
+  if (ccTB) {
+    ccTB.innerHTML = ccPending.length ? ccPending.slice(0,6).map(c => `
+      <tr>
+        <td><span class="ac-num">#${esc(String(c.account_number || '—'))}</span></td>
+        <td><span class="badge badge-orange">${esc(c.cc_status || d('review'))}</span></td>
+        <td style="color:var(--mu);font-size:13px">${c.created_at ? new Date(c.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-EG') : '—'}</td>
+      </tr>`).join('')
+      : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nocc')}</td></tr>`;
+  }
 
-  // KPI value
-  const kpiEl = document.getElementById('kpi-rev');
-  if (kpiEl) kpiEl.textContent = (sum.total ?? data.length ?? 0).toLocaleString('en');
+  // ── Broker deposit table (reusing top_brokers sorted by deposit) ──
+  const brkDepSorted = brokers.slice().sort((a,b) => Number(b.monthly_deposit||0) - Number(a.monthly_deposit||0));
+  const brkDepEl = document.getElementById('broker-dep-tb');
+  if (brkDepEl) {
+    brkDepEl.innerHTML = brkDepSorted.length ? brkDepSorted.slice(0,10).map((x,i) => `
+      <tr>
+        <td style="font-size:16px;width:36px">${medals[i]||i+1}</td>
+        <td style="font-weight:700">${esc(x.name)}</td>
+        <td class="mono c-green" style="font-weight:800">${fmtK(x.monthly_deposit)}</td>
+      </tr>`).join('')
+      : `<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--mu)">${d('nodata')}</td></tr>`;
+  }
 
-  const lang = (typeof curLang !== 'undefined' ? curLang : 'ar');
-  const esc_ = (typeof esc === 'function') ? esc : (s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+  // ── Recent Modifications ──
+  const mods = r.recent_modifications || [];
+  const modEl = document.getElementById('modifications-tb');
+  if (modEl) {
+    modEl.innerHTML = mods.length ? mods.slice(0,8).map(m => `
+      <tr>
+        <td><span class="ac-num">#${esc(String(m.account_number))}</span></td>
+        <td style="color:var(--or);font-size:13px">${esc(m.reason)}</td>
+        <td style="color:var(--mu)">${m.modified_at ? new Date(m.modified_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'ar-EG') : '—'}</td>
+        <td style="color:var(--mu)">${esc(m.modified_by?.name || '—')}</td>
+      </tr>`).join('')
+      : `<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--mu)">${d('noedit')}</td></tr>`;
+  }
 
-  // Over-$7
-  const overRows = data.filter(c => c.is_over_limit).slice(0, 6);
+  // ── Over-$7 rows ──
+  const overRows = r.over_limit_rows || [];
   const overBadge = document.getElementById('rev-over-badge');
-  const overCount = sum.over_limit_count ?? overRows.length;
   if (overBadge) {
-    if (overCount) { overBadge.textContent = overCount; overBadge.style.display = ''; }
+    if (k.over_limit_count > 0) { overBadge.textContent = k.over_limit_count; overBadge.style.display = ''; }
     else overBadge.style.display = 'none';
   }
   const overTB = document.getElementById('rev-over-tb');
   if (overTB) {
-    if (!overRows.length) {
-      overTB.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${lang==='en'?'None':'لا يوجد'}</td></tr>`;
-    } else {
-      overTB.innerHTML = overRows.map(c => {
-        const tot = (parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
-        return `<tr>
-          <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc_(c.account_number)}</span></a></td>
-          <td style="font-size:12px">${esc_(c.broker?.name || '—')}</td>
-          <td class="mono" style="color:#e04848;font-weight:800">$${tot.toFixed(1)}</td>
-          <td style="color:var(--mu);font-size:11px">${esc_(c.month)}</td>
-        </tr>`;
-      }).join('');
-    }
+    overTB.innerHTML = overRows.length ? overRows.map(c => {
+      const tot = Number(c.broker_commission||0)+Number(c.marketer_commission||0)+Number(c.ext_commission1||0)+Number(c.ext_commission2||0);
+      return `<tr>
+        <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc(c.account_number)}</span></a></td>
+        <td style="font-size:12px">${esc(c.broker_name || '—')}</td>
+        <td class="mono" style="color:#e04848;font-weight:800">$${tot.toFixed(1)}</td>
+        <td style="color:var(--mu);font-size:11px">${esc(c.month)}</td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${d('empty_ok')}</td></tr>`;
   }
 
-  // Duplicates
-  const dupRows = data.filter(c => c.is_duplicate).slice(0, 6);
+  // ── Duplicate rows ──
+  const dupRows = r.duplicate_rows || [];
   const dupBadge = document.getElementById('rev-dup-badge');
-  const dupCount = sum.duplicate_count ?? dupRows.length;
   if (dupBadge) {
-    if (dupCount) { dupBadge.textContent = dupCount; dupBadge.style.display = ''; }
+    if (k.duplicate_count > 0) { dupBadge.textContent = k.duplicate_count; dupBadge.style.display = ''; }
     else dupBadge.style.display = 'none';
   }
   const dupTB = document.getElementById('rev-dup-tb');
   if (dupTB) {
-    if (!dupRows.length) {
-      dupTB.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${lang==='en'?'None':'لا يوجد'}</td></tr>`;
-    } else {
-      dupTB.innerHTML = dupRows.map(c => {
-        const brN = lang==='en' ? (c.branch?.name_en||c.branch?.name_ar||'—') : (c.branch?.name_ar||'—');
-        return `<tr>
-          <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc_(c.account_number)}</span></a></td>
-          <td style="color:var(--mu);font-size:11px">${esc_(c.month)}</td>
-          <td style="font-size:11px">${esc_(brN)}</td>
-          <td style="font-size:12px">${esc_(c.broker?.name || '—')}</td>
-        </tr>`;
-      }).join('');
-    }
+    dupTB.innerHTML = dupRows.length ? dupRows.map(c => {
+      const brN = lang==='en' ? (c.branch_name_en||c.branch_name_ar||'—') : (c.branch_name_ar||'—');
+      return `<tr>
+        <td><a href="/cards/${c.id}/edit" style="color:var(--pri2);text-decoration:none"><span class="ac-num">#${esc(c.account_number)}</span></a></td>
+        <td style="color:var(--mu);font-size:11px">${esc(c.month)}</td>
+        <td style="font-size:11px">${esc(brN)}</td>
+        <td style="font-size:12px">${esc(c.broker_name || '—')}</td>
+      </tr>`;
+    }).join('')
+    : `<tr><td colspan="4" style="text-align:center;padding:18px;color:var(--mu);font-size:12px">${d('empty_ok')}</td></tr>`;
   }
 }
 
 loadDashboard();
-loadModifications();
-loadCcPending();
-loadNeedsReview();
 
-/* Re-render when language is toggled (re-runs fetches with new lang) */
+/* Re-render when language is toggled */
 const _dashOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
   if (_dashOrigApplyLang) _dashOrigApplyLang(lang);
-  /* Re-render dynamic JS content with new language */
   loadDashboard();
-  loadCcPending();
-  loadModifications();
-  loadNeedsReview();
 };
 </script>
 @endpush
