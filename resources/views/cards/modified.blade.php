@@ -2,9 +2,9 @@
 @section('title','Modified Accounts')
 @section('page-title','Modified Accounts')
 @section('content')
-<div style="background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'modified'])
-<div style="padding:24px">
+<div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
 <div id="mod-info-bar" style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:11px;padding:11px 15px;margin-bottom:14px;font-size:12px;color:var(--or)">
   ✏️ <span id="mod-info-text">جميع الحسابات التي تم تعديلها — تظهر بتمييز <strong>أصفر</strong> في التقارير.</span>

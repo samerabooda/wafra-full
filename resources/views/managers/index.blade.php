@@ -748,4 +748,3 @@ async function deleteInvite(id, email) {
 
 init();
 </script>
-@endpush

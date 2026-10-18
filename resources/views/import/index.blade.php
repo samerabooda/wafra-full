@@ -161,8 +161,6 @@
       <div class="panel">
         <div class="panel-header"><div class="panel-title" id="imp-result-title">📊 نتيجة الاستيراد</div></div>
         <div id="import-summary-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;border-bottom:1px solid var(--brd1)"></div>
-        {{-- CTA to review queue: shown when any card is flagged (over-limit or duplicate) --}}
-        <div id="import-review-cta" style="display:none;padding:0 16px 6px"></div>
         <div id="import-errors-wrap" style="display:none;padding:16px">
           <div style="font-size:12px;font-weight:700;color:var(--re);margin-bottom:8px" id="imp-err-title">⚠️ الصفوف التي بها أخطاء:</div>
           <div style="overflow-x:auto;max-height:200px;overflow-y:auto">
@@ -306,52 +304,17 @@ function downloadTemplate() {
   const headers = ['AC No.','Broker','Broker Commission','Marketing','Marketing Commission',
     'Ext Marketer 1','Ext Commission 1','Ext Marketer 2','Ext Commission 2',
     'Month','Initial Deposit $','Monthly Deposit $','New Or Sub','Type'];
-
-  // Sample rows demonstrating all supported scenarios:
-  // Row 1: standard broker + internal marketer
-  // Row 2: broker + marketer + external marketer
-  // Row 3: broker only, no marketer (marketing column empty → Self)
-  // Row 4: broker + REFERRAL (number in Marketing column = referral account)
-  // Row 5: broker + marketer + REFERRAL in Ext Marketer 1 (number = referral)
-  // Row 6: fully empty broker/marketing (both → Self, self-serve account)
   const samples = [
     ['719750','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','Jan 2025','5000','12000','NEW','ECN'],
     ['720100','Samer Obeid','4','Fahad Al-Bloshi','3','Ali Hassan','1.5','','0','Jan 2025','3000','8000','NEW','STP'],
     ['718500','Ahmed Al-Sayed','4','','0','','0','','0','Feb 2025','10000','0','SUB','ECN'],
-    ['721000','Khalid Nasser','3','555999','1','','0','','0','Feb 2025','8000','20000','NEW','ECN'],
-    ['722500','Samer Obeid','4','Nada Khalil','2','444777','1','','0','Mar 2025','12000','25000','NEW','STP'],
-    ['723800','','0','','0','','0','','0','Mar 2025','5000','10000','NEW','ECN'],
+    ['721000','Khalid Nasser','3.5','Mariam Al-Azmi','2','','0','','0','Mar 2025','7500','15000','NEW','ECN'],
   ];
-
   const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
   ws['!cols'] = headers.map(() => ({wch:22}));
-
-  // Add a rules sheet to document the behavior
-  const rulesRows = [
-    ['📋 Wafra Gulf — Import Rules'],
-    [''],
-    ['1. Broker / Marketing / Ext Marketer columns accept two types:'],
-    ['   • Text (name)   → treated as employee (created if missing)'],
-    ['   • Number         → treated as REFERRAL account (max 1 per card)'],
-    [''],
-    ['2. Empty Broker or Marketing → replaced with "Self" employee.'],
-    [''],
-    ['3. Names match case-insensitively and ignore extra spaces.'],
-    ['   New employee names are auto-created in the target branch as approved.'],
-    [''],
-    ['4. Commission ceiling per card: $7 (broker + marketer + ext + referral).'],
-    ['   Cards over $7 are IMPORTED but flagged RED and listed in "Needs Review".'],
-    [''],
-    ['5. Duplicate account+month = imported, flagged RED, appears in Needs Review.'],
-    [''],
-    ['6. Unknown referral account numbers are accepted (stored as text).'],
-  ];
-  const rulesWs = XLSX.utils.aoa_to_sheet(rulesRows);
-  rulesWs['!cols'] = [{wch:80}];
-
+  // تلوين الرأس (لن يعمل في جميع الأجهزة لكن يحسّن الشكل)
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Cards Import');
-  XLSX.utils.book_append_sheet(wb, rulesWs, 'Rules');
   XLSX.writeFile(wb, 'wafra_import_template.xlsx');
   toast(imp('toastTemplate'),'success');
 }
@@ -379,8 +342,6 @@ function readFile(file) {
     document.getElementById('import-filename').textContent = '📄 ' + file.name;
     document.getElementById('import-info').textContent     = importRows.length + (impL()==='en'?' records':' سجل');
     document.getElementById('import-details').style.display = 'none';
-    const _rev = document.getElementById('import-review-cta');
-    if (_rev) { _rev.style.display = 'none'; _rev.innerHTML = ''; }
 
     document.getElementById('import-thead').innerHTML =
       '<tr>' + header.map(h => `<th>${h || ''}</th>`).join('') + '</tr>';
@@ -467,36 +428,15 @@ function showImportDetails(result) {
   // بطاقات الإحصاء
   const grid = document.getElementById('import-summary-grid');
   grid.innerHTML = [
-    { labelKey:'summaryTotal',   val: result.total       || 0, color:'var(--pri2)' },
-    { labelKey:'summaryNew',     val: result.imported    || 0, color:'var(--gr)'   },
-    { labelKey:'summaryUpdated', val: result.updated     || 0, color:'var(--or)'   },
-    { labelKey:'summaryFailed',  val: result.failed      || 0, color:'var(--re)'   },
-    { label:'⚠ تجاوز $7',        val: result.over_limit  || 0, color:'#E04848'     },
-    { label:'🔁 مكرر',            val: result.duplicates  || 0, color:'#F59820'     },
-    { label:'👤 موظفون جدد',      val: result.auto_created|| 0, color:'#37A0CC'     },
+    { labelKey:'summaryTotal',   val: result.total   || 0, color:'var(--pri2)' },
+    { labelKey:'summaryNew',     val: result.imported || 0, color:'var(--gr)'   },
+    { labelKey:'summaryUpdated', val: result.updated  || 0, color:'var(--or)'   },
+    { labelKey:'summaryFailed',  val: result.failed   || 0, color:'var(--re)'   },
   ].map(k => `
     <div style="background:var(--bg4);border-radius:10px;padding:14px;text-align:center;border:1px solid var(--brd1)">
-      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${k.labelKey ? imp(k.labelKey) : k.label}</div>
+      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${imp(k.labelKey)}</div>
       <div style="font-size:1.8rem;font-weight:900;color:${k.color}">${k.val}</div>
     </div>`).join('');
-
-  // Link to review queue if any cards need review
-  if ((result.over_limit || 0) + (result.duplicates || 0) > 0) {
-    const reviewBox = document.getElementById('import-review-cta');
-    if (reviewBox) {
-      reviewBox.style.display = 'block';
-      reviewBox.innerHTML = `
-        <div style="padding:14px 16px;background:rgba(224,72,72,.08);border:1px solid rgba(224,72,72,.25);border-radius:10px;margin-top:12px">
-          <div style="font-size:13px;font-weight:700;color:#E04848;margin-bottom:6px">
-            ⚠ ${(result.over_limit||0) + (result.duplicates||0)} كرت يحتاج مراجعة
-          </div>
-          <div style="font-size:11px;color:var(--mu);margin-bottom:10px">
-            تجاوز حد $7 أو تكرار في رقم الحساب — راجعها في جدول "كروت تحتاج مراجعة"
-          </div>
-          <a href="/cards?filter=needs_review" class="btn btn-sm" style="background:var(--re);color:white">📋 عرض الكروت</a>
-        </div>`;
-    }
-  }
 
   // جدول الأخطاء
   const errWrap = document.getElementById('import-errors-wrap');
@@ -523,8 +463,6 @@ function cancelImport() {
   document.getElementById('drop-zone').style.display       = 'block';
   document.getElementById('import-progress').style.display = 'none';
   document.getElementById('import-bar').style.width = '0';
-  const rev = document.getElementById('import-review-cta');
-  if (rev) { rev.style.display = 'none'; rev.innerHTML = ''; }
   importRows = [];
   document.getElementById('file-inp').value = '';
   const badge = document.getElementById('import-branch-badge');
