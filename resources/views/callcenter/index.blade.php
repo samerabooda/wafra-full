@@ -70,6 +70,40 @@
 .nc-cal-m{padding:10px 0;border-radius:9px;border:1px solid var(--brd1);background:var(--bg3);color:var(--tx);font-weight:700;font-size:12.5px;cursor:pointer;transition:all .12s}
 .nc-cal-m:hover{border-color:var(--pri);color:var(--pri2)}
 .nc-cal-m.on{background:linear-gradient(135deg,#1AADBA,#0E7A88);color:#fff;border-color:transparent}
+
+/* ── Excel-style per-column sort + filter (mirror of /cards/list) ── */
+.cc-cards-table thead th.kh{cursor:pointer;user-select:none;position:relative}
+.cc-cards-table thead th.kh:hover{background:rgba(123,104,238,.08)}
+.cc-cards-table thead th.kh.srt{color:#a898ff}
+.cc-cards-table thead th.kh.flt{background:rgba(123,104,238,.12)}
+.cc-cards-table thead th.kh .ar{display:inline-block;font-size:9px;margin:0 3px;color:#a898ff}
+.cc-cards-table thead th.kh .kh-fn{display:inline-block;font-size:10px;opacity:.6;margin-inline-start:3px}
+.cc-cards-table thead th.kh.flt .kh-fn{opacity:1;color:#a898ff}
+.k-fmenu{display:none;position:fixed;width:260px;max-height:420px;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:11px;box-shadow:0 14px 42px rgba(0,0,0,.42);padding:9px;z-index:9000;overflow:hidden;font-family:'Tajawal',sans-serif}
+.kfm-srt{display:flex;gap:6px;margin-bottom:7px}
+.kfm-srt button{flex:1;padding:5px 7px;border-radius:7px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx);font-size:11px;font-weight:700;cursor:pointer}
+.kfm-srt button:hover{border-color:#7b68ee;color:#a898ff}
+.kfm-srch{width:100%;margin-bottom:7px;padding:6px 9px;font-size:12px}
+.kfm-it{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:11.5px}
+.kfm-it:hover{background:rgba(123,104,238,.08)}
+.kfm-it input{margin:0;flex-shrink:0}
+.kfm-it span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kfm-all{border-bottom:1px solid var(--brd1);padding-bottom:7px;margin-bottom:4px;font-weight:800}
+.kfm-list{max-height:220px;overflow-y:auto;margin-bottom:7px;padding-inline-end:3px}
+.kfm-list::-webkit-scrollbar{width:6px}
+.kfm-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+.kfm-note{color:var(--mu);font-size:10px;padding:5px;text-align:center}
+.kfm-act{display:flex;gap:6px;padding-top:7px;border-top:1px solid var(--brd1)}
+.kfm-ok,.kfm-cl{flex:1;padding:7px;border-radius:7px;border:0;font-weight:800;font-size:11.5px;cursor:pointer}
+.kfm-ok{background:linear-gradient(135deg,#7b68ee,#5f4bc4);color:#fff}
+.kfm-ok:hover{filter:brightness(1.08)}
+.kfm-cl{background:var(--bg3);color:var(--mu);border:1px solid var(--brd2)}
+.kfm-cl:hover{color:var(--re);border-color:rgba(224,80,80,.3)}
+.k-spin{display:inline-block;width:16px;height:16px;border:2px solid var(--brd2);border-top-color:#7b68ee;border-radius:50%;animation:kspin .8s linear infinite}
+@keyframes kspin{to{transform:rotate(360deg)}}
+.cc-clear-flt{padding:5px 12px;border-radius:16px;border:1px solid rgba(224,80,80,.3);background:none;color:var(--re);font-size:11px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;display:none;margin-inline-start:8px}
+.cc-clear-flt.on{display:inline-block}
+.cc-clear-flt:hover{background:rgba(224,80,80,.1)}
 </style>
 @endpush
 
@@ -134,6 +168,7 @@
       </div>
 
       <div class="cc-status-chips" id="cc-filter-chips"></div>
+      <button class="cc-clear-flt" id="cc-clear-filters" onclick="cckClearAll()">↺ <span id="cc-clear-l">مسح الفرز والتصفية</span></button>
 
       <div class="panel">
         <div class="panel-header">
@@ -447,8 +482,13 @@ const CCT = {
     acc_tbl_title:'قائمة كروت CC',
     sf_all:'الكل', sf_draft:'📝 مسودة', sf_sent:'📩 أُرسل للفرع',
     sf_acc:'✅ مقبول', sf_comp:'🏁 مكتمل', sf_rej:'❌ مرفوض',
-    th_acnum:'رقم الحساب', th_month:'الشهر', th_branch:'الفرع المستهدف',
-    th_agent:'موظف CC', th_type:'النوع', th_status:'الحالة', th_act:'الإجراء',
+    th_id:'رقم الكرت', th_acnum:'رقم الحساب', th_phone:'📱 هاتف العميل', th_month:'الشهر',
+    th_mgr:'مديرة CC', th_mgr_c:'عمولة المديرة', th_agent:'موظف CC', th_agent_c:'عمولة الموظف',
+    th_branch:'الفرع المستهدف', th_dep:'الإيداع المتوقع',
+    th_type:'النوع', th_status:'الحالة', th_act:'الإجراء',
+    kfm_asc:'تصاعدي', kfm_desc:'تنازلي', kfm_srch:'بحث…', kfm_all:'تحديد الكل',
+    kfm_apply:'تطبيق', kfm_clear:'مسح', kfm_blank:'(فارغ)', kfm_na:'(—)',
+    clear_flt:'↺ مسح الفرز والتصفية',
     loading:'جاري التحميل...', empty:'لا توجد كروت',
     btn_send:'📤 إرسال للفرع', btn_resend:'🔁 إعادة إرسال', btn_send_now:'📤 إرسال الآن للفرع', btn_send_later:'لاحقًا',
     status_wait_branch:'⏳ بانتظار الفرع', status_completing:'🔄 يستكمل البيانات',
@@ -509,8 +549,13 @@ const CCT = {
     acc_tbl_title:'CC Cards List',
     sf_all:'All', sf_draft:'📝 Draft', sf_sent:'📩 Sent to Branch',
     sf_acc:'✅ Accepted', sf_comp:'🏁 Completed', sf_rej:'❌ Rejected',
-    th_acnum:'Account #', th_month:'Month', th_branch:'Target Branch',
-    th_agent:'CC Agent', th_type:'Type', th_status:'Status', th_act:'Action',
+    th_id:'Card #', th_acnum:'Account #', th_phone:'📱 Client Phone', th_month:'Month',
+    th_mgr:'CC Manager', th_mgr_c:'Mgr Comm.', th_agent:'CC Agent', th_agent_c:'Agent Comm.',
+    th_branch:'Target Branch', th_dep:'Expected Deposit',
+    th_type:'Type', th_status:'Status', th_act:'Action',
+    kfm_asc:'Ascending', kfm_desc:'Descending', kfm_srch:'Search…', kfm_all:'Select all',
+    kfm_apply:'Apply', kfm_clear:'Clear', kfm_blank:'(blank)', kfm_na:'(—)',
+    clear_flt:'↺ Clear sort & filters',
     loading:'Loading...', empty:'No cards found',
     btn_send:'📤 Send to Branch', btn_resend:'🔁 Resend', btn_send_now:'📤 Send to Branch now', btn_send_later:'Later',
     status_wait_branch:'⏳ Awaiting Branch', status_completing:'🔄 Branch completing',
@@ -636,10 +681,28 @@ window.applyLang = function(lang) {
 
 /* ─── State ──────────────────────────────────────────────── */
 let _ccAllCards   = [];
-let _ccFilter     = '';   // active status filter for accounts section
+let _ccFilter     = '';   // active status filter for accounts section (quick chip)
 let _ccSection    = 'accounts';
 let _ccStatusChart = null;
 let _ccMonChart   = null;
+
+/* ─── Per-column sort + filter state (same pattern as /cards/list) ─ */
+/* [key, labelKey, sortable, filterable] — labelKey is a cc('…') dictionary key */
+var CCCOLS = [
+  ['id',                    'th_id',       1, 0],
+  ['account_number',        'th_acnum',    1, 1],
+  ['client_phone',          'th_phone',    1, 1],
+  ['month',                 'th_month',    1, 1],
+  ['cc_manager_name',       'th_mgr',      1, 1],
+  ['cc_manager_commission', 'th_mgr_c',    1, 0],
+  ['cc_agent_name',         'th_agent',    1, 1],
+  ['cc_agent_commission',   'th_agent_c',  1, 0],
+  ['branch_name',           'th_branch',   1, 1],
+  ['initial_deposit',       'th_dep',      1, 0],
+  ['cc_status',             'th_status',   1, 1],
+  ['_act',                  'th_act',      0, 0],
+];
+var CCSK='id',CCSD='desc',CFV={},KFCOL=null,KFITEMS=[],KFWORK=null,KFSEARCH='';
 
 /* ─── Nav ────────────────────────────────────────────────── */
 function ccShowSection(name) {
@@ -699,20 +762,113 @@ function buildFilterChips() {
 }
 function setFilter(v) { _ccFilter = v; buildFilterChips(); ccRenderAccounts(); }
 
+/* ─── Row-value extractors used by sort/filter (keep raw + display apart) ─ */
+function ccRowAgentName(c){ return c.cc_agent?.name ?? c.ccAgent?.name ?? ''; }
+function ccRowBranchName(c){ return (ccL()==='en' ? (c.branch?.name_en||c.branch?.name_ar) : (c.branch?.name_ar||c.branch?.name_en)) || ''; }
+function ccRowPhone(c){ return ((c.client_country_code||'')+' '+(c.client_phone||'')).trim(); }
+function ccRowStatus(c){ return c.cc_status||''; }
+/* raw value for sort/filter — strings get lowercased in sort compare */
+function ccRowValue(c, col){
+  switch(col){
+    case 'id':                    return Number(c.id)||0;
+    case 'account_number':        return c.account_number || '';
+    case 'client_phone':          return ccRowPhone(c);
+    case 'month':                 return c.month_date || c.month || '';
+    case 'cc_manager_name':       return c.cc_manager_name || '';
+    case 'cc_manager_commission': return Number(c.cc_manager_commission)||0;
+    case 'cc_agent_name':         return ccRowAgentName(c);
+    case 'cc_agent_commission':   return Number(c.cc_agent_commission)||0;
+    case 'branch_name':           return ccRowBranchName(c);
+    case 'initial_deposit':       return Number(c.initial_deposit)||0;
+    case 'cc_status':             return ccRowStatus(c);
+    default:                      return '';
+  }
+}
+/* label used in the filter dropdown — human-readable, same for id/raw */
+function ccRowLabel(c, col){
+  const v = ccRowValue(c, col);
+  if (col === 'cc_status') {
+    const map = {
+      cc_pending:cc('sf_draft'), branch_pending:cc('sf_sent'), accepted:cc('sf_acc'),
+      in_progress:'🔄 قيد المتابعة', completed:cc('sf_comp'), rejected:cc('sf_rej'),
+      declined:'🚫 رفض العميل',
+    };
+    return map[v] || v || cc('kfm_blank');
+  }
+  if (col === 'cc_manager_commission' || col === 'cc_agent_commission' || col === 'initial_deposit')
+    return Number(v).toFixed(2);
+  if (col === 'id') return '#'+v;
+  return (v==='' || v==null) ? cc('kfm_blank') : String(v);
+}
+
+/* ─── Sort/filter engine ───────────────────────────────────── */
+function ccSortCompare(a, b, col){
+  const va = ccRowValue(a, col), vb = ccRowValue(b, col);
+  if (typeof va === 'number' && typeof vb === 'number') return va - vb;
+  return String(va).toLowerCase().localeCompare(String(vb).toLowerCase(), undefined, {numeric:true});
+}
+function ccApplyFilters(rows){
+  // 1) Status chip filter (preserved for quick-click UX)
+  if (_ccFilter) rows = rows.filter(c => c.cc_status === _ccFilter);
+  // 2) Per-column filter values
+  for (const col in CFV) {
+    const sel = CFV[col];
+    if (!sel || !sel.length) continue;
+    if (sel.length === 1 && sel[0] === '__none__') { rows = []; break; }
+    const set = new Set(sel.map(String));
+    rows = rows.filter(c => {
+      const v = ccRowValue(c, col);
+      const key = (v==='' || v==null) ? '__blank__' : String(v);
+      return set.has(key);
+    });
+  }
+  // 3) Sort
+  if (CCSK) {
+    rows = rows.slice().sort((a,b) => {
+      const d = ccSortCompare(a, b, CCSK);
+      return CCSD === 'asc' ? d : -d;
+    });
+  }
+  return rows;
+}
+function ccHasActiveFilter(){
+  if (_ccFilter) return true;
+  for (const k in CFV) if (CFV[k] && CFV[k].length) return true;
+  return !(CCSK === 'id' && CCSD === 'desc');
+}
+
 /* ─── ACCOUNTS RENDER ────────────────────────────────────── */
 function ccRenderAccounts() {
-  const en = (typeof curLang!=='undefined' && curLang==='en');
-  const L = en
-    ? ['ID','Account #','Client Phone','Open Month','CC Manager','Mgr Comm.','CC Agent','Agent Comm.','Target Branch','Expected Deposit','Status','Action']
-    : ['رقم الكرت','رقم الحساب','📱 هاتف العميل','شهر فتح الحساب','مديرة مركز الاتصال','عمولة المديرة','موظف الكول سنتر','عمولة الموظف','الفرع المُرسل له','الإيداع المتوقع','الحالة','الإجراء'];
   const thead = document.getElementById('cc-thead');
-  if (thead) thead.innerHTML = '<tr>' + L.map((h,i)=>`<th class="${i>=9&&i<=10?'cc-th-c':''}">${h}</th>`).join('') + '</tr>';
-
+  if (thead) {
+    thead.innerHTML = '<tr>' + CCCOLS.map(function(c){
+      const key=c[0], lk=c[1], sortable=c[2], filterable=c[3];
+      const label = cc(lk) || lk;
+      if (!sortable) return '<th>'+label+'</th>';
+      const sorted  = CCSK===key;
+      const filtered= !!(CFV[key] && CFV[key].length);
+      const arrow   = sorted ? (CCSD==='asc'?'▲':'▼') : '';
+      const funnel  = filtered ? '🔽' : (filterable ? '▾' : '');
+      return '<th class="kh'+(sorted?' srt':'')+(filtered?' flt':'')+'" '
+        + 'title="'+(ccL()==='en'?'Sort &amp; filter':'فرز وتصفية')+'" '
+        + 'onclick="cckMenu(event,\''+key+'\','+(filterable?1:0)+')">'
+        + '<span>'+label+'</span>'
+        + (arrow?' <span class="ar">'+arrow+'</span>':'')
+        + (funnel?' <span class="kh-fn">'+funnel+'</span>':'')
+        + '</th>';
+    }).join('') + '</tr>';
+  }
   const src = _ccAllCards || [];
-  const filtered = _ccFilter ? src.filter(c => c.cc_status === _ccFilter) : src;
-  const tbody    = document.getElementById('cc-tbody'); if (!tbody) return;
+  const filtered = ccApplyFilters(src);
+  // Toggle the "clear" button next to chips
+  const cl = document.getElementById('cc-clear-filters');
+  if (cl) cl.classList.toggle('on', ccHasActiveFilter());
+  const cll = document.getElementById('cc-clear-l');
+  if (cll) cll.textContent = cc('clear_flt').replace(/^↺\s*/,'');
+
+  const tbody = document.getElementById('cc-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--mu)">${cc('empty')}</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--mu)">'+cc('empty')+'</td></tr>';
     return;
   }
   const money = v => (v!=null && v!=='' && !isNaN(v) && Number(v)>0) ? '$'+Number(v).toLocaleString('en') : '<span style="color:var(--brd2)">—</span>';
@@ -749,6 +905,137 @@ function ccActionButtons(c) {
   const del = `<button class="btn btn-ghost btn-sm" title="حذف / Delete" onclick="ccDeleteCard(${c.id})" style="padding:4px 8px;color:var(--re);border-color:rgba(224,80,80,.3)">🗑</button>`;
   return `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${main}${edit}${del}</div>`;
 }
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Excel-style sort + filter dropdown — mirrors /cards/list    */
+/* ──────────────────────────────────────────────────────────── */
+function cckEnsureMenu(){
+  var m = document.getElementById('cck-fmenu');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'cck-fmenu'; m.className = 'k-fmenu';
+    document.body.appendChild(m);
+    document.addEventListener('click', function(ev){
+      if (m.style.display==='block' && !m.contains(ev.target)) m.style.display='none';
+    });
+    window.addEventListener('resize', function(){ m.style.display='none'; });
+  }
+  return m;
+}
+function cckPosition(anchor){
+  var m = document.getElementById('cck-fmenu'); if (!m || !anchor) return;
+  var r = anchor.getBoundingClientRect(), w = m.offsetWidth||260;
+  var isRtl = (document.documentElement.getAttribute('dir')||'').toLowerCase()==='rtl'
+    || (document.body && getComputedStyle(document.body).direction==='rtl');
+  var left = isRtl ? Math.max(8, r.left) : Math.min(Math.max(8, r.right-w), window.innerWidth-w-8);
+  left = Math.max(8, Math.min(left, window.innerWidth-w-8));
+  var top = Math.min(r.bottom+4, window.innerHeight-(m.offsetHeight||300)-8);
+  m.style.left = left+'px'; m.style.top = Math.max(8, top)+'px';
+}
+
+/* Open the menu for a column — ev: click event, col: column key, filterable: 1/0 */
+window.cckMenu = function(ev, col, filterable){
+  ev.stopPropagation();
+  KFCOL = col; KFSEARCH = ''; KFITEMS = []; KFWORK = new Set();
+  var anchor = ev.currentTarget;
+  cckEnsureMenu();
+  var m = document.getElementById('cck-fmenu');
+  // Build items from the IN-MEMORY data (status chip + non-column filters still apply to the source)
+  // but when a user is filtering several columns, we want each dropdown to reflect the LATEST data
+  // after OTHER columns' filters — so build items from "all except this column".
+  var _save = CFV[col]; delete CFV[col];
+  var _savedFilter = _ccFilter;              // keep status chip; it's a soft overlay
+  var src = _ccAllCards || [];
+  // We DO respect the status chip, so the user can "filter inside this status".
+  var pool = ccApplyFilters(src);
+  if (_save) CFV[col] = _save;
+
+  // Distinct values with labels, limited pool is already filtered
+  var seen = {}, items = [];
+  pool.forEach(function(c){
+    var v = ccRowValue(c, col);
+    var key = (v==='' || v==null) ? '__blank__' : String(v);
+    if (seen[key]) return; seen[key]=1;
+    items.push({ v:key, label: ccRowLabel(c, col) });
+  });
+  // Sort items: numeric columns by value, others by label
+  var numericCols = {cc_manager_commission:1,cc_agent_commission:1,initial_deposit:1,id:1};
+  if (numericCols[col]) items.sort(function(a,b){ return (parseFloat(a.v)||0)-(parseFloat(b.v)||0); });
+  else items.sort(function(a,b){ return String(a.label).localeCompare(String(b.label), undefined, {numeric:true}); });
+
+  KFITEMS = items;
+  var sel = CFV[col] ? new Set(CFV[col].map(String)) : null;
+  KFWORK = new Set();
+  KFITEMS.forEach(function(it){ if (!sel || sel.has(String(it.v))) KFWORK.add(String(it.v)); });
+
+  if (filterable) {
+    cckBuildShell(/*withList=*/true);
+    cckRenderList();
+  } else {
+    // Sort-only menu (no value list)
+    cckBuildShell(/*withList=*/false);
+  }
+  m.style.display = 'block';
+  cckPosition(anchor);
+};
+function cckBuildShell(withList){
+  var m = document.getElementById('cck-fmenu');
+  var h = '<div class="kfm-srt">'
+        + '<button type="button" onclick="cckMenuSort(\'asc\')">▲ '+cc('kfm_asc')+'</button>'
+        + '<button type="button" onclick="cckMenuSort(\'desc\')">▼ '+cc('kfm_desc')+'</button></div>';
+  if (withList) {
+    h += '<input class="kfm-srch form-control" placeholder="'+cc('kfm_srch')+'" oninput="cckMenuSearch(this.value)">'
+      + '<label class="kfm-it kfm-all"><input type="checkbox" id="cck-allck" onchange="cckMenuAll(this.checked)"> <b>'+cc('kfm_all')+'</b> <span id="cck-cnt" style="color:var(--mu);font-weight:600"></span></label>'
+      + '<div class="kfm-list" id="cck-list"></div>'
+      + '<div class="kfm-act">'
+      +   '<button class="kfm-ok" type="button" onclick="cckMenuApply()">'+cc('kfm_apply')+'</button>'
+      +   '<button class="kfm-cl" type="button" onclick="cckMenuClear()">'+cc('kfm_clear')+'</button>'
+      + '</div>';
+  }
+  m.innerHTML = h;
+}
+function cckRenderList(){
+  var lst = document.getElementById('cck-list'); if (!lst) return;
+  var s = KFSEARCH.toLowerCase();
+  var list = KFITEMS.filter(function(it){ return !s || String(it.label).toLowerCase().indexOf(s)>=0; });
+  var cap = 800, shown = list.slice(0, cap);
+  var esc = window.esc || function(x){ return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+  lst.innerHTML = shown.map(function(it){
+    var v = String(it.v);
+    return '<label class="kfm-it"><input type="checkbox" '+(KFWORK.has(v)?'checked':'')
+      +' onchange="cckTick(this)" data-v="'+esc(v)+'"> <span>'+esc(it.label)+'</span></label>';
+  }).join('') || ('<div style="padding:10px;color:var(--mu);text-align:center">—</div>');
+  if (list.length > cap) lst.innerHTML += '<div class="kfm-note">+'+(list.length-cap)+' …</div>';
+  cckCnt();
+}
+function cckCnt(){
+  var cnt = document.getElementById('cck-cnt');
+  if (cnt) cnt.textContent = '('+KFWORK.size+'/'+KFITEMS.length+')';
+  var a = document.getElementById('cck-allck');
+  if (a) a.checked = (KFITEMS.length>0 && KFWORK.size===KFITEMS.length);
+}
+window.cckTick = function(cb){
+  var v = cb.getAttribute('data-v');
+  if (cb.checked) KFWORK.add(v); else KFWORK['delete'](v);
+  cckCnt();
+};
+window.cckMenuAll    = function(ck){ KFWORK = ck ? new Set(KFITEMS.map(function(it){return String(it.v);})) : new Set(); cckRenderList(); };
+window.cckMenuSearch = function(v){ KFSEARCH = v; cckRenderList(); };
+window.cckMenuSort   = function(dir){ CCSK = KFCOL; CCSD = dir; document.getElementById('cck-fmenu').style.display='none'; ccRenderAccounts(); };
+window.cckMenuApply  = function(){
+  if (KFWORK.size === KFITEMS.length)      { delete CFV[KFCOL]; }
+  else if (KFWORK.size === 0)              { CFV[KFCOL] = ['__none__']; }
+  else                                     { CFV[KFCOL] = Array.from(KFWORK); }
+  document.getElementById('cck-fmenu').style.display='none';
+  ccRenderAccounts();
+};
+window.cckMenuClear  = function(){ delete CFV[KFCOL]; document.getElementById('cck-fmenu').style.display='none'; ccRenderAccounts(); };
+
+/* Clear all filters + sort — button sitting next to the status chips */
+window.cckClearAll = function(){
+  CFV = {}; CCSK='id'; CCSD='desc'; _ccFilter='';
+  buildFilterChips(); ccRenderAccounts();
+};
 
 /* ─── REPORTS RENDER ────────────────────────────────────── */
 function ccRenderReports() {
