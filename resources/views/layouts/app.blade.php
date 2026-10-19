@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<meta name="app-version" content="v2026.10.19.2 — JS cross-script fix">
 <meta name="theme-color" content="#0A1628">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -959,6 +960,7 @@ const I18N = {
 let curLang = localStorage.getItem('wg_lang') || 'ar';
 
 function applyLang(lang) {
+  try {
   const isEn  = lang === 'en';
   const dir   = isEn ? 'ltr' : 'rtl';
   const html  = document.documentElement;
@@ -1014,6 +1016,7 @@ function applyLang(lang) {
     inp.setAttribute('dir', dir);
     inp.setAttribute('lang', lang);
   });
+  } catch(e) { console.warn('[applyLang]', e); }
 }
 
 function toggleLang() { applyLang(curLang === 'ar' ? 'en' : 'ar'); }
