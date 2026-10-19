@@ -1002,8 +1002,8 @@ function applyLang(lang) {
   localStorage.setItem('wg_lang', lang);
   curLang = lang;
 
-  /* Re-apply mobile page title */
-  updateMobTitle();
+  /* Re-apply mobile page title (defined in a later <script>, so guard it) */
+  if (typeof updateMobTitle === 'function') updateMobTitle();
 
   /* Sync all empty text inputs to new language direction */
   document.querySelectorAll('input,textarea').forEach(function(inp){
