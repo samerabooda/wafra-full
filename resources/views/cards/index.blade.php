@@ -3,9 +3,9 @@
 @section('page-title', 'Commission Cards')
 
 @section('content')
-<div style="background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'index'])
-<div style="padding:24px">
+<div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 <style>
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
 .chip-new      {background:rgba(34,201,122,.12);color:#22c97a;border:1px solid rgba(34,201,122,.25)}
@@ -15,8 +15,6 @@
 .chip-cc       {background:linear-gradient(135deg,#7b68ee22,#5f4fcf22);color:#7b68ee;border:1px solid rgba(123,104,238,.3)}
 .chip-new-acc  {background:rgba(34,201,122,.1);color:#22c97a;border:1px solid rgba(34,201,122,.2)}
 .chip-sub-acc  {background:rgba(46,134,171,.1);color:#2e86ab;border:1px solid rgba(46,134,171,.2)}
-.chip-overlimit{background:rgba(224,72,72,.14);color:#e04848;border:1px solid rgba(224,72,72,.35)}
-.chip-duplicate{background:rgba(245,152,32,.14);color:#f59820;border:1px solid rgba(245,152,32,.35)}
 .data-table tr.row-cc-card td{background:linear-gradient(90deg,rgba(123,104,238,.06),transparent 70%)!important}
 .data-table tr.row-cc-card td:first-child{border-right:3px solid #7b68ee}
 .data-table tr.row-cc-card:hover td{background:linear-gradient(90deg,rgba(123,104,238,.12),rgba(123,104,238,.03) 70%)!important}
@@ -24,12 +22,6 @@
 .data-table tr.row-modified td:first-child{border-right:3px solid #f5a623}
 .data-table tr.row-new_added td:first-child{border-right:3px solid #22c97a}
 .data-table tr.row-inactive td{opacity:.65}
-/* Flagged rows: red background + red left border for over_limit or duplicate */
-.data-table tr.row-flagged td{background:rgba(224,72,72,.08)!important}
-.data-table tr.row-flagged td:first-child{border-right:3px solid #e04848!important}
-.data-table tr.row-flagged:hover td{background:rgba(224,72,72,.15)!important}
-/* Review banner shown when filter=needs_review is active */
-.review-banner{background:linear-gradient(135deg,rgba(224,72,72,.10),rgba(224,72,72,.04));border:1px solid rgba(224,72,72,.30);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .comm-low{color:#22c97a}.comm-mid{color:#f5a623}.comm-high{color:#e05050}
 .kpi-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .kpi-pill{display:flex;flex-direction:column;align-items:center;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:12px;padding:10px 16px;min-width:120px;flex:1}
@@ -63,17 +55,6 @@
     </div>
   </div>
   <div id="ac-search-result-lbl" style="font-size:12px;color:var(--mu)"></div>
-</div>
-
-<!-- Needs-Review Banner (shown only when filter=needs_review) -->
-<div id="review-banner" class="review-banner" style="display:none">
-  <span style="font-size:22px">⚠</span>
-  <div style="flex:1;min-width:200px">
-    <div style="font-size:13px;font-weight:800;color:#e04848" id="idx-rev-title">كروت تحتاج مراجعة</div>
-    <div style="font-size:11px;color:var(--mu);margin-top:2px" id="idx-rev-sub">كروت تجاوزت الحد الأعلى (7$) أو حسابات مكرّرة من الاستيراد</div>
-  </div>
-  <div id="review-banner-counts" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-  <a href="/cards" class="btn btn-ghost btn-sm" id="idx-rev-clear">✕ عرض الكل</a>
 </div>
 
 <!-- KPI Summary Strip -->
@@ -168,7 +149,6 @@
   <span><span class="legend-dot" style="background:#7b68ee"></span> <span id="idx-legend-cc">كرت CC (مركز الاتصال)</span></span>
   <span><span class="legend-dot" style="background:#f5a623"></span> <span id="idx-legend-mod">معدّل</span></span>
   <span><span class="legend-dot" style="background:#22c97a"></span> <span id="idx-legend-new">مضاف جديد</span></span>
-  <span><span class="legend-dot" style="background:#e04848"></span> <span id="idx-legend-flag">تجاوز 7$ / مكرّر</span></span>
   <span style="color:#e05050" id="idx-legend-high">عمولة &gt;5$</span>
   <span style="color:#f5a623" id="idx-legend-mid">عمولة 2-5$</span>
   <span style="color:#22c97a" id="idx-legend-low">عمولة ≤2$</span>
@@ -257,11 +237,7 @@ const IDX = {
     flSource:'المصدر', srcReg:'🏦 عادي', srcCC:'📞 من CC',
     flSearch:'بحث', phSearch:'رقم حساب / اسم بروكر / مسوّق...',
     legendTitle:'دليل الألوان:', legendCC:'كرت CC (مركز الاتصال)', legendMod:'معدّل', legendNew:'مضاف جديد',
-    legendFlag:'تجاوز 7$ / مكرّر',
     legendHigh:'عمولة >5$', legendMid:'عمولة 2-5$', legendLow:'عمولة ≤2$',
-    revTitle:'كروت تحتاج مراجعة',
-    revSub:'كروت تجاوزت الحد الأعلى (7$) أو حسابات مكرّرة من الاستيراد',
-    revClear:'✕ عرض الكل',
     panelTitle:'🗂 كروت العمولات',
     thAc:'رقم الحساب', thMonth:'الشهر', thBranch:'الفرع', thBroker:'البروكر',
     thBComm:'ع. البروكر', thMktr:'المسوّق', thMComm:'ع. المسوّق',
@@ -284,11 +260,7 @@ const IDX = {
     flSource:'Source', srcReg:'🏦 Regular', srcCC:'📞 From CC',
     flSearch:'Search', phSearch:'Account # / Broker / Marketer...',
     legendTitle:'Color Guide:', legendCC:'CC Card (Call Center)', legendMod:'Modified', legendNew:'New Added',
-    legendFlag:'Over $7 / Duplicate',
     legendHigh:'Commission >$5', legendMid:'Commission $2-5', legendLow:'Commission ≤$2',
-    revTitle:'Cards Needing Review',
-    revSub:'Cards exceeding the $7 limit or duplicate accounts from import',
-    revClear:'✕ Show All',
     panelTitle:'🗂 Commission Cards',
     thAc:'AC No.', thMonth:'Month', thBranch:'Branch', thBroker:'Broker',
     thBComm:'B.Comm', thMktr:'Marketer', thMComm:'M.Comm',
@@ -312,9 +284,7 @@ function idxApplyLang() {
     'idx-fl-month':'flMonth','idx-fl-broker':'flBroker','idx-fl-kind':'flKind',
     'idx-fl-status':'flStatus','idx-fl-source':'flSource','idx-fl-search':'flSearch',
     'idx-legend-title':'legendTitle','idx-legend-cc':'legendCC','idx-legend-mod':'legendMod',
-    'idx-legend-new':'legendNew','idx-legend-flag':'legendFlag',
-    'idx-legend-high':'legendHigh','idx-legend-mid':'legendMid','idx-legend-low':'legendLow',
-    'idx-rev-title':'revTitle','idx-rev-sub':'revSub','idx-rev-clear':'revClear',
+    'idx-legend-new':'legendNew','idx-legend-high':'legendHigh','idx-legend-mid':'legendMid','idx-legend-low':'legendLow',
     'idx-th-ac':'thAc','idx-th-month':'thMonth','idx-th-branch':'thBranch','idx-th-broker':'thBroker',
     'idx-th-bcomm':'thBComm','idx-th-mktr':'thMktr','idx-th-mcomm':'thMComm',
     'idx-th-ext1':'thExt1','idx-th-ext2':'thExt2','idx-th-total':'thTotal',
@@ -354,11 +324,6 @@ window.applyLang = function(lang) {
 };
 
 let allCards=[], filteredCards=[];
-// Read ?filter=needs_review from URL — turns on the flag-only review mode
-function getReviewMode(){
-  try { return new URLSearchParams(location.search).get('filter') === 'needs_review'; }
-  catch(e){ return false; }
-}
 
 function commColor(val){ const v=parseFloat(val)||0; return v>5?'comm-high':v>2?'comm-mid':'comm-low'; }
 function commFmt(val){
@@ -380,37 +345,6 @@ async function loadFilterOptions(){
 }
 
 async function loadCards(){
-  const reviewMode = getReviewMode();
-  document.getElementById('cards-tbody').innerHTML=`<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:28px;opacity:.3;margin-bottom:8px">⏳</div>${idx('loading')}</td></tr>`;
-
-  // Review-mode: hit dedicated endpoint returning flagged cards
-  if (reviewMode) {
-    const rp = new URLSearchParams();
-    const s = document.getElementById('f-search').value; if (s) rp.set('search', s);
-    rp.set('per_page', 200);
-    const rr = await api('GET','/cards/needs-review?'+rp);
-    if (!rr.success) { toast(idx('loadErr'),'error'); return; }
-    allCards = rr.data?.data || [];
-    filteredCards = allCards;
-    // Show banner with summary counts
-    const banner = document.getElementById('review-banner');
-    const counts = document.getElementById('review-banner-counts');
-    if (banner) {
-      banner.style.display = 'flex';
-      const sum = rr.summary || {};
-      counts.innerHTML =
-        `<span class="chip chip-overlimit">⚠ ${idxL()==='en'?'Over $7':'تجاوز 7$'}: ${sum.over_limit_count||0}</span>`+
-        `<span class="chip chip-duplicate">🔁 ${idxL()==='en'?'Duplicate':'مكرّر'}: ${sum.duplicate_count||0}</span>`;
-    }
-    updateKpis(filteredCards);
-    renderTable(filteredCards);
-    return;
-  }
-
-  // Normal mode
-  const banner = document.getElementById('review-banner');
-  if (banner) banner.style.display = 'none';
-
   const params=new URLSearchParams();
   const month=document.getElementById('f-month').value;
   const broker=document.getElementById('f-broker').value;
@@ -423,6 +357,8 @@ async function loadCards(){
   if(status) params.set('status',status);
   if(search) params.set('search',search);
   params.set('per_page',200);
+
+  document.getElementById('cards-tbody').innerHTML=`<tr><td colspan="15" style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:28px;opacity:.3;margin-bottom:8px">⏳</div>${idx('loading')}</td></tr>`;
 
   const r=await api('GET','/cards?'+params);
   if(!r.success){ toast(idx('loadErr'),'error'); return; }
@@ -466,24 +402,13 @@ function renderTable(cards){
 
   tbody.innerHTML=cards.map(c=>{
     const isCc=!!c.cc_branch_id;
-    const isOverLimit = !!c.is_over_limit;
-    const isDuplicate = !!c.is_duplicate;
-    const isFlagged = isOverLimit || isDuplicate;
     const totalComm=(parseFloat(c.broker_commission)||0)+(parseFloat(c.marketer_commission)||0)+(parseFloat(c.ext_commission1)||0)+(parseFloat(c.ext_commission2)||0);
-    // Flagged rows take priority over CC / status color coding
-    const rowClass = isFlagged ? 'row-flagged'
-      : (isCc ? 'row-cc-card'
-      : (c.status==='modified' ? 'row-modified'
-      : (c.status==='new_added' ? 'row-new_added'
-      : (c.status==='inactive' ? 'row-inactive' : ''))));
-    const flagChips =
-      (isOverLimit?`<span class="chip chip-overlimit" style="margin-left:4px;font-size:9px" title="تجاوز حد 7$">⚠ &gt;7$</span>`:'') +
-      (isDuplicate?`<span class="chip chip-duplicate" style="margin-left:4px;font-size:9px" title="حساب مكرّر في الاستيراد">🔁</span>`:'');
+    const rowClass=isCc?'row-cc-card':c.status==='modified'?'row-modified':c.status==='new_added'?'row-new_added':c.status==='inactive'?'row-inactive':'';
     const ext1=c.ext_marketer1?.name?`<span style="color:var(--pu);font-size:11px">${esc(c.ext_marketer1.name)}</span><br><span class="mono ${commColor(c.ext_commission1)}" style="font-size:10px">$${c.ext_commission1}/lot</span>`:'<span style="color:var(--mu);font-size:10px">—</span>';
     const ext2=c.ext_marketer2?.name?`<span style="color:var(--pu);font-size:11px">${esc(c.ext_marketer2.name)}</span><br><span class="mono ${commColor(c.ext_commission2)}" style="font-size:10px">$${c.ext_commission2}/lot</span>`:'<span style="color:var(--mu);font-size:10px">—</span>';
     const branchName=idxL()==='en'?(c.branch?.name_en||c.branch?.name_ar||'—'):(c.branch?.name_ar||'—');
     return `<tr class="${rowClass}">
-      <td>${isCc?'<span class="chip chip-cc" style="margin-left:4px;font-size:9px">📞 CC</span>':''}${flagChips}<span class="ac-num" style="font-size:13px;font-weight:800">#${esc(String(c.account_number))}</span></td>
+      <td>${isCc?'<span class="chip chip-cc" style="margin-left:4px;font-size:9px">📞 CC</span>':''}<span class="ac-num" style="font-size:13px;font-weight:800">#${esc(String(c.account_number))}</span></td>
       <td style="color:var(--mu);font-size:11px;white-space:nowrap">${esc(c.month)}</td>
       <td style="font-size:11px;color:var(--mu)">${esc(branchName)}</td>
       <td style="font-weight:700;color:var(--pri2)">${esc(c.broker?.name||'—')}</td>
@@ -492,12 +417,12 @@ function renderTable(cards){
       <td>${commFmt(c.marketer_commission)}</td>
       <td style="font-size:11px">${ext1}</td>
       <td style="font-size:11px">${ext2}</td>
-      <td><span class="mono ${isOverLimit?'comm-high':commColor(totalComm)}" style="font-weight:${isOverLimit?900:700}${isOverLimit?';text-decoration:underline':''}" title="${isOverLimit?'تجاوز الحد 7$':''}">$${totalComm.toFixed(1)}</span></td>
+      <td><span class="mono ${commColor(totalComm)}" style="font-weight:700">$${totalComm.toFixed(1)}</span></td>
       <td class="mono" style="color:var(--pri2);font-weight:600">${fmt(c.initial_deposit)}</td>
       <td class="mono" style="color:var(--gr)">${fmt(c.monthly_deposit)}</td>
       <td><span class="chip ${c.account_kind==='new'?'chip-new-acc':'chip-sub-acc'}">${c.account_kind==='new'?'🟢 NEW':'🔵 SUB'}</span></td>
       <td>${statusChip(c.status)}</td>
-      <td><a href="/cards/${c.id}/edit" class="btn btn-ghost btn-sm" style="padding:4px 8px">✏️</a>${c.status==='modified'?`<button class="btn btn-sm" style="background:rgba(245,166,35,.1);color:var(--or);border:1px solid rgba(245,166,35,.25);padding:4px 8px" onclick="viewHistory(${c.id})">📋</button>`:''}${isFlagged?`<button class="btn btn-sm" style="background:rgba(224,72,72,.1);color:#e04848;border:1px solid rgba(224,72,72,.25);padding:4px 8px;margin-inline-start:4px" onclick="clearReviewFlag(${c.id})" title="تحرير علامة المراجعة">✓ حل</button>`:''}</td>
+      <td><a href="/cards/${c.id}/edit" class="btn btn-ghost btn-sm" style="padding:4px 8px">✏️</a>${c.status==='modified'?`<button class="btn btn-sm" style="background:rgba(245,166,35,.1);color:var(--or);border:1px solid rgba(245,166,35,.25);padding:4px 8px" onclick="viewHistory(${c.id})">📋</button>`:''}</td>
     </tr>`;
   }).join('');
 
@@ -624,21 +549,6 @@ function acSearchClear() {
   if (clearBtn) clearBtn.style.display = 'none';
   if (lbl) lbl.textContent = '';
   clearFilters();
-}
-
-// Clear an over-limit or duplicate review flag on a card (FA only)
-async function clearReviewFlag(id) {
-  const msg = idxL()==='en'
-    ? 'Mark this card as reviewed and clear its flags?'
-    : 'هل تم مراجعة هذا الكرت؟ سيتم إزالة علامة المراجعة.';
-  if (!confirm(msg)) return;
-  const r = await api('POST', `/cards/${id}/clear-review`, { flag: 'both' });
-  if (!r?.success) {
-    toast(r?.message || (idxL()==='en' ? 'Failed to clear flag' : 'تعذر إزالة العلامة'), 'error');
-    return;
-  }
-  toast(idxL()==='en' ? '✓ Flag cleared' : '✓ تمت المراجعة', 'success');
-  loadCards();
 }
 </script>
 @endpush
