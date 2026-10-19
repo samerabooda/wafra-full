@@ -33,6 +33,30 @@ Route::get('/csrf-refresh', function (Request $request) {
     ]);
 })->name('csrf.refresh');
 
+// Emergency cache clear — Finance Admin only. Used when auto-deploy's
+// `php artisan view:clear` step fails silently (storage permissions).
+Route::get('/_cache-clear', function (Request $request) {
+    $u = $request->user();
+    if (!$u || $u->role !== 'finance_admin') {
+        abort(403, 'Finance Admin only.');
+    }
+    $cleared = [];
+    try { \Illuminate\Support\Facades\Artisan::call('view:clear');    $cleared[] = 'view';   } catch (\Throwable $e) {}
+    try { \Illuminate\Support\Facades\Artisan::call('config:clear');  $cleared[] = 'config'; } catch (\Throwable $e) {}
+    try { \Illuminate\Support\Facades\Artisan::call('route:clear');   $cleared[] = 'route';  } catch (\Throwable $e) {}
+    try { \Illuminate\Support\Facades\Artisan::call('cache:clear');   $cleared[] = 'cache';  } catch (\Throwable $e) {}
+    // Also brute-force remove compiled Blade views in case artisan can't
+    $viewDir = storage_path('framework/views');
+    $removed = 0;
+    foreach (glob($viewDir . '/*.php') as $f) { @unlink($f) and $removed++; }
+    return response()->json([
+        'success'        => true,
+        'artisan_cleared'=> $cleared,
+        'blade_removed'  => $removed,
+        'message'        => 'Caches cleared. Reload the page.',
+    ]);
+})->middleware('auth')->name('cache.clear');
+
 // Authenticated
 Route::middleware(['auth','active.user','force.pwd'])->group(function(){
     Route::post('/logout',         [WebController::class,'logout'])->name('auth.logout');
