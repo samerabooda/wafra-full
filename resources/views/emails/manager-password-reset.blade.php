@@ -8,7 +8,8 @@
   body { margin:0; padding:0; background:#f0f4f8; font-family:'Segoe UI',Tahoma,Arial,sans-serif; direction:rtl; }
   .wrap { max-width:560px; margin:30px auto; background:#ffffff; border-radius:14px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.08); }
   .header { background:linear-gradient(135deg,#e67e22,#c0392b); padding:30px 28px; text-align:center; }
-  .header h1 { color:#fff; font-size:20px; margin:0; font-weight:700; }
+  .header img { width:74px; height:74px; border-radius:16px; background:#fff; padding:6px; object-fit:contain; display:block; margin:0 auto 12px; box-shadow:0 6px 18px rgba(0,0,0,.2); }
+  .header h1 { color:#fff; font-size:19px; margin:0; font-weight:700; }
   .header p { color:rgba(255,255,255,.82); font-size:12px; margin:6px 0 0; }
   .body { padding:28px 28px 20px; }
   .greeting { font-size:16px; font-weight:700; color:#1a2535; margin-bottom:6px; }
@@ -28,6 +29,7 @@
 <body>
 <div class="wrap">
   <div class="header">
+    <img src="{{ asset('logo.png') }}" alt="وفرة الخليجية للخدمات المالية">
     <h1>🔑 إعادة تعيين كلمة المرور</h1>
     <p>Password Reset — Wafra Gulf</p>
   </div>

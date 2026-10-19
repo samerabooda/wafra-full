@@ -12,20 +12,11 @@
 <title>{{ config('app.name', 'وفرة الخليجية') }} — @yield('title','لوحة المتابعة')</title>
 
 <!-- Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script>
-if (typeof Chart !== 'undefined') {
-  Chart.defaults.font.family = "'Tajawal', 'JetBrains Mono', sans-serif";
-  Chart.defaults.font.size = 12;
-  Chart.defaults.color = '#6B849E';
-}
-</script>
-<!-- SheetJS (Excel import/export) -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- SheetJS with cell styling (Excel import/export, colors + borders) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -36,8 +27,8 @@ if (typeof Chart !== 'undefined') {
   --pri:#1AADBA;--pri2:#22C4D4;--pri3:#0E7A88;
   --bg:#0C1520;--bg1:#111D2B;--bg2:#162437;--bg3:#1B2D42;--bg4:#20344C;
   --brd1:#1E3650;--brd2:#2C4E70;
-  --tx:#E6EFF6;--mu:#5A80A0;--m2:#7AABCA;
-  --gr:#1ECC80;--re:#E84545;--or:#F5A828;--pu:#8A78F0;
+  --tx:#F0F6FB;--mu:#90AECB;--m2:#B2D2EC;
+  --gr:#2EE08C;--re:#FF5A5A;--or:#FFB23E;--pu:#9D8BFF;
   --card-bg:var(--bg3);--card-brd:var(--brd1);
   --inp-bg:var(--bg4);--inp-brd:var(--brd1);
   --sb-bg:var(--bg1);--topb-bg:rgba(12,21,32,.95);
@@ -46,23 +37,25 @@ if (typeof Chart !== 'undefined') {
 [data-theme="light"] {
   --bg:#EDF2F7;--bg1:#FFFFFF;--bg2:#E2EBF4;--bg3:#FFFFFF;--bg4:#EDF2F7;
   --brd1:#B0CCDF;--brd2:#5A9ABF;
-  --tx:#0A1929;--mu:#3A5A78;--m2:#1A3A58;
-  --card-bg:#FFFFFF;--card-brd:#B0CCDF;
+  --tx:#04101F;--mu:#264259;--m2:#0E2A45;
+  --card-bg:#FFFFFF;--card-brd:#9CBED6;
   --sb-bg:#0C2240;--topb-bg:rgba(12,34,64,.98);
-  --inp-bg:#FFFFFF;--inp-brd:#5A9ABF;
+  --inp-bg:#FFFFFF;--inp-brd:#4A8AB2;
   --shadow:0 4px 24px rgba(26,173,186,.15);
-  --gr:#158838;--or:#A04800;--re:#B80020;
+  --gr:#0B7A30;--or:#8F3F00;--re:#A8001C;--pri2:#0A8C9E;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{font-size:16px}
-body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+html{font-size:16px;-webkit-text-size-adjust:100%;-moz-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--tx);min-height:100dvh;overflow-x:hidden;transition:background .3s,color .3s;-webkit-text-size-adjust:100%}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse 900px 500px at 70% -10%,rgba(46,134,171,.1),transparent 55%),
     radial-gradient(ellipse 600px 400px at -5% 80%,rgba(46,134,171,.05),transparent 50%)}
 
 /* ── Layout ── */
 .app-layout{display:flex;min-height:100vh}
-.sidebar{width:240px;background:var(--sb-bg);border-left:1px solid var(--brd1);
+.sidebar{width:240px;background:var(--sb-bg);
+  background-image:linear-gradient(180deg,rgba(26,173,186,.10),transparent 260px),radial-gradient(120% 60% at 100% 0,rgba(123,104,238,.07),transparent 60%);
+  border-left:1px solid var(--brd1);
   display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
 .main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:var(--topb-bg);backdrop-filter:blur(14px);border-bottom:1px solid var(--brd1);
@@ -72,10 +65,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ── Sidebar ── */
 .sb-header{
-  padding:18px 16px 16px;
+  padding:8px 16px 16px;
   border-bottom:1px solid rgba(255,255,255,.1);
-  display:flex;flex-direction:column;align-items:center;gap:12px;
-  background:linear-gradient(180deg,rgba(26,173,186,.12) 0%,transparent 100%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:linear-gradient(180deg,rgba(26,173,186,.10) 0%,transparent 100%);
 }
 .sb-logo{
   width:82px;height:82px;border-radius:18px;
@@ -84,13 +77,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   transition:transform .2s,box-shadow .2s;display:block;
 }
 .sb-logo:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(26,173,186,.7),0 4px 14px rgba(0,0,0,.45)}
-.sb-brand{font-size:13px;font-weight:800;color:white;line-height:1.3;text-align:center}
-.sb-brand small{display:block;font-size:10px;color:rgba(255,255,255,.55);font-weight:400}
-.sb-nav{flex:1;padding:10px 8px}
-.nav-section{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.6px;padding:8px 10px 4px;margin-top:4px}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
-  font-size:12px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;
-  text-decoration:none;position:relative;margin-bottom:1px}
+.sb-brand{font-size:14px;font-weight:800;color:#ffffff;line-height:1.3;text-align:center;letter-spacing:.2px}
+.sb-brand small{display:block;font-size:10.5px;color:rgba(255,255,255,.72);font-weight:500;margin-top:2px}
+.sb-nav{flex:1;padding:8px 9px}
+.nav-section{font-size:9.5px;color:rgba(255,255,255,.62);text-transform:uppercase;letter-spacing:.7px;padding:9px 10px 3px;margin-top:5px;font-weight:700}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;
+  font-size:13.5px;font-weight:600;color:rgba(255,255,255,.94);cursor:pointer;
+  text-decoration:none;position:relative;margin-bottom:2px}
 .nav-item:hover{
   background:rgba(255,255,255,.12);
   color:white;
@@ -102,23 +95,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   transition:all .18s ease;
 }
 .nav-item{transition:all .18s ease;border:1px solid transparent}
-.nav-item.active{background:rgba(46,134,171,.25);color:var(--pri2);font-weight:700}
+.nav-item.active{background:rgba(46,134,171,.28);color:#5fe0ec;font-weight:800;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border:1px solid rgba(95,224,236,.28);box-shadow:0 3px 14px rgba(26,173,186,.25),inset 0 1px 0 rgba(255,255,255,.12)}
 .nav-item.active::before{content:'';position:absolute;right:0;top:22%;bottom:22%;
   width:3px;background:var(--pri);border-radius:2px 0 0 2px}
 .nav-badge{margin-right:auto;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;
   background:rgba(46,134,171,.2);color:var(--pri2);border:1px solid rgba(46,134,171,.3)}
 .nav-badge.orange{background:rgba(245,166,35,.15);color:var(--or);border-color:rgba(245,166,35,.3)}
 .nav-badge.green{background:rgba(34,201,122,.1);color:var(--gr);border-color:rgba(34,201,122,.2)}
-.sb-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.08)}
-.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;
-  background:rgba(255,255,255,.05);border-radius:9px;border:1px solid rgba(255,255,255,.08)}
-.user-avatar{width:28px;height:28px;border-radius:50%;
+.sb-user-top{padding:14px 12px 12px}
+.sb-footer{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1)}
+.user-chip{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;padding:16px 14px;
+  background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);
+  border-radius:18px;border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 8px 26px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.12);transition:background .15s,transform .15s}
+.user-chip:hover{background:rgba(255,255,255,.11)}
+.user-avatar{width:66px;height:66px;border-radius:50%;
   background:linear-gradient(135deg,var(--pri2),var(--pri3));
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0}
-.user-name{font-size:11px;font-weight:800;flex:1;
+  display:flex;align-items:center;justify-content:center;font-size:25px;font-weight:800;color:white;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(26,173,186,.45),0 2px 8px rgba(0,0,0,.3);border:2.5px solid rgba(255,255,255,.22)}
+.user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.user-name{font-size:16.5px;font-weight:800;line-height:1.3;width:100%;
   background:linear-gradient(135deg,#22C4D4,#1AADBA);
-  -webkit-background-clip:text;background-clip:text;color:transparent;}
-.user-role{font-size:9px;color:rgba(255,255,255,.5)}
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  white-space:normal;word-break:break-word}
+.user-role{font-size:12.5px;color:rgba(255,255,255,.82);font-weight:600}
+.user-edit-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  margin-top:2px;padding:7px 18px;border-radius:10px;cursor:pointer;text-decoration:none;
+  font-size:12.5px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,var(--pri2),var(--pri3));
+  border:1px solid rgba(255,255,255,.22);box-shadow:0 4px 12px rgba(26,173,186,.35);transition:transform .15s,filter .15s}
+.user-edit-btn:hover{transform:translateY(-1px);filter:brightness(1.08);color:#fff}
 .logout-btn{color:rgba(255,255,255,.4);font-size:12px;text-decoration:none;cursor:pointer}
 .logout-btn:hover{color:var(--re)}
 
@@ -129,6 +137,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .tb-title{font-size:14px;font-weight:800;color:rgba(255,255,255,.95)}
 .tb-sub{font-size:11px;color:rgba(255,255,255,.5)}
 .tb-right{display:flex;align-items:center;gap:6px}
+.nb-pop{position:absolute;top:42px;left:0;width:340px;max-height:460px;overflow-y:auto;background:var(--bg2);border:1px solid var(--brd1);border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.45);z-index:2000;padding:6px}
+[dir="ltr"] .nb-pop{left:auto;right:0}
+.nb-h{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 10px;border-bottom:1px solid var(--brd1);margin-bottom:4px}
+.nb-h b{font-size:13px}
+.nb-ra{font-size:11px;color:var(--pri2);cursor:pointer;font-weight:700}
+.nb-ra:hover{text-decoration:underline}
+.nb-item{display:flex;gap:9px;align-items:flex-start;padding:10px;border-radius:10px;cursor:pointer;border-bottom:1px solid var(--brd1)}
+.nb-item:last-child{border-bottom:none}
+.nb-item:hover{background:rgba(26,173,186,.08)}
+.nb-item.unread{background:rgba(245,166,35,.07)}
+.nb-ic{width:30px;height:30px;border-radius:9px;background:rgba(123,104,238,.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.nb-tt{font-size:12.5px;font-weight:700;line-height:1.4}
+.nb-bd{font-size:11px;color:var(--mu);margin-top:2px;line-height:1.5}
+.nb-tm{font-size:10px;color:var(--m2);margin-top:3px}
+.nb-empty{text-align:center;padding:30px 12px;color:var(--mu);font-size:12px}
 .tb-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);
   border:1px solid var(--brd1);border-radius:7px;padding:6px 10px;
   font-size:11px;font-weight:600;color:var(--m2);cursor:pointer;
@@ -170,8 +193,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .data-table th{font-size:10px;color:var(--mu);text-transform:uppercase;
   padding:10px 12px;text-align:right;border-bottom:2px solid var(--brd1);
   background:var(--inp-bg);white-space:nowrap;font-weight:700;position:sticky;top:0;z-index:2}
-.data-table td{font-size:12px;padding:9px 12px;border-bottom:1px solid rgba(37,58,99,.3)}
-.data-table tr:hover td{background:rgba(46,134,171,.04)}
+.data-table td{font-size:12px;padding:9px 12px;border-bottom:1px solid var(--brd1)}
+.data-table tbody tr:nth-child(even) td{background:rgba(120,150,200,.045)}
+.data-table tr:hover td{background:rgba(46,134,171,.08)}
 .data-table tr:last-child td{border-bottom:none}
 .data-table tr.row-modified td{background:rgba(245,166,35,.06)!important}
 .data-table tr.row-modified td:first-child{border-right:3px solid var(--or)}
@@ -262,9 +286,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .c-blue{color:var(--pri)}.c-teal{color:var(--pri2)}.c-green{color:var(--gr)}
 .c-orange{color:var(--or)}.c-red{color:var(--re)}.c-muted{color:var(--mu)}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+/* ── Scrollbar — visible & lively ── */
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:4px;border:1px solid rgba(255,255,255,.08);transition:background .18s}
+::-webkit-scrollbar-thumb:hover{background:var(--pri3)}
+::-webkit-scrollbar-corner{background:transparent}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:#8aabca}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:#1AADBA}
 
 /* ══════════════════════════════════════════
    MOBILE NAVIGATION ELEMENTS
@@ -418,6 +447,51 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
   /* Hide demo dbar */
   .dbar{display:none!important}
+
+  /* ── Mobile layout hardening (visible borders + no horizontal cut-off) ── */
+  html,body{overflow-x:hidden;max-width:100vw}
+  .main-wrap{max-width:100vw;overflow-x:hidden}
+  .page-body{max-width:100%;box-sizing:border-box;padding-top:14px;padding-bottom:80px!important}
+  .page-body > *{max-width:100%;box-sizing:border-box}
+
+  /* Call-center screen: stack its internal sidebar instead of a 220px column */
+  #cc-shell{flex-direction:column!important;min-height:auto!important}
+  #cc-nav{width:100%!important;flex-direction:row!important;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    border-left:none!important;border-bottom:1px solid var(--brd1)!important;padding:6px!important;gap:5px}
+  #cc-nav > *{flex-shrink:0}
+  #cc-nav > div:first-child{display:none}
+
+  /* Wide tables/filters scroll INSIDE their box (not the whole page) */
+  .k-scroll,.table-scroll,.monthly-table-wrap,.rpt-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .k-bar{gap:6px}
+
+  /* Dashboard leaderboards & gradient bars fit small screens */
+  .ig-lead-nm{font-size:13px}
+  .ig-lead-big .v{font-size:1.4rem}
+
+  /* Any content shell wrapper: ensure rounded borders are fully on-screen */
+  [style*="min-height:calc(100vh"]{min-height:auto!important;max-width:100%;overflow:hidden}
+
+  /* ══ Responsive tables — NO horizontal scroll: each row becomes a stacked card ══ */
+  table.data-table, table.k-tbl, table.nt-tbl, table.ib-tbl, table.rx-tbl, table.cc-tbl{display:block;width:100%}
+  table.data-table thead, table.k-tbl thead, table.nt-tbl thead, table.ib-tbl thead, table.rx-tbl thead, table.cc-tbl thead,
+  table.k-tbl tfoot{display:none!important}
+  table.data-table tbody, table.k-tbl tbody, table.nt-tbl tbody, table.ib-tbl tbody, table.rx-tbl tbody, table.cc-tbl tbody{display:block;width:100%}
+  table.data-table tbody tr, table.k-tbl tbody tr, table.nt-tbl tbody tr, table.ib-tbl tbody tr, table.rx-tbl tbody tr, table.cc-tbl tbody tr{
+    display:block;width:100%;margin:0 0 9px;border:1px solid var(--card-brd)!important;border-radius:11px;
+    overflow:hidden;background:var(--card-bg);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+  table.data-table tbody td, table.k-tbl tbody td, table.nt-tbl tbody td, table.ib-tbl tbody td, table.rx-tbl tbody td, table.cc-tbl tbody td{
+    display:flex!important;justify-content:space-between;align-items:center;gap:12px;width:auto!important;
+    text-align:start!important;padding:8px 12px!important;border:none!important;
+    border-bottom:1px solid var(--brd1)!important;white-space:normal!important;position:static!important}
+  table tbody td[data-label]::before{content:attr(data-label);font-weight:800;color:var(--mu);
+    font-size:10px;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;max-width:45%}
+  table tbody td:last-child{border-bottom:none!important}
+  /* loading / empty full-width rows keep centered */
+  table tbody td[colspan]{justify-content:center!important}
+  table tbody td[colspan]::before{display:none}
+  /* the table's scroll box no longer needs height caps on mobile */
+  .k-scroll,.table-scroll{max-height:none!important;overflow:visible!important}
 }
 
 /* Extra small phones */
@@ -559,13 +633,21 @@ html{font-size:16px}
 
   {{-- SIDEBAR --}}
   <aside class="sidebar">
+
+    {{-- User chip at TOP (above logo) — click to open profile --}}
+    <div class="sb-user-top">
+      <div class="user-chip" title="الملف الشخصي / Profile">
+        <div class="user-avatar" id="sb-avatar" style="overflow:hidden">م</div>
+        <div class="user-name" id="sb-username">—</div>
+        <div class="user-role" id="sb-role">—</div>
+        <a href="{{ route('profile.index') }}" class="user-edit-btn" data-i18n="nav.edit_profile">✏️ تعديل الملف</a>
+      </div>
+    </div>
+
     <div class="sb-header">
       <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية"
            onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
-      <div class="sb-brand">
-        <span data-i18n="company.short">وفرة الخليجية</span>
-        <small data-i18n="company.tagline">للخدمات المالية</small>
-      </div>
+      {{-- Company name removed: it is already part of the logo (saves vertical space) --}}
     </div>
 
     <nav class="sb-nav">
@@ -580,19 +662,21 @@ html{font-size:16px}
       </a>
 
       <div class="nav-section" data-i18n="nav.sec.cc">📞 مركز الاتصال</div>
-      @if(auth()->user()?->isBranchManager())
-      {{-- Branch managers go straight to the incoming-cards view --}}
-      <a href="{{ route('callcenter.pending') }}" class="nav-item {{ request()->routeIs('callcenter.pending') ? 'active' : '' }}">
-        <span>📩</span> <span data-i18n="nav.cc.pending">كروت CC الواردة</span>
-        <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
-      </a>
-      @else
-      {{-- CC staff / FA see the full CC hub --}}
-      <a href="{{ route('callcenter.index') }}" class="nav-item {{ request()->routeIs('callcenter.*') ? 'active' : '' }}">
+      @php $__isCc = auth()->user()?->isCallCenterStaff(); @endphp
+      @if($__isCc)
+      {{-- Call-Center branch staff + Finance Admin → full hub (create & send cards) --}}
+      <a href="{{ route('callcenter.index') }}" class="nav-item {{ request()->routeIs('callcenter.index') ? 'active' : '' }}">
         <span>📞</span> <span data-i18n="nav.cc">مركز الاتصال</span>
+        <span class="nav-badge" id="sb-cc-count">—</span>
         <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
       </a>
       @endif
+      {{-- Primary CC entry for branch managers (and shared with CC staff + Finance Admin):
+           the CRM follow-up list — NOT the account-opening form. --}}
+      <a href="{{ route('callcenter.followup') }}" class="nav-item {{ request()->routeIs('callcenter.followup') ? 'active' : '' }}">
+        <span>🕒</span> <span data-i18n="nav.cc.followup">العملاء قيد المتابعة</span>
+        <span class="nav-badge orange" id="sb-cc-pending" style="display:none">0</span>
+      </a>
 
       <div class="nav-section" data-i18n="nav.sec.reports">📈 التقارير</div>
       <a href="{{ route('reports.index') }}" class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
@@ -618,13 +702,6 @@ html{font-size:16px}
     </nav>
 
     <div class="sb-footer">
-      <div class="user-chip">
-        <div class="user-avatar" id="sb-avatar">م</div>
-        <div style="flex:1;min-width:0">
-          <div class="user-name" id="sb-username">—</div>
-          <div class="user-role" id="sb-role">—</div>
-        </div>
-      </div>
       {{-- Prominent logout button --}}
       <a href="{{ route('auth.logout') }}"
          onclick="event.preventDefault(); doLogout()"
@@ -652,6 +729,13 @@ html{font-size:16px}
   <div class="main-wrap">
     <header class="topbar">
       <div class="tb-left">
+        @unless(request()->routeIs('dashboard'))
+        <button onclick="goBack()" title="رجوع / Back"
+                style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:700;font-size:13px;padding:8px 13px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .15s"
+                onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">
+          <span style="font-size:15px">→</span> <span data-i18n="btn.back">رجوع</span>
+        </button>
+        @endunless
         <img src="{{ asset('logo.png') }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية"
              onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
         <div>
@@ -661,6 +745,11 @@ html{font-size:16px}
       </div>
       <div class="tb-right">
         @yield('topbar-actions')
+        <div id="nb-wrap" style="position:relative;display:none">
+          <button class="theme-toggle" id="nb-btn" onclick="nbToggle()" title="التنبيهات / Notifications" style="position:relative;font-size:16px">🔔<span id="nb-count" style="display:none;position:absolute;top:-7px;right:-7px;background:#e05050;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;align-items:center;justify-content:center;padding:0 3px;box-shadow:0 2px 6px rgba(0,0,0,.3)">0</span></button>
+          <div id="nb-pop" class="nb-pop" style="display:none"></div>
+        </div>
+        <a id="mb-wrap" href="{{ route('notifications.inbox') }}" class="theme-toggle" title="صندوق البريد / Mailbox" style="position:relative;display:none;font-size:16px;text-decoration:none;display:none;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))"><defs><linearGradient id="goldEnv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE082"/><stop offset="1" stop-color="#E6A817"/></linearGradient></defs><path fill="url(#goldEnv)" d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v.35l-9.47 5.92a1 1 0 0 1-1.06 0L2 6.35V6Z"/><path fill="url(#goldEnv)" d="M22 8.6V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.6l8.94 5.59a2 2 0 0 0 2.12 0L22 8.6Z"/></svg><span id="mb-count" style="display:none;position:absolute;top:-7px;right:-7px;background:#e05050;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:9px;align-items:center;justify-content:center;padding:0 3px;box-shadow:0 2px 6px rgba(0,0,0,.3)">0</span></a>
         <a href="{{ route('cards.create') }}" class="tb-btn success">➕ <span data-i18n="btn.newcard">كرت جديد</span></a>
         <a href="{{ route('cards.edit-search') }}" class="tb-btn" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ <span data-i18n="btn.edit">تعديل</span></a>
         <button class="lang-toggle-btn" onclick="toggleLang()" id="lang-btn" title="Switch Language / تغيير اللغة">
@@ -692,6 +781,9 @@ html{font-size:16px}
 
 {{-- Shared JS --}}
 <script>
+/* Prevent stale CSRF (419) when the browser restores this page from bfcache */
+window.addEventListener('pageshow', function(e){ if (e.persisted) { window.location.reload(); } });
+
 const API = '{{ url("/api") }}';
 let API_TOKEN = localStorage.getItem('wg_token') || '{{ session("api_token","") }}';
 
@@ -707,7 +799,7 @@ function doLogout() {
   } catch(e) {}
   document.getElementById('logout-form').submit();
 }
-@php $__cu = auth()->user() ? auth()->user()->only('id','name','email','role','branch_id') : []; @endphp
+@php $__cu = auth()->user() ? auth()->user()->only('id','name','email','role','branch_id','photo') : []; @endphp
 const CURRENT_USER = @json($__cu);
 
 // ── Theme ──────────────────────────────────────────────────
@@ -760,9 +852,13 @@ const I18N = {
     'nav.settings':    'الإعدادات',
     'nav.import':      'استيراد بيانات',
     'nav.guide':       'دليل التشغيل',
+    'nav.inbox':       'صندوق البريد',
+    'nav.profile':     'الملف الشخصي',
     'nav.logout':      'تسجيل الخروج',
     'btn.newcard':     'كرت جديد',
     'btn.edit':        'تعديل',
+    'btn.back':        'رجوع',
+    'nav.edit_profile':'✏️ تعديل الملف',
     'tb.dept':         'الإدارة المالية',
     'mob.home':        'الرئيسية',
     'mob.cards':       'الكروت',
@@ -793,8 +889,8 @@ const I18N = {
     'page.cc.pending': 'كروت CC الواردة',
     'page.guide':      'دليل التشغيل',
     /* Dashboard */
-    'dash.kpi.total':     'إجمالي كروت العمولة',
-    'dash.kpi.total.sub': 'كرت مسجّل (حساب × شهر)',
+    'dash.kpi.total':     'إجمالي الحسابات',
+    'dash.kpi.total.sub': 'حساب فريد (بدون تكرار شهري)',
     'dash.kpi.dep':       'إيداع فتح الحساب',
     'dash.kpi.dep.sub':   'إجمالي الإيداع الأولي',
     'dash.kpi.mon':       'الإيداع الشهري المتوقع',
@@ -853,9 +949,13 @@ const I18N = {
     'nav.settings':    'Settings',
     'nav.import':      'Import Data',
     'nav.guide':       'User Guide',
+    'nav.inbox':       'Mailbox',
+    'nav.profile':     'Profile',
     'nav.logout':      'Sign Out',
     'btn.newcard':     'New Card',
     'btn.edit':        'Edit',
+    'btn.back':        'Back',
+    'nav.edit_profile':'✏️ Edit Profile',
     'tb.dept':         'Finance Department',
     'mob.home':        'Home',
     'mob.cards':       'Cards',
@@ -886,8 +986,8 @@ const I18N = {
     'page.guide':      'User Guide',
     'role.viewer':     'Viewer 👁',
     /* Dashboard */
-    'dash.kpi.total':     'Total Commission Cards',
-    'dash.kpi.total.sub': 'cards (account × month)',
+    'dash.kpi.total':     'Total Accounts',
+    'dash.kpi.total.sub': 'unique accounts (no monthly duplicates)',
     'dash.kpi.dep':       'Account Opening Deposit',
     'dash.kpi.dep.sub':   'Total initial deposit',
     'dash.kpi.mon':       'Expected Monthly Deposit',
@@ -955,6 +1055,35 @@ function applyLang(lang) {
   /* Re-apply mobile page title */
   updateMobTitle();
 
+  /* ── Translate cards _nav sidebar (present on all 6 cards pages) ── */
+  const _cn = {
+    'cnav-hdr':         {ar:'🗂 كروت العمولة',        en:'🗂 Commission Cards'},
+    'cnav-lbl-index':   {ar:'كروت العمولات',           en:'Commission Cards'},
+    'cnav-sub-index':   {ar:'كل الحسابات المسجّلة',   en:'All registered accounts'},
+    'cnav-lbl-modified':{ar:'الحسابات المعدّلة',       en:'Modified Accounts'},
+    'cnav-sub-modified':{ar:'السجلات المُعدَّلة',      en:'Modified records'},
+    'cnav-lbl-search':  {ar:'بحث عن حساب',             en:'Account Search'},
+    'cnav-sub-search':  {ar:'ابحث برقم الحساب',        en:'Search by account number'},
+    'cnav-lbl-create':  {ar:'إنشاء كرت جديد',          en:'New Commission Card'},
+    'cnav-sub-create':  {ar:'تسجيل حساب عمولة',        en:'Register a commission account'},
+    'cnav-lbl-edit':    {ar:'تعديل كرت عمولة',         en:'Edit Commission Card'},
+    'cnav-sub-edit':    {ar:'تعديل حساب موجود',        en:'Edit existing account'},
+    'cnav-lbl-tree':    {ar:'شجرة الحسابات',            en:'Account Tree'},
+    'cnav-sub-tree':    {ar:'توزيع العمولات',           en:'Commission distribution'},
+  };
+  Object.entries(_cn).forEach(function([id, vals]) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = vals[lang] || vals.ar;
+  });
+
+  /* ── Translate search input placeholders globally ── */
+  document.querySelectorAll('input[placeholder]').forEach(function(inp) {
+    const ph = inp.getAttribute('data-ph-ar') || inp.getAttribute('data-ph-en');
+    if (!ph) return;
+    const phAr = inp.getAttribute('data-ph-ar'); const phEn = inp.getAttribute('data-ph-en');
+    if (phAr && phEn) inp.placeholder = isEn ? phEn : phAr;
+  });
+
   /* Sync all empty text inputs to new language direction */
   document.querySelectorAll('input,textarea').forEach(function(inp){
     if (inp.value) return;
@@ -970,20 +1099,20 @@ function toggleLang() { applyLang(curLang === 'ar' ? 'en' : 'ar'); }
 
 /* ── Phone country codes ─────────────────────────────────── */
 const PHONE_CODES = [
-  {v:'+966',l:'🇸🇦 +966 السعودية'},{v:'+971',l:'🇦🇪 +971 الإمارات'},
-  {v:'+965',l:'🇰🇼 +965 الكويت'}, {v:'+974',l:'🇶🇦 +974 قطر'},
-  {v:'+973',l:'🇧🇭 +973 البحرين'},{v:'+968',l:'🇴🇲 +968 عُمان'},
-  {v:'+962',l:'🇯🇴 +962 الأردن'}, {v:'+20', l:'🇪🇬 +20  مصر'},
-  {v:'+213',l:'🇩🇿 +213 الجزائر'},{v:'+216',l:'🇹🇳 +216 تونس'},
-  {v:'+212',l:'🇲🇦 +212 المغرب'}, {v:'+249',l:'🇸🇩 +249 السودان'},
-  {v:'+218',l:'🇱🇾 +218 ليبيا'},  {v:'+963',l:'🇸🇾 +963 سوريا'},
-  {v:'+961',l:'🇱🇧 +961 لبنان'},  {v:'+967',l:'🇾🇪 +967 اليمن'},
-  {v:'+964',l:'🇮🇶 +964 العراق'}, {v:'+90', l:'🇹🇷 +90  تركيا'},
-  {v:'+1',  l:'🇺🇸 +1   أمريكا'}, {v:'+44', l:'🇬🇧 +44  بريطانيا'},
-  {v:'+49', l:'🇩🇪 +49  ألمانيا'},{v:'+33', l:'🇫🇷 +33  فرنسا'},
-  {v:'+7',  l:'🇷🇺 +7   روسيا'},  {v:'+86', l:'🇨🇳 +86  الصين'},
-  {v:'+91', l:'🇮🇳 +91  الهند'},  {v:'+92', l:'🇵🇰 +92  باكستان'},
-  {v:'+880',l:'🇧🇩 +880 بنغلاديش'},
+  {v:'+966',l:'🇸🇦 +966 Saudi Arabia'},{v:'+971',l:'🇦🇪 +971 UAE'},
+  {v:'+965',l:'🇰🇼 +965 Kuwait'},      {v:'+974',l:'🇶🇦 +974 Qatar'},
+  {v:'+973',l:'🇧🇭 +973 Bahrain'},     {v:'+968',l:'🇴🇲 +968 Oman'},
+  {v:'+962',l:'🇯🇴 +962 Jordan'},      {v:'+20', l:'🇪🇬 +20  Egypt'},
+  {v:'+213',l:'🇩🇿 +213 Algeria'},     {v:'+216',l:'🇹🇳 +216 Tunisia'},
+  {v:'+212',l:'🇲🇦 +212 Morocco'},     {v:'+249',l:'🇸🇩 +249 Sudan'},
+  {v:'+218',l:'🇱🇾 +218 Libya'},       {v:'+963',l:'🇸🇾 +963 Syria'},
+  {v:'+961',l:'🇱🇧 +961 Lebanon'},     {v:'+967',l:'🇾🇪 +967 Yemen'},
+  {v:'+964',l:'🇮🇶 +964 Iraq'},        {v:'+90', l:'🇹🇷 +90  Turkey'},
+  {v:'+1',  l:'🇺🇸 +1   USA'},         {v:'+44', l:'🇬🇧 +44  UK'},
+  {v:'+49', l:'🇩🇪 +49  Germany'},     {v:'+33', l:'🇫🇷 +33  France'},
+  {v:'+7',  l:'🇷🇺 +7   Russia'},      {v:'+86', l:'🇨🇳 +86  China'},
+  {v:'+91', l:'🇮🇳 +91  India'},       {v:'+92', l:'🇵🇰 +92  Pakistan'},
+  {v:'+880',l:'🇧🇩 +880 Bangladesh'},
 ];
 function fillPhoneCodeSelect(id, selected) {
   const el = document.getElementById(id); if (!el) return;
@@ -1068,6 +1197,62 @@ function logoRefresh() {
   sessionStorage.removeItem('wfr_shown');
   location.reload();
 }
+// Global Back — go to the previous page, or the dashboard if there is none.
+function goBack() {
+  if (window.history.length > 1) window.history.back();
+  else window.location.href = '{{ route("dashboard") }}';
+}
+
+// ── Shared styled, print-ready Excel export ────────────────────
+// aoa: array of rows (row 0 = headers). Auto-fits columns, styles header (teal,
+// white, bold), bordered + zebra body, sets row heights, margins & fit-to-width
+// print scaling — so the file prints without any manual resizing.
+// opts.colColors: optional { columnIndex: 'RRGGBB' } to tint specific body columns.
+function wgExportExcel(aoa, filename, sheetName, opts) {
+  opts = opts || {};
+  if (!aoa || !aoa.length) { if (window.toast) toast('لا توجد بيانات للتصدير','error'); return; }
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  var range = XLSX.utils.decode_range(ws['!ref']);
+  var headFill = opts.headerColor || '0E7A88';
+  var colColors = opts.colColors || {};
+
+  // auto column widths from longest cell
+  var cols = [];
+  for (var C = range.s.c; C <= range.e.c; C++) {
+    var w = 8;
+    for (var R = range.s.r; R <= range.e.r; R++) {
+      var cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+      if (cell && cell.v != null) { var len = String(cell.v).length; if (len > w) w = len; }
+    }
+    cols.push({ wch: Math.min(w + 3, 45) });
+  }
+  ws['!cols'] = cols;
+  ws['!rows'] = aoa.map(function (_, i) { return { hpt: i === 0 ? 28 : 20 }; });
+
+  var thin = { style: 'thin', color: { rgb: 'C9D3DC' } };
+  for (var R2 = range.s.r; R2 <= range.e.r; R2++) {
+    for (var C2 = range.s.c; C2 <= range.e.c; C2++) {
+      var ref = XLSX.utils.encode_cell({ r: R2, c: C2 });
+      var cl = ws[ref]; if (!cl) continue;
+      var head = (R2 === 0);
+      var bodyFill = colColors[C2] || (R2 % 2 ? 'F3F7FA' : 'FFFFFF');
+      cl.s = {
+        font: { name: 'Calibri', sz: head ? 12 : 11, bold: head, color: { rgb: head ? 'FFFFFF' : '20303F' } },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        fill: { patternType: 'solid', fgColor: { rgb: head ? headFill : bodyFill } },
+        border: { top: thin, bottom: thin, left: thin, right: thin }
+      };
+    }
+  }
+  ws['!margins'] = { left: 0.3, right: 0.3, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+  ws['!printSetup'] = { orientation: 'landscape', scale: 0, fitToWidth: 1, fitToHeight: 0 };
+  if (range.e.r >= 1) ws['!autofilter'] = { ref: ws['!ref'] };
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+  XLSX.writeFile(wb, filename);
+  if (window.toast) toast('Excel ✅', 'success');
+}
 
 // ── Toast ──────────────────────────────────────────────────
 function toast(msg, type = 'success') {
@@ -1094,16 +1279,22 @@ async function api(method, url, body = null) {
       body: body ? JSON.stringify(body) : null,
     });
   } catch (e) {
-    return { success: false, message: 'تعذّر الاتصال بالخادم. تحقق من الإنترنت.' };
+    const _l = (typeof curLang !== 'undefined' ? curLang : 'ar');
+    return { success: false, message: _l==='en' ? 'Cannot connect to server. Check your internet.' : 'تعذّر الاتصال بالخادم. تحقق من الإنترنت.' };
   }
   if (res.status === 401) {
     window.location.href = '{{ route("auth.login") }}';
-    return { success: false, message: 'غير مصرح.' };
+    const _l = (typeof curLang !== 'undefined' ? curLang : 'ar');
+    return { success: false, message: _l==='en' ? 'Unauthorized.' : 'غير مصرح.' };
   }
   try {
-    return await res.json();
+    const data = await res.json();
+    // Forced first-login password change: the server blocks every API call until done
+    if (data && data.must_change_pass === true && typeof showForcePwd === 'function') showForcePwd();
+    return data;
   } catch (e) {
-    return { success: false, message: 'خطأ في الخادم (' + res.status + ').' };
+    const _l = (typeof curLang !== 'undefined' ? curLang : 'ar');
+    return { success: false, message: _l==='en' ? 'Server error (' + res.status + ').' : 'خطأ في الخادم (' + res.status + ').' };
   }
 }
 
@@ -1114,7 +1305,10 @@ function updateUserChip() {
   const roleEl = document.getElementById('sb-role');
   const avatEl = document.getElementById('sb-avatar');
   const lang = (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar';
-  if (avatEl) avatEl.textContent = CURRENT_USER.name.charAt(0).toUpperCase();
+  if (avatEl) {
+    if (CURRENT_USER.photo) avatEl.innerHTML = '<img src="'+CURRENT_USER.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    else avatEl.textContent = CURRENT_USER.name.charAt(0).toUpperCase();
+  }
   if (nameEl) nameEl.textContent = CURRENT_USER.name;
   if (roleEl) {
     const roleKey = CURRENT_USER.role === 'finance_admin' ? 'role.admin'
@@ -1147,6 +1341,8 @@ const fmtK = n => {
   if (n >= 1000) return (n/1000).toFixed(0) + 'K';
   return Number(n).toLocaleString('en', {maximumFractionDigits:0});
 };
+// Expose globally so per-page scripts (cards search/modified, etc.) can use them.
+try { window.fmt = fmt; window.fmtK = fmtK; window.esc = esc; } catch(e){}
 
 // ── Modal helpers ──────────────────────────────────────────
 function openModal(id){ document.getElementById(id)?.classList.add('open'); }
@@ -1176,15 +1372,25 @@ const MOB_ROUTES = {
   'managers':    '{{ route("managers.index") }}',
   'permissions': '{{ route("permissions.index") }}',
   'tree':        '{{ route("cards.tree") }}',
-  'cc':          '{{ auth()->user()?->isBranchManager() ? route("callcenter.pending") : route("callcenter.index") }}',
+  'cc':          '{{ auth()->user()?->isCallCenterStaff() ? route("callcenter.index") : route("callcenter.followup") }}',
+  'guide':       '{{ route("guide.index") }}',
+  'profile':     '{{ route("profile.index") }}',
+  'inbox':       '{{ route("notifications.inbox") }}',
 };
 
-const MOB_TITLES = {
-  'd':'لوحة المتابعة','c':'كروت العمولات','m':'الحسابات المعدّلة',
-  'r':'التقارير','dynamic':'تقرير ديناميكي','e':'الموظفون',
-  'settings':'الإعدادات','import':'استيراد بيانات','managers':'المديرون',
-  'permissions':'الصلاحيات','tree':'شجرة الحسابات',
-};
+/* MOB_TITLES: keyed by page shortcode, resolved per language using I18N */
+function getMobTitle(key) {
+  const l = (typeof curLang !== 'undefined' ? curLang : 'ar');
+  const map = {
+    'd':'page.dashboard','c':'page.cards','m':'page.cards.mod',
+    'r':'page.reports','dynamic':'page.dynamic','e':'page.employees',
+    'settings':'page.settings','import':'page.import','managers':'page.settings',
+    'permissions':'page.settings','tree':'page.cards.tree',
+    'cc':'page.cc','pending':'page.cc.pending',
+  };
+  const k = map[key] || key;
+  return I18N[l]?.[k] || I18N.ar[k] || key;
+}
 
 function toggleMobSidebar() {
   const sb = document.querySelector('.sidebar');
@@ -1352,6 +1558,82 @@ async function loadCcPendingCount() {
 // Load once on page ready, then refresh every 60s
 document.addEventListener('DOMContentLoaded', loadCcPendingCount);
 setInterval(loadCcPendingCount, 60000);
+
+// ── Manager notification bell (per-user, accurate tracker) ──
+(function(){
+  // Bell + mailbox are shown to every authenticated user (managers, finance admin,
+  // and call-center staff). The inbox/notification content is scoped per role server-side.
+  var wrap=document.getElementById('nb-wrap'); if(wrap) wrap.style.display='';
+  var mb=document.getElementById('mb-wrap'); if(mb) mb.style.display='';
+  var lastUnread=null, popOpen=false;
+  function L(){return (typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))||'ar';}
+  function tlt(ts){ if(!ts)return ''; var d=new Date(ts.replace(' ','T')); var s=(Date.now()-d.getTime())/1000;
+    var en=L()==='en';
+    if(s<60)return en?'just now':'الآن';
+    if(s<3600)return Math.floor(s/60)+(en?'m ago':' د');
+    if(s<86400)return Math.floor(s/3600)+(en?'h ago':' س');
+    return Math.floor(s/86400)+(en?'d ago':' يوم'); }
+  function setBadge(n){
+    [['nb-count'],['mb-count']].forEach(function(x){
+      var b=document.getElementById(x[0]); if(!b)return;
+      if(n>0){b.textContent=n>99?'99+':n;b.style.display='flex';}else{b.style.display='none';}
+    });
+  }
+  function poll(){
+    api('GET','/notifications/unread-count').then(function(r){
+      if(!r||!r.success)return;
+      var n=r.unread||0;
+      if(lastUnread!==null && n>lastUnread && window.toast){toast(L()==='en'?'🔔 New call-center card':'🔔 كرت جديد من مركز الاتصال','info');}
+      lastUnread=n; setBadge(n);
+      if(popOpen) renderList();
+    }).catch(function(){});
+  }
+  function renderList(){
+    var pop=document.getElementById('nb-pop'); if(!pop)return;
+    api('GET','/notifications').then(function(r){
+      if(!r||!r.success){pop.innerHTML='<div class="nb-empty">—</div>';return;}
+      var en=L()==='en',rows=r.data||[];
+      setBadge(r.unread||0); lastUnread=r.unread||0;
+      var h='<div class="nb-h"><b>'+(en?'Notifications':'التنبيهات')+'</b><span class="nb-ra" onclick="nbReadAll(event)">'+(en?'Mark all read':'تعليم الكل كمقروء')+'</span></div>';
+      if(!rows.length){h+='<div class="nb-empty">🔕 '+(en?'No notifications':'لا توجد تنبيهات')+'</div>';}
+      else{ h+=rows.map(function(n){
+        var unread=!n.read_at, ac=n.account_number||'';
+        return '<div class="nb-item'+(unread?' unread':'')+'" onclick="nbOpen('+n.id+','+(n.card_id||'null')+',\''+(n.type||'')+'\')">'+
+          '<div class="nb-ic">📞</div><div style="flex:1;min-width:0">'+
+          '<div class="nb-tt">'+(esc?esc(n.title||''):n.title)+'</div>'+
+          (n.body?'<div class="nb-bd">'+(esc?esc(n.body):n.body)+'</div>':'')+
+          '<div class="nb-tm">'+tlt(n.created_at)+(unread?' • <span style="color:#f5a623">'+(en?'new':'جديد')+'</span>':'')+'</div>'+
+          '</div></div>';
+      }).join(''); }
+      var fa=(CURRENT_USER&&CURRENT_USER.role==='finance_admin');
+      if(fa)h+='<div style="text-align:center;padding:8px"><a href="/notifications/tracker" class="nb-ra">📊 '+(en?'Open tracker':'فتح المتتبّع')+'</a></div>';
+      pop.innerHTML=h;
+    }).catch(function(){});
+  }
+  window.nbToggle=function(){
+    var pop=document.getElementById('nb-pop'); if(!pop)return;
+    popOpen=!popOpen; pop.style.display=popOpen?'block':'none';
+    if(popOpen){ renderList(); }
+  };
+  window.nbReadAll=function(ev){ if(ev)ev.stopPropagation();
+    api('POST','/notifications/read-all').then(function(){ setBadge(0); lastUnread=0; renderList(); }); };
+  window.nbOpen=function(id,cardId,type){
+    api('POST','/notifications/'+id+'/act').then(function(r){
+      var cid=(r&&r.card_id)||cardId;
+      // Call-Center lead notifications open the CRM follow-up page (NOT the account-edit form).
+      // The customer must be contacted/followed up first; opening the account is the LAST step.
+      var ccTypes=['cc_new_card','card_sent','card_followup','card_declined','card_accepted','card_rejected','card_completed'];
+      if(ccTypes.indexOf(type)>=0){ window.location.href='/callcenter/followup'+(cid?('?focus='+cid):''); return; }
+      if(cid){ window.location.href='/cards/'+cid+'/edit'; }
+      else { poll(); }
+    });
+  };
+  document.addEventListener('click',function(e){
+    var w=document.getElementById('nb-wrap'); if(w&&popOpen&&!w.contains(e.target)){popOpen=false;var p=document.getElementById('nb-pop');if(p)p.style.display='none';}
+  });
+  document.addEventListener('DOMContentLoaded',poll);
+  poll(); setInterval(poll,30000);
+})();
 </script>
 
 @stack('scripts')
@@ -1405,10 +1687,10 @@ setInterval(loadCcPendingCount, 60000);
   <div class="mob-sheet-handle"></div>
   <div class="mob-sheet-grid">
     <div class="mob-sheet-item" onclick="mobGo('cc');closeMobMore()">
-      @if(auth()->user()?->isBranchManager())
-      <div class="mob-sheet-ico">📩</div><div class="mob-sheet-lbl" data-i18n="nav.cc.pending">كروت CC الواردة</div>
-      @else
+      @if(auth()->user()?->isCallCenterStaff())
       <div class="mob-sheet-ico">📞</div><div class="mob-sheet-lbl" data-i18n="nav.cc">مركز الاتصال</div>
+      @else
+      <div class="mob-sheet-ico">📩</div><div class="mob-sheet-lbl" data-i18n="nav.cc.pending">كروت CC الواردة</div>
       @endif
     </div>
     <div class="mob-sheet-item" onclick="mobGo('m');closeMobMore()">
@@ -1423,6 +1705,15 @@ setInterval(loadCcPendingCount, 60000);
     <div class="mob-sheet-item" onclick="mobGo('settings');closeMobMore()">
       <div class="mob-sheet-ico">⚙️</div><div class="mob-sheet-lbl" data-i18n="nav.settings">الإعدادات</div>
     </div>
+    <div class="mob-sheet-item" onclick="mobGo('inbox');closeMobMore()">
+      <div class="mob-sheet-ico">✉️</div><div class="mob-sheet-lbl" data-i18n="nav.inbox">صندوق البريد</div>
+    </div>
+    <div class="mob-sheet-item" onclick="mobGo('profile');closeMobMore()">
+      <div class="mob-sheet-ico">👤</div><div class="mob-sheet-lbl" data-i18n="nav.profile">الملف الشخصي</div>
+    </div>
+    <div class="mob-sheet-item" onclick="mobGo('guide');closeMobMore()">
+      <div class="mob-sheet-ico">📖</div><div class="mob-sheet-lbl" data-i18n="nav.guide">دليل التشغيل</div>
+    </div>
     @if(auth()->user()?->isFinanceAdmin())
     <div class="mob-sheet-item" onclick="mobGo('import');closeMobMore()">
       <div class="mob-sheet-ico">📥</div><div class="mob-sheet-lbl" data-i18n="mob.import">استيراد</div>
@@ -1434,6 +1725,88 @@ setInterval(loadCcPendingCount, 60000);
   </div>
 </div>
 <div class="mob-overlay" id="mob-sheet-overlay" onclick="closeMobMore()" style="display:none;z-index:1598"></div>
+
+<script>
+/* Mobile responsive tables — label each cell with its column header so rows
+   render as stacked cards (no horizontal scrolling on phones). */
+(function(){
+  function clean(s){ return (s||'').replace(/[⇅▲▼]/g,'').trim(); }
+  function labelTable(tbl){
+    if(!tbl.tHead || !tbl.tHead.rows.length) return;
+    var hr = tbl.tHead.rows[tbl.tHead.rows.length-1];
+    var heads = [].map.call(hr.cells, function(c){ return clean(c.textContent); });
+    [].forEach.call(tbl.tBodies, function(tb){
+      [].forEach.call(tb.rows, function(tr){
+        if(tr.cells.length===1 && tr.cells[0].hasAttribute('colspan')) return;
+        [].forEach.call(tr.cells, function(td,i){
+          if(heads[i] && !td.hasAttribute('data-label')) td.setAttribute('data-label', heads[i]);
+        });
+      });
+    });
+  }
+  var SEL='table.data-table,table.k-tbl,table.nt-tbl,table.ib-tbl,table.rx-tbl,table.cc-tbl', tmr=null;
+  function run(){ if(window.innerWidth>768) return; try{ document.querySelectorAll(SEL).forEach(labelTable); }catch(e){} }
+  function schedule(){ clearTimeout(tmr); tmr=setTimeout(run,120); }
+  function start(){
+    run();
+    try{ new MutationObserver(schedule).observe(document.body,{subtree:true,childList:true}); }catch(e){}
+    window.addEventListener('resize', schedule);
+  }
+  if(document.readyState!=='loading') start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+
+{{-- ══ Forced first-login password change ══ --}}
+<div id="fpwd-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,12,22,.82);backdrop-filter:blur(4px);z-index:99999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:18px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px">🔒 <span id="fpwd-t">تغيير كلمة المرور مطلوب</span></div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:16px" id="fpwd-sub">لأمان حسابك، يجب تعيين كلمة مرور جديدة قبل المتابعة.</div>
+    <div id="fpwd-err" class="alert alert-error" style="display:none;margin-bottom:12px"></div>
+    <div id="fpwd-ok"  class="alert alert-success" style="display:none;margin-bottom:12px"></div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <input type="password" id="fpwd-cur" class="form-control" placeholder="كلمة المرور الحالية / Current password" autocomplete="current-password">
+      <input type="password" id="fpwd-new" class="form-control" placeholder="كلمة المرور الجديدة (8 أحرف+) / New password" autocomplete="new-password">
+      <input type="password" id="fpwd-cnf" class="form-control" placeholder="تأكيد كلمة المرور الجديدة / Confirm" autocomplete="new-password">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="submitForcePwd()" id="fpwd-btn">✅ تغيير ومتابعة</button>
+  </div>
+</div>
+<script>
+let _fpwdShown = false;
+function showForcePwd(){
+  if (_fpwdShown) return; _fpwdShown = true;
+  var en = (typeof curLang!=='undefined' && curLang==='en');
+  var t=document.getElementById('fpwd-t'); if(t) t.textContent = en?'Password change required':'تغيير كلمة المرور مطلوب';
+  var s=document.getElementById('fpwd-sub'); if(s) s.textContent = en?'For your security, set a new password before continuing.':'لأمان حسابك، يجب تعيين كلمة مرور جديدة قبل المتابعة.';
+  var b=document.getElementById('fpwd-btn'); if(b) b.textContent = en?'✅ Change & continue':'✅ تغيير ومتابعة';
+  var o=document.getElementById('fpwd-overlay'); if(o) o.style.display='flex';
+}
+async function submitForcePwd(){
+  var en = (typeof curLang!=='undefined' && curLang==='en');
+  var cur=document.getElementById('fpwd-cur').value, nw=document.getElementById('fpwd-new').value, cnf=document.getElementById('fpwd-cnf').value;
+  var err=document.getElementById('fpwd-err'), ok=document.getElementById('fpwd-ok');
+  err.style.display='none'; ok.style.display='none';
+  if(!cur||!nw){ err.textContent=en?'Fill all fields':'أدخل كل الحقول'; err.style.display='block'; return; }
+  if(nw.length<8){ err.textContent=en?'New password must be at least 8 characters':'كلمة المرور الجديدة 8 أحرف على الأقل'; err.style.display='block'; return; }
+  if(nw!==cnf){ err.textContent=en?'Passwords do not match':'كلمتا المرور غير متطابقتين'; err.style.display='block'; return; }
+  var res;
+  try{
+    res = await fetch(API + '/auth/change-password', { method:'POST',
+      headers:{ 'Content-Type':'application/json','Accept':'application/json',
+        'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,
+        ...(API_TOKEN ? {'Authorization':'Bearer '+API_TOKEN} : {}) },
+      body: JSON.stringify({ current_password:cur, password:nw, password_confirmation:cnf }) });
+  }catch(e){ err.textContent=en?'Connection error':'تعذّر الاتصال'; err.style.display='block'; return; }
+  var d={}; try{ d=await res.json(); }catch(e){}
+  if(res.ok && d.success){
+    ok.textContent=en?'✅ Done! Reloading…':'✅ تم! جارٍ إعادة التحميل…'; ok.style.display='block';
+    setTimeout(function(){ window.location.reload(); }, 900);
+  } else {
+    err.textContent = (d && d.message) ? d.message : (en?'Current password is incorrect':'كلمة المرور الحالية غير صحيحة');
+    err.style.display='block';
+  }
+}
+</script>
 
 </body>
 </html>

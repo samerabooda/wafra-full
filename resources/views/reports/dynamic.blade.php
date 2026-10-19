@@ -83,12 +83,12 @@
 
 @section('content')
 
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:flex;flex-direction:column;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 
-  {{-- Reports Sidebar Nav --}}
-  <div id="rnav-sidebar" style="width:220px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--brd1);display:flex;flex-direction:column;padding:10px 0;">
-    <div style="padding:12px 16px 14px;border-bottom:1px solid var(--brd1);margin-bottom:8px">
-      <div id="rnav-hdr" style="font-size:11px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📈 التقارير</div>
+  {{-- Reports Nav — TOP horizontal bar (consistent with the other report screens) --}}
+  <div id="rnav-sidebar" style="width:100%;background:var(--bg2);border-bottom:1px solid var(--brd1);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 14px;overflow-x:auto;">
+    <div style="display:none">
+      <div id="rnav-hdr"></div>
     </div>
     <a href="{{ route('reports.index') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
       <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);">📊</div>
@@ -112,10 +112,14 @@
         <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-branch">فرع + شهر محدد</div>
       </div>
     </a>
-    <div style="flex:1"></div>
-    <div style="padding:12px 16px;border-top:1px solid var(--brd1);margin-top:8px">
-      <div id="rnav-footer" style="font-size:10px;color:var(--mu);line-height:1.6"></div>
-    </div>
+    <a href="{{ route('reports.referrals') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
+      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.2);">🔗</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap">تقرير المحيلين</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:1px">حسابات كل محيل</div>
+      </div>
+    </a>
+    <div style="display:none"><div id="rnav-footer"></div></div>
   </div>
 
   {{-- Content Panel --}}
@@ -497,7 +501,7 @@ async function initPage() {
 
 async function loadFilterOptions() {
   const [emps, branches] = await Promise.all([
-    api('GET', '/employees?status=approved'),
+    api('GET', '/employees?status=approved&slim=1'),
     api('GET', '/branches'),
   ]);
 
@@ -814,7 +818,7 @@ function renderTable() {
   numCols.forEach(col => {
     const total = displayData.reduce((s, r) => s + (parseFloat(getCellRawValue(r, col.id)) || 0), 0);
     if (total > 0) {
-      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '/lot';
+      const formatted = col.type === 'currency' ? fmtK(total) : '$' + total.toFixed(2) + '';
       summaryParts.push(`<span class="mono">${colLabel(col)}: <b style="color:var(--pri2)">${formatted}</b></span>`);
     }
   });
@@ -865,7 +869,7 @@ function renderCell(row, col) {
     case 'currency':
       return `<span class="mono" style="color:var(--pri2);font-weight:600">${fmtK(v)}</span>`;
     case 'number':
-      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}/lot</span>`;
+      return `<span class="mono" style="color:var(--gr)">$${parseFloat(v).toFixed(2)}</span>`;
     case 'badge':
       return v === 'new'
         ? '<span class="badge badge-green">NEW</span>'
@@ -880,7 +884,7 @@ function renderCell(row, col) {
       return statusMap[v] || v;
     default:
       if (col.id === 'account_number')
-        return `<span class="ac-num">#${v}</span>`;
+        return `<span class="ac-num">${v}</span>`;
       return String(v);
   }
 }
@@ -1012,7 +1016,7 @@ function exportDynExcel() {
     cols.map(col => {
       const v = getCellRawValue(row, col.id);
       if (v === null || v === undefined) return '';
-      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '/lot';
+      if (col.type === 'number')   return '$' + parseFloat(v).toFixed(2) + '';
       if (col.type === 'currency') return parseFloat(v) || 0;
       if (col.type === 'badge')    return v === 'new' ? 'NEW' : 'SUB';
       if (col.type === 'status')   return v === 'modified' ? dyn('xlsxStatusMod') : v === 'new_added' ? dyn('xlsxStatusNew') : dyn('xlsxStatusAct');
@@ -1020,13 +1024,7 @@ function exportDynExcel() {
     })
   );
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  // Column widths
-  ws['!cols'] = cols.map(c => ({ wch: Math.round(c.width / 7) }));
-  XLSX.utils.book_append_sheet(wb, ws, dyn('xlsxSheet'));
-  XLSX.writeFile(wb, 'WafraGulf_DynReport_' + new Date().toISOString().slice(0,10) + '.xlsx');
-  toast(dyn('toastExcelDone'), 'success');
+  wgExportExcel([headers, ...rows], 'WafraGulf_DynReport_' + new Date().toISOString().slice(0,10) + '.xlsx', dyn('xlsxSheet'));
 }
 
 function exportDynPdf() {

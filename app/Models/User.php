@@ -39,13 +39,35 @@ class User extends Authenticatable
 
     /**
      * Returns true for ANY non-FA role that must be locked to their branch.
-     * This covers both branch_manager AND viewer roles.
-     * Only applies when branch_id is actually set (null = not locked).
+     * This covers both branch_manager AND viewer roles. Applies even when
+     * branch_id is null — such a user is locked to a non-existent branch
+     * (sees NOTHING) rather than accidentally seeing every branch.
      */
     public function isScopedToBranch(): bool
     {
-        return in_array($this->role, ['branch_manager', 'viewer'])
-            && $this->branch_id !== null;
+        return in_array($this->role, ['branch_manager', 'viewer']);
+    }
+
+    /** Branch id to scope queries by — never null, so a branch-less manager sees nothing. */
+    public function branchScopeId(): int
+    {
+        return (int) ($this->branch_id ?? -1);
+    }
+
+    /** True if this user belongs to a Call-Center branch (or is Finance Admin). */
+    public function isCallCenterStaff(): bool
+    {
+        if ($this->isFinanceAdmin()) return true;
+        if (!$this->branch_id) return false;
+        if ($this->relationLoaded('branch')) return (bool) ($this->branch?->is_call_center);
+        return (bool) \App\Models\Branch::whereKey($this->branch_id)->value('is_call_center');
+    }
+
+    /** True only if this user is the MANAGER of a Call-Center branch. */
+    public function isCallCenterManager(): bool
+    {
+        return $this->isBranchManager() && $this->branch_id
+            && (bool) \App\Models\Branch::whereKey($this->branch_id)->value('is_call_center');
     }
 
     // ── Password Reset ─────────────────────────────────────────

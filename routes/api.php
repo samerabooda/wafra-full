@@ -10,8 +10,8 @@ use App\Http\Controllers\Api\{
     ImportController,
     BranchController,
     SettingsController,
-    ExportController,
-    DashboardController,
+    ProfileController,
+    NotificationController,
 };
 
 /*
@@ -22,10 +22,10 @@ use App\Http\Controllers\Api\{
 |──────────────────────────────────────────────────────────────
 */
 
-// ── Public routes (no authentication) ────────────────────────
-Route::prefix('auth')->group(function () {
+// ── Public routes (no authentication) — rate-limited to stop brute-force ──
+Route::prefix('auth')->middleware('throttle:12,1')->group(function () {
     Route::post('register',         [AuthController::class, 'register']);        // FA first-time only
-    Route::post('login',            [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('login',            [AuthController::class, 'login']);
     Route::post('check-invite',     [AuthController::class, 'checkInvite']);     // validate invite email
     Route::post('register-invite',  [AuthController::class, 'registerViaInvite']); // branch manager self-signup
 });
@@ -40,9 +40,8 @@ Route::get('cards/stats', function () {
     ]);
 });
 
-
 // ── Protected routes ──────────────────────────────────────────
-Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1'])->group(function () {
+Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function () {
 
     // Auth
     Route::prefix('auth')->group(function () {
@@ -51,21 +50,69 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
         Route::get('me',               [AuthController::class, 'me']);
     });
 
+    // ── Own profile (any authenticated user) ──────────────────
+    Route::get('profile',           [ProfileController::class, 'show']);
+    Route::put('profile',           [ProfileController::class, 'update']);
+    Route::post('profile/photo',    [ProfileController::class, 'photo']);
+    Route::delete('profile/photo',  [ProfileController::class, 'removePhoto']);
+    Route::put('profile/password',  [ProfileController::class, 'password']);
+
     // ── Commission Cards ──────────────────────────────────────
     Route::prefix('cards')->group(function () {
 
-        Route::get('tree',          [CommissionCardController::class, 'tree']);
+        Route::get('tree',          [CommissionCardController::class, 'tree'])
+             ->middleware('permission:cards');
 
-        Route::get('report',        [CommissionCardController::class, 'report']);
+        Route::get('fast',          [CommissionCardController::class, 'fastList'])
+             ->middleware('permission:cards');
 
-        Route::get('modifications', [CommissionCardController::class, 'modifications']);
+        Route::get('distinct',      [CommissionCardController::class, 'distinctValues'])
+             ->middleware('permission:cards');
 
-        // Cards needing review — over-limit ($>7) or duplicates from import
-        Route::get('needs-review',  [CommissionCardController::class, 'needsReview']);
+        Route::get('summary',       [CommissionCardController::class, 'summary'])
+             ->middleware('permission:reports');
 
-        Route::get('/',             [CommissionCardController::class, 'index']);
+        Route::get('over-limit',    [CommissionCardController::class, 'overLimit'])
+             ->middleware('permission:reports');
 
-        Route::get('{id}',          [CommissionCardController::class, 'show']);
+        Route::get('cross-branch',  [CommissionCardController::class, 'crossBranch'])
+             ->middleware('permission:reports');
+
+        Route::get('report',        [CommissionCardController::class, 'report'])
+             ->middleware('permission:reports');
+
+        Route::get('modifications', [CommissionCardController::class, 'modifications'])
+             ->middleware('permission:modified');
+
+        Route::get('modified-report', [CommissionCardController::class, 'modifiedReport'])
+             ->middleware('permission:modified');
+
+        Route::get('search-flat', [CommissionCardController::class, 'searchFlat'])
+             ->middleware('permission:cards');
+
+        Route::get('account-exists', [CommissionCardController::class, 'accountExists'])
+             ->middleware('permission:cards');
+
+        Route::get('account-name', [CommissionCardController::class, 'accountName'])
+             ->middleware('permission:cards');
+
+        Route::get('referrer-names', [CommissionCardController::class, 'referrerNames'])
+             ->middleware('permission:cards');
+
+        Route::post('referrer-name', [CommissionCardController::class, 'saveReferrer'])
+             ->middleware('permission:cards');
+
+        Route::post('referrer-names-bulk', [CommissionCardController::class, 'saveReferrersBulk'])
+             ->middleware('permission:cards');
+
+        Route::get('referrals', [CommissionCardController::class, 'referrals'])
+             ->middleware('permission:reports');
+
+        Route::get('/',             [CommissionCardController::class, 'index'])
+             ->middleware('permission:cards');
+
+        Route::get('{id}',          [CommissionCardController::class, 'show'])
+             ->middleware('permission:cards');
 
         Route::post('/',            [CommissionCardController::class, 'store'])
              ->middleware('permission:create_card');
@@ -74,10 +121,6 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
              ->middleware('permission:edit_card');
 
         Route::delete('{id}',       [CommissionCardController::class, 'destroy'])
-             ->middleware('role:finance_admin');
-
-        // Clear review flags (over-limit / duplicate) — FA only
-        Route::post('{id}/clear-review', [CommissionCardController::class, 'clearReviewFlags'])
              ->middleware('role:finance_admin');
     });
 
@@ -135,26 +178,26 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
     });
 
     // ── Call Center ───────────────────────────────────────────
-    // Only FA and branch managers may touch CC endpoints. Viewers are
-    // read-only elsewhere and have no business creating / accepting / etc.
-    Route::prefix('cc')->middleware('role:finance_admin,branch_manager')->group(function () {
-        // CC creates / sends cards
-        Route::post('cards',              [CallCenterController::class, 'store']);
-        Route::post('cards/{id}/send',    [CallCenterController::class, 'send']);
-        Route::post('cards/{id}/resend',  [CallCenterController::class, 'resend']);
-        Route::delete('cards/{id}',       [CallCenterController::class, 'cancel']); // CC cancel draft/rejected
-        // Restore a cancelled CC card
-        Route::post('cards/{id}/restore', [CallCenterController::class, 'restoreCancelled']);
+    Route::prefix('cc')->group(function () {
+        // CC creates / edits / sends cards
+        Route::post('cards',                  [CallCenterController::class, 'store']);
+        Route::put('cards/{id}',              [CallCenterController::class, 'update']);          // edit draft before send
+        Route::post('cards/{id}/delete-secure',[CallCenterController::class, 'deleteSecure']);   // delete w/ password
+        Route::post('cards/{id}/send',        [CallCenterController::class, 'send']);
+        Route::post('cards/{id}/resend',      [CallCenterController::class, 'resend']);
 
-        // Branch responds to CC cards
-        Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);
-        Route::put('cards/{id}/reject',   [CallCenterController::class, 'reject']);
-        Route::put('cards/{id}/complete', [CallCenterController::class, 'complete']);
+        // Branch responds to CC leads
+        Route::put('cards/{id}/accept',   [CallCenterController::class, 'accept']);    // legacy / back-compat
+        Route::put('cards/{id}/followup', [CallCenterController::class, 'followup']);  // log an update (still in progress)
+        Route::put('cards/{id}/decline',  [CallCenterController::class, 'decline']);   // customer refused (terminal)
+        Route::put('cards/{id}/reject',   [CallCenterController::class, 'reject']);    // branch bounces lead back to CC
+        Route::put('cards/{id}/complete', [CallCenterController::class, 'complete']);  // account opened
 
         // Listings
         Route::get('pending',             [CallCenterController::class, 'pending']);   // branch: incoming
+        Route::get('leads',               [CallCenterController::class, 'leads']);     // shared: follow-up list
+        Route::get('cards/{id}/followups',[CallCenterController::class, 'followups']); // a lead's call log
         Route::get('sent',                [CallCenterController::class, 'sent']);      // cc: sent cards
-        Route::get('report',              [CallCenterController::class, 'report']);    // cc: aggregated report
 
         // Notifications
         Route::get('notifications',            [CallCenterController::class, 'notifications']);
@@ -162,16 +205,19 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd', 'throttle:120,1']
         Route::put('notifications/{id}/read',  [CallCenterController::class, 'markRead']);
     });
 
-    // ── Dashboard (stats + charts) ─────────────────────────────
-    Route::get('dashboard', [DashboardController::class, 'stats']);
-
-    // ── Export (Excel / PDF) ───────────────────────────────────
-    Route::prefix('export')->group(function () {
-        Route::get('excel', [ExportController::class, 'excel']);
-        Route::get('pdf',   [ExportController::class, 'pdf']);
+    // ── Manager Notifications (per-user, accurate tracker) ────
+    Route::prefix('notifications')->group(function () {
+        Route::get('/',              [NotificationController::class, 'index']);
+        Route::get('unread-count',   [NotificationController::class, 'unreadCount']);
+        Route::get('inbox',          [NotificationController::class, 'inbox']);
+        Route::post('read-all',      [NotificationController::class, 'readAll']);
+        Route::post('{id}/read',     [NotificationController::class, 'markRead']);
+        Route::post('{id}/act',      [NotificationController::class, 'act']);
+        Route::get('tracker',        [NotificationController::class, 'tracker'])
+             ->middleware('role:finance_admin');
     });
 
-        // ── Import ────────────────────────────────────────────────
+    // ── Import ────────────────────────────────────────────────
     // Import — Finance Admin ONLY
     Route::prefix('import')->middleware('role:finance_admin')->group(function () {
         Route::post('/',      [ImportController::class, 'import']);

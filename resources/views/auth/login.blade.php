@@ -767,6 +767,34 @@ body {
 </div>{{-- .login-wrap --}}
 
 <script>
+/* ── Fix recurring "419 Page Expired" ──────────────────────────────
+   The login is a full-page form POST, so a stale CSRF token (expired
+   session / restored or cached page) makes Laravel reject it with 419.
+   We always pull a FRESH token before the page is used and right before
+   every submit, so the token can never be stale. ── */
+async function refreshCsrf(){
+  try{
+    const r = await fetch('/refresh-token', { headers:{'Accept':'text/plain'}, cache:'no-store', credentials:'same-origin' });
+    if(!r.ok) return;
+    const t = (await r.text()).trim();
+    if(t && t.length > 10){
+      document.querySelectorAll('input[name="_token"]').forEach(i => i.value = t);
+      const m = document.querySelector('meta[name=csrf-token]'); if(m) m.content = t;
+    }
+  }catch(e){}
+}
+refreshCsrf();
+window.addEventListener('pageshow', function(e){ refreshCsrf(); });
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(f){
+    f.addEventListener('submit', function(ev){
+      if(f.__tokOk) return;                 // token already refreshed → let it submit
+      ev.preventDefault();
+      refreshCsrf().then(function(){ f.__tokOk = true; f.submit(); });
+    });
+  });
+});
+
 /* ══════════════════════════════════════════════════════════
    UTILITIES
    ══════════════════════════════════════════════════════════ */

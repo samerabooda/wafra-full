@@ -50,7 +50,7 @@
 @endpush
 
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'create'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 <div class="panel" style="max-width:860px">
@@ -63,6 +63,19 @@
     <div id="alert-ok"  class="alert alert-success"></div>
 
     <form id="card-form">
+      <style>
+        /* Compact spacing — only margins/labels, NEVER force input height (text must stay visible) */
+        #card-form .form-group{margin-bottom:9px}
+        #card-form .form-section{margin-bottom:13px}
+        #card-form .form-section-title{margin-bottom:8px;font-size:14px}
+        #card-form .form-label{font-size:12px;margin-bottom:3px}
+        #card-form .form-row{gap:12px}
+        /* Person category tints — each a clearly DIFFERENT hue */
+        .crt-cat{border-radius:9px;padding:10px 12px;margin-bottom:9px;border-width:1px;border-style:solid}
+        .crt-cat-broker{background:rgba(14,122,136,.10);border-color:#0E7A88}          /* teal */
+        .crt-cat-mk1{background:rgba(31,138,76,.10);border-color:#1f8a4c}              /* green */
+        .crt-cat-mk2{background:rgba(214,51,108,.09);border-color:#d6336c}             /* pink */
+      </style>
       <!-- Section 1: Account Info -->
       <div class="form-section">
         <div class="form-section-title" id="crt-sec1-title">معلومات الحساب الأساسية</div>
@@ -99,9 +112,10 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" id="crt-lbl-status">حالة الحساب</label>
-            <select id="f-status" class="form-control">
-              <option value="" id="crt-opt-select2">— اختر —</option>
+            <label class="form-label" id="crt-lbl-kind">حساب جديد أم فرعي</label>
+            <select id="f-kind" class="form-control" onchange="onKindChange()">
+              <option value="new" id="crt-opt-new">New — جديد</option>
+              <option value="sub" id="crt-opt-sub">Sub — فرعي</option>
             </select>
           </div>
         </div>
@@ -136,13 +150,6 @@
           </div>
         </div>
         @endif
-        <div class="form-group">
-          <label class="form-label" id="crt-lbl-kind">نوع الحساب (New / Sub)</label>
-          <select id="f-kind" class="form-control" onchange="onKindChange()">
-            <option value="new" id="crt-opt-new">New — جديد</option>
-            <option value="sub" id="crt-opt-sub">Sub — فرعي</option>
-          </select>
-        </div>
         {{-- Parent account: shown only when kind = sub --}}
         <div id="parent-ac-row">
           <div class="form-group" style="margin-bottom:0">
@@ -158,52 +165,68 @@
       <!-- Section 2: Broker & Marketers -->
       <div class="form-section">
         <div class="form-section-title" id="crt-sec2-title">البروكر والمسوّقون (من قائمة الموظفين)</div>
-        <div class="form-row">
-          <div class="form-group">
+        <div class="form-row crt-cat crt-cat-broker">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-broker">🧑‍💼 البروكر *</label>
-            <select id="f-broker" class="form-control" required>
+            <select id="f-broker" class="form-control" required onchange="onBrokerChange()">
               <option value="" id="crt-opt-broker">— اختر البروكر —</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-broker-comm">عمولة البروكر</label>
-            <input type="number" id="f-broker-comm" class="form-control" value="4" min="0" step="0.5">
+            <input type="number" id="f-broker-comm" class="form-control" value="4" min="0" step="any" inputmode="decimal">
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" id="crt-lbl-mktr">📢 مسوّق داخلي</label>
+        <div class="form-row crt-cat crt-cat-mk1">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" id="crt-lbl-mktr">📢 مسوّق داخلي 1</label>
             <select id="f-marketer" class="form-control" onchange="onMktrChange()">
               <option value="" id="crt-opt-none1">— لا يوجد —</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-mktr-comm">عمولة المسوّق الداخلي</label>
-            <input type="number" id="f-marketer-comm" class="form-control" value="0" min="0" step="0.5" disabled>
+            <input type="number" id="f-marketer-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
           </div>
         </div>
-        <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:14px;margin-bottom:10px">
+        <div class="form-row crt-cat crt-cat-mk2">
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext1">🌐 مسوّق خارجي 1</label>
-            <select id="f-ext1" class="form-control" onchange="onExt1Change()">
-              <option value="" id="crt-opt-none2">— لا يوجد —</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext1-comm">عمولة مسوّق خارجي 1</label>
-            <input type="number" id="f-ext1-comm" class="form-control" value="0" min="0" step="0.5" disabled>
-          </div>
-        </div>
-        <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:14px">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext2">🌐 مسوّق خارجي 2</label>
+            <label class="form-label" id="crt-lbl-ext2">📢 مسوّق داخلي 2</label>
             <select id="f-ext2" class="form-control" onchange="onExt2Change()">
               <option value="" id="crt-opt-none3">— لا يوجد —</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0">
-            <label class="form-label" id="crt-lbl-ext2-comm">عمولة مسوّق خارجي 2</label>
-            <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="0.5" disabled>
+            <label class="form-label" id="crt-lbl-ext2-comm">عمولة المسوّق الداخلي 2</label>
+            <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+          </div>
+        </div>
+        <div class="form-row" style="background:rgba(123,104,238,.11);border:1px solid #7b68ee;border-radius:9px;padding:12px;margin-bottom:9px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" id="crt-lbl-ext1">🌐 مسوّق خارجي</label>
+            <select id="f-ext1" class="form-control" onchange="onExt1Change()">
+              <option value="" id="crt-opt-none2">— لا يوجد —</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" id="crt-lbl-ext1-comm">عمولة المسوّق الخارجي</label>
+            <input type="number" id="f-ext1-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+          </div>
+        </div>
+        <div class="form-row" style="background:rgba(245,150,30,.12);border:1px solid #f5961e;border-radius:9px;padding:12px;margin-top:8px;grid-template-columns:1.3fr 1.3fr 0.9fr;align-items:flex-start">
+          <div class="form-group" style="margin-bottom:0;min-width:0">
+            <label class="form-label" id="crt-lbl-ref">🔗 رقم حساب المُحيل</label>
+            <input type="text" id="f-referral-acc" class="form-control" placeholder="رقم الحساب" inputmode="numeric" autocomplete="off" list="ref-datalist" oninput="onReferralChange()">
+            <datalist id="ref-datalist"></datalist>
+            <div id="f-referral-msg" style="font-size:11px;margin-top:5px;min-height:15px"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;min-width:0">
+            <label class="form-label" id="crt-lbl-ref-name">اسم المُحيل</label>
+            <input type="text" id="f-referral-name" class="form-control" placeholder="اسم المُحيل" autocomplete="off">
+          </div>
+          <div class="form-group" style="margin-bottom:0;min-width:0">
+            <label class="form-label" id="crt-lbl-ref-comm">عمولة المُحيل</label>
+            <input type="number" id="f-referral-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
           </div>
         </div>
       </div>
@@ -211,7 +234,13 @@
       <!-- Section 3: Deposits & Commissions -->
       <div class="form-section">
         <div class="form-section-title" id="crt-sec3-title">الإيداعات والعمولات</div>
-        <div class="form-row-3">
+        <style>
+          .crt-cmp{display:flex;gap:10px;flex-wrap:wrap}
+          .crt-cmp .form-group{flex:1;min-width:115px;margin-bottom:10px}
+          .crt-cmp .form-label{font-size:11px;margin-bottom:4px}
+          .crt-cmp .form-control{height:36px;font-size:12.5px;padding:6px 10px}
+        </style>
+        <div class="crt-cmp">
           <div class="form-group">
             <label class="form-label" id="crt-lbl-dep">إيداع فتح الحساب</label>
             <input type="number" id="f-dep" class="form-control" value="0" min="0">
@@ -221,19 +250,17 @@
             <input type="number" id="f-mon" class="form-control" value="0" min="0">
           </div>
           <div class="form-group">
-            <label class="form-label">Forex Commission</label>
-            <input type="number" id="f-forex" class="form-control" value="8" min="0">
+            <label class="form-label">Forex</label>
+            <input type="number" id="f-forex" class="form-control" value="8" min="0" step="any" inputmode="decimal">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Futures</label>
+            <input type="number" id="f-futures" class="form-control" value="8" min="0" step="any" inputmode="decimal">
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Futures Commission</label>
-            <input type="number" id="f-futures" class="form-control" value="8" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label" id="crt-lbl-notes">ملاحظات</label>
-            <input type="text" id="f-notes" class="form-control" id="crt-inp-notes" placeholder="ملاحظات اختيارية">
-          </div>
+        <div class="form-group">
+          <label class="form-label" id="crt-lbl-notes">ملاحظات</label>
+          <input type="text" id="f-notes" class="form-control" placeholder="ملاحظات اختيارية">
         </div>
       </div>
 
@@ -270,18 +297,20 @@ const CRT = {
     lblStatus:    'حالة الحساب',
     lblBranch:    'الفرع',
     lblTrading:   'نوع التداول',
-    lblKind:      'نوع الحساب (New / Sub)',
+    lblKind:      'حساب جديد أم فرعي',
     lblParent:    '🔗 رقم حساب العميل الأساسي (Parent AC) *',
     phParent:     'أدخل رقم الحساب الأساسي...',
     hintParent:   '⚠️ هذا الحقل إلزامي عند إنشاء حساب فرعي (Sub)',
     lblBroker:    '🧑‍💼 البروكر *',
     lblBrComm:    'عمولة البروكر',
-    lblMktr:      '📢 مسوّق داخلي',
-    lblMktrComm:  'عمولة المسوّق الداخلي',
-    lblExt1:      '🌐 مسوّق خارجي 1',
-    lblExt1Comm:  'عمولة مسوّق خارجي 1',
-    lblExt2:      '🌐 مسوّق خارجي 2',
-    lblExt2Comm:  'عمولة مسوّق خارجي 2',
+    lblMktr:      '📢 مسوّق داخلي 1',
+    lblMktrComm:  'عمولة المسوّق الداخلي 1',
+    lblExt1:      '🌐 مسوّق خارجي',
+    lblExt1Comm:  'عمولة المسوّق الخارجي',
+    lblExt2:      '📢 مسوّق داخلي 2',
+    lblExt2Comm:  'عمولة المسوّق الداخلي 2',
+    lblRef:       '🔗 إحالة (Referral) — رقم حساب المُحيل',
+    lblRefComm:   'عمولة الإحالة',
     lblDep:       'إيداع فتح الحساب',
     lblMon:       'الإيداع الشهري المتوقع',
     lblNotes:     'ملاحظات',
@@ -311,18 +340,20 @@ const CRT = {
     lblStatus:    'Account Status',
     lblBranch:    'Branch',
     lblTrading:   'Trading Type',
-    lblKind:      'Account Kind (New / Sub)',
+    lblKind:      'New or Sub',
     lblParent:    '🔗 Parent Account Number (Parent AC) *',
     phParent:     'Enter parent account number...',
     hintParent:   '⚠️ This field is required for Sub accounts',
     lblBroker:    '🧑‍💼 Broker *',
     lblBrComm:    'Broker Commission',
-    lblMktr:      '📢 Internal Marketer',
-    lblMktrComm:  'Internal Marketer Commission',
-    lblExt1:      '🌐 External Marketer 1',
-    lblExt1Comm:  'External Marketer 1 Commission',
-    lblExt2:      '🌐 External Marketer 2',
-    lblExt2Comm:  'External Marketer 2 Commission',
+    lblMktr:      '📢 Internal Marketer 1',
+    lblMktrComm:  'Internal Marketer 1 Commission',
+    lblExt1:      '🌐 External Marketer',
+    lblExt1Comm:  'External Marketer Commission',
+    lblExt2:      '📢 Internal Marketer 2',
+    lblExt2Comm:  'Internal Marketer 2 Commission',
+    lblRef:       '🔗 Referral — Referrer Account Number',
+    lblRefComm:   'Referral Commission',
     lblDep:       'Opening Deposit',
     lblMon:       'Expected Monthly Deposit',
     lblNotes:     'Notes',
@@ -369,6 +400,8 @@ function crtApplyLang() {
     'crt-lbl-ext1-comm':'lblExt1Comm',
     'crt-lbl-ext2':   'lblExt2',
     'crt-lbl-ext2-comm':'lblExt2Comm',
+    'crt-lbl-ref':    'lblRef',
+    'crt-lbl-ref-comm':'lblRefComm',
     'crt-lbl-dep':    'lblDep',
     'crt-lbl-mon':    'lblMon',
     'crt-lbl-notes':  'lblNotes',
@@ -504,31 +537,87 @@ function onKindChange() {
   }
 }
 
-// ── Marketer commission field enablers ────────────────────────
+// ── Commission field enablers. "Self" (or empty) = no person → commission is forced to 0. ──
+function _realPerson(v){ return v && v !== 'self'; }
+function onBrokerChange() {
+  const real = _realPerson(document.getElementById('f-broker').value);
+  const inp = document.getElementById('f-broker-comm');
+  inp.disabled = !real;
+  if (!real) inp.value = '0';
+  else if (!parseFloat(inp.value)) inp.value = '4';   // restore the usual default when leaving Self
+}
 function onMktrChange() {
-  const has = !!document.getElementById('f-marketer').value;
+  const real = _realPerson(document.getElementById('f-marketer').value);
   const inp = document.getElementById('f-marketer-comm');
-  inp.disabled = !has;
-  if (!has) inp.value = '0';
+  inp.disabled = !real;
+  if (!real) inp.value = '0';
 }
 function onExt1Change() {
-  const has = !!document.getElementById('f-ext1').value;
+  const real = _realPerson(document.getElementById('f-ext1').value);
   const inp = document.getElementById('f-ext1-comm');
-  inp.disabled = !has;
-  if (!has) inp.value = '0';
+  inp.disabled = !real;
+  if (!real) inp.value = '0';
 }
 function onExt2Change() {
-  const has = !!document.getElementById('f-ext2').value;
+  const real = _realPerson(document.getElementById('f-ext2').value);
   const inp = document.getElementById('f-ext2-comm');
-  inp.disabled = !has;
-  if (!has) inp.value = '0';
+  inp.disabled = !real;
+  if (!real) inp.value = '0';
+}
+
+// ── Referral account: enable commission + live existence check ──
+let _refLookupT = null;
+window._refMap = window._refMap || {};   // referral account → referrer name
+// Load known referrers once → datalist + instant-name map.
+(async function loadReferrerNames(){
+  try{
+    const r = await api('GET','/cards/referrer-names');
+    if(r && r.success){
+      var dl = document.getElementById('ref-datalist');
+      (r.data||[]).forEach(function(x){
+        window._refMap[String(x.account)] = x.name || '';
+        if(dl){ var o=document.createElement('option'); o.value=x.account; o.textContent=x.name||''; dl.appendChild(o); }
+      });
+    }
+  }catch(e){}
+})();
+function _refSetName(nm){ var el=document.getElementById('f-referral-name'); if(el && !el.value.trim()) el.value = nm || ''; }
+function _refShowName(acc, msg, en){
+  var nm = window._refMap[acc];
+  if(nm){ msg.style.color='var(--gr)'; msg.innerHTML = '✓ '+(en?'Referrer':'المحيل')+': <b>'+nm+'</b>'; _refSetName(nm); return true; }
+  return false;
+}
+function onReferralChange() {
+  const acc  = (document.getElementById('f-referral-acc').value || '').trim();
+  const comm = document.getElementById('f-referral-comm');
+  const msg  = document.getElementById('f-referral-msg');
+  const en   = (typeof curLang !== 'undefined' && curLang === 'en');
+  comm.disabled = !acc;
+  if (!acc) { comm.value = '0'; msg.textContent = ''; return; }
+  if (_refShowName(acc, msg, en)) return;   // instant from known referrers
+  msg.style.color = 'var(--mu)';
+  msg.textContent = en ? 'Checking…' : 'جارٍ التحقق…';
+  clearTimeout(_refLookupT);
+  _refLookupT = setTimeout(async () => {
+    const r = await api('GET', '/cards/account-name?account=' + encodeURIComponent(acc));
+    if (r && r.name) {
+      window._refMap[acc] = r.name;
+      msg.style.color = 'var(--gr)';
+      msg.innerHTML = '✓ '+(en?'Referrer':'المحيل')+': <b>'+r.name+'</b>';
+      _refSetName(r.name);
+    } else {
+      msg.style.color = 'var(--or)';
+      msg.innerHTML = en ? '✍️ New referrer — type the name on the right to save it'
+                         : '✍️ مُحيل جديد — اكتب الاسم في الخانة المجاورة ليُحفظ تلقائيًا';
+    }
+  }, 400);
 }
 
 // ── Load dropdowns ────────────────────────────────────────────
 async function loadFormOptions() {
   const [settings, employees, branches] = await Promise.all([
     api('GET', '/settings'),
-    api('GET', '/employees?status=approved'),
+    api('GET', '/employees?status=approved&slim=1&all_branches=1&recent=1'),
     api('GET', '/branches'),
   ]);
 
@@ -549,7 +638,6 @@ async function loadFormOptions() {
       });
     };
     fill('f-type',    settings.data.account_types);
-    fill('f-status',  settings.data.account_statuses);
     fill('f-trading', settings.data.trading_types);
   }
 
@@ -562,10 +650,16 @@ async function loadFormOptions() {
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
       if (firstOpt) sel.appendChild(firstOpt);
+      // "Self" — the account has no broker/marketer (direct / self-sourced).
+      const so = document.createElement('option');
+      so.value = 'self';
+      so.textContent = '👤 Self';
+      sel.appendChild(so);
       employees.data.forEach(e => {
         const o = document.createElement('option');
         o.value = e.id;
-        o.textContent = e.name + (e.role === 'external' ? ' 🌐' : e.role === 'marketing' ? ' 📢' : ' 🏦');
+        const br = e.branch && (e.branch.name_ar || e.branch.name_en);
+        o.textContent = e.name + (br ? ' — ' + br : '') + (e.role === 'external' ? ' 🌐' : e.role === 'marketing' ? ' 📢' : ' 🏦');
         sel.appendChild(o);
       });
     });
@@ -617,7 +711,8 @@ async function submitCard() {
   const yyyy     = parts[1] ?? new Date().getFullYear();
   const monthDate = `${yyyy}-${mm}-01`;
 
-  const mktrId = parseInt(document.getElementById('f-marketer').value) || null;
+  const mktrVal = document.getElementById('f-marketer').value;
+  const mktrId = (mktrVal && mktrVal !== 'self') ? (parseInt(mktrVal) || null) : null;
   const ext1Id = parseInt(document.getElementById('f-ext1').value)     || null;
   const ext2Id = parseInt(document.getElementById('f-ext2').value)     || null;
 
@@ -627,11 +722,11 @@ async function submitCard() {
     month_date:          monthDate,
     branch_id:           parseInt(document.getElementById('f-branch').value) || null,
     account_type_id:     parseInt(document.getElementById('f-type').value)   || null,
-    account_status_id:   parseInt(document.getElementById('f-status').value) || null,
+    account_status_id:   null,
     trading_type_id:     parseInt(document.getElementById('f-trading').value)|| null,
     account_kind:        kind,
     parent_account_number: kind === 'sub' ? parentAc : null,
-    broker_id:           parseInt(broker),
+    broker_id:           (broker && broker !== 'self') ? (parseInt(broker) || null) : null,
     broker_commission:   parseFloat(document.getElementById('f-broker-comm').value) || 0,
     marketer_id:         mktrId,
     marketer_commission: mktrId ? (parseFloat(document.getElementById('f-marketer-comm').value) || 0) : 0,
@@ -639,6 +734,9 @@ async function submitCard() {
     ext_commission1:     ext1Id ? (parseFloat(document.getElementById('f-ext1-comm').value) || 0) : 0,
     ext_marketer2_id:    ext2Id,
     ext_commission2:     ext2Id ? (parseFloat(document.getElementById('f-ext2-comm').value) || 0) : 0,
+    referral_account:    (document.getElementById('f-referral-acc').value || '').trim() || null,
+    referral_name:       (document.getElementById('f-referral-name').value || '').trim() || null,
+    referral_commission: (document.getElementById('f-referral-acc').value || '').trim() ? (parseFloat(document.getElementById('f-referral-comm').value) || 0) : 0,
     forex_commission:    parseFloat(document.getElementById('f-forex').value)   || 0,
     futures_commission:  parseFloat(document.getElementById('f-futures').value) || 0,
     initial_deposit:     parseFloat(document.getElementById('f-dep').value)  || 0,

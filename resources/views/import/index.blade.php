@@ -14,78 +14,20 @@
       اتبع الخطوات التالية لاستيراد كروت كل فرع من البيانات السابقة دون أي كتابة يدوية.
     </div>
 
-    {{-- خطوات مرقمة --}}
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
-      @foreach([
-        ['1','📥','حمّل النموذج','اضغط "تحميل النموذج" للحصول على ملف Excel جاهز بالأعمدة الصحيحة'],
-        ['2','✏️','أدخل البيانات','افتح الملف وأدخل كروت الفرع — صف واحد لكل كرت. يمكن تكرار العملية لكل فرع في ملف منفصل'],
-        ['3','🏢','اختر الفرع','قبل الرفع حدد الفرع المستهدف — جميع الكروت في الملف ستُضاف لهذا الفرع'],
-        ['4','📤','ارفع الملف','اسحب الملف أو اضغط للاختيار — ستظهر معاينة قبل الحفظ النهائي'],
-        ['5','✅','راجع وتأكيد','راجع الأعداد: جديد / تحديث / أخطاء — ثم اضغط "استيراد" للحفظ'],
-        ['6','🔁','كرر للفروع','كرر من الخطوة 2 لكل فرع حتى تكتمل بيانات جميع الفروع'],
-      ] as [$n,$ico,$ttl,$desc])
-      <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1);position:relative">
-        <div style="position:absolute;top:-10px;right:12px;width:22px;height:22px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white">{{$n}}</div>
-        <div style="font-size:18px;margin-bottom:6px">{{$ico}}</div>
-        <div style="font-size:12px;font-weight:700;color:var(--pri2);margin-bottom:4px">{{$ttl}}</div>
-        <div style="font-size:11px;color:var(--mu);line-height:1.6">{{$desc}}</div>
-      </div>
-      @endforeach
-    </div>
+    {{-- خطوات مرقمة (مُولَّدة بـ JS للدعم الثنائي) --}}
+    <div id="imp-steps-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px"></div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      {{-- أعمدة Excel --}}
+      {{-- أعمدة Excel (JS-rendered) --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
         <div style="font-size:12px;font-weight:800;color:var(--pri2);margin-bottom:8px" id="imp-cols-title">📝 أعمدة ملف Excel (بالترتيب)</div>
-        <div style="display:flex;flex-direction:column;gap:3px">
-          @foreach([
-            ['A','AC No.','رقم الحساب — مطلوب','#e05050'],
-            ['B','Broker','اسم البروكر (يجب أن يطابق اسمه في الموظفين تماماً)','#f5a623'],
-            ['C','Broker Commission','عمولة البروكر لكل لوت — مثال: 4','#f5a623'],
-            ['D','Marketing','اسم المسوّق الداخلي','#22c97a'],
-            ['E','Marketing Commission','عمولة المسوّق — مثال: 3','#22c97a'],
-            ['F','Ext Marketer 1','المسوّق الخارجي الأول (اختياري)','#7b68ee'],
-            ['G','Ext Commission 1','عمولته','#7b68ee'],
-            ['H','Ext Marketer 2','المسوّق الخارجي الثاني (اختياري)','#7b68ee'],
-            ['I','Ext Commission 2','عمولته','#7b68ee'],
-            ['J','Month','الشهر — مثال: Jan 2025','#2e86ab'],
-            ['K','Initial Deposit $','إيداع فتح الحساب','#2e86ab'],
-            ['L','Monthly Deposit $','الإيداع الشهري المتوقع','#2e86ab'],
-            ['M','New Or Sub','NEW أو SUB','#3a9db5'],
-            ['N','Type','ECN أو STP أو غيره','#3a9db5'],
-          ] as [$col,$name,$note,$clr])
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-            <span style="background:{{$clr}};color:white;font-family:monospace;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0;min-width:16px;text-align:center">{{$col}}</span>
-            <span class="mono" style="color:var(--m2);font-size:10px;flex-shrink:0;min-width:120px">{{$name}}</span>
-            <span style="color:var(--mu);font-size:10px">{{$note}}</span>
-          </div>
-          @endforeach
-        </div>
+        <div style="display:flex;flex-direction:column;gap:3px" id="imp-cols-list"></div>
       </div>
 
-      {{-- ملاحظات مهمة --}}
+      {{-- ملاحظات مهمة (JS-rendered) --}}
       <div style="background:var(--bg4);border-radius:10px;padding:14px;border:1px solid var(--brd1)">
         <div style="font-size:12px;font-weight:800;color:var(--or);margin-bottom:8px" id="imp-notes-title">⚠️ ملاحظات مهمة</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
-          <div style="padding:8px;background:rgba(224,80,80,.08);border-radius:7px;border-right:3px solid var(--re)">
-            🔑 <strong>أسماء الموظفين</strong> يجب أن تطابق بالضبط الأسماء المسجّلة في قسم الموظفين — حرف بحرف
-          </div>
-          <div style="padding:8px;background:rgba(46,134,171,.08);border-radius:7px;border-right:3px solid var(--pri)">
-            📅 <strong>تنسيق الشهر:</strong> اكتب مثل <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> أو <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>
-          </div>
-          <div style="padding:8px;background:rgba(34,201,122,.08);border-radius:7px;border-right:3px solid var(--gr)">
-            🔄 <strong>التكرار محمي:</strong> إذا كان الحساب + الشهر موجوداً مسبقاً سيتم تحديثه فقط
-          </div>
-          <div style="padding:8px;background:rgba(245,166,35,.08);border-radius:7px;border-right:3px solid var(--or)">
-            🏢 <strong>ملف واحد = فرع واحد</strong> — حدد الفرع المستهدف قبل كل رفع
-          </div>
-          <div style="padding:8px;background:rgba(123,104,238,.08);border-radius:7px;border-right:3px solid #7b68ee">
-            📊 <strong>لا يوجد حد أقصى</strong> — يمكنك رفع أي عدد من السجلات في ملف واحد
-          </div>
-          <div style="padding:8px;background:rgba(46,134,171,.08);border-radius:7px;border-right:3px solid var(--pri)">
-            💾 <strong>النتيجة:</strong> بعد الاستيراد ستظهر تفاصيل كاملة — جديد / تحديث / أخطاء مع رقم الصف
-          </div>
-        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px" id="imp-notes-list"></div>
         <div style="margin-top:12px">
           <button class="btn btn-primary" id="imp-dl-btn" onclick="downloadTemplate()">⬇ تحميل نموذج Excel</button>
         </div>
@@ -93,6 +35,17 @@
     </div>
   </div>
 </div>
+
+{{-- ── نوع الاستيراد ── --}}
+@if(auth()->user()?->isFinanceAdmin())
+<div class="panel" style="max-width:900px;margin-bottom:14px">
+  <div class="panel-header"><div class="panel-title" id="imp-mode-title">📂 نوع الاستيراد</div></div>
+  <div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap">
+    <button type="button" id="impmode-normal" class="btn btn-primary" onclick="setImportMode('normal')">📋 استيراد عادي</button>
+    <button type="button" id="impmode-cc"     class="btn btn-ghost"   onclick="setImportMode('cc')">📞 استيراد مركز الاتصال</button>
+  </div>
+</div>
+@endif
 
 {{-- ── تحديد الفرع (المدير المالي فقط) ── --}}
 @if(auth()->user()?->isFinanceAdmin())
@@ -210,6 +163,27 @@ const IMP = {
     summaryTotal:'إجمالي الصفوف', summaryNew:'حسابات جديدة',
     summaryUpdated:'سجلات محدّثة', summaryFailed:'صفوف فاشلة',
     rowLabel:'صف',
+    steps:[
+      ['📥','حمّل النموذج','اضغط "تحميل النموذج" للحصول على ملف Excel جاهز بالأعمدة الصحيحة'],
+      ['✏️','أدخل البيانات','افتح الملف وأدخل كروت الفرع — صف واحد لكل كرت. يمكن تكرار العملية لكل فرع في ملف منفصل'],
+      ['🏢','اختر الفرع','قبل الرفع حدد الفرع المستهدف — جميع الكروت في الملف ستُضاف لهذا الفرع'],
+      ['📤','ارفع الملف','اسحب الملف أو اضغط للاختيار — ستظهر معاينة قبل الحفظ النهائي'],
+      ['✅','راجع وتأكيد','راجع الأعداد: جديد / تحديث / أخطاء — ثم اضغط "استيراد" للحفظ'],
+      ['🔁','كرر للفروع','كرر من الخطوة 2 لكل فرع حتى تكتمل بيانات جميع الفروع'],
+    ],
+    colNotes:['رقم الحساب — مطلوب','اسم البروكر (يجب أن يطابق اسمه في الموظفين تماماً)','عمولة البروكر لكل لوت — مثال: 4','اسم المسوّق الداخلي 1','عمولة المسوّق — مثال: 3','المسوّق الخارجي (لا يعمل بالشركة — اختياري)','عمولته','المسوّق الداخلي 2 (اختياري)','عمولته','الشهر — مثال: Jan 2025','إيداع فتح الحساب','الإيداع الشهري المتوقع','NEW أو SUB','ECN أو STP أو غيره'],
+    notes:[
+      ['rgba(224,80,80,.08)','var(--re)','🔑 <strong>أسماء الموظفين</strong> يجب أن تطابق بالضبط الأسماء المسجّلة في قسم الموظفين — حرف بحرف'],
+      ['rgba(46,134,171,.08)','var(--pri)','📅 <strong>تنسيق الشهر:</strong> اكتب مثل <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> أو <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>'],
+      ['rgba(34,201,122,.08)','var(--gr)','🔄 <strong>التكرار محمي:</strong> إذا كان الحساب + الشهر موجوداً مسبقاً سيتم تحديثه فقط'],
+      ['rgba(26,173,186,.08)','var(--pri2)','🧠 <strong>قراءة ذكية:</strong> يتعرّف النظام على الأعمدة من أسمائها (عربي/إنجليزي) مهما اختلف ترتيبها، وتجاوز الأعمدة الناقصة (كالمسوّق الخارجي).'],
+      ['rgba(245,168,40,.08)','var(--or)','🔗 <strong>دمج المسوّقين:</strong> إذا تكرّر رقم الحساب على سطرين (مسوّقان لنفس الحساب) يدمجهما النظام في كرت واحد بمسوّقَين.'],
+      ['rgba(123,104,238,.08)','var(--pu)','💡 <strong>إحالة تلقائية:</strong> إذا وُجد <u>رقم حساب</u> بدل اسم المسوّق وبجواره عمولة، يحتسبه النظام تلقائيًا كـ<strong>إحالة (Referral)</strong> ويضع العمولة لصاحب الحساب المُحيل.'],
+      ['rgba(34,201,122,.08)','var(--gr)','🧑‍💼 <strong>تعريف الموظفين تلقائيًا:</strong> أي اسم بروكر/مسوّق في الشيت غير موجود في الموظفين يُنشأ تلقائيًا بدوره الصحيح (بروكر/مسوّق/خارجي) ويُربط بالفرع — لا حاجة لتعريفهم مسبقًا.'],
+      ['rgba(245,166,35,.08)','var(--or)','🏢 <strong>ملف واحد = فرع واحد</strong> — حدد الفرع المستهدف قبل كل رفع'],
+      ['rgba(123,104,238,.08)','#7b68ee','📊 <strong>لا يوجد حد أقصى</strong> — يمكنك رفع أي عدد من السجلات في ملف واحد'],
+      ['rgba(46,134,171,.08)','var(--pri)','💾 <strong>النتيجة:</strong> بعد الاستيراد ستظهر تفاصيل كاملة — جديد / تحديث / أخطاء مع رقم الصف'],
+    ],
   },
   en: {
     tbTitle:'Import Data', planTitle:'📋 Import Plan — Previous Branch Cards',
@@ -239,14 +213,39 @@ const IMP = {
     summaryTotal:'Total Rows', summaryNew:'New Accounts',
     summaryUpdated:'Updated Records', summaryFailed:'Failed Rows',
     rowLabel:'Row',
+    steps:[
+      ['📥','Download Template','Click "Download Template" to get a ready Excel file with the correct columns'],
+      ['✏️','Enter Data','Open the file and enter the branch cards — one row per card. Repeat for each branch in a separate file'],
+      ['🏢','Select Branch','Before uploading select the target branch — all cards in the file will be added to this branch'],
+      ['📤','Upload File','Drag the file or click to select — a preview will appear before final save'],
+      ['✅','Review & Confirm','Review counts: new / updated / errors — then click "Import" to save'],
+      ['🔁','Repeat per Branch','Repeat from step 2 for each branch until all branch data is complete'],
+    ],
+    colNotes:['Account number — required','Broker name (must exactly match name in Employees)','Broker commission per lot — e.g. 4','Internal marketer 1 name','Marketer commission — e.g. 3','External marketer (not a company employee — optional)','Their commission','Internal marketer 2 (optional)','Their commission','Month — e.g. Jan 2025','Account opening deposit','Expected monthly deposit','NEW or SUB','ECN or STP or other'],
+    notes:[
+      ['rgba(224,80,80,.08)','var(--re)','🔑 <strong>Employee names</strong> must exactly match names registered in the Employees section — character by character'],
+      ['rgba(46,134,171,.08)','var(--pri)','📅 <strong>Month format:</strong> write like <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">Jan 2025</code> or <code style="background:var(--inp-bg);padding:1px 5px;border-radius:4px">February 2024</code>'],
+      ['rgba(34,201,122,.08)','var(--gr)','🔄 <strong>Duplicate protection:</strong> if account + month already exists it will only be updated'],
+      ['rgba(26,173,186,.08)','var(--pri2)','🧠 <strong>Smart reading:</strong> columns are detected by their header names (AR/EN) in any order, and missing columns (e.g. external marketers) are skipped.'],
+      ['rgba(245,168,40,.08)','var(--or)','🔗 <strong>Marketer merge:</strong> if the same account appears on two rows (two marketers), they are merged into one card with two marketers.'],
+      ['rgba(123,104,238,.08)','var(--pu)','💡 <strong>Auto referral:</strong> if a marketer cell contains an <u>account number</u> (not a name) with a commission, the system treats it as a <strong>Referral</strong> and credits the commission to that referrer account.'],
+      ['rgba(34,201,122,.08)','var(--gr)','🧑‍💼 <strong>Auto-define employees:</strong> any broker/marketer name not already in Employees is created automatically with the right role (broker/marketer/external) and linked to the branch — no need to pre-define them.'],
+      ['rgba(245,166,35,.08)','var(--or)','🏢 <strong>One file = one branch</strong> — select the target branch before each upload'],
+      ['rgba(123,104,238,.08)','#7b68ee','📊 <strong>No maximum limit</strong> — you can upload any number of records in one file'],
+      ['rgba(46,134,171,.08)','var(--pri)','💾 <strong>Result:</strong> after import full details will appear — new / updated / errors with row numbers'],
+    ],
   }
 };
 function impL()    { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
 function imp(key)  { const l = impL(); return IMP[l]?.[key] ?? IMP.ar[key] ?? key; }
 
 function impApplyLang() {
-  const t = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = imp(key); };
-  const h = (id, key) => { const e = document.getElementById(id); if (e) e.innerHTML  = imp(key); };
+  const L  = impL();
+  const D  = IMP[L] || IMP.ar;
+  const t  = (id, key) => { const e = document.getElementById(id); if (e) e.textContent = D[key] ?? IMP.ar[key] ?? key; };
+  const h  = (id, key) => { const e = document.getElementById(id); if (e) e.innerHTML  = D[key] ?? IMP.ar[key] ?? key; };
+  const el = (id) => document.getElementById(id);
+
   t('imp-plan-title','planTitle');
   h('imp-quick-start','quickStart');
   t('imp-cols-title','colsTitle');
@@ -265,7 +264,46 @@ function impApplyLang() {
   t('imp-err-th-row','errThRow');
   t('imp-err-th-ac','errThAc');
   t('imp-err-th-reason','errThReason');
-  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = imp('tbTitle');
+  const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = D.tbTitle;
+
+  /* ── Render Steps ── */
+  const stepsGrid = el('imp-steps-grid');
+  if (stepsGrid && D.steps) {
+    stepsGrid.innerHTML = D.steps.map(([ico,ttl,desc], i) => `
+      <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1);position:relative">
+        <div style="position:absolute;top:-10px;right:12px;width:22px;height:22px;background:var(--pri);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white">${i+1}</div>
+        <div style="font-size:18px;margin-bottom:6px">${ico}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--pri2);margin-bottom:4px">${ttl}</div>
+        <div style="font-size:11px;color:var(--mu);line-height:1.6">${desc}</div>
+      </div>`).join('');
+  }
+
+  /* ── Render Column Notes ── */
+  const colsList = el('imp-cols-list');
+  const colDefs = [
+    ['A','AC No.','#e05050'],['B','Broker','#f5a623'],['C','Broker Commission','#f5a623'],
+    ['D','Marketing','#22c97a'],['E','Marketing Commission','#22c97a'],
+    ['F','Ext Marketer 1','#7b68ee'],['G','Ext Commission 1','#7b68ee'],
+    ['H','Ext Marketer 2','#7b68ee'],['I','Ext Commission 2','#7b68ee'],
+    ['J','Month','#2e86ab'],['K','Initial Deposit $','#2e86ab'],['L','Monthly Deposit $','#2e86ab'],
+    ['M','New Or Sub','#3a9db5'],['N','Type','#3a9db5'],
+  ];
+  if (colsList && D.colNotes) {
+    colsList.innerHTML = colDefs.map(([col,name,clr], i) => `
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="background:${clr};color:white;font-family:monospace;font-weight:700;font-size:10px;padding:1px 6px;border-radius:4px;flex-shrink:0;min-width:16px;text-align:center">${col}</span>
+        <span class="mono" style="color:var(--m2);font-size:10px;flex-shrink:0;min-width:120px">${name}</span>
+        <span style="color:var(--mu);font-size:10px">${D.colNotes[i] ?? ''}</span>
+      </div>`).join('');
+  }
+
+  /* ── Render Notes ── */
+  const notesList = el('imp-notes-list');
+  if (notesList && D.notes) {
+    notesList.innerHTML = D.notes.map(([bg,brd,html]) =>
+      `<div style="padding:8px;background:${bg};border-radius:7px;border-right:3px solid ${brd}">${html}</div>`
+    ).join('');
+  }
 }
 const _impOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
@@ -274,6 +312,106 @@ window.applyLang = function(lang) {
 };
 
 let importRows = [];
+let importHeader = [];
+let importMode = 'normal';
+
+function setImportMode(m){
+  importMode = m;
+  const en = (typeof impL==='function' && impL()==='en');
+  const _cls = (id,on) => { const e=document.getElementById(id); if(e) e.className = 'btn ' + (on?'btn-primary':'btn-ghost'); };
+  _cls('impmode-normal', m==='normal'); _cls('impmode-cc', m==='cc');
+  const title = document.getElementById('imp-branch-title');
+  const lbl   = document.getElementById('imp-branch-lbl');
+  if (m==='cc'){
+    if(title) title.textContent = en?'📞 Call Center source branch':'📞 فرع مركز الاتصال (المصدر)';
+    if(lbl)   lbl.textContent   = en?'Select the Call Center branch — the target branch is auto-detected from the duplicate account number already imported under its branch (the "Target Branch" column is optional) *'
+                                    :'اختر فرع مركز الاتصال — يكتشف النظام الفرع المستهدف تلقائيًا من رقم الحساب المكرّر المستورد مسبقًا تحت فرعه (عمود «الفرع المُرسَل له» اختياري) *';
+  } else {
+    if(title) title.textContent = en?'🏢 Target branch':'🏢 تحديد الفرع المستهدف';
+    if(lbl)   lbl.textContent   = en?'Branch — all cards in the file will be added to this branch *'
+                                    :'الفرع — جميع كروت الملف ستُضاف لهذا الفرع *';
+  }
+}
+
+/* ── Smart column detection: match header names (AR/EN, fuzzy) to fields ── */
+// Excel stores "Dec-25" as a date — read it as a real month ("Dec 2025"),
+// never as the raw serial number (43361). Handles Date objects and serials.
+const _IMP_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _fmtMonth(v){
+  // Date object (only if cellDates was on) — read in UTC so the calendar month never
+  // drifts by a day due to the local timezone (the cause of "Mar" being saved as "Feb").
+  if (v instanceof Date && !isNaN(v))
+    return _IMP_MON[v.getUTCMonth()] + ' ' + v.getUTCFullYear();
+  const s = String(v==null?'':v).trim();
+  if (s === '') return '';
+  // bare Excel serial number → convert via the Excel epoch (UTC, timezone-safe)
+  if (/^\d{4,6}(\.\d+)?$/.test(s)) {
+    const n = parseFloat(s);
+    if (n > 20000 && n < 80000) {
+      const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+      if (!isNaN(d)) return _IMP_MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+    }
+  }
+  // text like "Mar-26", "Mar 2026", "March-2026", "Mar/26" → "Mar 2026"
+  const m = s.match(/^([A-Za-z]{3,})[\s\-\/.]+(\d{2,4})$/);
+  if (m) {
+    const idx = _IMP_MON.findIndex(mn => m[1].toLowerCase().startsWith(mn.toLowerCase()));
+    if (idx >= 0) { let y = parseInt(m[2], 10); if (y < 100) y += 2000; return _IMP_MON[idx] + ' ' + y; }
+  }
+  return s;
+}
+function _impNorm(s){
+  return String(s==null?'':s).toLowerCase().trim()
+    .replace(/[ً-ْ]/g,'')          // strip Arabic diacritics
+    .replace(/[أإآ]/g,'ا') // normalize alef
+    .replace(/[._\-\/\\():#]/g,' ').replace(/\s+/g,' ').trim();
+}
+const IMP_ALIASES = {
+  ac_no:['account number','account no','account','ac no.','ac no','acno','acc no','ac','a c','رقم الحساب','رقم حساب','الحساب','حساب'],
+  broker:['broker','broker name','بروكر','اسم البروكر','البروكر'],
+  broker_commission:['broker commission per lot','broker comm per lot','broker commission/lot','broker commission','broker comm','broker com','عمولة البروكر','عمولة بروكر','عموله البروكر'],
+  marketing:['marketing','marketer','marketing name','marketer name','internal marketer','مسوق','المسوق','اسم المسوق','مسوق داخلي','المسوق الداخلي','تسويق'],
+  marketing_commission:['marketing commission per lot','marketing comm per lot','marketing commission/lot','marketing commission','marketer commission','marketing comm','عمولة المسوق','عمولة التسويق','عمولة مسوق','عموله المسوق'],
+  ext_marketer1:['external marketer 1','external marketer','ext marketer 1','external 1','ext marketer1','مسوق خارجي 1','مسوق خارجي','المسوق الخارجي','مسوق خارجي اول','خارجي 1','خارجي'],
+  ext_commission1:['external commission 1','external commission','ext commission 1','external comm','عمولة خارجي 1','عمولة المسوق الخارجي','عمولة خارجي','عموله خارجي'],
+  ext_marketer2:['internal marketer 2','marketer 2','marketing 2','marketer2','مسوق داخلي 2','مسوق 2','المسوق الثاني','مسوق ثاني','مسوق2','external marketer 2','مسوق خارجي 2'],
+  ext_commission2:['internal marketer 2 commission','marketer 2 commission','marketing 2 commission','عمولة مسوق 2','عمولة المسوق الثاني','عمولة مسوق ثاني','external commission 2','عمولة خارجي 2'],
+  month:['opening month','open month','account opening month','month','شهر فتح الحساب','الشهر','شهر'],
+  initial_deposit:['initial deposit','opening deposit','first deposit','deposit','الايداع الاولي','ايداع فتح الحساب','اول ايداع','الايداع','ايداع'],
+  monthly_deposit:['monthly deposit','expected monthly deposit','الايداع الشهري','ايداع شهري','الايداع الشهري المتوقع'],
+  new_or_sub:['new or sub','new/sub','new sub','نوع الحساب','جديد ام فرعي','جديد او فرعي'],
+  // "Type" / "ECN" / platform column → mapped here and IGNORED (never read as month or new/sub)
+  trading:['trading type','account type','platform','trading','type','ecn','stp','نوع التداول','نوع العقد','نوع'],
+  // ── Referral (a referrer account number that earns the marketing commission) ──
+  referral_account:['referral','referral account','referrer account','referral acc','referrer','رقم المحيل','حساب المحيل','احاله','إحالة','المحيل','ريفيرال'],
+  referral_commission:['referral commission','referral comm','referrer commission','عمولة الاحالة','عمولة الإحالة','عمولة المحيل','عموله الاحاله'],
+  // ── Call Center columns ──
+  cc_agent:['cc agent','call center agent','موظف الكول سنتر','موظف مركز الاتصال','موظف الكول','الموظف'],
+  cc_agent_commission:['cc agent commission','call center agent commission','agent commission','عمولة موظف الكول سنتر','عمولة موظف مركز الاتصال','عمولة الموظف'],
+  cc_manager_commission:['cc manager commission','call center manager commission','manager commission','عمولة مديرة مركز الاتصال','عمولة مدير مركز الاتصال','عمولة المديرة'],
+  target_branch:['target branch','branch sent to','الفرع المرسل له','الفرع المستهدف','الفرع المرسل','فرع الوجهة'],
+};
+function buildColMap(header){
+  const map={ac_no:-1,broker:-1,broker_commission:-1,marketing:-1,marketing_commission:-1,
+    ext_marketer1:-1,ext_commission1:-1,ext_marketer2:-1,ext_commission2:-1,
+    month:-1,initial_deposit:-1,monthly_deposit:-1,new_or_sub:-1,trading:-1,
+    referral_account:-1,referral_commission:-1,
+    cc_agent:-1,cc_agent_commission:-1,cc_manager_commission:-1,target_branch:-1};
+  (header||[]).forEach((cell,i)=>{
+    const h=_impNorm(cell); if(!h) return;
+    let best=null,bestLen=0;
+    for(const field in IMP_ALIASES){
+      for(const a of IMP_ALIASES[field]){
+        // short aliases (<=3 chars, e.g. "ac") must match EXACTLY so they don't
+        // accidentally hit longer headers that merely contain those letters.
+        const hit = a.length <= 3 ? (h === a) : (h === a || h.indexOf(a) >= 0);
+        if(hit){ if(a.length>bestLen){ bestLen=a.length; best=field; } }
+      }
+    }
+    if(best && map[best]===-1) map[best]=i;
+  });
+  return map;
+}
 
 // ── تحميل الفروع ───────────────────────────────────────────
 async function loadImportBranches() {
@@ -301,21 +439,32 @@ loadImportBranches();
 
 // ── تحميل نموذج Excel ──────────────────────────────────────
 function downloadTemplate() {
-  const headers = ['AC No.','Broker','Broker Commission','Marketing','Marketing Commission',
-    'Ext Marketer 1','Ext Commission 1','Ext Marketer 2','Ext Commission 2',
-    'Month','Initial Deposit $','Monthly Deposit $','New Or Sub','Type'];
-  const samples = [
-    ['719750','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','Jan 2025','5000','12000','NEW','ECN'],
-    ['720100','Samer Obeid','4','Fahad Al-Bloshi','3','Ali Hassan','1.5','','0','Jan 2025','3000','8000','NEW','STP'],
-    ['718500','Ahmed Al-Sayed','4','','0','','0','','0','Feb 2025','10000','0','SUB','ECN'],
-    ['721000','Khalid Nasser','3.5','Mariam Al-Azmi','2','','0','','0','Mar 2025','7500','15000','NEW','ECN'],
-  ];
+  let headers, samples, fname = 'wafra_import_template.xlsx';
+  if (importMode === 'cc') {
+    headers = ['AC No.','Month','CC Agent','CC Agent Commission','CC Manager Commission','Target Branch',
+      'Broker','Broker Commission','Marketing','Marketing Commission','External Marketer','External Commission',
+      'Internal Marketer 2','Internal Marketer 2 Commission','Initial Deposit $','New Or Sub','Type'];
+    samples = [
+      ['730100','Jan 2025','Sara Ali','1','2','الجهراء','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','5000','NEW','ECN'],
+      ['730105','Jan 2025','Sara Ali','1','2','','','0','','0','','0','','0','2000','NEW','ECN'],
+    ];
+    fname = 'wafra_callcenter_import_template.xlsx';
+  } else {
+    headers = ['AC No.','Broker','Broker Commission','Marketing','Marketing Commission',
+      'External Marketer','External Commission','Internal Marketer 2','Internal Marketer 2 Commission',
+      'Month','Initial Deposit $','Monthly Deposit $','New Or Sub','Type'];
+    samples = [
+      ['719750','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','Jan 2025','5000','12000','NEW','ECN'],
+      ['720100','Samer Obeid','4','Fahad Al-Bloshi','3','Ali Hassan','1.5','','0','Jan 2025','3000','8000','NEW','STP'],
+      ['718500','Ahmed Al-Sayed','4','','0','','0','','0','Feb 2025','10000','0','SUB','ECN'],
+      ['721000','Khalid Nasser','3.5','Mariam Al-Azmi','2','','0','','0','Mar 2025','7500','15000','NEW','ECN'],
+    ];
+  }
   const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
   ws['!cols'] = headers.map(() => ({wch:22}));
-  // تلوين الرأس (لن يعمل في جميع الأجهزة لكن يحسّن الشكل)
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Cards Import');
-  XLSX.writeFile(wb, 'wafra_import_template.xlsx');
+  XLSX.writeFile(wb, fname);
   toast(imp('toastTemplate'),'success');
 }
 
@@ -331,23 +480,48 @@ function handleFile(inp) { if (inp.files[0]) readFile(inp.files[0]); }
 function readFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
+    // NOTE: cellDates intentionally OFF — date cells come through as Excel serial numbers,
+    // which _fmtMonth converts via the UTC epoch (timezone-safe). cellDates produced Date
+    // objects that drifted by a day in some timezones, saving "Mar" as "Feb".
     const wb   = XLSX.read(e.target.result, { type: 'array' });
     const ws   = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
     if (rows.length < 2) { toast(imp('toastEmpty'), 'error'); return; }
 
-    const header = rows[0];
-    importRows   = rows.slice(1).filter(r => r.some(c => c));
+    // SMART header detection: the first row may be a title ("Employees Commission for...").
+    // Scan the first rows and pick the one that actually holds recognised column names
+    // (must include the account column); data starts on the row after it.
+    let headerIdx = 0, bestScore = -1;
+    const scan = Math.min(rows.length, 20);
+    for (let i = 0; i < scan; i++) {
+      const mm = buildColMap(rows[i] || []);
+      if (mm.ac_no === -1) continue;                 // not a header without an account column
+      let score = 0; for (const k in mm) if (mm[k] !== -1) score++;
+      if (score > bestScore) { bestScore = score; headerIdx = i; }
+    }
+    const header = rows[headerIdx];
+    importHeader = header;
+    // Data rows after the header. Keep any row that has an ACCOUNT NUMBER (even if every
+    // other cell is empty) so account-only rows still import; otherwise require ≥2 cells to
+    // drop blank rows / stray single-cell section labels. (Backend still skips non-data rows.)
+    const _hm = buildColMap(header);
+    const _acIdx = _hm.ac_no >= 0 ? _hm.ac_no : 0;
+    importRows = rows.slice(headerIdx + 1).filter(r => {
+      if (String(r[_acIdx] ?? '').trim() !== '') return true;
+      return r.filter(c => c !== '' && c != null).length >= 2;
+    });
 
     document.getElementById('import-filename').textContent = '📄 ' + file.name;
     document.getElementById('import-info').textContent     = importRows.length + (impL()==='en'?' records':' سجل');
     document.getElementById('import-details').style.display = 'none';
 
+    // format the month column (now a serial) for the preview
+    const _mIdxPrev = (_hm.ac_no === -1) ? 9 : (_hm.month >= 0 ? _hm.month : -1);
     document.getElementById('import-thead').innerHTML =
       '<tr>' + header.map(h => `<th>${h || ''}</th>`).join('') + '</tr>';
     document.getElementById('import-tbody').innerHTML =
       importRows.slice(0, 20).map(r =>
-        `<tr>${header.map((_, i) => `<td style="font-size:11px">${r[i] ?? ''}</td>`).join('')}</tr>`
+        `<tr>${header.map((_, i) => `<td style="font-size:11px">${ (i === _mIdxPrev || r[i] instanceof Date) ? _fmtMonth(r[i]) : (r[i] ?? '') }</td>`).join('')}</tr>`
       ).join('');
 
     document.getElementById('import-result').style.display = 'block';
@@ -377,35 +551,152 @@ async function confirmImport() {
   let w = 0;
   const timer = setInterval(() => { w = Math.min(w + 2, 88); bar.style.width = w + '%'; }, 80);
 
-  const rows = importRows.map(r => ({
-    ac_no:                  String(r[0] || '').trim().replace(/\.0$/, ''),
-    broker:                 String(r[1] || '').trim(),
-    broker_commission:      parseFloat(r[2]) || 0,
-    marketing:              String(r[3] || '').trim(),
-    marketing_commission:   parseFloat(r[4]) || 0,
-    ext_marketer1:          String(r[5] || '').trim(),
-    ext_commission1:        parseFloat(r[6]) || 0,
-    ext_marketer2:          String(r[7] || '').trim(),
-    ext_commission2:        parseFloat(r[8]) || 0,
-    month:                  String(r[9] || '').trim(),
-    initial_deposit:        parseFloat(r[10]) || 0,
-    monthly_deposit:        parseFloat(r[11]) || 0,
-    new_or_sub:             String(r[12] || '').trim(),
-    type:                   String(r[13] || 'ECN').trim(),
-  })).filter(r => r.ac_no && r.month);
+  // ── Smart column mapping (by header name); fall back to fixed template order ──
+  const m = buildColMap(importHeader);
+  const FIXED = {ac_no:0,broker:1,broker_commission:2,marketing:3,marketing_commission:4,
+    ext_marketer1:5,ext_commission1:6,ext_marketer2:7,ext_commission2:8,
+    month:9,initial_deposit:10,monthly_deposit:11,new_or_sub:12,trading:13};
+  const useFixed = (m.ac_no === -1);           // header not recognized → legacy order
+  const ix = f => useFixed ? FIXED[f] : (m[f] >= 0 ? m[f] : -1);
+  const S  = (r,f) => { const i=ix(f); return i>=0 ? String(r[i] ?? '').trim() : ''; };
+  const N  = (r,f) => { const i=ix(f); return i>=0 ? (parseFloat(r[i]) || 0) : 0; };
+
+  // a marketer cell that is a pure number = an account number → it's a REFERRAL, not an employee
+  const isAccNo = v => v !== '' && /^\d{2,}(\.\d+)?$/.test(String(v).replace(/[,\s]/g,''));
+  // 0 / - / – / $ in a broker/marketer cell = "no employee" → ignore it
+  const empName = v => { const t=String(v==null?'':v).trim();
+    if(t===''||t==='-'||t==='—'||t==='–') return '';
+    if(/^(self|direct|ذاتي)$/i.test(t)) return '';   // "self" in broker/marketer = NO employee (direct)
+    const c=t.replace(/[,\s$]/g,''); if(c===''||/^0+(\.0+)?$/.test(c)) return ''; return t; };
+
+  const _mi = ix('month');
+  let _pAcc='', _curMon='';   // forward-fill ONLY for duplicate-account continuation rows
+  const raw = importRows.map(r => {
+    let acNo  = String(S(r,'ac_no')).replace(/\.0$/, '').trim();
+    let month = _fmtMonth(_mi >= 0 ? r[_mi] : '');
+    const isCont = (acNo === '');   // blank account number = a continuation of the account above
+    if (isCont) {
+      // continuation row → belongs to the account above; inherit ITS account & ITS month only
+      if (_pAcc) acNo = _pAcc;
+      if (!month) month = _curMon;
+      if (month) _curMon = month;
+    } else {
+      // a NEW account starts here — its own month (if the sheet left it blank, it STAYS blank;
+      // never borrow the previous account's month)
+      _pAcc = acNo;
+      _curMon = month;
+    }
+
+    // marketer slots (name + commission) — 0/-/$ ignored
+    const slots = [
+      { name: empName(S(r,'marketing')),     comm: N(r,'marketing_commission') },
+      { name: empName(S(r,'ext_marketer1')), comm: N(r,'ext_commission1') },
+      { name: empName(S(r,'ext_marketer2')), comm: N(r,'ext_commission2') },
+    ];
+    // broker — but a numeric account number in the BROKER column = a REFERRAL too
+    let brokerName = empName(S(r,'broker'));
+    let brokerComm = N(r,'broker_commission');
+    // dedicated referral column (if present)
+    let refAcc  = S(r,'referral_account');
+    let refComm = N(r,'referral_commission');
+    // SMART: an account number in the BROKER column → referral (its commission = referral commission)
+    if (!refAcc && brokerName && isAccNo(brokerName)) {
+      refAcc = String(brokerName).replace(/[,\s]/g,'').replace(/\.0$/, '');
+      refComm = brokerComm;
+      brokerName = ''; brokerComm = 0;
+    }
+    // SMART: any numeric name in a marketer column → referral account (take first)
+    for (const s of slots) {
+      if (!refAcc && s.name && isAccNo(s.name)) {
+        refAcc = String(s.name).replace(/[,\s]/g,'').replace(/\.0$/, '');
+        refComm = s.comm;
+        s.name = ''; s.comm = 0;        // remove from marketer slot so it isn't matched as employee
+      }
+    }
+    return {
+      ac_no:                acNo,
+      broker:               brokerName,
+      broker_commission:    brokerComm,
+      marketing:            slots[0].name, marketing_commission: slots[0].comm,
+      ext_marketer1:        slots[1].name, ext_commission1:      slots[1].comm,
+      ext_marketer2:        slots[2].name, ext_commission2:      slots[2].comm,
+      referral_account:     refAcc,        referral_commission:  refComm,
+      month:                month,
+      initial_deposit:      N(r,'initial_deposit'),
+      monthly_deposit:      N(r,'monthly_deposit'),
+      new_or_sub:           S(r,'new_or_sub'),
+      type:                 S(r,'trading') || 'ECN',
+      cc_agent:             S(r,'cc_agent'),
+      cc_agent_commission:  N(r,'cc_agent_commission'),
+      cc_manager_commission:N(r,'cc_manager_commission'),
+      target_branch:        S(r,'target_branch'),
+    };
+  }).filter(r => r.ac_no);   // require only an account number; month may be blank (still imported)
+
+  // ── Merge duplicate account+month rows ──
+  // INTERNAL marketers (work at the company) → marketer 1 + marketer 2 slots.
+  // EXTERNAL marketer (does NOT work at the company, only brings accounts) → external slot.
+  const bag = {}, order = [];
+  const pushTo = (slot, name, comm) => { if (name && !slot.some(x => x.name === name)) slot.push({name, comm}); };
+  const collect = (b, r) => {
+    // internal: the "Marketing" column + the "internal marketer 2" column
+    pushTo(b._int, r.marketing,     r.marketing_commission);
+    pushTo(b._int, r.ext_marketer2, r.ext_commission2);
+    // external: the "External Marketer" column
+    pushTo(b._ext, r.ext_marketer1, r.ext_commission1);
+  };
+  raw.forEach(r => {
+    // Merge by ACCOUNT NUMBER only — an account is opened once (one opening month),
+    // so the same account on multiple rows = ONE card (marketers combined).
+    const key = String(r.ac_no);
+    if (!bag[key]) { bag[key] = Object.assign({}, r, {_int:[], _ext:[]}); order.push(key); collect(bag[key], r); }
+    else {
+      const b = bag[key];
+      if (!b.broker && r.broker) { b.broker = r.broker; b.broker_commission = r.broker_commission; }
+      if (!b.broker_commission && r.broker_commission) b.broker_commission = r.broker_commission;
+      if (!b.initial_deposit && r.initial_deposit) b.initial_deposit = r.initial_deposit;
+      if (!b.monthly_deposit && r.monthly_deposit) b.monthly_deposit = r.monthly_deposit;
+      if (!b.new_or_sub && r.new_or_sub) b.new_or_sub = r.new_or_sub;
+      if (!b.referral_account && r.referral_account) { b.referral_account = r.referral_account; b.referral_commission = r.referral_commission; }
+      collect(b, r);
+    }
+  });
+  const mergedCount = raw.length - order.length;
+  const rows = order.map(key => {
+    const b = bag[key], int = b._int, ext = b._ext;
+    return {
+      ac_no: b.ac_no, month: b.month,
+      broker: b.broker, broker_commission: b.broker_commission,
+      marketing:     int[0] ? int[0].name : '', marketing_commission: int[0] ? int[0].comm : 0,  // مسوّق داخلي 1
+      ext_marketer2: int[1] ? int[1].name : '', ext_commission2:      int[1] ? int[1].comm : 0,  // مسوّق داخلي 2
+      ext_marketer1: ext[0] ? ext[0].name : '', ext_commission1:      ext[0] ? ext[0].comm : 0,  // مسوّق خارجي
+      referral_account: b.referral_account || '', referral_commission: b.referral_commission || 0,
+      initial_deposit: b.initial_deposit, monthly_deposit: b.monthly_deposit,
+      new_or_sub: b.new_or_sub, type: b.type,
+      cc_agent: b.cc_agent, cc_agent_commission: b.cc_agent_commission,
+      cc_manager_commission: b.cc_manager_commission, target_branch: b.target_branch,
+    };
+  });
+  if (mergedCount > 0) toast((impL()==='en'
+        ? '🔗 Merged '+mergedCount+' duplicate account row(s)'
+        : '🔗 تم دمج '+mergedCount+' سطر حساب مكرّر'), 'info');
 
   const result = await api('POST', '/import', {
     rows,
     filename:  document.getElementById('import-filename').textContent.replace('📄 ', ''),
-    branch_id: branchId ? parseInt(branchId) : null,
+    mode:      importMode,
+    branch_id:    importMode==='cc' ? null : (branchId ? parseInt(branchId) : null),
+    cc_branch_id: importMode==='cc' ? (branchId ? parseInt(branchId) : null) : null,
   });
 
   clearInterval(timer);
   bar.style.width = '100%';
 
-  if (result.success || result.imported > 0 || result.updated > 0) {
+  if (result.success || result.imported > 0 || result.updated > 0 || result.linked > 0) {
     bar.style.background = 'var(--gr)';
-    pct.textContent = `✅ ${impL()==='en'?'Done':'تم بنجاح'} — ${impL()==='en'?'New':'جديد'}: ${result.imported} | ${impL()==='en'?'Updated':'تحديث'}: ${result.updated} | ${impL()==='en'?'Errors':'أخطاء'}: ${result.failed}`;
+    const _lk = (result.linked > 0) ? ` | ${impL()==='en'?'Linked to branch':'مرتبط بفرع'}: ${result.linked}` : '';
+    const _ce = (result.created_employees > 0) ? ` | ${impL()==='en'?'New employees':'موظفون جدد'}: ${result.created_employees}` : '';
+    pct.textContent = `✅ ${impL()==='en'?'Done':'تم بنجاح'} — ${impL()==='en'?'New':'جديد'}: ${result.imported} | ${impL()==='en'?'Updated':'تحديث'}: ${result.updated}${_lk}${_ce} | ${impL()==='en'?'Errors':'أخطاء'}: ${result.failed}`;
     toast(imp('toastSuccess').replace('{i}',result.imported).replace('{u}',result.updated), 'success');
   } else {
     bar.style.background = 'var(--re)';
@@ -427,14 +718,18 @@ function showImportDetails(result) {
 
   // بطاقات الإحصاء
   const grid = document.getElementById('import-summary-grid');
-  grid.innerHTML = [
+  const _cards = [
     { labelKey:'summaryTotal',   val: result.total   || 0, color:'var(--pri2)' },
     { labelKey:'summaryNew',     val: result.imported || 0, color:'var(--gr)'   },
     { labelKey:'summaryUpdated', val: result.updated  || 0, color:'var(--or)'   },
-    { labelKey:'summaryFailed',  val: result.failed   || 0, color:'var(--re)'   },
-  ].map(k => `
+  ];
+  if (result.linked > 0) _cards.push({ label:(impL()==='en'?'Linked to branch':'مرتبط بفرع'), val: result.linked, color:'#7b68ee' });
+  if (result.created_employees > 0) _cards.push({ label:(impL()==='en'?'New employees':'موظفون جدد'), val: result.created_employees, color:'#f5a623' });
+  _cards.push({ labelKey:'summaryFailed',  val: result.failed   || 0, color:'var(--re)'   });
+  if (_cards.length > 4) grid.style.gridTemplateColumns = 'repeat(' + _cards.length + ',1fr)';
+  grid.innerHTML = _cards.map(k => `
     <div style="background:var(--bg4);border-radius:10px;padding:14px;text-align:center;border:1px solid var(--brd1)">
-      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${imp(k.labelKey)}</div>
+      <div style="font-size:10px;color:var(--mu);margin-bottom:6px">${k.label || imp(k.labelKey)}</div>
       <div style="font-size:1.8rem;font-weight:900;color:${k.color}">${k.val}</div>
     </div>`).join('');
 

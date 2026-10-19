@@ -3,7 +3,7 @@
 @section('page-title','Call Center')
 
 @section('topbar-actions')
-<button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openModal('modal-cc-create')">➕ كرت جديد</button>
+<button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openCcNew()">➕ كرت جديد</button>
 @endsection
 
 @push('styles')
@@ -38,20 +38,53 @@
 .cc-chart-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:18px}
 @media(max-width:768px){.cc-chart-grid{grid-template-columns:1fr}}
 .monthly-table-wrap{overflow-x:auto}
+
+/* ── Distinctive CC cards table (compact single-line rows) ── */
+.cc-cards-scroll{overflow-x:auto}
+.cc-cards-table{min-width:920px;border-collapse:separate;border-spacing:0}
+.cc-cards-table th{position:sticky;top:0;z-index:2;white-space:nowrap;background:var(--bg2);
+  font-size:9.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.2px;font-weight:800;
+  padding:6px 8px;border-bottom:2px solid var(--brd1);text-align:start;line-height:1.2}
+.cc-cards-table td{white-space:nowrap;padding:5px 8px;border-bottom:1px solid var(--brd1);
+  font-size:11.5px;vertical-align:middle;line-height:1.3}
+.cc-cards-table tbody tr:nth-child(even){background:rgba(127,127,127,.04)}
+.cc-cards-table tbody tr:hover{background:rgba(26,173,186,.08)}
+.cc-th-c,.cc-td-c{text-align:center}
+.cc-id{font-family:monospace;font-weight:800;font-size:10px;color:var(--pri2);
+  background:var(--bg3);border:1px solid var(--brd1);border-radius:5px;padding:1px 6px}
+.cc-acc{font-size:12px;color:var(--tx)}
+.cc-person{font-size:11px}.cc-person.mgr{color:#7b68ee;font-weight:700}
+.cc-branch{font-size:11px;font-weight:600}
+.cc-comm{display:inline-block;font-family:monospace;font-weight:700;font-size:11px;color:var(--gr);
+  background:rgba(34,201,122,.12);border:1px solid rgba(34,201,122,.22);border-radius:7px;padding:1px 7px}
+.cc-dep{font-family:monospace;font-weight:700;font-size:11.5px;color:var(--pri2)}
+.cc-cards-table .badge,.cc-cards-table .btn-sm{font-size:10px!important}
+.cc-cards-table .btn-sm{padding:3px 7px!important}
+/* CC month/year picker (same idea as the dashboard calendar) */
+.nc-cal{display:none;position:absolute;z-index:5000;margin-top:5px;width:288px;max-width:92vw;background:var(--bg2,#fff);border:1px solid var(--brd2);border-radius:12px;padding:12px;box-shadow:0 16px 44px rgba(0,0,0,.32)}
+.nc-cal.open{display:block}
+.nc-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-weight:900;color:var(--tx);font-size:15px}
+.nc-cal-nav button{border:1px solid var(--brd2);background:var(--bg3);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--tx);font-weight:900;font-size:14px}
+.nc-cal-nav button:hover{border-color:var(--pri);color:var(--pri2)}
+.nc-cal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.nc-cal-m{padding:10px 0;border-radius:9px;border:1px solid var(--brd1);background:var(--bg3);color:var(--tx);font-weight:700;font-size:12.5px;cursor:pointer;transition:all .12s}
+.nc-cal-m:hover{border-color:var(--pri);color:var(--pri2)}
+.nc-cal-m.on{background:linear-gradient(135deg,#1AADBA,#0E7A88);color:#fff;border-color:transparent}
 </style>
 @endpush
 
 @section('content')
 
-<div id="cc-shell" style="display:flex;gap:0;min-height:calc(100vh - 120px);
+<div id="cc-shell" style="display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 120px);
   background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 
-  {{-- ── CC Sidebar Nav ── --}}
-  <div id="cc-nav" style="width:220px;flex-shrink:0;background:var(--bg2);
-    border-left:1px solid var(--brd1);display:flex;flex-direction:column;padding:10px 0;">
+  {{-- ── CC Top Nav (horizontal) ── --}}
+  <div id="cc-nav" style="width:100%;flex-shrink:0;background:var(--bg2);
+    border-bottom:1px solid var(--brd1);display:flex;flex-direction:row;flex-wrap:wrap;
+    align-items:center;gap:5px;padding:8px 12px;">
 
-    <div style="padding:12px 16px 14px;border-bottom:1px solid var(--brd1);margin-bottom:8px">
-      <div id="ccnav-hdr" style="font-size:11px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px">
+    <div style="padding:0 6px 0 10px;border-left:1px solid var(--brd1);flex-shrink:0">
+      <div id="ccnav-hdr" style="font-size:11px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">
         📞 مركز الاتصال
       </div>
     </div>
@@ -63,29 +96,24 @@
       ['monthly',  '📅'],
     ] as [$sid, $ico])
     <button onclick="ccShowSection('{{ $sid }}')" id="ccnav-{{ $sid }}" style="
-      display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;
-      border-radius:9px;background:none;border:none;cursor:pointer;
-      text-align:right;width:calc(100% - 16px);font-family:'Tajawal',sans-serif;transition:all .18s;">
-      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;
+      display:flex;align-items:center;gap:7px;padding:7px 11px;margin:0;
+      border-radius:8px;background:none;border:1px solid transparent;cursor:pointer;
+      text-align:right;width:auto;flex-shrink:0;white-space:nowrap;font-family:'Tajawal',sans-serif;transition:all .18s;">
+      <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;
         background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);
-        display:flex;align-items:center;justify-content:center;font-size:17px;"
+        display:flex;align-items:center;justify-content:center;font-size:14px;"
         id="ccnav-ico-{{ $sid }}">{{ $ico }}</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap"
+      <div style="min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:var(--tx);white-space:nowrap"
           id="ccnav-lbl-{{ $sid }}"></div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px"
-          id="ccnav-sub-{{ $sid }}"></div>
+        <div style="display:none" id="ccnav-sub-{{ $sid }}"></div>
       </div>
       <span style="display:none;font-size:9px;padding:2px 7px;border-radius:10px;
         background:rgba(245,166,35,.2);color:var(--or);font-weight:700;border:1px solid rgba(245,166,35,.3)"
         id="ccnav-badge-{{ $sid }}">0</span>
     </button>
     @endforeach
-
-    <div style="flex:1"></div>
-    <div style="padding:12px 16px;border-top:1px solid var(--brd1);margin-top:8px">
-      <div id="ccnav-footer" style="font-size:10px;color:var(--mu);line-height:1.7"></div>
-    </div>
+    <div id="ccnav-footer" style="display:none"></div>
   </div>
 
   {{-- ── Content Panel ── --}}
@@ -112,17 +140,11 @@
           <div class="panel-title" id="ccs-acc-tbl-title"></div>
           <button class="btn btn-ghost btn-sm" onclick="ccLoadAll()">🔄</button>
         </div>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr>
-              <th>#</th>
-              <th id="cc-th-acnum"></th><th id="cc-th-month"></th>
-              <th id="cc-th-branch"></th><th id="cc-th-agent"></th>
-              <th id="cc-th-type"></th><th id="cc-th-status"></th>
-              <th id="cc-th-act"></th>
-            </tr></thead>
+        <div class="table-scroll cc-cards-scroll">
+          <table class="data-table cc-cards-table" id="cc-cards-table">
+            <thead id="cc-thead"></thead>
             <tbody id="cc-tbody">
-              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)" id="cc-loading-cell"></td></tr>
+              <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--mu)" id="cc-loading-cell"></td></tr>
             </tbody>
           </table>
         </div>
@@ -276,25 +298,32 @@
       <button class="modal-close" onclick="closeModal('modal-cc-create')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="limit-hint" id="cc-modal-limit-hint"></div>
       <div id="nc-err" class="alert alert-error"></div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="nc-lbl-ac"></label>
-          <input type="text" id="nc-ac" class="form-control" placeholder="719750">
+          <input type="text" id="nc-ac" class="form-control" placeholder="اختياري — 6 أرقام" inputmode="numeric" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
         </div>
         <div class="form-group">
           <label class="form-label" id="nc-lbl-kind"></label>
-          <select id="nc-kind" class="form-control">
+          <select id="nc-kind" class="form-control" onchange="ncKindChange()">
             <option value="new">New — جديد</option>
             <option value="sub">Sub — فرعي</option>
           </select>
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row" id="nc-parent-row" style="display:none">
         <div class="form-group">
+          <label class="form-label">🔗 رقم الحساب الأساسي / Parent (Main) Account * <span style="font-size:10px;color:var(--mu)">(6 أرقام)</span></label>
+          <input type="text" id="nc-parent" class="form-control" inputmode="numeric" maxlength="6" placeholder="رقم الحساب الأساسي" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="position:relative">
           <label class="form-label" id="nc-lbl-month"></label>
-          <select id="nc-month" class="form-control"></select>
+          <input type="hidden" id="nc-month">
+          <button type="button" id="nc-month-btn" class="form-control" style="text-align:start;cursor:pointer" onclick="ncCalToggle(event)">—</button>
+          <div id="nc-cal" class="nc-cal"></div>
         </div>
         <div class="form-group">
           <label class="form-label" id="nc-lbl-branch"></label>
@@ -307,18 +336,56 @@
           <select id="nc-agent" class="form-control"></select>
         </div>
         <div class="form-group">
-          <label class="form-label" id="nc-lbl-acctype"></label>
-          <select id="nc-acc-type" class="form-control"></select>
+          <label class="form-label">👤 عمولة موظف مركز الاتصال / CC Agent Commission</label>
+          <input type="number" id="nc-agent-comm" class="form-control" value="0" min="0" step="0.5">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" id="nc-lbl-accstatus"></label>
-          <select id="nc-acc-status" class="form-control"></select>
+          <label class="form-label" id="nc-lbl-acctype"></label>
+          <select id="nc-acc-type" class="form-control"></select>
         </div>
         <div class="form-group">
           <label class="form-label" id="nc-lbl-trading"></label>
           <select id="nc-trading" class="form-control"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-phone">📱 رقم هاتف العميل * <span style="font-size:10px;color:#dc3545">(الحقل الأساسي)</span></label>
+          <div style="display:flex;gap:6px">
+            <select id="nc-cc" class="form-control" dir="ltr" style="flex:0 0 165px;max-width:165px"><option value="+965">🇰🇼 +965</option></select>
+            <input type="tel" id="nc-phone" class="form-control" dir="ltr" placeholder="50001234" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-source">📡 كيف تم التعرّف على العميل؟ / Client Source</label>
+          <select id="nc-source" class="form-control" onchange="ncSourceChange()">
+            <option value="">— اختر / Select —</option>
+            <option value="إعلان">📢 إعلان / Advertisement</option>
+            <option value="توصية">🤝 توصية عميل أو صديق / Referral</option>
+            <option value="اتصال مباشر">📞 اتصال مباشر / Direct call</option>
+            <option value="سوشيال ميديا">🌐 سوشيال ميديا / Social media</option>
+            <option value="واتساب">💬 واتساب / WhatsApp</option>
+            <option value="معرض أو فعالية">🎪 معرض أو فعالية / Event</option>
+            <option value="أخرى">➕ أخرى / Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="nc-source-other-row" style="display:none">
+        <div class="form-group">
+          <label class="form-label">✏️ اذكر طريقة التعرّف على العميل / Specify the source</label>
+          <input type="text" id="nc-source-other" class="form-control" placeholder="اكتب المصدر">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-dep">💰 الإيداع المتوقع لفتح الحساب / Expected Deposit</label>
+          <input type="number" id="nc-dep" class="form-control" value="0" min="0" step="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="nc-lbl-mgrcomm">👩‍💼 عمولة مديرة مركز الاتصال / CC Manager Commission</label>
+          <input type="number" id="nc-mgr-comm" class="form-control" value="0" min="0" step="0.5">
         </div>
       </div>
       <div class="form-group">
@@ -329,6 +396,30 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" id="nc-cancel-btn" onclick="closeModal('modal-cc-create')"></button>
       <button class="btn btn-primary" id="nc-save-btn" onclick="createCard()"></button>
+    </div>
+  </div>
+</div>
+
+{{-- Delete confirmation — requires the manager's own password --}}
+<div class="modal-overlay" id="modal-cc-delete">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🗑 حذف الكرت / Delete Card</div>
+      <button class="modal-close" onclick="closeModal('modal-cc-delete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="cc-del-err" class="alert alert-error"></div>
+      <p style="font-size:13px;color:var(--mu);line-height:1.8;margin-bottom:12px">
+        ⚠️ لتأكيد حذف الكرت نهائياً، أدخل <strong>كلمة مرور حسابك</strong>.<br>
+        To permanently delete this card, enter <strong>your account password</strong>.
+      </p>
+      <input type="password" id="cc-del-pass" class="form-control" dir="ltr"
+             placeholder="كلمة المرور / Password" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')ccConfirmDelete()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cc-delete')">إلغاء / Cancel</button>
+      <button class="btn" style="background:var(--re);color:#fff;border-color:var(--re)" onclick="ccConfirmDelete()">🗑 حذف نهائي / Delete</button>
     </div>
   </div>
 </div>
@@ -344,7 +435,7 @@
 const CCT = {
   ar: {
     navHdr:'📞 مركز الاتصال',
-    footer:'⚡ حد عمولات CC:\nبروكر + مسوّق ≤ 5$/lot',
+    footer:'⚡ حد عمولات CC:\nبروكر + مسوّق ≤ 5$',
     s_accounts_lbl:'حسابات CC',          s_accounts_sub:'كل كروت مركز الاتصال',
     s_reports_lbl:'تقارير CC',           s_reports_sub:'تحليل الحالات والفروع',
     s_modified_lbl:'الحسابات المعدّلة',  s_modified_sub:'كروت CC المُعدَّلة',
@@ -359,7 +450,7 @@ const CCT = {
     th_acnum:'رقم الحساب', th_month:'الشهر', th_branch:'الفرع المستهدف',
     th_agent:'موظف CC', th_type:'النوع', th_status:'الحالة', th_act:'الإجراء',
     loading:'جاري التحميل...', empty:'لا توجد كروت',
-    btn_send:'📤 إرسال للفرع', btn_resend:'🔁 إعادة إرسال',
+    btn_send:'📤 إرسال للفرع', btn_resend:'🔁 إعادة إرسال', btn_send_now:'📤 إرسال الآن للفرع', btn_send_later:'لاحقًا',
     status_wait_branch:'⏳ بانتظار الفرع', status_completing:'🔄 يستكمل البيانات',
     type_new:'🆕 جديد', type_sub:'🔀 فرعي',
     confirm_send:'إرسال هذا الكرت للفرع؟', confirm_resend:'إعادة إرسال هذا الكرت للفرع؟',
@@ -393,20 +484,21 @@ const CCT = {
     mon_th_comp:'مكتمل', mon_th_rej:'مرفوض', mon_empty:'لا توجد بيانات',
     // Modal
     modal_title:'📞 كرت CC جديد',
-    limit_hint:'⚠️ تنبيه: عمولة البروكر + عمولة المسوّق يجب ألا تتجاوز 5$/lot عند إتمام الكرت من الفرع.',
-    nc_ac:'رقم الحساب *', nc_kind:'نوع الحساب', nc_month:'الشهر *',
+    limit_hint:'⚠️ تنبيه: عمولة البروكر + عمولة المسوّق يجب ألا تتجاوز 5$ عند إتمام الكرت من الفرع.',
+    nc_ac:'رقم الحساب', nc_kind:'نوع الحساب', nc_month:'الشهر *',
     nc_branch:'الفرع المستهدف *', nc_agent:'موظف CC *',
     nc_acctype:'نوع الحساب (تصنيف)', nc_accstatus:'حالة الحساب',
     nc_trading:'نوع التداول', nc_notes:'ملاحظات',
     nc_ph_notes:'معلومات إضافية للفرع...',
     nc_cancel:'إلغاء', nc_save:'💾 حفظ كمسودة',
-    nc_err_required:'يرجى ملء جميع الحقول المطلوبة (رقم الحساب، الشهر، الفرع، الموظف)',
+    nc_err_required:'يرجى ملء الحقول المطلوبة (الشهر، الفرع، الموظف)',
+    nc_err_ac_or_phone:'أدخل رقم الحساب أو رقم هاتف العميل (أحدهما على الأقل)',
     topbar_btn:'➕ كرت جديد',
     opt_optional:'— اختياري —', opt_branch:'— اختر الفرع —', opt_agent:'— اختر الموظف —',
   },
   en: {
     navHdr:'📞 Call Center',
-    footer:'⚡ CC Commission Limit:\nBroker + Marketer ≤ $5/lot',
+    footer:'⚡ CC Commission Limit:\nBroker + Marketer ≤ $5',
     s_accounts_lbl:'CC Accounts',         s_accounts_sub:'All call center cards',
     s_reports_lbl:'CC Reports',           s_reports_sub:'Status & branch analysis',
     s_modified_lbl:'Modified Accounts',   s_modified_sub:'Modified CC cards',
@@ -420,7 +512,7 @@ const CCT = {
     th_acnum:'Account #', th_month:'Month', th_branch:'Target Branch',
     th_agent:'CC Agent', th_type:'Type', th_status:'Status', th_act:'Action',
     loading:'Loading...', empty:'No cards found',
-    btn_send:'📤 Send to Branch', btn_resend:'🔁 Resend',
+    btn_send:'📤 Send to Branch', btn_resend:'🔁 Resend', btn_send_now:'📤 Send to Branch now', btn_send_later:'Later',
     status_wait_branch:'⏳ Awaiting Branch', status_completing:'🔄 Branch completing',
     type_new:'🆕 New', type_sub:'🔀 Sub',
     confirm_send:'Send this card to the branch?', confirm_resend:'Resend this card to the branch?',
@@ -450,14 +542,15 @@ const CCT = {
     mon_th_draft:'Draft', mon_th_sent:'Sent', mon_th_acc:'Accepted',
     mon_th_comp:'Completed', mon_th_rej:'Rejected', mon_empty:'No data',
     modal_title:'📞 New CC Card',
-    limit_hint:'⚠️ Note: Broker + Marketer commission must not exceed $5/lot when the branch completes the card.',
-    nc_ac:'Account Number *', nc_kind:'Account Type', nc_month:'Month *',
+    limit_hint:'⚠️ Note: Broker + Marketer commission must not exceed $5 when the branch completes the card.',
+    nc_ac:'Account Number', nc_kind:'Account Type', nc_month:'Month *',
     nc_branch:'Target Branch *', nc_agent:'CC Agent *',
     nc_acctype:'Account Type (classification)', nc_accstatus:'Account Status',
     nc_trading:'Trading Type', nc_notes:'Notes',
     nc_ph_notes:'Additional information for the branch...',
     nc_cancel:'Cancel', nc_save:'💾 Save as Draft',
-    nc_err_required:'Please fill in all required fields (account number, month, branch, agent)',
+    nc_err_required:'Please fill in the required fields (month, branch, agent)',
+    nc_err_ac_or_phone:'Enter an account number or a client phone (at least one)',
     topbar_btn:'➕ New Card',
     opt_optional:'— Optional —', opt_branch:'— Select Branch —', opt_agent:'— Select Agent —',
   }
@@ -483,10 +576,7 @@ function ccApplyLang() {
   // Accounts section
   _t('ccs-acc-h2', cc('acc_h2')); _t('ccs-acc-p', cc('acc_p'));
   _t('ccs-acc-new', cc('acc_newBtn')); _t('ccs-acc-tbl-title', cc('acc_tbl_title'));
-  _t('cc-th-acnum', cc('th_acnum')); _t('cc-th-month', cc('th_month'));
-  _t('cc-th-branch', cc('th_branch')); _t('cc-th-agent', cc('th_agent'));
-  _t('cc-th-type', cc('th_type')); _t('cc-th-status', cc('th_status'));
-  _t('cc-th-act', cc('th_act'));
+  if (typeof ccRenderAccounts === 'function' && document.getElementById('cc-thead')) ccRenderAccounts();
 
   // Reports section
   _t('ccs-rpt-h2', cc('rpt_h2')); _t('ccs-rpt-p', cc('rpt_p'));
@@ -521,7 +611,6 @@ function ccApplyLang() {
 
   // Modal
   _t('cc-modal-create-title', cc('modal_title'));
-  const lh = document.getElementById('cc-modal-limit-hint'); if (lh) lh.textContent = cc('limit_hint');
   _t('nc-lbl-ac', cc('nc_ac')); _t('nc-lbl-kind', cc('nc_kind'));
   _t('nc-lbl-month', cc('nc_month')); _t('nc-lbl-branch', cc('nc_branch'));
   _t('nc-lbl-agent', cc('nc_agent')); _t('nc-lbl-acctype', cc('nc_acctype'));
@@ -558,7 +647,7 @@ function ccShowSection(name) {
   ['accounts','reports','modified','monthly'].forEach(id => {
     const btn = document.getElementById('ccnav-' + id);
     const ico = document.getElementById('ccnav-ico-' + id);
-    if (btn) { btn.style.background = 'none'; btn.style.border = 'none'; }
+    if (btn) { btn.style.background = 'none'; btn.style.border = '1px solid transparent'; }
     if (ico) { ico.style.background='rgba(26,173,186,.1)'; ico.style.borderColor='rgba(26,173,186,.15)'; }
   });
   const sec = document.getElementById('ccsec-' + name);
@@ -586,7 +675,8 @@ const CC_STATUS_COLORS = {
 function ccStatusChip(s) {
   const labels = {
     cc_pending:cc('sf_draft'), branch_pending:cc('sf_sent'),
-    accepted:cc('sf_acc'), completed:cc('sf_comp'), rejected:cc('sf_rej'),
+    accepted:cc('sf_acc'), in_progress:'🔄 قيد المتابعة', completed:cc('sf_comp'),
+    rejected:cc('sf_rej'), declined:'🚫 رفض العميل',
   };
   return `<span class="cc-chip ${s}">${labels[s]||s}</span>`;
 }
@@ -598,45 +688,66 @@ function buildFilterChips() {
     {v:'',   lk:'sf_all'},
     {v:'cc_pending', lk:'sf_draft'},
     {v:'branch_pending', lk:'sf_sent'},
-    {v:'accepted', lk:'sf_acc'},
+    {v:'in_progress', t:'🔄 قيد المتابعة'},
     {v:'completed', lk:'sf_comp'},
     {v:'rejected', lk:'sf_rej'},
+    {v:'declined', t:'🚫 رفض العميل'},
   ];
   wrap.innerHTML = chips.map(ch =>
-    `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${cc(ch.lk)}</button>`
+    `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${ch.t || cc(ch.lk)}</button>`
   ).join('');
 }
 function setFilter(v) { _ccFilter = v; buildFilterChips(); ccRenderAccounts(); }
 
 /* ─── ACCOUNTS RENDER ────────────────────────────────────── */
 function ccRenderAccounts() {
-  const filtered = _ccFilter ? _ccAllCards.filter(c => c.cc_status === _ccFilter) : _ccAllCards;
+  const en = (typeof curLang!=='undefined' && curLang==='en');
+  const L = en
+    ? ['ID','Account #','Client Phone','Open Month','CC Manager','Mgr Comm.','CC Agent','Agent Comm.','Target Branch','Expected Deposit','Status','Action']
+    : ['رقم الكرت','رقم الحساب','📱 هاتف العميل','شهر فتح الحساب','مديرة مركز الاتصال','عمولة المديرة','موظف الكول سنتر','عمولة الموظف','الفرع المُرسل له','الإيداع المتوقع','الحالة','الإجراء'];
+  const thead = document.getElementById('cc-thead');
+  if (thead) thead.innerHTML = '<tr>' + L.map((h,i)=>`<th class="${i>=9&&i<=10?'cc-th-c':''}">${h}</th>`).join('') + '</tr>';
+
+  const src = _ccAllCards || [];
+  const filtered = _ccFilter ? src.filter(c => c.cc_status === _ccFilter) : src;
   const tbody    = document.getElementById('cc-tbody'); if (!tbody) return;
   if (!filtered.length) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">${cc('empty')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--mu)">${cc('empty')}</td></tr>`;
     return;
   }
+  const money = v => (v!=null && v!=='' && !isNaN(v) && Number(v)>0) ? '$'+Number(v).toLocaleString('en') : '<span style="color:var(--brd2)">—</span>';
+  const pill  = v => (v!=null && Number(v)>0) ? `<span class="cc-comm">$${Number(v).toLocaleString('en')}</span>` : '<span style="color:var(--brd2)">—</span>';
   tbody.innerHTML = filtered.map(c => `
-    <tr class="cc-row">
-      <td style="color:var(--mu);font-size:11px">${c.id}</td>
-      <td><strong>${c.account_number}</strong></td>
-      <td>${c.month}</td>
-      <td>${c.branch?.name_ar ?? '—'}</td>
-      <td>${c.cc_agent?.name ?? c.ccAgent?.name ?? '—'}</td>
-      <td><span style="font-size:11px;color:var(--mu)">${c.account_kind==='sub'?cc('type_sub'):cc('type_new')}</span></td>
+    <tr class="cc-row"${c.cc_status==='cc_pending'?' style="background:rgba(245,168,40,.10);border-right:3px solid #f5a828"':''}>
+      <td><span class="cc-id">#${c.id}</span></td>
+      <td><strong class="cc-acc">${c.account_number ? esc(c.account_number) : '<span style=\"color:var(--brd2)\">—</span>'}</strong></td>
+      <td style="white-space:nowrap;direction:ltr">${esc(((c.client_country_code? c.client_country_code+' ':'')+(c.client_phone||'')).trim()||'—')}</td>
+      <td style="white-space:nowrap">${esc(c.month)}</td>
+      <td><span class="cc-person mgr">👩‍💼 ${esc(c.cc_manager_name || '—')}</span></td>
+      <td>${pill(c.cc_manager_commission)}</td>
+      <td><span class="cc-person">🎧 ${esc(c.cc_agent?.name ?? c.ccAgent?.name ?? '—')}</span></td>
+      <td>${pill(c.cc_agent_commission)}</td>
+      <td><span class="cc-branch">🏢 ${esc(c.branch?.name_ar ?? '—')}</span></td>
+      <td class="cc-td-c"><span class="cc-dep">${money(c.initial_deposit)}</span></td>
       <td>
         ${ccStatusChip(c.cc_status)}
-        ${c.cc_rejection_reason?`<div style="font-size:10px;color:#842029;margin-top:3px;max-width:180px">${cc('reason_lbl')} ${c.cc_rejection_reason}</div>`:''}
+        ${c.cc_rejection_reason?`<div style="font-size:10px;color:#842029;margin-top:3px;max-width:170px">${cc('reason_lbl')} ${esc(c.cc_rejection_reason)}</div>`:''}
       </td>
       <td>${ccActionButtons(c)}</td>
     </tr>`).join('');
 }
 function ccActionButtons(c) {
-  if (c.cc_status==='cc_pending')     return `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>`;
-  if (c.cc_status==='branch_pending') return `<span style="font-size:11px;color:var(--mu)">${cc('status_wait_branch')}</span>`;
-  if (c.cc_status==='accepted')       return `<span style="font-size:11px;color:var(--gr)">${cc('status_completing')}</span>`;
-  if (c.cc_status==='rejected')       return `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>`;
-  return '—';
+  let main = '';
+  if      (c.cc_status==='cc_pending')     main = `<button class="btn btn-primary btn-sm" onclick="sendCard(${c.id})">${cc('btn_send')}</button>`;
+  else if (c.cc_status==='branch_pending') main = `<span style="font-size:11px;color:var(--mu)">${cc('status_wait_branch')}</span>`;
+  else if (c.cc_status==='accepted')       main = `<span style="font-size:11px;color:var(--gr)">${cc('status_completing')}</span>`;
+  else if (c.cc_status==='rejected')       main = `<button class="btn btn-warning btn-sm" onclick="resendCard(${c.id})">${cc('btn_resend')}</button>`;
+  // ✏️ edit only while the card is still a draft (before it is sent to the branch)
+  const edit = c.cc_status==='cc_pending'
+    ? `<button class="btn btn-ghost btn-sm" title="تعديل / Edit" onclick="openCcEdit(${c.id})" style="padding:4px 8px">✏️</button>` : '';
+  // 🗑 delete — requires the manager's password
+  const del = `<button class="btn btn-ghost btn-sm" title="حذف / Delete" onclick="ccDeleteCard(${c.id})" style="padding:4px 8px;color:var(--re);border-color:rgba(224,80,80,.3)">🗑</button>`;
+  return `<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">${main}${edit}${del}</div>`;
 }
 
 /* ─── REPORTS RENDER ────────────────────────────────────── */
@@ -746,7 +857,7 @@ function ccRenderModified() {
         <td>${c.month}</td>
         <td>${c.branch?.name_ar||'—'}</td>
         <td>${c.cc_agent?.name||c.ccAgent?.name||'—'}</td>
-        <td class="mono c-blue">${c.broker_commission?'$'+c.broker_commission+'/lot':'—'}</td>
+        <td class="mono c-blue">${c.broker_commission?'$'+c.broker_commission+'':'—'}</td>
         <td class="mono c-green">${c.initial_deposit?'$'+Number(c.initial_deposit).toLocaleString('en'):'—'}</td>
         <td>${ccStatusChip(c.cc_status)}</td>
       </tr>`).join('')
@@ -876,6 +987,63 @@ function ccShowAlert(type, msg) {
   if (type==='err' && e) { e.textContent=msg; e.classList.add('show'); window.scrollTo(0,0); }
   else if (o)             { o.textContent=msg; o.classList.add('show'); window.scrollTo(0,0); }
 }
+// Success banner for a new draft card WITH an inline "Send to branch now" button.
+function ccShowSendPrompt(id, msg) {
+  const e = document.getElementById('cc-alert-err'); if (e) e.classList.remove('show');
+  const o = document.getElementById('cc-alert-ok');  if (!o) return;
+  o.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+    + '<span style="font-weight:700">✅ ' + esc(msg) + '</span>'
+    + '<button class="btn btn-primary btn-sm" style="white-space:nowrap" onclick="sendCard(' + id + ')">' + cc('btn_send_now') + '</button>'
+    + '<button class="btn btn-ghost btn-sm" onclick="this.closest(\'.alert\').classList.remove(\'show\')">' + cc('btn_send_later') + '</button>'
+    + '</div>';
+  o.classList.add('show'); window.scrollTo(0, 0);
+}
+
+/* ─── Month / year picker (same look as the dashboard calendar) ─ */
+var NC_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var _ncCalYear = new Date().getFullYear();
+function ncSetMonth(label){
+  var inp=document.getElementById('nc-month'), btn=document.getElementById('nc-month-btn');
+  if(inp) inp.value = label || '';
+  if(btn) btn.textContent = label || (cc('opt_month') || 'اختر الشهر / Pick month');
+}
+function ncCalRender(){
+  var el=document.getElementById('nc-cal'); if(!el) return;
+  var cur=(document.getElementById('nc-month').value||'').split(' '), curM=cur[0], curY=cur[1];
+  var h='<div class="nc-cal-nav"><button type="button" onclick="ncCalYearStep(-1,event)">◀</button><b>'+_ncCalYear+'</b><button type="button" onclick="ncCalYearStep(1,event)">▶</button></div><div class="nc-cal-grid">';
+  NC_MONTHS.forEach(function(m){
+    var on=(m===curM && String(_ncCalYear)===String(curY));
+    h+='<button type="button" class="nc-cal-m'+(on?' on':'')+'" onclick="ncCalPick(\''+m+'\',event)">'+m+'</button>';
+  });
+  el.innerHTML=h+'</div>';
+}
+function ncCalToggle(e){
+  if(e&&e.stopPropagation)e.stopPropagation();
+  var el=document.getElementById('nc-cal'); if(!el) return;
+  var open=el.classList.contains('open');
+  if(open){ el.classList.remove('open'); return; }
+  var v=(document.getElementById('nc-month').value||'').split(' '); if(v[1]) _ncCalYear=parseInt(v[1]);
+  ncCalRender(); el.classList.add('open');
+}
+function ncCalYearStep(d,e){ if(e&&e.stopPropagation)e.stopPropagation(); _ncCalYear+=d; ncCalRender(); }
+function ncCalPick(m,e){ if(e&&e.stopPropagation)e.stopPropagation(); ncSetMonth(m+' '+_ncCalYear); var el=document.getElementById('nc-cal'); if(el) el.classList.remove('open'); }
+document.addEventListener('click',function(e){
+  var el=document.getElementById('nc-cal');
+  if(el&&el.classList.contains('open')&&!el.contains(e.target)&&e.target.id!=='nc-month-btn') el.classList.remove('open');
+});
+
+/* Sub account → show a required parent-account field (same as the branch new-card screen). */
+function ncKindChange(){
+  var sub = document.getElementById('nc-kind').value === 'sub';
+  var row = document.getElementById('nc-parent-row'); if(row) row.style.display = sub ? '' : 'none';
+  if(!sub){ var p=document.getElementById('nc-parent'); if(p) p.value=''; }
+}
+/* Client source = "Other" → show a free-text field to type the actual source. */
+function ncSourceChange(){
+  var other = document.getElementById('nc-source').value === 'أخرى';
+  var row = document.getElementById('nc-source-other-row'); if(row) row.style.display = other ? '' : 'none';
+  if(!other){ var o=document.getElementById('nc-source-other'); if(o) o.value=''; }
+}
 
 /* ─── Create card ────────────────────────────────────────── */
 async function createCard() {
@@ -883,52 +1051,192 @@ async function createCard() {
   const monthV = document.getElementById('nc-month').value;
   const branch = document.getElementById('nc-branch').value;
   const agent  = document.getElementById('nc-agent').value;
+  const phone  = document.getElementById('nc-phone').value.trim();
+  const ccode  = document.getElementById('nc-cc').value || '+965';
   const errEl  = document.getElementById('nc-err');
   errEl.classList.remove('show');
-  if (!ac || !monthV || !branch || !agent) {
+  // Phone is now the PRIMARY required field — the lead is identified by it. Account is optional.
+  if (!phone) {
+    errEl.textContent = '⚠️ رقم هاتف العميل إلزامي — هو أساس بناء الكرت.';
+    errEl.classList.add('show'); return;
+  }
+  if (!monthV || !branch || !agent) {
     errEl.textContent = cc('nc_err_required');
     errEl.classList.add('show'); return;
   }
+  if (ac && !/^\d{6}$/.test(ac)) {
+    errEl.textContent = '⚠️ رقم الحساب يجب أن يتكوّن من 6 أرقام بالضبط (أو اتركه فارغًا).';
+    errEl.classList.add('show'); return;
+  }
+  const kind = document.getElementById('nc-kind').value;
+  const parent = (document.getElementById('nc-parent').value||'').replace(/[^0-9]/g,'');
+  if (kind === 'sub' && !/^\d{6}$/.test(parent)) {
+    errEl.textContent = 'رقم الحساب الأساسي يجب أن يتكوّن من 6 أرقام بالضبط.';
+    errEl.classList.add('show'); return;
+  }
+  // CC team cap: agent + manager commission ≤ $2
+  const ccAgentC = parseFloat(document.getElementById('nc-agent-comm').value)||0;
+  const ccMgrC   = parseFloat(document.getElementById('nc-mgr-comm').value)||0;
+  if (ccAgentC + ccMgrC > 2.0001) {
+    errEl.textContent = '⛔ عمولة موظف مركز الاتصال + المديرة ('+(ccAgentC+ccMgrC).toFixed(2)+'$) تتجاوز الحد المسموح (2$).';
+    errEl.classList.add('show'); return;
+  }
+  // Client source: when "Other" is chosen, use the free-text value the user typed.
+  let source = document.getElementById('nc-source').value || null;
+  if (source === 'أخرى') source = (document.getElementById('nc-source-other').value||'').trim() || 'أخرى';
   const parts = monthV.split(' ');
   const mMap  = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
   const mm    = String(mMap[parts[0]]??1).padStart(2,'0');
   const yyyy  = parts[1] ?? new Date().getFullYear();
-  const r = await api('POST', '/cc/cards', {
-    account_number:    ac, month: monthV, month_date: `${yyyy}-${mm}-01`,
+  const payload = {
+    account_number:    ac || null, month: monthV, month_date: `${yyyy}-${mm}-01`,
     target_branch_id:  parseInt(branch), cc_agent_id: parseInt(agent),
-    account_kind:      document.getElementById('nc-kind').value,
+    account_kind:      kind,
+    parent_account:    kind === 'sub' ? parent : null,
     account_type_id:   parseInt(document.getElementById('nc-acc-type').value)||null,
-    account_status_id: parseInt(document.getElementById('nc-acc-status').value)||null,
+    account_status_id: null,
     trading_type_id:   parseInt(document.getElementById('nc-trading').value)||null,
     notes:             document.getElementById('nc-notes').value.trim()||null,
-  });
+    client_phone:      phone,
+    client_country_code: ccode,
+    client_source:     source,
+    initial_deposit:   parseFloat(document.getElementById('nc-dep').value)||0,
+    cc_agent_commission:   parseFloat(document.getElementById('nc-agent-comm').value)||0,
+    cc_manager_commission: parseFloat(document.getElementById('nc-mgr-comm').value)||0,
+  };
+  // Edit mode (draft) → PUT; otherwise create → POST
+  const r = window._ccEditId
+    ? await api('PUT', `/cc/cards/${window._ccEditId}`, payload)
+    : await api('POST', '/cc/cards', payload);
   if (r.success) {
     errEl.classList.remove('show');
+    const wasEdit = !!window._ccEditId;
+    const newId   = r.data?.id;
+    window._ccEditId = null;
     closeModal('modal-cc-create');
-    ccShowAlert('ok', '✅ ' + r.message);
-    ['nc-ac','nc-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    ['nc-ac','nc-notes','nc-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    var ns=document.getElementById('nc-source'); if(ns) ns.value='';
     await ccLoadAll();
+    // A freshly-created card is saved as a DRAFT — it is NOT sent automatically. The CC manager
+    // reviews the data, then sends it to the target branch via the «إرسال للفرع» button.
+    if (!wasEdit && newId) ccShowSendPrompt(newId, r.message);
+    else ccShowAlert('ok', '✅ ' + r.message);
+  } else if (r.duplicate) {
+    // Same customer already under follow-up — not an error; inform and close.
+    closeModal('modal-cc-create');
+    ['nc-ac','nc-notes','nc-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    var ns2=document.getElementById('nc-source'); if(ns2) ns2.value='';
+    ccShowAlert('ok', 'ℹ️ ' + r.message);
   } else {
     errEl.textContent = '❌ ' + (r.errors?Object.values(r.errors).flat().join(' | '):r.message);
     errEl.classList.add('show');
   }
 }
 
+/* ─── New / Edit / Delete a CC card ──────────────────────── */
+function openCcNew(){
+  window._ccEditId = null;
+  ['nc-ac','nc-notes','nc-phone','nc-parent','nc-source-other'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['nc-kind','nc-source'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['nc-dep','nc-mgr-comm','nc-agent-comm'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  ncKindChange(); ncSourceChange();
+  const _n=new Date(); ncSetMonth(NC_MONTHS[_n.getMonth()]+' '+_n.getFullYear());
+  const err=document.getElementById('nc-err'); if(err) err.classList.remove('show');
+  const ttl=document.getElementById('cc-modal-create-title'); if(ttl) ttl.textContent='📞 كرت CC جديد / New CC Card';
+  openModal('modal-cc-create');
+}
+function openCcEdit(id){
+  const c = (_ccAllCards||[]).find(x=>x.id===id);
+  if(!c){ ccShowAlert('err','الكرت غير موجود'); return; }
+  window._ccEditId = id;
+  const setV=(eid,val)=>{const el=document.getElementById(eid); if(el) el.value=(val==null?'':val);};
+  setV('nc-ac', c.account_number); setV('nc-kind', c.account_kind||'new');
+  ncSetMonth(c.month || ''); setV('nc-branch', c.branch_id);
+  setV('nc-agent', c.cc_agent_id); setV('nc-acc-type', c.account_type_id);
+  setV('nc-trading', c.trading_type_id);
+  setV('nc-notes', c.notes); setV('nc-phone', c.client_phone);
+  setV('nc-cc', c.client_country_code || '+965');
+  setV('nc-parent', c.parent_account);
+  setV('nc-dep', c.initial_deposit||0); setV('nc-mgr-comm', c.cc_manager_commission||0); setV('nc-agent-comm', c.cc_agent_commission||0);
+  // client source: a saved value not in the preset list → treat as "Other" + free text
+  var srcSel=document.getElementById('nc-source'); var preset=['إعلان','توصية','اتصال مباشر','سوشيال ميديا','واتساب','معرض أو فعالية'];
+  if(c.client_source && preset.indexOf(c.client_source)<0){ setV('nc-source','أخرى'); setV('nc-source-other', c.client_source); }
+  else { setV('nc-source', c.client_source||''); setV('nc-source-other',''); }
+  ncKindChange(); ncSourceChange();
+  const err=document.getElementById('nc-err'); if(err) err.classList.remove('show');
+  const ttl=document.getElementById('cc-modal-create-title'); if(ttl) ttl.textContent='✏️ تعديل كرت CC / Edit CC Card';
+  openModal('modal-cc-create');
+}
+function ccDeleteCard(id){
+  window._ccDelId = id;
+  const p=document.getElementById('cc-del-pass'); if(p) p.value='';
+  const e=document.getElementById('cc-del-err'); if(e) e.classList.remove('show');
+  openModal('modal-cc-delete');
+}
+async function ccConfirmDelete(){
+  const err=document.getElementById('cc-del-err');
+  const pass=(document.getElementById('cc-del-pass')||{}).value||'';
+  if(!pass){ err.textContent='⚠️ أدخل كلمة المرور / Enter password'; err.classList.add('show'); return; }
+  const r=await api('POST', `/cc/cards/${window._ccDelId}/delete-secure`, {password:pass});
+  if(r&&r.success){ closeModal('modal-cc-delete'); ccShowAlert('ok','✅ '+r.message); window._ccDelId=null; await ccLoadAll(); }
+  else { err.textContent='❌ '+((r&&r.message)||'فشل الحذف'); err.classList.add('show'); }
+}
+// One "new card" icon only: hide the global top-bar card buttons + the body duplicate on this screen.
+/* ─── Full country dialing-code list (flags derived from the 2-letter code) ─── */
+const NC_COUNTRIES=[
+['+93','AF','Afghanistan'],['+355','AL','Albania'],['+213','DZ','Algeria'],['+376','AD','Andorra'],['+244','AO','Angola'],['+1','AG','Antigua & Barbuda'],['+54','AR','Argentina'],['+374','AM','Armenia'],['+61','AU','Australia'],['+43','AT','Austria'],['+994','AZ','Azerbaijan'],
+['+1','BS','Bahamas'],['+973','BH','Bahrain'],['+880','BD','Bangladesh'],['+1','BB','Barbados'],['+375','BY','Belarus'],['+32','BE','Belgium'],['+501','BZ','Belize'],['+229','BJ','Benin'],['+975','BT','Bhutan'],['+591','BO','Bolivia'],['+387','BA','Bosnia & Herzegovina'],['+267','BW','Botswana'],['+55','BR','Brazil'],['+673','BN','Brunei'],['+359','BG','Bulgaria'],['+226','BF','Burkina Faso'],['+257','BI','Burundi'],
+['+855','KH','Cambodia'],['+237','CM','Cameroon'],['+1','CA','Canada'],['+238','CV','Cape Verde'],['+236','CF','Central African Rep.'],['+235','TD','Chad'],['+56','CL','Chile'],['+86','CN','China'],['+57','CO','Colombia'],['+269','KM','Comoros'],['+242','CG','Congo'],['+243','CD','Congo (DRC)'],['+506','CR','Costa Rica'],['+225','CI','Côte d’Ivoire'],['+385','HR','Croatia'],['+53','CU','Cuba'],['+357','CY','Cyprus'],['+420','CZ','Czechia'],
+['+45','DK','Denmark'],['+253','DJ','Djibouti'],['+1','DM','Dominica'],['+1','DO','Dominican Rep.'],
+['+593','EC','Ecuador'],['+20','EG','Egypt'],['+503','SV','El Salvador'],['+240','GQ','Equatorial Guinea'],['+291','ER','Eritrea'],['+372','EE','Estonia'],['+268','SZ','Eswatini'],['+251','ET','Ethiopia'],
+['+679','FJ','Fiji'],['+358','FI','Finland'],['+33','FR','France'],
+['+241','GA','Gabon'],['+220','GM','Gambia'],['+995','GE','Georgia'],['+49','DE','Germany'],['+233','GH','Ghana'],['+30','GR','Greece'],['+1','GD','Grenada'],['+502','GT','Guatemala'],['+224','GN','Guinea'],['+245','GW','Guinea-Bissau'],['+592','GY','Guyana'],
+['+509','HT','Haiti'],['+504','HN','Honduras'],['+852','HK','Hong Kong'],['+36','HU','Hungary'],
+['+354','IS','Iceland'],['+91','IN','India'],['+62','ID','Indonesia'],['+98','IR','Iran'],['+964','IQ','Iraq'],['+353','IE','Ireland'],['+972','IL','Israel'],['+39','IT','Italy'],
+['+1','JM','Jamaica'],['+81','JP','Japan'],['+962','JO','Jordan'],
+['+7','KZ','Kazakhstan'],['+254','KE','Kenya'],['+686','KI','Kiribati'],['+965','KW','Kuwait'],['+996','KG','Kyrgyzstan'],
+['+856','LA','Laos'],['+371','LV','Latvia'],['+961','LB','Lebanon'],['+266','LS','Lesotho'],['+231','LR','Liberia'],['+218','LY','Libya'],['+423','LI','Liechtenstein'],['+370','LT','Lithuania'],['+352','LU','Luxembourg'],
+['+853','MO','Macau'],['+261','MG','Madagascar'],['+265','MW','Malawi'],['+60','MY','Malaysia'],['+960','MV','Maldives'],['+223','ML','Mali'],['+356','MT','Malta'],['+692','MH','Marshall Islands'],['+222','MR','Mauritania'],['+230','MU','Mauritius'],['+52','MX','Mexico'],['+691','FM','Micronesia'],['+373','MD','Moldova'],['+377','MC','Monaco'],['+976','MN','Mongolia'],['+382','ME','Montenegro'],['+212','MA','Morocco'],['+258','MZ','Mozambique'],['+95','MM','Myanmar'],
+['+264','NA','Namibia'],['+674','NR','Nauru'],['+977','NP','Nepal'],['+31','NL','Netherlands'],['+64','NZ','New Zealand'],['+505','NI','Nicaragua'],['+227','NE','Niger'],['+234','NG','Nigeria'],['+850','KP','North Korea'],['+389','MK','North Macedonia'],['+47','NO','Norway'],
+['+968','OM','Oman'],
+['+92','PK','Pakistan'],['+680','PW','Palau'],['+970','PS','Palestine'],['+507','PA','Panama'],['+675','PG','Papua New Guinea'],['+595','PY','Paraguay'],['+51','PE','Peru'],['+63','PH','Philippines'],['+48','PL','Poland'],['+351','PT','Portugal'],['+974','QA','Qatar'],
+['+40','RO','Romania'],['+7','RU','Russia'],['+250','RW','Rwanda'],
+['+1','KN','Saint Kitts & Nevis'],['+1','LC','Saint Lucia'],['+1','VC','Saint Vincent'],['+685','WS','Samoa'],['+378','SM','San Marino'],['+239','ST','São Tomé & Príncipe'],['+966','SA','Saudi Arabia'],['+221','SN','Senegal'],['+381','RS','Serbia'],['+248','SC','Seychelles'],['+232','SL','Sierra Leone'],['+65','SG','Singapore'],['+421','SK','Slovakia'],['+386','SI','Slovenia'],['+677','SB','Solomon Islands'],['+252','SO','Somalia'],['+27','ZA','South Africa'],['+82','KR','South Korea'],['+211','SS','South Sudan'],['+34','ES','Spain'],['+94','LK','Sri Lanka'],['+249','SD','Sudan'],['+597','SR','Suriname'],['+46','SE','Sweden'],['+41','CH','Switzerland'],['+963','SY','Syria'],
+['+886','TW','Taiwan'],['+992','TJ','Tajikistan'],['+255','TZ','Tanzania'],['+66','TH','Thailand'],['+670','TL','Timor-Leste'],['+228','TG','Togo'],['+676','TO','Tonga'],['+1','TT','Trinidad & Tobago'],['+216','TN','Tunisia'],['+90','TR','Türkiye'],['+993','TM','Turkmenistan'],['+688','TV','Tuvalu'],
+['+256','UG','Uganda'],['+380','UA','Ukraine'],['+971','AE','United Arab Emirates'],['+44','GB','United Kingdom'],['+1','US','United States'],['+598','UY','Uruguay'],['+998','UZ','Uzbekistan'],
+['+678','VU','Vanuatu'],['+58','VE','Venezuela'],['+84','VN','Vietnam'],
+['+967','YE','Yemen'],['+260','ZM','Zambia'],['+263','ZW','Zimbabwe']
+];
+function ncFlag(cc){ try{ return cc.toUpperCase().replace(/./g,c=>String.fromCodePoint(127397+c.charCodeAt(0))); }catch(e){ return ''; } }
+function ncBuildCountries(){
+  const sel=document.getElementById('nc-cc'); if(!sel) return;
+  const cur=sel.value||'+965';
+  const pinned=['+965','+966','+971','+973','+974','+968','+20','+962','+961','+964','+963','+967','+970','+218','+249','+212','+216','+213'];
+  const top=[], rest=[];
+  NC_COUNTRIES.forEach(c=>{ (pinned.indexOf(c[0])>=0?top:rest).push(c); });
+  top.sort((a,b)=>pinned.indexOf(a[0])-pinned.indexOf(b[0]));
+  rest.sort((a,b)=>a[2].localeCompare(b[2]));
+  const opt=c=>`<option value="${c[0]}">${ncFlag(c[1])} ${c[0]} ${c[2]}</option>`;
+  sel.innerHTML=top.map(opt).join('')+'<option value="" disabled>──────────</option>'+rest.map(opt).join('');
+  sel.value=cur || '+965';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.topbar .tb-right > a.tb-btn').forEach(function(a){ a.style.display='none'; });
+  var dup=document.getElementById('ccs-acc-new'); if(dup) dup.style.display='none';
+  ncBuildCountries();
+});
+
 /* ─── Load form options ──────────────────────────────────── */
 async function loadFormOptions() {
   const [emps, branches, settings] = await Promise.all([
-    api('GET', '/employees?status=approved'),
+    api('GET', '/employees?status=approved&slim=1'),
     api('GET', '/branches'),
     api('GET', '/settings'),
   ]);
-  // Months
-  const mSel = document.getElementById('nc-month');
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const now = new Date();
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
-    const o = document.createElement('option'); o.value = o.textContent = label; mSel.appendChild(o);
+  // Month — default to the current month in the calendar picker
+  if (!document.getElementById('nc-month').value) {
+    const _n = new Date(); ncSetMonth(NC_MONTHS[_n.getMonth()] + ' ' + _n.getFullYear());
   }
   // Branches
   if (branches.success) {
@@ -958,7 +1266,6 @@ async function loadFormOptions() {
       });
     };
     fill('nc-acc-type',   settings.data?.account_types);
-    fill('nc-acc-status', settings.data?.account_statuses);
     fill('nc-trading',    settings.data?.trading_types);
   }
 }

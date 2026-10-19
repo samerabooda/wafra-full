@@ -2,7 +2,7 @@
 @section('title','Managers')
 @section('page-title','Managers')
 @section('topbar-actions')
-<button class="tb-btn primary" id="mgr-tb-btn-add" onclick="openModal('modal-add-mgr')">👤 مدير جديد</button>
+<button class="tb-btn primary" id="mgr-tb-btn-add" onclick="['mg-phone','mg-email'].forEach(function(i){var e=document.getElementById(i);if(e)e.value='';});openModal('modal-add-mgr');setTimeout(function(){var p=document.getElementById('mg-phone');if(p)p.value=p.value.replace(/[^0-9]/g,'');},300)">👤 مدير جديد</button>
 <button class="tb-btn" id="mgr-tb-btn-invite" onclick="openModal('modal-add-invite')" style="margin-right:8px">📧 دعوة مدير فرع</button>
 @endsection
 
@@ -25,6 +25,30 @@
 .perm-chip{display:inline-flex;align-items:center;gap:2px;padding:2px 6px;border-radius:5px;
   font-size:9px;font-weight:700;background:rgba(26,173,186,.1);color:var(--pri2);
   border:1px solid rgba(26,173,186,.2);white-space:nowrap}
+
+/* ── Elegant single-row cards (managers list) ── */
+.row-list{padding:12px 14px 16px;display:flex;flex-direction:column;gap:9px}
+.row-card{position:relative;display:flex;align-items:center;gap:14px;padding:12px 20px;border-radius:14px;
+  border:1px solid var(--brd1);background:var(--bg2);transition:all .18s ease;flex-wrap:nowrap;overflow:hidden}
+.row-card::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--gr)}
+.row-card.off::before{background:var(--re)}
+.row-card:hover{border-color:var(--pri);box-shadow:0 6px 22px rgba(0,0,0,.16);transform:translateY(-2px)}
+.row-card.off{opacity:.6}
+.rc-av{width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;
+  align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;
+  box-shadow:0 2px 8px rgba(26,173,186,.35);background:linear-gradient(135deg,var(--pri2),var(--pri3))}
+.rc-id{min-width:0;flex:1 1 200px}
+.rc-cell{flex-shrink:0;font-size:12px;color:var(--tx);white-space:nowrap;text-align:center}
+.rc-muted{color:var(--mu)}
+.rc-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:9px;
+  font-size:11.5px;font-weight:600;background:var(--bg3);border:1px solid var(--brd1);color:var(--tx);white-space:nowrap}
+.rc-dot{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--gr)}
+.rc-dot i{width:8px;height:8px;border-radius:50%;background:var(--gr);box-shadow:0 0 0 3px rgba(30,204,128,.18)}
+.rc-dot.off{color:var(--re)} .rc-dot.off i{background:var(--re);box-shadow:0 0 0 3px rgba(232,69,69,.18)}
+.rc-lab{font-size:8.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:700}
+.rc-actions{display:flex;gap:5px;flex-shrink:0;margin-inline-start:auto}
+@media(max-width:1000px){.rc-perms,.rc-last{display:none}}
+@media(max-width:700px){.row-card{flex-wrap:wrap;gap:9px}.rc-id{flex-basis:60%}.rc-actions{margin-inline-start:0}}
 </style>
 
 @section('content')
@@ -35,23 +59,8 @@
     <div class="panel-title" id="mgr-list-title">👤 قائمة المديرين</div>
     <div style="font-size:11px;color:var(--mu)" id="mgr-count"></div>
   </div>
-  <div class="table-scroll">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th style="min-width:160px" id="mgr-th-manager">المدير</th>
-          <th style="min-width:110px" id="mgr-th-branch">الفرع</th>
-          <th style="min-width:90px" id="mgr-th-role">الدور</th>
-          <th style="min-width:80px" id="mgr-th-status">الحالة</th>
-          <th style="min-width:90px" id="mgr-th-last">آخر دخول</th>
-          <th style="min-width:90px" id="mgr-th-perms">الصلاحيات</th>
-          <th style="width:100px;text-align:center" id="mgr-th-act">إجراءات</th>
-        </tr>
-      </thead>
-      <tbody id="mgr-tbody">
-        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)" id="mgr-loading">جاري التحميل...</td></tr>
-      </tbody>
-    </table>
+  <div class="row-list" id="mgr-tbody">
+    <div style="text-align:center;padding:40px;color:var(--mu)" id="mgr-loading">جاري التحميل...</div>
   </div>
 </div>
 
@@ -109,18 +118,22 @@
           <label class="form-label" id="mgr-lbl-phone">رقم التليفون</label>
           <div style="display:flex;gap:6px">
             <select id="mg-phone-code" class="form-control" style="width:150px;flex-shrink:0;font-size:12px;direction:ltr">
-              <option value="+965">🇰🇼 +965 الكويت</option>
-              <option value="+966">🇸🇦 +966 السعودية</option>
-              <option value="+971">🇦🇪 +971 الإمارات</option>
-              <option value="+973">🇧🇭 +973 البحرين</option>
-              <option value="+974">🇶🇦 +974 قطر</option>
-              <option value="+968">🇴🇲 +968 عُمان</option>
-              <option value="+962">🇯🇴 +962 الأردن</option>
-              <option value="+20">🇪🇬 +20 مصر</option>
-              <option value="+964">🇮🇶 +964 العراق</option>
-              <option value="+963">🇸🇾 +963 سوريا</option>
+              <option value="+965">🇰🇼 +965 Kuwait</option>
+              <option value="+966">🇸🇦 +966 Saudi Arabia</option>
+              <option value="+971">🇦🇪 +971 UAE</option>
+              <option value="+973">🇧🇭 +973 Bahrain</option>
+              <option value="+974">🇶🇦 +974 Qatar</option>
+              <option value="+968">🇴🇲 +968 Oman</option>
+              <option value="+962">🇯🇴 +962 Jordan</option>
+              <option value="+20">🇪🇬 +20 Egypt</option>
+              <option value="+964">🇮🇶 +964 Iraq</option>
+              <option value="+963">🇸🇾 +963 Syria</option>
             </select>
-            <input type="tel" id="mg-phone" class="form-control" placeholder="5XXXXXXXX" dir="ltr" style="flex:1">
+            <input type="text" id="mg-phone" name="x_contact_9931" class="form-control" placeholder="5XXXXXXXX" dir="ltr" style="flex:1" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" inputmode="numeric"
+                   readonly onfocus="this.removeAttribute('readonly')"
+                   oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+                   onchange="this.value=this.value.replace(/[^0-9]/g,'')"
+                   onblur="this.value=this.value.replace(/[^0-9]/g,'')">
           </div>
         </div>
         <div class="form-group">
@@ -166,6 +179,23 @@
       <div id="edit-mgr-err" class="alert alert-error"></div>
       <div id="edit-mgr-ok"  class="alert alert-success"></div>
       <input type="hidden" id="edit-mgr-id">
+
+      {{-- Profile photo row --}}
+      <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--bg3);border-radius:12px;border:1px solid var(--brd1);margin-bottom:14px">
+        <div id="edit-mgr-avatar-preview" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--pri2),var(--pri3));display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:white;flex-shrink:0;overflow:hidden">
+          ?
+        </div>
+        <div style="flex:1">
+          <div class="form-label" id="mgr-edit-lbl-photo">صورة المدير (اختيارية)</div>
+          <input type="file" id="edit-mg-photo" accept="image/jpeg,image/png,image/gif,image/webp"
+            style="font-size:12px;color:var(--mu);margin-top:4px"
+            onchange="previewMgrPhoto(this)">
+          <div style="font-size:10px;color:var(--mu);margin-top:3px" id="mgr-edit-photo-hint">JPG / PNG — max 2 MB — سيُعرض في الواجهة الجانبية مستقبلاً</div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="mgr-photo-clear-btn" style="display:none"
+          onclick="clearMgrPhoto()">✕ <span id="mgr-photo-clear-lbl">حذف الصورة</span></button>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="mgr-edit-lbl-name">الاسم الكامل *</label>
@@ -173,7 +203,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" id="mgr-edit-lbl-phone">رقم التليفون</label>
-          <input type="tel" id="edit-mg-phone" class="form-control" dir="ltr">
+          <input type="tel" id="edit-mg-phone" class="form-control" dir="ltr" autocomplete="off" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
         </div>
       </div>
       <div class="form-row">
@@ -536,31 +566,30 @@ function renderMgrTable(data) {
   document.getElementById('mgr-count').textContent = data.length + mgr('mgrCount');
   document.getElementById('mgr-tbody').innerHTML = data.length
     ? data.map(m => `
-      <tr style="${!m.is_active ? 'opacity:.55' : ''}">
-        <td>
+      <div class="row-card ${!m.is_active ? 'off' : ''}">
+        <div class="rc-av">${m.photo ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover">` : esc((m.name||'?').charAt(0).toUpperCase())}</div>
+        <div class="rc-id">
           <div class="mgr-name-cell">${esc(m.name)}</div>
-          <div class="mgr-email" title="${esc(m.email)}">${esc(m.email)}</div>
-          ${m.phone ? `<div class="mgr-phone">${esc(m.phone)}</div>` : ''}
-        </td>
-        <td style="font-size:12px">${esc(m.branch?.name_ar || '—')}</td>
-        <td><span class="badge badge-blue" style="font-size:10px">${esc(roleLabel(m.role))}</span></td>
-        <td><span class="badge ${m.is_active ? 'badge-green' : 'badge-red'}" style="font-size:10px">${m.is_active ? mgr('statusActive') : mgr('statusDisabled')}</span></td>
-        <td style="font-size:10px;color:var(--mu)">${m.last_login ? esc(m.last_login.slice(0,10)) : '<span style="color:var(--mu)">—</span>'}</td>
-        <td>
-          <div style="display:flex;flex-wrap:wrap;gap:3px">
-            ${(m.permissions||[]).slice(0,3).map(p => `<span class="perm-chip">${esc(p)}</span>`).join('')}
-            ${(m.permissions||[]).length > 3 ? `<span class="perm-chip">+${(m.permissions||[]).length - 3}</span>` : ''}
+          <div class="mgr-email" title="${esc(m.email)}">✉️ ${esc(m.email)}</div>
+          ${m.phone ? `<div class="mgr-phone">📞 ${esc(m.phone)}</div>` : ''}
+        </div>
+        <div class="rc-cell"><div class="rc-lab">${mgr('thBranch')}</div><span class="rc-pill">🏢 ${esc(m.branch?.name_ar || '—')}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${mgr('thRole')}</div><span class="badge badge-blue" style="font-size:10px">${esc(roleLabel(m.role))}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${mgr('thStatus')}</div><span class="rc-dot ${m.is_active ? '' : 'off'}"><i></i>${m.is_active ? mgr('statusActive') : mgr('statusDisabled')}</span></div>
+        <div class="rc-cell rc-last"><div class="rc-lab">${mgr('thLast')}</div><span class="rc-muted" style="font-size:11px">${m.last_login ? esc(m.last_login.slice(0,10)) : '—'}</span></div>
+        <div class="rc-cell rc-perms"><div class="rc-lab">${mgr('thPerms')}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;max-width:160px;justify-content:center">
+            ${(m.permissions||[]).slice(0,2).map(p => `<span class="perm-chip">${esc(p)}</span>`).join('')}
+            ${(m.permissions||[]).length > 2 ? `<span class="perm-chip">+${(m.permissions||[]).length - 2}</span>` : ''}
           </div>
-        </td>
-        <td>
-          <div style="display:flex;gap:4px;justify-content:center">
-            <button class="icon-btn" onclick="editMgr(${m.id})" title="${mgr('titleEdit')}">✏️</button>
-            <button class="icon-btn warn" onclick="resetPw(${m.id},'${esc(m.name)}')" title="${mgr('titleResetPw')}">🔑</button>
-            <button class="icon-btn ${m.is_active ? 'danger' : 'success-btn'}" onclick="toggleMgr(${m.id},${m.is_active},'${esc(m.name)}')" title="${mgr('titleToggle')}">${m.is_active ? '🚫' : '✅'}</button>
-          </div>
-        </td>
-      </tr>`).join('')
-    : `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">${mgr('noManagers')}</td></tr>`;
+        </div>
+        <div class="rc-actions">
+          <button class="icon-btn" onclick="editMgr(${m.id})" title="${mgr('titleEdit')}">✏️</button>
+          <button class="icon-btn warn" onclick="resetPw(${m.id},'${esc(m.name)}')" title="${mgr('titleResetPw')}">🔑</button>
+          <button class="icon-btn ${m.is_active ? 'danger' : 'success-btn'}" onclick="toggleMgr(${m.id},${m.is_active},'${esc(m.name)}')" title="${mgr('titleToggle')}">${m.is_active ? '🚫' : '✅'}</button>
+        </div>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:40px;color:var(--mu)">${mgr('noManagers')}</div>`;
 }
 
 async function loadManagers() {
@@ -649,12 +678,53 @@ async function createManager() {
 
 // ── Edit Manager ──────────────────────────────────────────
 let _editMgrData = null;
+let _mgrPhoto;   // undefined = unchanged, string = new photo, null = remove
+/* ── Manager photo preview helpers ── */
+function previewMgrPhoto(inp) {
+  if (!inp.files || !inp.files[0]) return;
+  const file = inp.files[0];
+  if (file.size > 2 * 1024 * 1024) {
+    toast(mgrL()==='en' ? 'Image must be under 2 MB' : 'الصورة يجب أن تكون أقل من 2 ميجا', 'error');
+    inp.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _mgrPhoto = e.target.result;   // base64 data URL — sent on save
+    const av = document.getElementById('edit-mgr-avatar-preview');
+    if (av) { av.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+    const clrBtn = document.getElementById('mgr-photo-clear-btn');
+    if (clrBtn) clrBtn.style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+function clearMgrPhoto() {
+  const inp = document.getElementById('edit-mg-photo');
+  const av  = document.getElementById('edit-mgr-avatar-preview');
+  const clrBtn = document.getElementById('mgr-photo-clear-btn');
+  if (inp) inp.value = '';
+  _mgrPhoto = null;   // signal removal on save
+  if (av && _editMgrData) {
+    av.innerHTML = (_editMgrData.name || '?').charAt(0).toUpperCase();
+    av.style.background = 'linear-gradient(135deg,var(--pri2),var(--pri3))';
+  }
+  if (clrBtn) clrBtn.style.display = 'none';
+}
+
 async function editMgr(id) {
-  const r = await api('GET', '/managers');
-  if (!r.success) return;
-  const m = r.data.find(x => x.id === id);
-  if (!m) { toast(mgr('mgrNotFound'), 'error'); return; }
+  /* Use cached data first; fall back to fresh API call if cache empty */
+  let m = (_mgrData || []).find(x => x.id === id);
+  if (!m) {
+    const r = await api('GET', '/managers');
+    if (!r.success) { toast(mgr('mgrNotFound') || 'Manager not found', 'error'); return; }
+    _mgrData = r.data;
+    m = r.data.find(x => x.id === id);
+  }
+  if (!m) { toast(mgr('mgrNotFound') || 'Manager not found', 'error'); return; }
+
+  try {
   _editMgrData = m;
+  _mgrPhoto = undefined;   // reset photo-change tracking for this manager
   document.getElementById('edit-mgr-id').value    = m.id;
   document.getElementById('edit-mg-name').value   = m.name;
   document.getElementById('edit-mg-phone').value  = m.phone || '';
@@ -662,8 +732,37 @@ async function editMgr(id) {
   document.getElementById('edit-mg-active').value = m.is_active ? '1' : '0';
   document.getElementById('edit-mgr-err').classList.remove('show');
   document.getElementById('edit-mgr-ok').classList.remove('show');
-  setPerms(m.permissions || [], 'e-');
+
+  // Show existing photo or initials preview
+  const av = document.getElementById('edit-mgr-avatar-preview');
+  const clrBtn = document.getElementById('mgr-photo-clear-btn');
+  if (av) {
+    if (m.photo) { av.innerHTML = `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+    else { av.textContent = (m.name || '?').charAt(0).toUpperCase(); av.style.background = 'linear-gradient(135deg,var(--pri2),var(--pri3))'; av.style.fontSize = '24px'; }
+  }
+  if (clrBtn) clrBtn.style.display = m.photo ? '' : 'none';
+  const photoInp = document.getElementById('edit-mg-photo');
+  if (photoInp) photoInp.value = '';
+
+  // Also update label translations
+  const isEn = mgrL() === 'en';
+  const lbl = document.getElementById('mgr-edit-lbl-photo');
+  if (lbl) lbl.textContent = isEn ? 'Profile Photo (optional)' : 'صورة المدير (اختيارية)';
+  const hint = document.getElementById('mgr-edit-photo-hint');
+  if (hint) hint.textContent = isEn ? 'JPG / PNG — max 2 MB — Will display in sidebar in future' : 'JPG / PNG — max 2 MB — سيُعرض في القائمة الجانبية مستقبلاً';
+  const clearLbl = document.getElementById('mgr-photo-clear-lbl');
+  if (clearLbl) clearLbl.textContent = isEn ? 'Remove Photo' : 'حذف الصورة';
+
+  // API returns permissions as {key:bool} object — convert to array of granted keys
+  const permArr = Array.isArray(m.permissions)
+    ? m.permissions
+    : Object.entries(m.permissions || {}).filter(([,v])=>v).map(([k])=>k);
+  setPerms(permArr, 'e-');
   openModal('modal-edit-mgr');
+  } catch(err) {
+    console.error('editMgr error:', err);
+    toast('Error opening edit form: ' + err.message, 'error');
+  }
 }
 
 async function saveManager() {
@@ -679,7 +778,9 @@ async function saveManager() {
   if (!name) { errEl.textContent = mgr('errEnterName'); errEl.classList.add('show'); return; }
   const btn = document.getElementById('btn-save-mgr');
   btn.disabled = true; btn.textContent = mgr('btnSaving');
-  const r = await api('PUT', `/managers/${id}`, { name, phone, branch_id: parseInt(branch), is_active: active, permissions: perms });
+  const payload = { name, phone, branch_id: parseInt(branch), is_active: active, permissions: perms };
+  if (_mgrPhoto !== undefined) payload.photo = _mgrPhoto;   // new photo, or null to remove
+  const r = await api('PUT', `/managers/${id}`, payload);
   btn.disabled = false; btn.textContent = mgr('btnSave');
   if (r.success) {
     okEl.textContent = mgr('savedOk'); okEl.classList.add('show');
@@ -748,4 +849,3 @@ async function deleteInvite(id, email) {
 
 init();
 </script>
-@endpush

@@ -2,7 +2,7 @@
 @section('title','Account Search')
 @section('page-title','Account Search')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'search'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
@@ -13,7 +13,8 @@
       <label class="form-label" id="srch-lbl">رقم الحساب / Account Number</label>
       <div style="position:relative">
         <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none">🔍</span>
-        <input type="text" id="srch-input" class="form-control"
+        <input type="search" id="srch-input" name="srch_nofill" class="form-control"
+               autocomplete="off" data-lpignore="true" data-form-type="other" readonly onfocus="this.removeAttribute('readonly')"
                placeholder="أدخل رقم الحساب..."
                oninput="schedSearch()" onkeydown="if(event.key==='Enter')doSearch()"
                dir="ltr" autocomplete="off" spellcheck="false"
@@ -86,6 +87,8 @@ const SRCH = {
 
 function srchL() { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
 function s(k)    { const l = srchL(); return SRCH[l]?.[k] ?? SRCH.ar[k] ?? k; }
+// Local fmt — the layout's `const fmt` is not in this script's scope (was "fmt is not defined").
+function fmt(n){ n = Number(n); return (n > 0) ? n.toLocaleString('en', {maximumFractionDigits:0}) : '—'; }
 
 function srchApplyLang() {
   const el = id => document.getElementById(id);
@@ -103,6 +106,9 @@ function srchApplyLang() {
   if (note) note.style.display = '';
   // re-render if there are results
   if (_srchData.length) renderResults(_srchData, _srchTerm);
+  // Placeholder
+  const inp = document.getElementById('srch-input');
+  if (inp) inp.placeholder = srchL()==='en' ? 'Enter account number...' : 'أدخل رقم الحساب...';
 }
 
 const _srchOrig = window.applyLang;
@@ -127,14 +133,26 @@ async function doSearch() {
     `<div style="text-align:center;padding:50px;color:var(--mu);font-size:14px">${s('loading')}</div>`;
   document.getElementById('srch-clear-btn').style.display = '';
 
-  const r = await api('GET', '/cards?search=' + encodeURIComponent(term) + '&per_page=100');
-  if (!r.success) {
+  let r;
+  try {
+    r = await api('GET', '/cards/search-flat?q=' + encodeURIComponent(term));
+  } catch (e) {
     document.getElementById('srch-results').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--re)">${r.message || 'خطأ'}</div>`;
+      `<div style="padding:30px;color:#e05050;direction:ltr;white-space:pre-wrap;text-align:left">API ERROR:\n${(e&&e.stack)||(e&&e.message)||e}</div>`;
     return;
   }
-  _srchData = r.data?.data ?? r.data ?? [];
-  renderResults(_srchData, term);
+  if (!r || !r.success) {
+    document.getElementById('srch-results').innerHTML =
+      `<div style="text-align:center;padding:40px;color:var(--re)">${(r&&r.message) || 'خطأ في الاستجابة'}</div>`;
+    return;
+  }
+  try {
+    _srchData = r.data || [];
+    renderResults(_srchData, term);
+  } catch (e) {
+    document.getElementById('srch-results').innerHTML =
+      `<div style="padding:30px;color:#e05050;direction:ltr;white-space:pre-wrap;text-align:left">RENDER ERROR:\n${(e&&e.stack)||(e&&e.message)||e}</div>`;
+  }
 }
 
 function clearSearch() {
@@ -150,79 +168,38 @@ function clearSearch() {
     </div>`;
 }
 
-function renderResults(data, term) {
+function _e(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _m(v){ v=Number(v)||0; return '$'+(Math.round(v*100)/100); }
+function renderResults(data, term){
   const res = document.getElementById('srch-results');
-  if (!data.length) {
-    res.innerHTML = `
-      <div style="text-align:center;padding:60px;color:var(--mu)">
-        <div style="font-size:40px;margin-bottom:12px">🔎</div>
-        <div style="font-size:15px;font-weight:700">${s('noResult')} "${term}"</div>
-      </div>`;
+  if(!data.length){
+    res.innerHTML = `<div style="text-align:center;padding:60px;color:var(--mu)"><div style="font-size:40px;margin-bottom:12px">🔎</div><div style="font-size:15px;font-weight:700">${s('noResult')} "${_e(term)}"</div></div>`;
     return;
   }
-
-  // Header
-  let html = `<div class="panel-header" style="margin-bottom:12px;padding:14px 16px;background:var(--card-bg);border:1px solid var(--card-brd);border-radius:12px;">
-    <div class="panel-title">🔍 ${data.length} ${s('results')} — "<span class="ac-num">${term}</span>"</div>
-  </div>`;
-
-  // Cards grid - show each card as a detailed panel
-  data.forEach(c => {
-    const totalComm = (parseFloat(c.broker_commission||0)+parseFloat(c.marketer_commission||0)+parseFloat(c.ext_commission1||0)+parseFloat(c.ext_commission2||0)).toFixed(1);
-    const isModified = c.status === 'modified';
-    html += `
-    <div class="panel" style="margin-bottom:14px;${isModified?'border-color:rgba(245,166,35,.35);':''}" >
-      <div class="panel-header" style="background:${isModified?'rgba(245,166,35,.06)':'var(--bg3)'}">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span class="ac-num" style="font-size:15px">#${c.account_number}</span>
-          <span style="color:var(--mu);font-size:13px">📅 ${c.month}</span>
-          ${c.branch ? `<span style="color:var(--mu);font-size:12px">🏢 ${c.branch.name_ar}</span>` : ''}
-          ${isModified ? `<span class="badge badge-orange">${s('stMod')}</span>` : `<span class="badge badge-blue">${s('stNormal')}</span>`}
-        </div>
-        <a href="/cards/${c.id}/edit" class="btn btn-ghost btn-sm" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️ ${s('btnEdit')}</a>
-      </div>
-      <div class="panel-body">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
-          <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">💰 ${s('thDep')}</div>
-            <div class="mono c-blue" style="font-size:15px;font-weight:700">${fmt(c.initial_deposit)}</div>
-          </div>
-          <div style="background:var(--bg4);border-radius:10px;padding:12px 14px;border:1px solid var(--brd1)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">📅 ${s('thMon')}</div>
-            <div class="mono c-green" style="font-size:15px;font-weight:700">${fmt(c.monthly_deposit)}</div>
-          </div>
-          <div style="background:rgba(46,134,171,.08);border-radius:10px;padding:12px 14px;border:1px solid rgba(46,134,171,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🧑‍💼 ${s('thBroker')}</div>
-            <div style="font-size:14px;font-weight:700;color:var(--pri2)">${c.broker?.name||'—'}</div>
-            <div class="mono c-blue" style="font-size:12px;margin-top:3px">$${c.broker_commission||0}/lot</div>
-          </div>
-          ${c.marketer && c.marketer.name !== c.broker?.name ? `
-          <div style="background:rgba(34,201,122,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(34,201,122,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">📢 ${s('thMktr')}</div>
-            <div style="font-size:14px;font-weight:700;color:var(--gr)">${c.marketer.name}</div>
-            <div class="mono c-green" style="font-size:12px;margin-top:3px">$${c.marketer_commission||0}/lot</div>
-          </div>` : ''}
-          ${c.ext_marketer1 ? `
-          <div style="background:rgba(138,120,240,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(138,120,240,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🌐 ${s('thExt1')}</div>
-            <div style="font-size:14px;font-weight:700;color:var(--pu)">${c.ext_marketer1.name}</div>
-            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission1||0}/lot</div>
-          </div>` : ''}
-          ${c.ext_marketer2 ? `
-          <div style="background:rgba(138,120,240,.06);border-radius:10px;padding:12px 14px;border:1px solid rgba(138,120,240,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">🌐 ${s('thExt2')}</div>
-            <div style="font-size:14px;font-weight:700;color:var(--pu)">${c.ext_marketer2.name}</div>
-            <div class="mono" style="color:var(--pu);font-size:12px;margin-top:3px">$${c.ext_commission2||0}/lot</div>
-          </div>` : ''}
-          <div style="background:rgba(245,166,35,.08);border-radius:10px;padding:12px 14px;border:1px solid rgba(245,166,35,.2)">
-            <div style="font-size:10px;color:var(--mu);margin-bottom:4px;text-transform:uppercase">💎 ${s('totalComm')}</div>
-            <div class="badge badge-orange" style="font-size:14px;padding:6px 14px">$${totalComm}/lot</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
+  const isEn = (typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))==='en';
+  let html = `<div class="panel" style="overflow:hidden">
+    <div class="panel-header"><div class="panel-title">🔍 ${data.length} ${s('results')} — "<span class="ac-num">${_e(term)}</span>"</div></div>
+    <div class="table-scroll"><table class="data-table"><thead><tr>
+      <th>${isEn?'Account':'رقم الحساب'}</th><th>${isEn?'Month':'الشهر'}</th><th>${isEn?'Branch':'الفرع'}</th>
+      <th>${isEn?'Broker':'البروكر'}</th><th>${isEn?'Marketer':'المسوّق'}</th>
+      <th>${isEn?'Opening dep.':'إيداع الفتح'}</th><th>${isEn?'Referral':'الإحالة'}</th><th>${isEn?'Status':'الحالة'}</th><th></th>
+    </tr></thead><tbody>`;
+  data.forEach(c=>{
+    const br = isEn ? (c.branch_en||c.branch_ar) : (c.branch_ar||c.branch_en);
+    const mod = c.status==='modified';
+    html += `<tr${mod?' style="background:rgba(245,166,35,.06)"':''}>
+      <td><span class="ac-num">${_e(c.account_number)}</span></td>
+      <td style="color:var(--mu);white-space:nowrap">${_e(c.month||'—')}</td>
+      <td style="white-space:nowrap">🏢 ${_e(br||'—')}</td>
+      <td style="color:var(--pri2);font-weight:700">${_e(c.broker_name||'—')}<div class="mono" style="font-size:11px;color:var(--mu)">${_m(c.broker_commission)}</div></td>
+      <td style="color:var(--m2);font-weight:700">${_e(c.marketer_name||'—')}<div class="mono" style="font-size:11px;color:var(--mu)">${_m(c.marketer_commission)}</div></td>
+      <td class="mono c-blue" style="font-weight:700">${fmt(c.initial_deposit)}</td>
+      <td>${c.referral_account?('<span class="ac-num">'+_e(c.referral_account)+'</span>'):'<span style="color:var(--mu)">—</span>'}</td>
+      <td>${mod?`<span class="badge badge-orange">${s('stMod')}</span>`:`<span class="badge badge-blue">${s('stNormal')}</span>`}</td>
+      <td><a href="/cards/${c.id}/edit" class="btn btn-ghost btn-sm" style="color:var(--or);border-color:rgba(245,166,35,.3)">✏️</a></td>
+    </tr>`;
   });
-
+  html += `</tbody></table></div></div>`;
   res.innerHTML = html;
 }
 

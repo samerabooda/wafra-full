@@ -8,36 +8,81 @@
 
 @section('content')
 
+<style>
+/* ── Elegant single-row cards (shared, settings lists) ── */
+.row-list{padding:12px 4px 8px;display:flex;flex-direction:column;gap:9px}
+.row-card{position:relative;display:flex;align-items:center;gap:14px;padding:12px 20px;border-radius:14px;
+  border:1px solid var(--brd1);background:var(--bg2);transition:all .18s ease;flex-wrap:nowrap;overflow:hidden}
+.row-card::before{content:'';position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--gr)}
+.row-card.off::before{background:var(--re)}
+.row-card.neutral::before{background:var(--pri2)}
+.row-card.cc::before{background:#7b68ee}
+.row-card.pend::before{background:var(--or)}
+.ac-num{font-family:monospace;font-weight:800;font-size:13px;color:var(--pri2)}
+.row-card:hover{border-color:var(--pri);box-shadow:0 6px 22px rgba(0,0,0,.16);transform:translateY(-2px)}
+.row-card.off{opacity:.6}
+.rc-av{width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;
+  align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#fff;
+  box-shadow:0 2px 8px rgba(26,173,186,.35);background:linear-gradient(135deg,var(--pri2),var(--pri3))}
+.rc-id{min-width:0;flex:1 1 200px}
+.rc-name{font-weight:700;font-size:13px;white-space:nowrap;color:var(--tx)}
+.rc-sub{font-size:10px;color:var(--mu);direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.rc-cell{flex-shrink:0;font-size:12px;color:var(--tx);white-space:nowrap;text-align:center}
+.rc-muted{color:var(--mu)}
+.rc-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:9px;
+  font-size:11.5px;font-weight:600;background:var(--bg3);border:1px solid var(--brd1);color:var(--tx);white-space:nowrap}
+.rc-dot{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--gr)}
+.rc-dot i{width:8px;height:8px;border-radius:50%;background:var(--gr);box-shadow:0 0 0 3px rgba(30,204,128,.18)}
+.rc-dot.off{color:var(--re)} .rc-dot.off i{background:var(--re);box-shadow:0 0 0 3px rgba(232,69,69,.18)}
+.rc-lab{font-size:8.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-weight:700}
+.rc-actions{display:flex;gap:5px;flex-shrink:0;margin-inline-start:auto}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;
+  border:1px solid var(--brd1);background:var(--bg3);cursor:pointer;font-size:14px;transition:all .18s;color:var(--mu)}
+.icon-btn:hover{border-color:var(--pri);background:rgba(26,173,186,.12);color:var(--pri2)}
+.icon-btn.warn:hover{border-color:var(--or);background:rgba(245,166,35,.1);color:var(--or)}
+.icon-btn.danger:hover{border-color:var(--re);background:rgba(232,69,69,.1);color:var(--re)}
+@media(max-width:1000px){.rc-last{display:none}}
+@media(max-width:700px){.row-card{flex-wrap:wrap;gap:9px}.rc-id{flex-basis:60%}.rc-actions{margin-inline-start:0}}
+</style>
+
 <div id="settings-shell" style="
-  display:flex; gap:0; min-height:calc(100vh - 120px);
+  display:flex; flex-direction:column; gap:0; min-height:calc(100vh - 120px);
   background:var(--card-bg); border:1px solid var(--card-brd);
   border-radius:16px; overflow:hidden;
 ">
 
   {{-- ── Settings Sidebar Nav ── --}}
   <div id="settings-nav" style="
-    width:220px; flex-shrink:0;
-    background:var(--bg2); border-left:1px solid var(--brd1);
-    display:flex; flex-direction:column; padding:10px 0;
+    width:100%; flex-shrink:0;
+    background:var(--bg2); border-bottom:1px solid var(--brd1);
+    display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:5px;
+    padding:8px 12px; overflow:visible;
   ">
-    <div style="padding:12px 16px 14px; border-bottom:1px solid var(--brd1); margin-bottom:8px">
-      <div id="stnav-hdr" style="font-size:11px; color:var(--mu); font-weight:700; text-transform:uppercase; letter-spacing:.5px">⚙️ لوحة الإعدادات</div>
+    <div style="padding:0 6px 0 10px; border-left:1px solid var(--brd1); flex-shrink:0">
+      <div id="stnav-hdr" style="font-size:11px; color:var(--mu); font-weight:700; text-transform:uppercase; letter-spacing:.5px; white-space:nowrap">⚙️ الإعدادات</div>
     </div>
 
-    @foreach(['general','branches','employees','managers','approvals','permissions'] as $sid)
+    @php
+      $__isFA = auth()->user()?->isFinanceAdmin();
+      // Branch managers manage only their own branch's employees + view general settings.
+      $__tabs = $__isFA
+          ? ['general','branches','employees','managers','approvals','permissions']
+          : ['general','employees'];
+    @endphp
+    @foreach($__tabs as $sid)
     <button onclick="showSection('{{ $sid }}')" id="snav-{{ $sid }}" style="
-      display:flex; align-items:center; gap:10px;
-      padding:10px 14px; margin:1px 8px; border-radius:9px;
-      background:none; border:none; cursor:pointer;
-      text-align:right; width:calc(100% - 16px);
+      display:flex; align-items:center; gap:7px;
+      padding:7px 11px; margin:0; border-radius:8px;
+      background:none; border:1px solid transparent; cursor:pointer;
+      text-align:right; width:auto; flex-shrink:0; white-space:nowrap;
       font-family:'Tajawal',sans-serif; transition:all .18s;">
-      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;
+      <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;
         background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);
-        display:flex;align-items:center;justify-content:center;font-size:17px;"
+        display:flex;align-items:center;justify-content:center;font-size:14px;"
         id="snav-ico-{{ $sid }}"></div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap" id="snav-lbl-{{ $sid }}"></div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="snav-sub-{{ $sid }}"></div>
+      <div style="min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:var(--tx);white-space:nowrap" id="snav-lbl-{{ $sid }}"></div>
+        <div style="display:none" id="snav-sub-{{ $sid }}"></div>
       </div>
       <span style="display:none;font-size:9px;padding:2px 7px;border-radius:10px;
         background:rgba(245,166,35,.2);color:var(--or);font-weight:700;border:1px solid rgba(245,166,35,.3)"
@@ -46,7 +91,7 @@
     @endforeach
 
     <div style="flex:1"></div>
-    <div style="padding:12px 16px;border-top:1px solid var(--brd1);margin-top:8px">
+    <div style="display:none">
       <div id="st-footer-note" style="font-size:10px;color:var(--mu);line-height:1.6"></div>
     </div>
   </div>
@@ -123,7 +168,7 @@
           <p  id="br-p"  style="font-size:12px;color:var(--mu)"></p>
         </div>
         @if(auth()->user()?->isFinanceAdmin())
-        <button class="btn btn-primary" id="br-new-btn" onclick="openModal('modal-add-branch')"></button>
+        <button class="btn btn-primary" id="br-new-btn" onclick="openBranchNew()"></button>
         @endif
       </div>
       <div class="panel">
@@ -134,16 +179,8 @@
           </div>
           <button class="btn btn-ghost btn-sm" id="br-refresh-btn" onclick="loadBranchesSection()"></button>
         </div>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr>
-              <th id="br-th-code"></th><th id="br-th-nar"></th><th id="br-th-nen"></th>
-              <th id="br-th-cards"></th><th id="br-th-date"></th><th id="br-th-act"></th>
-            </tr></thead>
-            <tbody id="br-tbody">
-              <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--mu)" id="br-loading-cell"></td></tr>
-            </tbody>
-          </table>
+        <div class="row-list" id="br-tbody">
+          <div style="text-align:center;padding:40px;color:var(--mu)" id="br-loading-cell"></div>
         </div>
       </div>
     </div>
@@ -170,22 +207,14 @@
             <span id="emp-list-title"></span>
             <span id="emp-count-badge" style="font-size:11px;color:var(--mu)"></span>
           </div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="emp-f-branch" class="form-control" style="width:auto;font-size:12px;padding:5px 9px" onchange="renderFilteredEmps()"></select>
             <select id="emp-f-role" class="form-control" style="width:auto;font-size:12px;padding:5px 9px" onchange="loadEmployeesSection()"></select>
             <button class="btn btn-ghost btn-sm" onclick="loadEmployeesSection()">🔄</button>
           </div>
         </div>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr>
-              <th id="emp-th-name"></th><th id="emp-th-role"></th><th id="emp-th-branch"></th>
-              <th id="emp-th-bc"></th><th id="emp-th-mc"></th>
-              <th id="emp-th-status"></th><th id="emp-th-addedby"></th><th id="emp-th-act"></th>
-            </tr></thead>
-            <tbody id="emp-tbody">
-              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)" id="emp-loading-cell"></td></tr>
-            </tbody>
-          </table>
+        <div class="row-list" id="emp-tbody">
+          <div style="text-align:center;padding:40px;color:var(--mu)" id="emp-loading-cell"></div>
         </div>
       </div>
     </div>
@@ -209,17 +238,8 @@
           <div class="panel-title" id="mgr-list-title"></div>
           <button class="btn btn-ghost btn-sm" id="mgr-refresh-btn" onclick="loadManagersSection()"></button>
         </div>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr>
-              <th id="mgr-th-name"></th><th id="mgr-th-email"></th><th id="mgr-th-phone"></th>
-              <th id="mgr-th-branch"></th><th id="mgr-th-role"></th><th id="mgr-th-login"></th>
-              <th id="mgr-th-status"></th><th id="mgr-th-act"></th>
-            </tr></thead>
-            <tbody id="mgr-tbody">
-              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)" id="mgr-loading-cell"></td></tr>
-            </tbody>
-          </table>
+        <div class="row-list" id="mgr-tbody">
+          <div style="text-align:center;padding:40px;color:var(--mu)" id="mgr-loading-cell"></div>
         </div>
       </div>
       <div class="panel">
@@ -230,17 +250,8 @@
           @endif
         </div>
         <div style="padding:10px 16px;font-size:12px;color:var(--mu);border-bottom:1px solid var(--brd1)" id="inv-desc"></div>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr>
-              <th id="inv-th-email"></th><th id="inv-th-branch"></th><th id="inv-th-role"></th>
-              <th id="inv-th-note"></th><th id="inv-th-status"></th>
-              <th id="inv-th-date"></th><th id="inv-th-act"></th>
-            </tr></thead>
-            <tbody id="inv-tbody">
-              <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)" id="inv-loading-cell"></td></tr>
-            </tbody>
-          </table>
+        <div class="row-list" id="inv-tbody">
+          <div style="text-align:center;padding:40px;color:var(--mu)" id="inv-loading-cell"></div>
         </div>
       </div>
     </div>
@@ -329,10 +340,45 @@
         <label class="form-label" id="br-lbl-code"></label>
         <input type="text" id="br-code" class="form-control" placeholder="B001" style="font-family:monospace">
       </div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:rgba(123,104,238,.07);border:1px solid rgba(123,104,238,.22);border-radius:10px;padding:11px 13px;margin-top:4px">
+        <input type="checkbox" id="br-iscc" style="width:18px;height:18px;accent-color:#7b68ee;cursor:pointer">
+        <span style="font-size:13px;font-weight:700">📞 <span id="br-lbl-iscc">فرع مركز اتصال / Call-Center branch</span></span>
+      </label>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost"   id="br-cancel-btn" onclick="closeModal('modal-add-branch')"></button>
       <button class="btn btn-primary" id="br-submit-btn" onclick="addBranch()"></button>
+    </div>
+  </div>
+</div>
+
+{{-- Delete-branch modal: move cards + Finance-Admin password --}}
+<div class="modal-overlay" id="modal-del-branch">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🗑 حذف الفرع / Delete Branch</div>
+      <button class="modal-close" onclick="closeModal('modal-del-branch')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="db-err" class="alert alert-error"></div>
+      <p style="font-size:13px;line-height:1.8;margin-bottom:12px">
+        حذف نهائي للفرع: <strong id="db-name" style="color:var(--re)"></strong>
+      </p>
+      <div id="db-move-block" style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:12px;margin-bottom:14px">
+        <div style="font-size:12.5px;font-weight:700;color:var(--or);margin-bottom:8px">
+          📦 لهذا الفرع <span id="db-cards-n">0</span> كرت عمولة — إلى أين تُنقل؟ / Move its commission cards to:
+        </div>
+        <select id="db-target" class="form-control"></select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">🔒 كلمة مرور المدير المالي (كلمة الدخول) / Finance-Admin password</label>
+        <input type="password" id="db-pass" class="form-control" dir="ltr" autocomplete="current-password"
+               placeholder="Password" onkeydown="if(event.key==='Enter')confirmDelBranch()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-del-branch')">إلغاء / Cancel</button>
+      <button class="btn" style="background:var(--re);color:#fff;border-color:var(--re)" onclick="confirmDelBranch()">🗑 حذف نهائي / Delete</button>
     </div>
   </div>
 </div>
@@ -352,18 +398,14 @@
           <input type="text" id="ae-name" class="form-control auto-lang" lang="ar" placeholder="Ahmed Al-Sayed">
         </div>
         <div class="form-group">
-          <label class="form-label" id="ae-lbl-role"></label>
-          <select id="ae-role" class="form-control"></select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="ae-lbl-bc"></label>
-          <input type="number" id="ae-bc" class="form-control" value="4" min="0" step="0.5">
-        </div>
-        <div class="form-group">
-          <label class="form-label" id="ae-lbl-mc"></label>
-          <input type="number" id="ae-mc" class="form-control" value="3" min="0" step="0.5">
+          <label class="form-label" id="ae-lbl-role">الدور الوظيفي / Role</label>
+          <select id="ae-role" class="form-control">
+            <option value="broker">🏦 بروكر / Broker</option>
+            <option value="marketing">📢 مسوّق / Marketer</option>
+            <option value="broker_marketer">🔁 بروكر ومسوّق / Broker + Marketer</option>
+            <option value="external">🌐 مسوّق خارجي / External Marketer</option>
+            <option value="other">📋 أخرى / Other</option>
+          </select>
         </div>
       </div>
       <div class="form-row">
@@ -451,6 +493,15 @@
       <div id="emg-err" class="alert alert-error"></div>
       <div id="emg-ok"  class="alert alert-success"></div>
       <input type="hidden" id="emg-id">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+        <div id="emg-avatar" onclick="document.getElementById('emg-photo').click()" title="تغيير الصورة"
+             style="width:64px;height:64px;border-radius:50%;flex-shrink:0;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--pri2),var(--pri3))">?</div>
+        <div style="flex:1;min-width:0">
+          <div class="form-label" id="emg-lbl-photo" style="margin-bottom:5px">صورة المدير (اختيارية)</div>
+          <input type="file" id="emg-photo" accept="image/jpeg,image/png,image/gif,image/webp" onchange="emgPickPhoto(this)" style="font-size:12px">
+          <button type="button" class="btn btn-ghost btn-sm" id="emg-photo-clear" onclick="emgClearPhoto()" style="display:none;color:var(--re);margin-top:6px">✕ حذف الصورة</button>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" id="emg-lbl-name"></label>
@@ -521,16 +572,6 @@
           <select id="eep-branch" class="form-control"></select>
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" id="eep-lbl-bc"></label>
-          <input type="number" id="eep-bc" class="form-control" min="0" step="0.5">
-        </div>
-        <div class="form-group">
-          <label class="form-label" id="eep-lbl-mc"></label>
-          <input type="number" id="eep-mc" class="form-control" min="0" step="0.5">
-        </div>
-      </div>
       <div class="form-group">
         <label class="form-label" id="eep-lbl-active" style="margin-bottom:10px"></label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bg4);border-radius:9px;border:1px solid var(--brd1);width:fit-content">
@@ -591,6 +632,11 @@
 /* ══════════════════════════════════════════════════════════════
    SETTINGS PAGE — BILINGUAL CONTROLLER
    ══════════════════════════════════════════════════════════════ */
+// Role gates — branch managers manage only their own branch (no delete on general settings).
+const IS_FA = {{ auth()->user()?->isFinanceAdmin() ? 'true' : 'false' }};
+const MY_BRANCH = {{ auth()->user()?->branch_id ?? 'null' }};
+const MY_BRANCH_NAME = @json(auth()->user()?->branch?->name_ar ?? '');
+const MY_BRANCH_NAME_EN = @json(auth()->user()?->branch?->name_en ?? '');
 
 /* ─── Translation Dictionary ─────────────────────────────── */
 const ST = {
@@ -1076,14 +1122,15 @@ function stApplyLang() {
   _txt('ae-pending-note', s.ae_pendingNote);
   _txt('ae-cancel-btn', s.ae_cancel); _txt('ae-submit-btn', s.ae_submit);
   // Role dropdowns
+  var _both = (typeof curLang!=='undefined' && curLang==='en') ? '🔁 Broker + Marketer' : '🔁 بروكر ومسوّق';
   _rebuildSelect('emp-f-role', [
     {v:'',label:s.emp_f_all},{v:'broker',label:s.emp_role_broker},
-    {v:'marketing',label:s.emp_role_mkt},{v:'external',label:s.emp_role_ext},
-    {v:'other',label:s.emp_role_other},
+    {v:'marketing',label:s.emp_role_mkt},{v:'broker_marketer',label:_both},
+    {v:'external',label:s.emp_role_ext},{v:'other',label:s.emp_role_other},
   ]);
   _rebuildSelect('ae-role', [
     {v:'broker',label:s.emp_role_broker},{v:'marketing',label:s.emp_role_mkt},
-    {v:'external',label:s.emp_role_ext},{v:'other',label:s.emp_role_other},
+    {v:'broker_marketer',label:_both},{v:'external',label:s.emp_role_ext},{v:'other',label:s.emp_role_other},
   ]);
 
   // Managers section
@@ -1214,7 +1261,9 @@ let _cachedInvites  = null;
 let _cachedApprovals = null;
 
 function _empRoles() {
-  return { broker: st('emp_role_broker'), marketing: st('emp_role_mkt'), external: st('emp_role_ext'), other: st('emp_role_other') };
+  return { broker: st('emp_role_broker'), marketing: st('emp_role_mkt'),
+           broker_marketer: (stLang()==='en'?'🔁 Broker + Marketer':'🔁 بروكر ومسوّق'),
+           external: st('emp_role_ext'), other: st('emp_role_other') };
 }
 function _empStatus(status) {
   const map = { approved: st('emp_status_approved'), pending: st('emp_status_pending'), rejected: st('emp_status_rejected') };
@@ -1228,11 +1277,13 @@ function _mgrRole(role) {
 
 /* ─── Section navigation ─────────────────────────────────── */
 function showSection(name) {
+  // Branch managers may only open General & Employees — FA-only sections fall back to General.
+  if (!IS_FA && ['branches','managers','approvals','permissions'].includes(name)) name = 'general';
   document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
   ['general','branches','employees','managers','approvals','permissions'].forEach(id => {
     const btn = document.getElementById('snav-' + id);
     const ico = document.getElementById('snav-ico-' + id);
-    if (btn) { btn.style.background = 'none'; btn.style.border = 'none'; }
+    if (btn) { btn.style.background = 'none'; btn.style.border = '1px solid transparent'; }
     if (ico) { ico.style.background = 'rgba(26,173,186,.1)'; ico.style.borderColor = 'rgba(26,173,186,.15)'; }
   });
   const section = document.getElementById('section-' + name);
@@ -1263,8 +1314,8 @@ async function loadGeneralSection() {
       `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--brd1)">
         <span style="flex:1;font-size:12px;font-weight:600">${item.name_en}</span>
         <span style="color:var(--mu);font-size:11px">${item.name_ar}</span>
-        <button class="btn btn-ghost btn-sm" style="color:var(--re);padding:3px 8px"
-          onclick="deleteLookup('${epMap[key]}',${item.id},'${item.name_en}')">✕</button>
+        ${IS_FA ? `<button class="btn btn-ghost btn-sm" style="color:var(--re);padding:3px 8px"
+          onclick="deleteLookup('${epMap[key]}',${item.id},'${item.name_en}')">✕</button>` : ''}
       </div>`
     ).join('') || `<div style="color:var(--mu);font-size:12px;padding:12px 0;text-align:center">${st('gen_noItems')}</div>`;
   });
@@ -1303,23 +1354,61 @@ async function loadBranchesSection() {
   _updateBranchSelects();
 }
 
+let _branchesData = [];
 function _renderBranches(data) {
+  _branchesData = data || [];
   const tbody = document.getElementById('br-tbody'); if (!tbody) return;
   tbody.innerHTML = (data && data.length)
     ? data.map(b => `
-      <tr>
-        <td><span class="ac-num">${b.code}</span></td>
-        <td style="font-weight:700">${b.name_ar}</td>
-        <td style="color:var(--mu)">${b.name_en || '—'}</td>
-        <td><span class="badge badge-blue">${b.commission_cards_count || 0} ${st('br_card_lbl')}</span></td>
-        <td style="color:var(--mu);font-size:11px">${b.created_at?.slice(0,10) || '—'}</td>
-        <td><button class="btn btn-ghost btn-sm" style="color:var(--re)"
-          onclick="deleteBranch(${b.id},'${b.name_ar.replace(/'/g,"\\'")}',${b.commission_cards_count||0})">${st('br_del')}</button></td>
-      </tr>`).join('')
-    : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--mu)">${st('br_empty')}</td></tr>`;
+      <div class="row-card ${b.is_call_center?'cc':'neutral'}">
+        <div class="rc-av" ${b.is_call_center?'style="background:linear-gradient(135deg,#7b68ee,#5a4bd0)"':''}>${b.is_call_center?'📞':'🏢'}</div>
+        <div class="rc-id">
+          <div class="rc-name">${b.name_ar}${b.is_call_center?' <span class="badge badge-purple" style="font-size:9px">CC</span>':''}</div>
+          <div class="rc-sub" style="direction:rtl">${b.name_en || '—'}</div>
+        </div>
+        <div class="rc-cell"><div class="rc-lab">${st('br_th_code')||'الكود'}</div><span class="rc-pill"><span class="ac-num">${b.code}</span></span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('br_th_cards')||'الكروت'}</div><span class="badge badge-blue">${b.commission_cards_count || 0} ${st('br_card_lbl')}</span></div>
+        <div class="rc-cell rc-last"><div class="rc-lab">${st('br_th_date')||'التاريخ'}</div><span class="rc-muted" style="font-size:11px">${b.created_at?.slice(0,10) || '—'}</span></div>
+        <div class="rc-actions">
+          <button class="icon-btn" title="تعديل / Edit" onclick="openBranchEdit(${b.id})">✏️</button>
+          <button class="icon-btn danger" title="${st('br_del')}"
+            onclick="deleteBranch(${b.id},'${b.name_ar.replace(/'/g,"\\'")}',${b.commission_cards_count||0})">🗑</button>
+        </div>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:40px;color:var(--mu)">${st('br_empty')}</div>`;
+}
+
+let _brEditId = null;
+function openBranchNew(){
+  _brEditId = null;
+  ['br-ar','br-en','br-code'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  var cc=document.getElementById('br-iscc'); if(cc)cc.checked=false;
+  var t=document.getElementById('br-modal-title'); if(t)t.textContent=(typeof curLang!=='undefined'&&curLang==='en'?'➕ New Branch':'➕ إضافة فرع');
+  openModal('modal-add-branch');
+}
+function openBranchEdit(id){
+  const b = _branchesData.find(x=>x.id===id); if(!b){return;}
+  _brEditId = id;
+  document.getElementById('br-ar').value = b.name_ar || '';
+  document.getElementById('br-en').value = b.name_en || '';
+  document.getElementById('br-code').value = b.code || '';
+  var cc=document.getElementById('br-iscc'); if(cc)cc.checked = !!b.is_call_center;
+  var t=document.getElementById('br-modal-title'); if(t)t.textContent=(typeof curLang!=='undefined'&&curLang==='en'?'✏️ Edit Branch':'✏️ تعديل الفرع');
+  var er=document.getElementById('br-err'),ok=document.getElementById('br-ok'); if(er)er.classList.remove('show'); if(ok)ok.classList.remove('show');
+  openModal('modal-add-branch');
 }
 
 function _updateBranchSelects() {
+  if (!IS_FA) {
+    // Branch manager: every branch select is LOCKED to their own branch — cannot add to others.
+    const nm = (stLang()==='en' ? (MY_BRANCH_NAME_EN||MY_BRANCH_NAME) : MY_BRANCH_NAME) || '—';
+    const only = `<option value="${MY_BRANCH}">${nm}</option>`;
+    ['mg-branch','ae-branch','emg-branch','eep-branch','inv-branch-input'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.innerHTML = only; el.value = MY_BRANCH; el.disabled = true; el.style.opacity = '.75'; }
+    });
+    return;
+  }
   const opt = (_branchesCache || []).map(b => `<option value="${b.id}">${b.name_ar}</option>`).join('');
   const fa  = `<option value="">${st('branch_select')}</option>`;
   ['mg-branch','ae-branch','emg-branch','eep-branch'].forEach(id => {
@@ -1337,24 +1426,52 @@ async function addBranch() {
   const ok  = document.getElementById('br-ok');
   err.classList.remove('show'); ok.classList.remove('show');
   if (!ar) { err.textContent = st('br_err_noAr'); err.classList.add('show'); return; }
-  if (!code) code = 'B' + String(Math.floor(Math.random() * 900) + 100);
-  const r = await api('POST', '/branches', { code, name_ar: ar, name_en: en || ar });
+  if (!code && !_brEditId) code = 'B' + String(Math.floor(Math.random() * 900) + 100);
+  const isCc = !!(document.getElementById('br-iscc') && document.getElementById('br-iscc').checked);
+  const payload = { code, name_ar: ar, name_en: en || ar, is_call_center: isCc };
+  const r = _brEditId
+    ? await api('PUT', '/branches/' + _brEditId, payload)
+    : await api('POST', '/branches', payload);
   if (r.success) {
-    ok.textContent = st('br_ok_prefix') + ar;
+    ok.textContent = (_brEditId ? (typeof curLang!=='undefined'&&curLang==='en'?'✅ Updated: ':'✅ تم تعديل: ') : st('br_ok_prefix')) + ar;
     ok.classList.add('show');
+    _brEditId = null;
     ['br-ar','br-en','br-code'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    var cc=document.getElementById('br-iscc'); if(cc) cc.checked=false;
+    closeModal('modal-add-branch');
     loadBranchesSection();
-  } else { err.textContent = r.message || st('err_generic'); err.classList.add('show'); }
+  } else { err.textContent = (r.errors ? Object.values(r.errors).flat().join(' | ') : (r.message || st('err_generic'))); err.classList.add('show'); }
 }
 
-async function deleteBranch(id, nameAr, cardCount) {
-  const msg = cardCount > 0
-    ? st('br_confirm_cards') + cardCount + st('br_confirm_cards2')
-    : st('br_confirm_del') + nameAr + st('br_confirm_del2');
-  if (!confirm(msg)) return;
-  const r = await api('DELETE', '/branches/' + id);
-  if (r.success) { toast(r.message || st('br_del'),'success'); loadBranchesSection(); }
-  else toast(r.message || st('err_generic'),'error');
+let _delBranch = null;
+function deleteBranch(id, nameAr, cardCount) {
+  _delBranch = { id, name: nameAr, cards: cardCount };
+  const en = (typeof curLang!=='undefined' && curLang==='en');
+  document.getElementById('db-name').textContent = nameAr;
+  // target dropdown — all branches except the one being deleted
+  const sel = document.getElementById('db-target');
+  const opts = (_branchesData||[]).filter(b => b.id !== id)
+    .map(b => `<option value="${b.id}">${b.code} — ${en?(b.name_en||b.name_ar):b.name_ar}</option>`).join('');
+  sel.innerHTML = `<option value="">${en?'— Select branch —':'— اختر الفرع —'}</option>` + opts;
+  // show the "move cards" block only when the branch has cards
+  const moveBlk = document.getElementById('db-move-block');
+  document.getElementById('db-cards-n').textContent = cardCount;
+  moveBlk.style.display = cardCount > 0 ? '' : 'none';
+  document.getElementById('db-pass').value = '';
+  const er = document.getElementById('db-err'); if (er) er.classList.remove('show');
+  openModal('modal-del-branch');
+}
+async function confirmDelBranch() {
+  if (!_delBranch) return;
+  const er = document.getElementById('db-err');
+  const pass = document.getElementById('db-pass').value;
+  const target = document.getElementById('db-target').value;
+  const en = (typeof curLang!=='undefined' && curLang==='en');
+  if (_delBranch.cards > 0 && !target) { er.textContent = en?'Select a branch to move the cards to.':'اختر الفرع الذي ستُنقل إليه الكروت.'; er.classList.add('show'); return; }
+  if (!pass) { er.textContent = en?'Enter the Finance-Admin password.':'أدخل كلمة مرور المدير المالي.'; er.classList.add('show'); return; }
+  const r = await api('DELETE', '/branches/' + _delBranch.id, { target_branch_id: target || null, password: pass });
+  if (r.success) { closeModal('modal-del-branch'); toast(r.message || st('br_del'),'success'); _delBranch = null; loadBranchesSection(); }
+  else { er.textContent = (r.message || st('err_generic')); er.classList.add('show'); }
 }
 
 /* ─── EMPLOYEES ──────────────────────────────────────────── */
@@ -1363,7 +1480,7 @@ async function loadEmployeesSection() {
   const r = await api('GET', '/employees' + (role ? '?role=' + role : ''));
   if (!r.success) return;
   _cachedEmployees = r.data;
-  _cacheRender.employees = () => _renderEmployees(_cachedEmployees);
+  _cacheRender.employees = () => renderFilteredEmps();
   const badge = document.getElementById('emp-count-badge');
   if (badge) badge.textContent = r.data.filter(e => e.status==='approved').length + ' ' + st('emp_approved_lbl');
   if (r.pending_count > 0) {
@@ -1374,33 +1491,61 @@ async function loadEmployeesSection() {
     const nb = document.getElementById('snav-badge-approvals');
     if (nb) { nb.textContent = r.pending_count; nb.style.display = ''; }
   }
-  _renderEmployees(r.data);
+  buildEmpBranchFilter();
+  renderFilteredEmps();
+}
+
+// Branch filter (dropdown) for the employees list — client-side
+let _empBranchFilter = '';
+function buildEmpBranchFilter() {
+  const sel = document.getElementById('emp-f-branch'); if (!sel) return;
+  const en = (typeof curLang!=='undefined' && curLang==='en');
+  const prev = sel.value;
+  const map = {}; let noBranch = 0;
+  (_cachedEmployees || []).forEach(e => {
+    if (e.branch && e.branch.id) { if (!map[e.branch.id]) map[e.branch.id] = { name: en?(e.branch.name_en||e.branch.name_ar):(e.branch.name_ar||e.branch.name_en), n:0, cc:!!e.branch.is_call_center }; map[e.branch.id].n++; }
+    else noBranch++;
+  });
+  let html = `<option value="">🏢 ${en?'All branches':'كل الفروع'} (${(_cachedEmployees||[]).length})</option>`;
+  Object.keys(map).sort((a,b)=>map[b].n-map[a].n).forEach(k => { html += `<option value="${k}">${map[k].cc?'📞 ':''}${map[k].name} (${map[k].n})</option>`; });
+  if (noBranch>0) html += `<option value="none">— ${en?'No branch':'بدون فرع'} (${noBranch})</option>`;
+  sel.innerHTML = html;
+  if (prev) sel.value = prev;
+  _empBranchFilter = sel.value || '';
+}
+function renderFilteredEmps() {
+  const sel = document.getElementById('emp-f-branch');
+  _empBranchFilter = sel ? sel.value : '';
+  let data = _cachedEmployees || [];
+  if (_empBranchFilter === 'none') data = data.filter(e => !(e.branch && e.branch.id));
+  else if (_empBranchFilter)       data = data.filter(e => e.branch && String(e.branch.id) === String(_empBranchFilter));
+  _renderEmployees(data);
 }
 
 function _renderEmployees(data) {
   const tbody = document.getElementById('emp-tbody'); if (!tbody) return;
   const roles = _empRoles();
   tbody.innerHTML = (data && data.length)
-    ? data.map(e => `
-      <tr style="${e.status==='pending'?'opacity:.8':''}">
-        <td style="font-weight:700">${e.name}</td>
-        <td>${roles[e.role] || e.role}</td>
-        <td style="color:var(--mu)">${e.branch?.name_ar || '—'}</td>
-        <td class="mono c-blue">$${e.broker_commission}/lot</td>
-        <td class="mono c-green">$${e.marketing_commission}/lot</td>
-        <td>${_empStatus(e.status)}</td>
-        <td style="color:var(--mu);font-size:11px">${e.added_by?.name || '—'}</td>
-        <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" style="color:var(--or);border-color:rgba(245,166,35,.3)" onclick="openEditEmployee(${e.id})">
-            ${st('emp_edit')}</button>
+    ? data.map(e => {
+      const acc = e.status==='pending' ? 'pend' : (e.status==='rejected' ? 'off' : '');
+      return `
+      <div class="row-card ${acc}">
+        <div class="rc-av">${(e.name||'?').charAt(0).toUpperCase()}</div>
+        <div class="rc-id">
+          <div class="rc-name">${e.name}</div>
+          <div class="rc-sub" style="direction:rtl;color:var(--pri2);font-weight:600">${roles[e.role] || e.role}</div>
+        </div>
+        <div class="rc-cell"><div class="rc-lab">${st('emp_th_branch')}</div><span class="rc-pill">🏢 ${e.branch?.name_ar || '—'}${e.branch?.is_call_center?' 📞':''}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('emp_th_status')}</div>${_empStatus(e.status)}</div>
+        <div class="rc-cell rc-last"><div class="rc-lab">${st('emp_th_addedby')}</div><span class="rc-muted" style="font-size:11px">${e.added_by?.name || '—'}</span></div>
+        <div class="rc-actions">
           ${CURRENT_USER.role==='finance_admin'
-            ? (e.is_base
-                ? `<span style="font-size:11px;color:var(--mu);padding:4px 8px;background:var(--bg3);border-radius:6px;border:1px solid var(--brd1)">${st('emp_base')}</span>`
-                : `<button class="btn btn-ghost btn-sm" style="color:var(--re);border-color:rgba(232,69,69,.3)" onclick="deleteEmployee(${e.id},'${e.name.replace(/'/g,"\\'")}')">🗑</button>`)
+            ? `<button class="icon-btn" title="${st('emp_edit')}" onclick="openEditEmployee(${e.id})">✏️</button>
+               <button class="icon-btn danger" title="🗑" onclick="deleteEmployee(${e.id},'${e.name.replace(/'/g,"\\'")}')">🗑</button>`
             : ''}
-        </td>
-      </tr>`).join('')
-    : `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">${st('emp_empty')}</td></tr>`;
+        </div>
+      </div>`;}).join('')
+    : `<div style="text-align:center;padding:40px;color:var(--mu)">${st('emp_empty')}</div>`;
 }
 
 async function addEmployee() {
@@ -1412,8 +1557,6 @@ async function addEmployee() {
     name, email: document.getElementById('ae-email').value || null,
     role: document.getElementById('ae-role').value,
     branch_id: parseInt(document.getElementById('ae-branch').value) || null,
-    broker_commission:    parseFloat(document.getElementById('ae-bc').value) || 4,
-    marketing_commission: parseFloat(document.getElementById('ae-mc').value) || 3,
   });
   if (r.success) {
     closeModal('modal-add-emp');
@@ -1470,25 +1613,26 @@ function _renderManagers(data) {
   const tbody = document.getElementById('mgr-tbody'); if (!tbody) return;
   tbody.innerHTML = (data && data.length)
     ? data.map(m => `
-      <tr>
-        <td style="font-weight:700">${m.name}</td>
-        <td style="color:var(--mu)">${m.email}</td>
-        <td style="color:var(--mu);direction:ltr;text-align:left">${m.phone || '<span style="color:var(--brd2)">—</span>'}</td>
-        <td>${m.branch?.name_ar || '—'}</td>
-        <td><span class="badge badge-blue">${_mgrRole(m.role)}</span></td>
-        <td style="color:var(--mu);font-size:11px">${m.last_login || st('mgr_neverLogin')}</td>
-        <td><span class="badge ${m.is_active?'badge-green':'badge-red'}">${m.is_active?st('mgr_active'):st('mgr_inactive')}</span></td>
-        <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" style="color:var(--or);border-color:rgba(245,166,35,.3)" onclick="openEditManager(${m.id})">
-            ${st('mgr_edit')}</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetManagerPw(${m.id},'${m.name.replace(/'/g,"\\'")}')">
-            ${st('mgr_resetPw')}</button>
+      <div class="row-card ${m.is_active?'':'off'}">
+        <div class="rc-av">${m.photo ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover">` : (m.name||'?').charAt(0).toUpperCase()}</div>
+        <div class="rc-id">
+          <div class="rc-name">${m.name}</div>
+          <div class="rc-sub" title="${m.email}">✉️ ${m.email}</div>
+          ${m.phone ? `<div class="rc-sub">📞 ${m.phone}</div>` : ''}
+        </div>
+        <div class="rc-cell"><div class="rc-lab">${st('mgr_th_branch')||'الفرع'}</div><span class="rc-pill">🏢 ${m.branch?.name_ar || '—'}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('mgr_th_role')||'الدور'}</div><span class="badge badge-blue">${_mgrRole(m.role)}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('mgr_th_status')||'الحالة'}</div><span class="rc-dot ${m.is_active?'':'off'}"><i></i>${m.is_active?st('mgr_active'):st('mgr_inactive')}</span></div>
+        <div class="rc-cell rc-last"><div class="rc-lab">${st('mgr_th_login')||'آخر دخول'}</div><span class="rc-muted" style="font-size:11px">${m.last_login ? String(m.last_login).slice(0,10) : st('mgr_neverLogin')}</span></div>
+        <div class="rc-actions">
+          <button class="icon-btn" title="${st('mgr_edit')}" onclick="openEditManager(${m.id})">✏️</button>
+          <button class="icon-btn warn" title="${st('mgr_resetPw')}" onclick="resetManagerPw(${m.id},'${m.name.replace(/'/g,"\\'")}')">🔑</button>
           ${CURRENT_USER.role==='finance_admin'
-            ? `<button class="btn btn-ghost btn-sm" style="color:var(--re)" title="${st('mgr_del_confirm').trim()}" onclick="deleteManager(${m.id},'${m.name.replace(/'/g,"\\'")}')">🗑</button>`
+            ? `<button class="icon-btn danger" title="${st('mgr_del_confirm').trim()}" onclick="deleteManager(${m.id},'${m.name.replace(/'/g,"\\'")}')">🗑</button>`
             : ''}
-        </td>
-      </tr>`).join('')
-    : `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">${st('mgr_empty')}</td></tr>`;
+        </div>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:40px;color:var(--mu)">${st('mgr_empty')}</div>`;
 }
 
 async function loadInvites() {
@@ -1502,20 +1646,23 @@ function _renderInvites(data) {
   const tbody = document.getElementById('inv-tbody'); if (!tbody) return;
   tbody.innerHTML = (data && data.length)
     ? data.map(i => `
-      <tr>
-        <td style="font-weight:600">${i.email}</td>
-        <td>${i.branch?.name_ar || '<span style="color:var(--mu)">—</span>'}</td>
-        <td><span class="badge badge-blue">${_mgrRole(i.role)}</span></td>
-        <td style="color:var(--mu);font-size:12px">${i.note || '—'}</td>
-        <td>${i.is_pending
+      <div class="row-card ${i.is_pending?'pend':''}">
+        <div class="rc-av" style="background:linear-gradient(135deg,#F5A828,#D98200)">📧</div>
+        <div class="rc-id">
+          <div class="rc-name" style="direction:ltr;text-align:start">${i.email}</div>
+          ${i.note ? `<div class="rc-sub" style="direction:rtl">📝 ${i.note}</div>` : ''}
+        </div>
+        <div class="rc-cell"><div class="rc-lab">${st('inv_th_branch')||'الفرع'}</div><span class="rc-pill">🏢 ${i.branch?.name_ar || '—'}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('inv_th_role')||'الدور'}</div><span class="badge badge-blue">${_mgrRole(i.role)}</span></div>
+        <div class="rc-cell"><div class="rc-lab">${st('inv_th_status')||'الحالة'}</div>${i.is_pending
           ? `<span class="badge badge-orange">${st('inv_pending_badge')}</span>`
-          : `<span class="badge badge-green">${st('inv_used_badge')}</span>`}</td>
-        <td style="color:var(--mu);font-size:11px">${i.created_at?.slice(0,10) || '—'}</td>
-        <td>${i.is_pending
-          ? `<button class="btn btn-ghost btn-sm" style="color:var(--re)" onclick="deleteInvite(${i.id},'${i.email}')">${st('inv_del')}</button>`
-          : `<span style="color:var(--mu);font-size:11px">${st('inv_expired')}</span>`}</td>
-      </tr>`).join('')
-    : `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--mu)">${st('inv_empty')}</td></tr>`;
+          : `<span class="badge badge-green">${st('inv_used_badge')}</span>`}</div>
+        <div class="rc-cell rc-last"><div class="rc-lab">${st('inv_th_date')||'التاريخ'}</div><span class="rc-muted" style="font-size:11px">${i.created_at?.slice(0,10) || '—'}</span></div>
+        <div class="rc-actions">${i.is_pending
+          ? `<button class="icon-btn danger" title="${st('inv_del')}" onclick="deleteInvite(${i.id},'${i.email}')">🗑</button>`
+          : `<span style="color:var(--mu);font-size:10px;padding:6px">${st('inv_expired')}</span>`}</div>
+      </div>`).join('')
+    : `<div style="text-align:center;padding:30px;color:var(--mu)">${st('inv_empty')}</div>`;
 }
 
 function togPerm(id) {
@@ -1600,9 +1747,32 @@ async function resetManagerPw(id, name) {
 }
 
 /* ─── EDIT MANAGER ───────────────────────────────────────── */
+let _emgPhoto;   // undefined = unchanged, string = new data-URL, null = remove
+function _emgShowAvatar(name, photo) {
+  const av = document.getElementById('emg-avatar'); if (!av) return;
+  if (photo) { av.innerHTML = `<img src="${photo}" style="width:100%;height:100%;object-fit:cover">`; }
+  else { av.textContent = (name || '?').charAt(0).toUpperCase(); }
+  const clr = document.getElementById('emg-photo-clear'); if (clr) clr.style.display = photo ? '' : 'none';
+}
+function emgPickPhoto(input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  if (f.size > 2 * 1024 * 1024) { toast(stLang()==='en'?'Image too large (max 2MB)':'الصورة كبيرة (أقصى 2 ميجا)','error'); input.value=''; return; }
+  const rd = new FileReader();
+  rd.onload = e => { _emgPhoto = e.target.result; _emgShowAvatar(document.getElementById('emg-name').value, _emgPhoto); };
+  rd.readAsDataURL(f);
+}
+function emgClearPhoto() {
+  _emgPhoto = null;
+  document.getElementById('emg-photo').value = '';
+  _emgShowAvatar(document.getElementById('emg-name').value, null);
+}
 function openEditManager(id) {
+ try {
   const m = (_cachedManagers || []).find(x => x.id === id);
-  if (!m) { toast('لا توجد بيانات للمدير','error'); return; }
+  if (!m) { toast(stLang()==='en'?'Manager data not found':'لا توجد بيانات للمدير','error'); return; }
+  _emgPhoto = undefined;
+  _emgShowAvatar(m.name, m.photo);
+  document.getElementById('emg-photo').value = '';
   document.getElementById('emg-id').value   = id;
   document.getElementById('emg-name').value = m.name || '';
   // Phone — parse into code + number
@@ -1619,7 +1789,10 @@ function openEditManager(id) {
   _emgUpdateActiveLbl();
   // perm grid
   const perms = ST[stLang()]?.perms_list || ST.ar.perms_list;
-  const mPerms = m.permissions?.map(p => p.name || p) || [];
+  // API may return permissions as an array OR as a {key:bool} object — handle both.
+  const mPerms = Array.isArray(m.permissions)
+    ? m.permissions.map(p => p.name || p)
+    : Object.entries(m.permissions || {}).filter(([, v]) => v).map(([k]) => k);
   const grid = document.getElementById('perm-grid-edit');
   if (grid) grid.innerHTML = perms.map(p => {
     const on = mPerms.includes(p.id);
@@ -1645,6 +1818,10 @@ function openEditManager(id) {
   // active toggle listener
   document.getElementById('emg-active').onchange = _emgUpdateActiveLbl;
   openModal('modal-edit-mgr');
+ } catch (e) {
+  console.error('openEditManager error:', e);
+  toast((stLang()==='en'?'Could not open edit form: ':'تعذّر فتح نافذة التعديل: ') + (e && e.message ? e.message : e), 'error');
+ }
 }
 function _emgUpdateActiveLbl() {
   const chk = document.getElementById('emg-active');
@@ -1685,12 +1862,14 @@ async function saveManagerEdit() {
   const perms = (ST[stLang()]?.perms_list || ST.ar.perms_list)
     .filter(p => document.getElementById('epchk-' + p.id)?.textContent === '✓')
     .map(p => p.id);
-  const r = await api('PUT', '/managers/' + id, {
+  const payload = {
     name, phone: phone || null,
     branch_id: parseInt(branch) || null,
     is_active: active,
     permissions: perms,
-  });
+  };
+  if (_emgPhoto !== undefined) payload.photo = _emgPhoto;   // string = new photo, null = remove
+  const r = await api('PUT', '/managers/' + id, payload);
   if (r.success) {
     ok.textContent = st('mgr_edit_ok') || '✅ تم التحديث';
     ok.classList.add('show');
@@ -1703,16 +1882,15 @@ async function saveManagerEdit() {
 /* ─── EDIT EMPLOYEE ──────────────────────────────────────── */
 function openEditEmployee(id) {
   const e = (_cachedEmployees || []).find(x => x.id === id);
-  if (!e) { toast('لا توجد بيانات للموظف','error'); return; }
+  if (!e) { toast(stLang()==='en'?'Employee data not found':'لا توجد بيانات للموظف','error'); return; }
   document.getElementById('eep-id').value    = id;
   document.getElementById('eep-name').value  = e.name || '';
   document.getElementById('eep-email').value = e.email || '';
-  document.getElementById('eep-bc').value    = e.broker_commission ?? 4;
-  document.getElementById('eep-mc').value    = e.marketing_commission ?? 3;
   // role select
   const roles = [
-    {v:'broker',     label:st('emp_role_broker')},
-    {v:'marketing',  label:st('emp_role_mkt')},
+    {v:'broker',          label:st('emp_role_broker')},
+    {v:'marketing',       label:st('emp_role_mkt')},
+    {v:'broker_marketer', label:(stLang()==='en'?'🔁 Broker + Marketer':'🔁 بروكر ومسوّق')},
     {v:'external',   label:st('emp_role_ext')},
     {v:'other',      label:st('emp_role_other')},
   ];
@@ -1722,6 +1900,8 @@ function openEditEmployee(id) {
   const opt = (_branchesCache || []).map(b => `<option value="${b.id}"${e.branch?.id===b.id?' selected':''}>${b.name_ar}</option>`).join('');
   const bSel = document.getElementById('eep-branch');
   if (bSel) bSel.innerHTML = `<option value="">${st('branch_select')}</option>` + opt;
+  const bLbl = document.getElementById('eep-lbl-branch');
+  if (bLbl) bLbl.textContent = (stLang()==='en' ? '🔄 Move to branch' : '🔄 نقل إلى فرع');
   // active
   const chk = document.getElementById('eep-active');
   if (chk) chk.checked = !!e.is_active;
@@ -1761,8 +1941,6 @@ async function saveEmployeeEdit() {
     email:               document.getElementById('eep-email').value.trim() || null,
     role:                document.getElementById('eep-role').value,
     branch_id:           parseInt(document.getElementById('eep-branch').value) || null,
-    broker_commission:   parseFloat(document.getElementById('eep-bc').value) || 0,
-    marketing_commission:parseFloat(document.getElementById('eep-mc').value) || 0,
     is_active:           document.getElementById('eep-active').checked,
   });
   if (r.success) {
@@ -1808,8 +1986,8 @@ function _renderApprovals(data) {
             · ${st('appr_addedBy')} ${e.added_by?.name || '—'}
           </div>
           <div style="display:flex;gap:8px;margin-top:6px">
-            <span class="badge badge-blue">${st('appr_broker')} $${e.broker_commission}/lot</span>
-            <span class="badge badge-green">${st('appr_mkt')} $${e.marketing_commission}/lot</span>
+            <span class="badge badge-blue">${st('appr_broker')} $${e.broker_commission}</span>
+            <span class="badge badge-green">${st('appr_mkt')} $${e.marketing_commission}</span>
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">

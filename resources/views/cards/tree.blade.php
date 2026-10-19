@@ -2,7 +2,7 @@
 @section('title','Account Tree')
 @section('page-title','Account Tree')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+<div style="display:block;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
 @include('cards._nav', ['active' => 'tree'])
 <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
@@ -166,8 +166,8 @@ async function loadTree(){
 
 function renderTree(data, s){
   document.getElementById('ts-total').textContent=(s.total_accounts||0).toLocaleString();
-  document.getElementById('ts-broker').textContent='$'+(s.total_broker_comm||0).toFixed(1)+'/lot';
-  document.getElementById('ts-mkt').textContent='$'+((s.total_mkt_comm||0)+(s.total_ext1_comm||0)+(s.total_ext2_comm||0)).toFixed(1)+'/lot';
+  document.getElementById('ts-broker').textContent='$'+(s.total_broker_comm||0).toFixed(1)+'';
+  document.getElementById('ts-mkt').textContent='$'+((s.total_mkt_comm||0)+(s.total_ext1_comm||0)+(s.total_ext2_comm||0)).toFixed(1)+'';
   document.getElementById('ts-dep').textContent=fmtK(s.total_monthly||0);
 
   let html='';
@@ -177,25 +177,25 @@ function renderTree(data, s){
       <td>—</td>
       <td class="mono c-blue" style="font-weight:700">${fmt(g.initial_deposit)}</td>
       <td class="mono c-green" style="font-weight:700">${fmt(g.monthly_deposit)}</td>
-      <td colspan="8"><span style="font-size:11px;color:var(--mu)">${tre('totalComm')}: <b class="c-orange">$${(g.total_comm||0).toFixed(1)}/lot</b></span></td>
+      <td colspan="8"><span style="font-size:11px;color:var(--mu)">${tre('totalComm')}: <b class="c-orange">$${(g.total_comm||0).toFixed(1)}</b></span></td>
       <td></td>
     </tr>`;
     (g.cards||[]).forEach(c=>{
       const totalComm=(parseFloat(c.broker_commission||0)+parseFloat(c.marketer_commission||0)+parseFloat(c.ext_commission1||0)+parseFloat(c.ext_commission2||0));
       html+=`<tr class="${c.status==='modified'?'row-modified':''}">
-        <td><div style="padding:8px 14px 8px 34px;display:flex;align-items:center;gap:6px"><span style="color:var(--brd2)">└</span> <span class="ac-num">#${c.account_number}</span>${c.status==='modified'?'<span class="badge badge-orange" style="font-size:9px">✏️</span>':''}</div></td>
+        <td><div style="padding:8px 14px 8px 34px;display:flex;align-items:center;gap:6px"><span style="color:var(--brd2)">└</span> <span class="ac-num">${c.account_number}</span>${c.status==='modified'?'<span class="badge badge-orange" style="font-size:9px">✏️</span>':''}</div></td>
         <td style="color:var(--mu)">${c.month}</td>
         <td class="mono c-blue">${fmt(c.initial_deposit)}</td>
         <td class="mono c-green">${fmt(c.monthly_deposit)}</td>
         <td style="font-weight:600;color:var(--pri2)">${c.broker?.name||'—'}</td>
-        <td class="mono c-blue">$${c.broker_commission||0}/lot</td>
+        <td class="mono c-blue">$${c.broker_commission||0}</td>
         <td style="color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?c.marketer.name:'—'}</td>
-        <td class="mono c-green">$${c.marketer_commission||0}/lot</td>
+        <td class="mono c-green">$${c.marketer_commission||0}</td>
         <td style="color:var(--pu)">${c.ext_marketer1?.name||'—'}</td>
-        <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}/lot</td>
+        <td class="mono" style="color:var(--pu)">$${c.ext_commission1||0}</td>
         <td style="color:var(--pu)">${c.ext_marketer2?.name||'—'}</td>
-        <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}/lot</td>
-        <td><span class="badge badge-orange">$${totalComm.toFixed(1)}/lot</span></td>
+        <td class="mono" style="color:var(--pu)">$${c.ext_commission2||0}</td>
+        <td><span class="badge badge-orange">$${totalComm.toFixed(1)}</span></td>
         <td>${c.status==='modified'?`<span class="badge badge-orange">${tre('stMod')}</span>`:`<span class="badge badge-blue">${tre('stNormal')}</span>`}</td>
       </tr>`;
     });
@@ -213,7 +213,7 @@ async function initMonths(){
 
 function exportTreeExcel(){
   if(!treeData.length){toast(tre('noExport'),'error');return;}
-  toast('قريباً / Coming soon','info');
+  toast(tre('tbTitle')==='Account Tree' ? 'Coming soon' : 'قريباً','info');
 }
 
 treApplyLang();

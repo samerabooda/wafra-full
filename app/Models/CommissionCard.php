@@ -12,25 +12,21 @@ class CommissionCard extends Model
 
     protected $fillable = [
         'account_number', 'month', 'month_date',
+        'modified_month', 'modified_month_date',
         'branch_id', 'account_type_id', 'account_status_id',
-        'trading_type_id', 'account_kind',
-        // Parent AC when account_kind=sub
-        'parent_account',
+        'trading_type_id', 'account_kind', 'parent_account',
         'broker_id',         'broker_commission',
         'marketer_id',       'marketer_commission',
         'ext_marketer1_id',  'ext_commission1',
         'ext_marketer2_id',  'ext_commission2',
+        'referral_account',  'referral_commission',
         'forex_commission',  'futures_commission',
         'initial_deposit',   'monthly_deposit',
         'status', 'notes', 'import_batch_id', 'created_by',
-        // ── Referral (numeric account referring the client) ────
-        'referral_account', 'referral_commission',
-        // ── Rebate ─────────────────────────────────────────────
-        'has_rebate', 'rebate_amount',
-        // ── Import flags ───────────────────────────────────────
-        'is_over_limit', 'is_duplicate',
+        'client_phone', 'client_country_code', 'client_source',
         // ── Call Center fields ─────────────────────────────────
         'cc_branch_id', 'cc_agent_id', 'cc_agent_commission',
+        'cc_manager_commission',
         'cc_status', 'cc_rejection_reason',
     ];
 
@@ -40,16 +36,13 @@ class CommissionCard extends Model
         'marketer_commission'   => 'decimal:2',
         'ext_commission1'       => 'decimal:2',
         'ext_commission2'       => 'decimal:2',
+        'referral_commission'   => 'decimal:2',
         'forex_commission'      => 'decimal:2',
         'futures_commission'    => 'decimal:2',
         'initial_deposit'       => 'decimal:2',
         'monthly_deposit'       => 'decimal:2',
         'cc_agent_commission'   => 'decimal:2',
-        'referral_commission'   => 'decimal:2',
-        'rebate_amount'         => 'decimal:2',
-        'has_rebate'            => 'boolean',
-        'is_over_limit'         => 'boolean',
-        'is_duplicate'          => 'boolean',
+        'cc_manager_commission' => 'decimal:2',
     ];
 
     // ── Relationships ──────────────────────────────────────────
@@ -68,6 +61,16 @@ class CommissionCard extends Model
     public function ccBranch(): BelongsTo { return $this->belongsTo(Branch::class, 'cc_branch_id'); }
     public function ccAgent(): BelongsTo  { return $this->belongsTo(Employee::class, 'cc_agent_id'); }
     public function ccNotifications(): HasMany { return $this->hasMany(CcNotification::class, 'card_id'); }
+    public function ccFollowups(): HasMany { return $this->hasMany(CcFollowup::class, 'card_id')->latest(); }
+
+    /** Full client phone for display / identity: "+965 12345678". */
+    public function getClientPhoneFullAttribute(): ?string
+    {
+        $p = trim((string) $this->client_phone);
+        if ($p === '') return null;
+        $cc = trim((string) $this->client_country_code);
+        return $cc !== '' ? "{$cc} {$p}" : $p;
+    }
 
     public function modifications(): HasMany
     {
@@ -80,7 +83,8 @@ class CommissionCard extends Model
         return (float)$this->broker_commission
              + (float)$this->marketer_commission
              + (float)$this->ext_commission1
-             + (float)$this->ext_commission2;
+             + (float)$this->ext_commission2
+             + (float)$this->referral_commission;
     }
 
     /** Is this card from the Call Center? */
@@ -96,9 +100,6 @@ class CommissionCard extends Model
     public function scopeForMonth($q, string $m) { return $q->where('month', $m); }
     public function scopeForBroker($q, int $id)  { return $q->where('broker_id', $id); }
     public function scopeCcCards($q)             { return $q->whereNotNull('cc_branch_id'); }
-    public function scopeOverLimit($q)            { return $q->where('is_over_limit', true); }
-    public function scopeDuplicates($q)           { return $q->where('is_duplicate', true); }
-    public function scopeNeedsReview($q)          { return $q->where(function($qq){ $qq->where('is_over_limit', true)->orWhere('is_duplicate', true); }); }
 
     public function scopeSearch($q, string $term)
     {

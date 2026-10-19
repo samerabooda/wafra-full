@@ -1,375 +1,205 @@
 @extends('layouts.app')
-@section('title','Branch Monthly Report')
-@section('page-title','Branch Monthly Report')
-
+@section('title','تقرير شهري للفروع')
+@section('page-title','تقرير شهري للفروع')
 @section('content')
-<div style="display:flex;gap:0;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+@verbatim
+<style>
+.bmcal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2147483000;display:none;align-items:center;justify-content:center}
+.bmcal-overlay.open{display:flex}
+.bmcal{width:340px;max-width:92vw;background:var(--card-bg);border:1px solid var(--brd2);border-radius:16px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.bmcal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.bmcal-nav button{width:34px;height:34px;border-radius:9px;border:1px solid var(--brd1);background:var(--bg3);color:var(--tx);font-size:16px;cursor:pointer}
+.bmcal-y{font-size:17px;font-weight:900;color:var(--pri2)}
+.bmcal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bmcal-m{padding:11px 0;border-radius:10px;border:1px solid var(--brd1);background:var(--bg3);color:var(--tx);font-size:13px;font-weight:700;cursor:pointer;transition:all .12s}
+.bmcal-m:hover{border-color:var(--pri);color:var(--pri2)}
+.bmcal-m.on{background:linear-gradient(135deg,var(--pri2),var(--pri3));color:#fff;border-color:transparent}
+</style>
+@endverbatim
 
-  {{-- Reports Sidebar Nav --}}
-  <div id="rnav-sidebar" style="width:220px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--brd1);display:flex;flex-direction:column;padding:10px 0;">
-    <div style="padding:12px 16px 14px;border-bottom:1px solid var(--brd1);margin-bottom:8px">
-      <div id="rnav-hdr" style="font-size:11px;color:var(--mu);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📈 التقارير</div>
-    </div>
-    <a href="{{ route('reports.index') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
-      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);">📊</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap" id="rnav-lbl-monthly">التقارير الشهرية</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-monthly">تحليل شامل بالرسوم البيانية</div>
-      </div>
-    </a>
-    <a href="{{ route('reports.dynamic') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:none;border:1px solid transparent;">
-      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(26,173,186,.1);border:1px solid rgba(26,173,186,.15);">🔧</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--tx);white-space:nowrap" id="rnav-lbl-dynamic">تقرير ديناميكي</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-dynamic">بناء تقرير مخصص</div>
-      </div>
-    </a>
-    <a href="{{ route('reports.branch-monthly') }}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin:1px 8px;border-radius:9px;text-decoration:none;font-family:'Tajawal',sans-serif;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);">
-      <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;background:rgba(245,166,35,.25);border:1px solid rgba(245,166,35,.5);">🏢</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--or);white-space:nowrap" id="rnav-lbl-branch">تقرير شهري للفروع</div>
-        <div style="font-size:10px;color:var(--mu);margin-top:1px" id="rnav-sub-branch">فرع + شهر محدد</div>
-      </div>
-    </a>
-    <div style="flex:1"></div>
-    <div style="padding:12px 16px;border-top:1px solid var(--brd1);margin-top:8px">
-      <div id="rnav-footer" style="font-size:10px;color:var(--mu);line-height:1.6">منصة وفرة الخليجية</div>
-    </div>
+@php
+  $bmMoney = fn($v) => '$' . number_format((float)$v, (fmod((float)$v,1)?1:0));
+  $bmMonNames = ['Jan'=>'يناير','Feb'=>'فبراير','Mar'=>'مارس','Apr'=>'أبريل','May'=>'مايو','Jun'=>'يونيو','Jul'=>'يوليو','Aug'=>'أغسطس','Sep'=>'سبتمبر','Oct'=>'أكتوبر','Nov'=>'نوفمبر','Dec'=>'ديسمبر'];
+  $bmLabel = $bmMonthStr ? (($bmMonNames[$bmM] ?? $bmM) . ' ' . $bmY) : 'اختر الشهر';
+@endphp
+
+<div style="display:flex;flex-direction:column;min-height:calc(100vh - 120px);background:var(--card-bg);border:1px solid var(--card-brd);border-radius:16px;overflow:hidden;">
+
+  {{-- Reports Nav — TOP horizontal bar --}}
+  <div style="width:100%;background:var(--bg2);border-bottom:1px solid var(--brd1);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:11px 16px;overflow-x:auto;">
+    @php
+      $rNav = [
+        ['reports.index','📊','التقارير الشهرية', false],
+        ['reports.table','📋','جدول البيانات', false],
+        ['reports.dynamic','🔧','تقرير ديناميكي', false],
+        ['reports.branch-monthly','🏢','تقرير شهري للفروع', true],
+        ['reports.referrals','🔗','تقرير المحيلين', false],
+      ];
+    @endphp
+    @foreach($rNav as [$rt,$ic,$tx,$on])
+      <a href="{{ route($rt) }}" style="display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:11px;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;{{ $on ? 'background:linear-gradient(135deg,rgba(245,166,35,.22),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.45);color:var(--or)' : 'background:var(--bg3);border:1px solid var(--brd1);color:var(--tx)' }}">{{ $ic }} {{ $tx }}</a>
+    @endforeach
   </div>
 
-  {{-- Content Panel --}}
   <div style="flex:1;overflow-y:auto;padding:24px;min-width:0">
 
-    {{-- Filter bar --}}
+    {{-- Filter --}}
     <div class="panel" style="padding:20px;margin-bottom:16px">
       <div class="panel-header" style="padding:0 0 14px;border-bottom:1px solid var(--brd1);margin-bottom:16px">
-        <div class="panel-title" id="bm-panel-title">🏢 تقرير شهري للفروع</div>
+        <div class="panel-title">🏢 تقرير شهري للفروع</div>
       </div>
-      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
-        @if(auth()->user()?->isFinanceAdmin())
+      <form method="GET" action="{{ route('reports.branch-monthly') }}" id="bm-form" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+        @if($bmIsFa)
         <div style="min-width:200px;flex:1">
-          <label class="form-label" id="bm-lbl-branch">🏢 الفرع</label>
-          <select id="bm-branch" class="form-control">
-            <option value="" id="bm-opt-all-branch">— كل الفروع —</option>
+          <label class="form-label">🏢 الفرع</label>
+          <select name="branch_id" class="form-control">
+            <option value="">— كل الفروع —</option>
+            @foreach($bmBranches as $b)
+              <option value="{{ $b->id }}" @selected((string)($bmBranchId ?? '') === (string)$b->id)>{{ $b->name_ar ?: $b->name_en }}</option>
+            @endforeach
           </select>
         </div>
         @endif
-        <div style="min-width:160px;flex:1">
-          <label class="form-label" id="bm-lbl-month">📅 الشهر (مثال: Jan 2025)</label>
-          <input type="text" id="bm-month" class="form-control" placeholder="Jan 2025" dir="ltr"
-                 list="bm-month-list" autocomplete="off">
-          <datalist id="bm-month-list"></datalist>
+        <div style="min-width:200px">
+          <label class="form-label">📅 الشهر والسنة</label>
+          <input type="hidden" name="m" id="bm-m" value="{{ $bmM }}">
+          <input type="hidden" name="y" id="bm-y" value="{{ $bmY }}">
+          <button type="button" class="form-control" onclick="bmCalOpen()" id="bm-cal-btn"
+                  style="cursor:pointer;text-align:right;display:flex;align-items:center;gap:8px;width:100%;font-weight:700">
+            <span>📅</span><span id="bm-cal-label">{{ $bmLabel }}</span>
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="bmGenerate()" id="bm-gen-btn">⚡ توليد التقرير</button>
-        <button class="btn btn-ghost" onclick="bmExport()" id="bm-export-btn" style="display:none">📥 تصدير Excel</button>
-      </div>
+        <button class="btn btn-primary" type="submit">⚡ توليد التقرير</button>
+        @if($bmRows->count())
+        <button class="btn btn-ghost" type="button" onclick="bmExport()">📥 تصدير Excel</button>
+        @endif
+      </form>
     </div>
 
-    {{-- KPI summary --}}
-    <div id="bm-kpis" style="display:none;margin-bottom:16px">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-        <div class="kpi-card kpi-teal">
-          <div class="kpi-label" id="bm-k-lbl-total">إجمالي الحسابات</div>
-          <div class="kpi-value" id="bm-k-total">—</div>
-        </div>
-        <div class="kpi-card kpi-green">
-          <div class="kpi-label" id="bm-k-lbl-dep">إيداع أولي</div>
-          <div class="kpi-value" id="bm-k-dep">—</div>
-          <div class="kpi-sub">USD</div>
-        </div>
-        <div class="kpi-card kpi-blue">
-          <div class="kpi-label" id="bm-k-lbl-mon">إيداع شهري</div>
-          <div class="kpi-value" id="bm-k-mon">—</div>
-          <div class="kpi-sub">USD</div>
-        </div>
-        <div class="kpi-card kpi-orange">
-          <div class="kpi-label" id="bm-k-lbl-comm">إجمالي العمولة</div>
-          <div class="kpi-value" id="bm-k-comm">—</div>
-          <div class="kpi-sub">$/lot</div>
-        </div>
-        <div class="kpi-card kpi-purple">
-          <div class="kpi-label" id="bm-k-lbl-mod">حسابات معدّلة</div>
-          <div class="kpi-value" id="bm-k-mod">—</div>
-        </div>
-      </div>
-    </div>
-
-    {{-- Results table --}}
-    <div id="bm-results">
+    {{-- Results --}}
+    @if(!$bmMonthStr)
       <div style="text-align:center;padding:60px 20px;color:var(--mu)">
         <div style="font-size:48px;margin-bottom:12px">🏢</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px" id="bm-empty-title">اختر الفرع والشهر</div>
-        <div style="font-size:12px" id="bm-empty-sub">اضغط ⚡ توليد التقرير لعرض البيانات</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">اختر الفرع والشهر</div>
+        <div style="font-size:12px">اضغط ⚡ توليد التقرير لعرض الكروت المُدخلة أو المُعدَّلة في الشهر المختار</div>
       </div>
-    </div>
+    @else
+      <div class="panel" style="padding:12px 16px;margin-bottom:14px;display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+        <div style="font-weight:800;color:var(--pri2)">📅 {{ $bmLabel }}</div>
+        <div style="color:var(--mu);font-size:13px">عدد الكروت: <b style="color:var(--tx)">{{ number_format($bmRows->count()) }}</b></div>
+        <div style="color:var(--mu);font-size:12px">🟡 الصفوف الصفراء = كروت تم تعديلها في هذا الشهر</div>
+      </div>
+      <div class="panel" style="padding:0">
+        <div class="table-scroll" style="max-height:64vh">
+          <table class="data-table" id="bm-table">
+            <thead><tr>
+              <th>رقم الحساب</th><th>البروكر</th><th>عمولة البروكر</th>
+              <th>المسوّق الأول</th><th>عمولة م1</th><th>المسوّق الثاني</th><th>عمولة م2</th>
+              <th>المحيل</th><th>عمولة المحيل</th><th>الشهر</th><th>الإيداع الأولي</th><th>نوع الحساب</th>
+            </tr></thead>
+            <tbody>
+              @forelse($bmRows as $r)
+                @php $mod = ($r->modified_month === $bmMonthStr); @endphp
+                <tr @if($mod) style="background:rgba(245,166,35,.14);border-right:3px solid #f5a623" @endif>
+                  <td><span class="ac-num">{{ $r->account_number }}</span>@if($mod)<div style="font-size:10px;color:#f5a623;font-weight:800;margin-top:2px">✏️ معدّل</div>@endif</td>
+                  <td style="color:var(--pri2);font-weight:700">{{ $r->broker_name ?: 'Self' }}</td>
+                  <td class="mono">{{ $bmMoney($r->broker_commission) }}</td>
+                  <td style="color:var(--m2);font-weight:600">{{ $r->m1_name ?: '—' }}</td>
+                  <td class="mono">{{ $bmMoney($r->marketer_commission) }}</td>
+                  <td style="color:var(--m2);font-weight:600">{{ $r->m2_name ?: '—' }}</td>
+                  <td class="mono">{{ $bmMoney($r->ext_commission2) }}</td>
+                  <td>@if($r->referral_account)<span class="bm-ref" onclick="bmRefPop(this)" data-acc="{{ $r->referral_account }}" data-name="{{ $r->referral_name }}" data-type="{{ $r->referral_type }}" style="cursor:pointer;color:var(--pri2);font-weight:800;border-bottom:1px dashed var(--pri)">{{ ($r->referral_type === 'employee' ? '👤 ' : '🔗 ') }}{{ $r->referral_account }}</span>@else — @endif</td>
+                  <td class="mono">{{ $r->referral_account ? $bmMoney($r->referral_commission) : '—' }}</td>
+                  <td style="color:var(--mu);white-space:nowrap">{{ $r->month ?: '—' }}</td>
+                  <td class="mono c-green">{{ $r->initial_deposit > 0 ? number_format($r->initial_deposit) : '—' }}</td>
+                  <td>
+                    @if($r->account_kind === 'sub')
+                      <span class="badge badge-blue">فرعي</span>
+                      @if($r->parent_account)<div style="font-size:10px;color:var(--mu);margin-top:2px">أساسي: <b>{{ $r->parent_account }}</b></div>@endif
+                    @else
+                      <span class="badge badge-green">أساسي</span>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr><td colspan="12" style="text-align:center;padding:40px;color:var(--mu)">لا توجد كروت في هذا الشهر</td></tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+    @endif
 
-  </div>{{-- content panel --}}
-</div>{{-- shell --}}
+  </div>
+</div>
+
+{{-- Month/Year calendar popup --}}
+<div class="bmcal-overlay" id="bm-cal" onclick="if(event.target===this)bmCalClose()">
+  <div class="bmcal">
+    <div class="bmcal-nav">
+      <button type="button" onclick="bmCalYear(-1)">‹</button>
+      <span class="bmcal-y" id="bm-cal-year">2026</span>
+      <button type="button" onclick="bmCalYear(1)">›</button>
+    </div>
+    <div class="bmcal-grid" id="bm-cal-grid"></div>
+  </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-// ══════════════════════════════════════════════════════════
-// BILINGUAL DICTIONARY
-// ══════════════════════════════════════════════════════════
-const BM = {
-  ar: {
-    panelTitle:'🏢 تقرير شهري للفروع',
-    lblBranch:'🏢 الفرع', optAllBranch:'— كل الفروع —',
-    lblMonth:'📅 الشهر (مثال: Jan 2025)',
-    btnGen:'⚡ توليد التقرير', btnGenLoading:'⏳ جاري التحميل...',
-    btnExport:'📥 تصدير Excel',
-    kpiTotal:'إجمالي الحسابات', kpiDep:'إيداع أولي',
-    kpiMon:'إيداع شهري', kpiComm:'إجمالي العمولة', kpiMod:'حسابات معدّلة',
-    emptyTitle:'اختر الفرع والشهر',
-    emptySub:'اضغط ⚡ توليد التقرير لعرض البيانات',
-    toastEnterMonth:'أدخل الشهر أولاً — مثال: Jan 2025',
-    toastLoadErr:'خطأ في التحميل',
-    toastExported:'تم تصدير التقرير',
-    toastNoData:'لا توجد بيانات',
-    loadingData:'⏳ جاري تحميل البيانات...',
-    noDataFor:'لا توجد بيانات لـ "{m}" في {b}',
-    thAccount:'رقم الحساب', thMonth:'الشهر', thBroker:'البروكر',
-    thBComm:'ع.بروكر', thMarketer:'المسوّق', thMComm:'ع.مسوّق',
-    thInitDep:'إيداع أولي', thMonDep:'إيداع شهري',
-    thStatus:'الحالة', thBranch:'الفرع',
-    statusMod:'معدّل', statusAct:'عادي',
-    allBranches:'كل الفروع',
-    xlsxStatusMod:'معدّل', xlsxStatusAct:'عادي',
-    navHdr:'📈 التقارير', navLblMonthly:'التقارير الشهرية',
-    navSubMonthly:'تحليل شامل بالرسوم البيانية',
-    navLblDynamic:'تقرير ديناميكي', navSubDynamic:'بناء تقرير مخصص',
-    navLblBranch:'تقرير شهري للفروع', navSubBranch:'فرع + شهر محدد',
-    navFooter:'منصة وفرة الخليجية\nلإدارة العمولات',
-  },
-  en: {
-    panelTitle:'🏢 Branch Monthly Report',
-    lblBranch:'🏢 Branch', optAllBranch:'— All Branches —',
-    lblMonth:'📅 Month (e.g. Jan 2025)',
-    btnGen:'⚡ Generate Report', btnGenLoading:'⏳ Loading...',
-    btnExport:'📥 Export Excel',
-    kpiTotal:'Total Accounts', kpiDep:'Initial Deposit',
-    kpiMon:'Monthly Deposit', kpiComm:'Total Commission', kpiMod:'Modified Accounts',
-    emptyTitle:'Select Branch & Month',
-    emptySub:'Click ⚡ Generate Report to view data',
-    toastEnterMonth:'Enter a month first — e.g. Jan 2025',
-    toastLoadErr:'Error loading data',
-    toastExported:'Report exported',
-    toastNoData:'No data available',
-    loadingData:'⏳ Loading data...',
-    noDataFor:'No data for "{m}" in {b}',
-    thAccount:'Account #', thMonth:'Month', thBroker:'Broker',
-    thBComm:'Broker C.', thMarketer:'Marketer', thMComm:'Mkt. C.',
-    thInitDep:'Initial Dep.', thMonDep:'Monthly Dep.',
-    thStatus:'Status', thBranch:'Branch',
-    statusMod:'Modified', statusAct:'Active',
-    allBranches:'All Branches',
-    xlsxStatusMod:'Modified', xlsxStatusAct:'Active',
-    navHdr:'📈 Reports', navLblMonthly:'Monthly Reports',
-    navSubMonthly:'Full analysis with charts',
-    navLblDynamic:'Dynamic Report', navSubDynamic:'Build custom report',
-    navLblBranch:'Branch Monthly Report', navSubBranch:'Branch + specific month',
-    navFooter:'Wafra Gulf Platform\nCommission Management',
-  }
-};
-function bmL() { return (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) || 'ar'; }
-function bm(k) { return (BM[bmL()] || BM.ar)[k] || (BM.ar)[k] || k; }
-
-function bmApplyLang() {
-  const _t = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  _t('bm-panel-title',    bm('panelTitle'));
-  _t('bm-lbl-branch',     bm('lblBranch'));
-  _t('bm-opt-all-branch', bm('optAllBranch'));
-  _t('bm-lbl-month',      bm('lblMonth'));
-  const genBtn = document.getElementById('bm-gen-btn');
-  if (genBtn && !genBtn.disabled) genBtn.textContent = bm('btnGen');
-  const expBtn = document.getElementById('bm-export-btn');
-  if (expBtn) expBtn.textContent = bm('btnExport');
-  _t('bm-k-lbl-total',    bm('kpiTotal'));
-  _t('bm-k-lbl-dep',      bm('kpiDep'));
-  _t('bm-k-lbl-mon',      bm('kpiMon'));
-  _t('bm-k-lbl-comm',     bm('kpiComm'));
-  _t('bm-k-lbl-mod',      bm('kpiMod'));
-  _t('bm-empty-title',    bm('emptyTitle'));
-  _t('bm-empty-sub',      bm('emptySub'));
-  // Sidebar nav
-  _t('rnav-hdr',          bm('navHdr'));
-  _t('rnav-lbl-monthly',  bm('navLblMonthly'));
-  _t('rnav-sub-monthly',  bm('navSubMonthly'));
-  _t('rnav-lbl-dynamic',  bm('navLblDynamic'));
-  _t('rnav-sub-dynamic',  bm('navSubDynamic'));
-  _t('rnav-lbl-branch',   bm('navLblBranch'));
-  _t('rnav-sub-branch',   bm('navSubBranch'));
-  const fn = document.getElementById('rnav-footer');
-  if (fn) fn.innerHTML = bm('navFooter').replace('\n','<br>');
-  // Re-render table if data is loaded
-  if (_bmData && _bmData.length) bmRenderTable(_bmData);
+// Referrer account → click shows the saved name in a popover (same idea as the parent-account chip).
+function bmRefClose(){ var p=document.getElementById('bm-ref-pop'); if(p) p.remove(); document.removeEventListener('click',bmRefOutside,true); }
+function bmRefOutside(e){ var p=document.getElementById('bm-ref-pop'); if(p && !p.contains(e.target) && !(e.target.classList&&e.target.classList.contains('bm-ref'))) bmRefClose(); }
+function bmRefPop(el){
+  if(event && event.stopPropagation) event.stopPropagation();
+  bmRefClose();
+  var acc=el.getAttribute('data-acc'), name=(el.getAttribute('data-name')||'').trim(), emp=(el.getAttribute('data-type')==='employee');
+  var pop=document.createElement('div'); pop.id='bm-ref-pop';
+  pop.style.cssText='position:fixed;z-index:99999;background:var(--card-bg,#fff);border:1.5px solid '+(emp?'#7b68ee':'#1AADBA')+';border-radius:12px;padding:9px 13px;box-shadow:0 12px 34px rgba(0,0,0,.28);font-size:13px;font-weight:800;color:var(--tx,#222);white-space:nowrap;display:flex;align-items:center;gap:8px';
+  pop.innerHTML = (emp?'👤':'🔗')+' '+(name ? (emp?'الموظف المحيل: ':'المحيل: ')+'<span style="color:'+(emp?'#5b46d6':'#0E7A88')+'">'+name+'</span>' : '<span style="color:var(--mu,#888)">بدون اسم — صنّفه من تقرير المحيلين</span>')+' <span class="mono" style="color:var(--mu);font-weight:600">#'+acc+'</span>';
+  document.body.appendChild(pop);
+  var r=el.getBoundingClientRect(), pw=pop.offsetWidth, ph=pop.offsetHeight;
+  var top=r.top-ph-8; if(top<8) top=r.bottom+8;
+  pop.style.top=top+'px'; pop.style.left=Math.max(8,Math.min(r.left+r.width/2-pw/2, window.innerWidth-pw-8))+'px';
+  setTimeout(function(){ document.addEventListener('click',bmRefOutside,true); },0);
+  setTimeout(function(){ if(pop.parentNode) pop.remove(); }, 4500);
 }
-
-let _bmData = [];
-let _bmBranchName = '';
-let _bmMonthVal = '';
-
-// Load branches
-async function bmLoadBranches() {
-  const sel = document.getElementById('bm-branch'); if (!sel) return;
-  const r = await api('GET', '/branches');
-  if (!r.success) return;
-  sel.innerHTML = `<option value="" id="bm-opt-all-branch">${bm('optAllBranch')}</option>` +
-    r.data.map(b => `<option value="${b.id}">${b.name_ar}</option>`).join('');
-  // Also build month datalist suggestions
-  const months = [];
-  const now = new Date();
-  for (let i = 0; i < 36; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(d.toLocaleDateString('en-US',{month:'short',year:'numeric'}));
-  }
-  const dl = document.getElementById('bm-month-list');
-  if (dl) dl.innerHTML = months.map(m => `<option value="${m}">`).join('');
+var BM_MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var BM_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var _bmCalY = parseInt(document.getElementById('bm-y')?.value) || new Date().getFullYear();
+function bmCalOpen(){
+  _bmCalY = parseInt(document.getElementById('bm-y').value) || new Date().getFullYear();
+  bmCalRender();
+  document.getElementById('bm-cal').classList.add('open');
 }
-
-async function bmGenerate() {
-  const branchId = document.getElementById('bm-branch')?.value || '';
-  const month    = document.getElementById('bm-month')?.value.trim() || '';
-  const btn      = document.getElementById('bm-gen-btn');
-
-  if (!month) { toast(bm('toastEnterMonth'),'error'); return; }
-
-  btn.disabled = true;
-  btn.textContent = bm('btnGenLoading');
-  document.getElementById('bm-results').innerHTML =
-    `<div style="text-align:center;padding:50px;color:var(--mu)">${bm('loadingData')}</div>`;
-  document.getElementById('bm-kpis').style.display = 'none';
-
-  let url = `/cards?month=${encodeURIComponent(month)}&per_page=200`;
-  if (branchId) url += `&branch_id=${branchId}`;
-
-  const r = await api('GET', url);
-  btn.disabled = false;
-  btn.textContent = bm('btnGen');
-
-  if (!r.success) {
-    document.getElementById('bm-results').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--re)">${r.message||bm('toastLoadErr')}</div>`;
-    return;
-  }
-
-  _bmData = r.data?.data ?? r.data ?? [];
-  _bmMonthVal = month;
-
-  // Branch name
-  const brSel = document.getElementById('bm-branch');
-  _bmBranchName = branchId && brSel
-    ? (brSel.options[brSel.selectedIndex]?.text || '')
-    : bm('allBranches');
-
-  bmRenderKpis(_bmData);
-  bmRenderTable(_bmData);
-  document.getElementById('bm-export-btn').style.display = '';
-  document.getElementById('bm-export-btn').textContent = bm('btnExport');
+function bmCalClose(){ document.getElementById('bm-cal').classList.remove('open'); }
+function bmCalYear(d){ _bmCalY += d; bmCalRender(); }
+function bmCalRender(){
+  document.getElementById('bm-cal-year').textContent = _bmCalY;
+  var selM = document.getElementById('bm-m').value, selY = document.getElementById('bm-y').value;
+  document.getElementById('bm-cal-grid').innerHTML = BM_MONTHS.map(function(m,i){
+    var on = (m===selM && String(_bmCalY)===String(selY));
+    return '<button type="button" class="bmcal-m'+(on?' on':'')+'" onclick="bmCalPick(\''+m+'\')">'+BM_AR[i]+'</button>';
+  }).join('');
 }
-
-function bmRenderKpis(data) {
-  const kpis = document.getElementById('bm-kpis');
-  if (!kpis) return;
-  kpis.style.display = '';
-  const total = data.length;
-  const dep   = data.reduce((s,c) => s + parseFloat(c.initial_deposit||0), 0);
-  const mon   = data.reduce((s,c) => s + parseFloat(c.monthly_deposit||0), 0);
-  const comm  = data.reduce((s,c) => s +
-    parseFloat(c.broker_commission||0) + parseFloat(c.marketer_commission||0) +
-    parseFloat(c.ext_commission1||0)   + parseFloat(c.ext_commission2||0), 0);
-  const mod   = data.filter(c => c.status==='modified').length;
-  const fmtN  = n => n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toFixed(0);
-  document.getElementById('bm-k-total').textContent = total;
-  document.getElementById('bm-k-dep').textContent   = '$'+fmtN(dep);
-  document.getElementById('bm-k-mon').textContent   = '$'+fmtN(mon);
-  document.getElementById('bm-k-comm').textContent  = '$'+comm.toFixed(1);
-  document.getElementById('bm-k-mod').textContent   = mod;
+function bmCalPick(m){
+  document.getElementById('bm-m').value = m;
+  document.getElementById('bm-y').value = _bmCalY;
+  var i = BM_MONTHS.indexOf(m);
+  document.getElementById('bm-cal-label').textContent = BM_AR[i] + ' ' + _bmCalY;
+  bmCalClose();
+  // auto-generate
+  document.getElementById('bm-form').submit();
 }
-
-function bmRenderTable(data) {
-  const res = document.getElementById('bm-results');
-  if (!data.length) {
-    res.innerHTML = `<div style="text-align:center;padding:60px;color:var(--mu)">
-      <div style="font-size:40px;margin-bottom:12px">🔎</div>
-      <div style="font-size:15px;font-weight:700">${bm('noDataFor').replace('{m}',_bmMonthVal).replace('{b}',_bmBranchName)}</div>
-    </div>`;
-    return;
-  }
-
-  let html = `
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title">📋 ${data.length} ${bmL()==='en'?'accounts':'حساب'} — ${_bmMonthVal} — ${_bmBranchName}</div>
-    </div>
-    <div class="table-scroll">
-      <table class="data-table">
-        <thead><tr>
-          <th>${bm('thAccount')}</th>
-          <th>${bm('thMonth')}</th>
-          <th>${bm('thBroker')}</th>
-          <th>${bm('thBComm')}</th>
-          <th>${bm('thMarketer')}</th>
-          <th>${bm('thMComm')}</th>
-          <th>${bm('thInitDep')}</th>
-          <th>${bm('thMonDep')}</th>
-          <th>${bm('thStatus')}</th>
-          <th>${bm('thBranch')}</th>
-        </tr></thead>
-        <tbody>`;
-
-  data.forEach(c => {
-    const isM = c.status === 'modified';
-    html += `<tr${isM?' class="row-modified"':''}>
-      <td><span class="ac-num">#${c.account_number}</span></td>
-      <td style="color:var(--mu)">${c.month}</td>
-      <td style="font-weight:600">${c.broker?.name||'—'}</td>
-      <td class="mono c-blue">$${c.broker_commission||0}</td>
-      <td style="color:var(--mu)">${c.marketer?.name||'—'}</td>
-      <td class="mono c-green">$${c.marketer_commission||0}</td>
-      <td class="mono" style="color:var(--gr)">$${fmt(parseFloat(c.initial_deposit||0))}</td>
-      <td class="mono" style="color:var(--pri2)">$${fmt(parseFloat(c.monthly_deposit||0))}</td>
-      <td>${isM?`<span class="badge badge-orange">${bm('statusMod')}</span>`:`<span class="badge badge-blue">${bm('statusAct')}</span>`}</td>
-      <td style="color:var(--mu);font-size:12px">${c.branch?.name_ar||'—'}</td>
-    </tr>`;
+function bmExport(){
+  var rows=[], t=document.getElementById('bm-table'); if(!t) return;
+  t.querySelectorAll('tr').forEach(function(tr){
+    var cells=tr.querySelectorAll('th,td');
+    rows.push(Array.prototype.map.call(cells,function(c){return c.innerText.replace(/\s+/g,' ').trim();}));
   });
-
-  html += `</tbody></table></div></div>`;
-  res.innerHTML = html;
+  wgExportExcel(rows, 'WafraBranchMonthly_'+new Date().toISOString().slice(0,10)+'.xlsx', 'تقرير الفروع',
+    { colColors:{ 0:'EAF3DE', 2:'FAEEDA', 4:'FAEEDA', 6:'FAEEDA', 8:'FAEEDA', 9:'EEEDFE', 10:'E6F1FB' } });
 }
-
-function fmt(n) { return n >= 1000 ? (n/1000).toFixed(1)+'k' : n.toFixed(0); }
-
-function bmExport() {
-  if (!_bmData.length) { toast(bm('toastNoData'),'error'); return; }
-  const headers = [bm('thAccount'),bm('thMonth'),bm('thBroker'),bm('thBComm'),
-    bm('thMarketer'),bm('thMComm'),bm('thInitDep'),bm('thMonDep'),bm('thStatus'),bm('thBranch')];
-  const rows = _bmData.map(c => [
-    c.account_number, c.month,
-    c.broker?.name||'', c.broker_commission||0,
-    c.marketer?.name||'', c.marketer_commission||0,
-    parseFloat(c.initial_deposit||0), parseFloat(c.monthly_deposit||0),
-    c.status==='modified'?bm('xlsxStatusMod'):bm('xlsxStatusAct'),
-    c.branch?.name_ar||'',
-  ]);
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map(()=>({wch:18}));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Report');
-  XLSX.writeFile(wb, `branch_monthly_${_bmMonthVal}_${_bmBranchName}.xlsx`.replace(/\s+/g,'_'));
-  toast(bm('toastExported'),'success');
-}
-
-// Init
-bmLoadBranches();
-bmApplyLang();
-
-/* ── Language hook ──────────────────────────────────────── */
-const _bmOrigApplyLang = window.applyLang;
-window.applyLang = function(lang) {
-  if (_bmOrigApplyLang) _bmOrigApplyLang(lang);
-  bmApplyLang();
-};
 </script>
 @endpush

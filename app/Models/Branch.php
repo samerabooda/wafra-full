@@ -19,10 +19,10 @@ class Branch extends Model
 
     protected $fillable = [
         'code', 'name_ar', 'name_en', 'country', 'city',
-        'is_active', 'created_by',
+        'is_active', 'is_call_center', 'created_by',
     ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = ['is_active' => 'boolean', 'is_call_center' => 'boolean'];
 
     public function users(): HasMany           { return $this->hasMany(User::class); }
     public function employees(): HasMany       { return $this->hasMany(Employee::class); }

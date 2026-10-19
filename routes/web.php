@@ -7,13 +7,9 @@ use App\Http\Controllers\Web\PasswordController;
 // Public
 Route::get('/', fn() => redirect()->route('auth.login'));
 Route::get('/login',  [WebController::class,'loginPage'])->name('auth.login');
-Route::post('/login', [WebController::class,'loginPost'])
-     ->middleware('throttle:10,1')
-     ->name('auth.login.submit');
+Route::post('/login', [WebController::class,'loginPost'])->name('auth.login.submit');
 Route::get('/register',  fn()=>redirect()->route('auth.login'))->name('auth.register');
-Route::post('/register', [WebController::class,'registerPost'])
-     ->middleware('throttle:5,1')
-     ->name('auth.register.submit');
+Route::post('/register', [WebController::class,'registerPost'])->name('auth.register.submit');
 
 // Password Reset
 Route::post('/forgot-password',          [PasswordController::class,'sendResetLink'])->name('auth.password.email');
@@ -23,42 +19,23 @@ Route::post('/reset-password',           [PasswordController::class,'reset'])->n
 // Auth check endpoint (public)
 Route::get('/api-fa-check', [WebController::class,'faCheck'])->name('auth.fa-check');
 
-// CSRF refresh endpoint — the SPA calls this on 419 to pick up a fresh
-// token so long-open pages don't fail with "Page Expired"
-Route::get('/csrf-refresh', function (Request $request) {
-    $request->session()->regenerateToken();
-    return response()->json([
-        'success'    => true,
-        'csrf_token' => csrf_token(),
-    ]);
-})->name('csrf.refresh');
+// Fresh CSRF token (prevents recurring 419 on a stale/restored login page)
+Route::get('/refresh-token', fn() => response(csrf_token())
+    ->header('Cache-Control', 'no-store, max-age=0'));
 
-// Emergency cache clear — Finance Admin only. Used when auto-deploy's
-// `php artisan view:clear` step fails silently (storage permissions).
-Route::get('/_cache-clear', function (Request $request) {
-    $u = $request->user();
-    if (!$u || $u->role !== 'finance_admin') {
-        abort(403, 'Finance Admin only.');
-    }
-    $cleared = [];
-    try { \Illuminate\Support\Facades\Artisan::call('view:clear');    $cleared[] = 'view';   } catch (\Throwable $e) {}
-    try { \Illuminate\Support\Facades\Artisan::call('config:clear');  $cleared[] = 'config'; } catch (\Throwable $e) {}
-    try { \Illuminate\Support\Facades\Artisan::call('route:clear');   $cleared[] = 'route';  } catch (\Throwable $e) {}
-    try { \Illuminate\Support\Facades\Artisan::call('cache:clear');   $cleared[] = 'cache';  } catch (\Throwable $e) {}
-    // Also brute-force remove compiled Blade views in case artisan can't
-    $viewDir = storage_path('framework/views');
-    $removed = 0;
-    foreach (glob($viewDir . '/*.php') as $f) { @unlink($f) and $removed++; }
-    return response()->json([
-        'success'        => true,
-        'artisan_cleared'=> $cleared,
-        'blade_removed'  => $removed,
-        'message'        => 'Caches cleared. Reload the page.',
-    ]);
-})->middleware('auth')->name('cache.clear');
+// Small company logo for emails — served from a committed base64 file (deploy-safe, no binary
+// upload, independent of static-file serving). Used by the invite/notification emails.
+Route::get('/assets/email-logo.png', function () {
+    $b64 = @file_get_contents(resource_path('assets/email-logo.b64'));
+    if (!$b64) abort(404);
+    $png = base64_decode(trim($b64));
+    return response($png, 200)
+        ->header('Content-Type', 'image/png')
+        ->header('Cache-Control', 'public, max-age=2592000');
+})->name('email.logo');
 
 // Authenticated
-Route::middleware(['auth','active.user','force.pwd'])->group(function(){
+Route::middleware('auth')->group(function(){
     Route::post('/logout',         [WebController::class,'logout'])->name('auth.logout');
     Route::get('/dashboard',       [WebController::class,'dashboard'])->name('dashboard');
     Route::get('/cards',           [WebController::class,'cardsIndex'])->name('cards.index');
@@ -69,17 +46,25 @@ Route::middleware(['auth','active.user','force.pwd'])->group(function(){
     Route::get('/cards/{id}/edit', [WebController::class,'cardsEdit'])->name('cards.edit');
     Route::get('/cards/tree',      [WebController::class,'cardsTree'])->name('cards.tree');
     Route::get('/reports',                [WebController::class,'reports'])->name('reports.index');
+    Route::get('/reports/table',          [WebController::class,'reportsTable'])->name('reports.table');
     Route::get('/reports/dynamic',        [WebController::class,'reportsDynamic'])->name('reports.dynamic');
     Route::get('/reports/branch-monthly', [WebController::class,'reportsBranchMonthly'])->name('reports.branch-monthly');
+    Route::get('/reports/referrals',      [WebController::class,'reportsReferrals'])->name('reports.referrals');
     Route::get('/employees',       [WebController::class,'employees'])->name('employees.index');
     Route::get('/settings',        [WebController::class,'settings'])->name('settings.index');
     Route::get('/import',          [WebController::class,'import'])->name('import.index');
     Route::get('/managers',        [WebController::class,'managers'])->name('managers.index');
     Route::get('/branches',        [WebController::class,'branches'])->name('branches.index');
     Route::get('/permissions',     [WebController::class,'permissions'])->name('permissions.index');
+    // Profile
+    Route::get('/profile', [WebController::class,'profile'])->name('profile.index');
+    // Notifications tracker (Finance Admin) + mailbox/inbox (all roles)
+    Route::get('/notifications/tracker', [WebController::class,'notificationsTracker'])->name('notifications.tracker');
+    Route::get('/notifications/inbox',   [WebController::class,'notificationsInbox'])->name('notifications.inbox');
     // Guide
     Route::get('/guide', [WebController::class,'guide'])->name('guide.index');
     // Call Center
-    Route::get('/callcenter',         [WebController::class,'callcenterIndex'])->name('callcenter.index');
-    Route::get('/callcenter/pending', [WebController::class,'callcenterPending'])->name('callcenter.pending');
+    Route::get('/callcenter',          [WebController::class,'callcenterIndex'])->name('callcenter.index');
+    Route::get('/callcenter/pending',  [WebController::class,'callcenterPending'])->name('callcenter.pending');
+    Route::get('/callcenter/followup', [WebController::class,'callcenterFollowup'])->name('callcenter.followup');
 });
