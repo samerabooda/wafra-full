@@ -645,7 +645,7 @@ html{font-size:16px}
     </div>
 
     <div class="sb-header">
-      <img src="{{ asset('logo.png') }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية"
+      <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية"
            onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
       {{-- Company name removed: it is already part of the logo (saves vertical space) --}}
     </div>
@@ -736,7 +736,7 @@ html{font-size:16px}
           <span style="font-size:15px">→</span> <span data-i18n="btn.back">رجوع</span>
         </button>
         @endunless
-        <img src="{{ asset('logo.png') }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية"
+        <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية"
              onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
@@ -1642,7 +1642,7 @@ setInterval(loadCcPendingCount, 60000);
 <div class="mob-header" id="mob-header">
   <button class="mob-burger" onclick="toggleMobSidebar()">☰</button>
   <div class="mob-logo-row">
-    <img src="{{ asset('logo.png') }}" class="mob-logo" alt="وفرة الخليجية للخدمات المالية"
+    <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" class="mob-logo" alt="وفرة الخليجية للخدمات المالية"
          onclick="logoRefresh()" style="cursor:pointer">
     <div class="mob-title"><span data-i18n="company.short">وفرة الخليجية</span><small id="mob-pg-title">لوحة المتابعة</small></div>
   </div>

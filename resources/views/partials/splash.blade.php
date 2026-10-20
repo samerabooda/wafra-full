@@ -20,7 +20,7 @@
     {{-- Logo frame --}}
     <div id="wfr-logo-wrap">
       <div id="wfr-logo-frame">
-        <img src="{{ asset('logo.png') }}" id="wfr-logo-img" alt="وفرة الخليجية">
+        <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" id="wfr-logo-img" alt="وفرة الخليجية">
       </div>
       {{-- Expanding rings --}}
       <div class="wfr-ring wfr-ring-1"></div>

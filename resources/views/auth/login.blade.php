@@ -658,7 +658,7 @@ body {
       {{-- Card Logo --}}
       <div class="card-logo-wrap">
         <div class="card-logo-img">
-          <img src="{{ asset('logo.png') }}" alt="وفرة الخليجية">
+          <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" alt="وفرة الخليجية">
         </div>
         <div class="card-logo-text">
           <div class="title" id="lp-card-title">وفرة الخليجية للخدمات المالية</div>
@@ -834,7 +834,7 @@ body {
     <div class="brand-logo-row">
       <div class="brand-logo-wrap">
         <div class="brand-logo-img">
-          <img src="{{ asset('logo.png') }}" alt="وفرة الخليجية">
+          <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" alt="وفرة الخليجية">
         </div>
       </div>
       <div class="brand-logo-text">
