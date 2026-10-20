@@ -405,6 +405,59 @@ class CallCenterController extends Controller
         }
     }
 
+    /**
+     * Fan out a lifecycle-event notification: card accepted / rejected / completed /
+     * followed up / declined. Recipients:
+     *   • The CC branch's manager(s) — they see what happened to the lead they sent
+     *   • Every Finance Admin — full oversight across the pipeline
+     *   • Never the actor (whoever just acted on the card)
+     *
+     * $type is one of: cc_card_accepted | cc_card_rejected | cc_card_completed |
+     *                  cc_card_followup | cc_card_declined
+     */
+    private function notifyLifecycleEvent(CommissionCard $card, User $actor, string $type, string $title, string $body, array $extra = []): void
+    {
+        try {
+            if (!$card->cc_branch_id) return; // Only CC cards have a CC branch to notify back.
+
+            $recipients = User::where('is_active', true)
+                ->where(function ($q) use ($card, $actor) {
+                    $q->where(function ($w) use ($card, $actor) {
+                        $w->where('role', 'branch_manager')
+                          ->where('branch_id', $card->cc_branch_id)
+                          ->where('id', '!=', $actor->id);
+                    })->orWhere(function ($w) use ($actor) {
+                        $w->where('role', 'finance_admin')
+                          ->where('id', '!=', $actor->id);
+                    });
+                })
+                ->get(['id']);
+
+            if ($recipients->isEmpty()) return;
+
+            $phoneFull = trim(trim((string) $card->client_country_code) . ' ' . trim((string) $card->client_phone));
+
+            ManagerNotification::fanOut($recipients, [
+                'type'           => $type,
+                'card_id'        => $card->id,
+                'account_number' => $card->account_number,
+                'month'          => $card->month,
+                'from_user_id'   => $actor->id,
+                'from_branch_id' => $card->branch_id,     // handling branch is the "from" on a response
+                'to_branch_id'   => $card->cc_branch_id,  // CC branch is the "to"
+                'title'          => $title,
+                'body'           => $body,
+                'data'           => array_merge([
+                    'client_phone'   => $phoneFull,
+                    'account_number' => $card->account_number,
+                    'month'          => $card->month,
+                ], $extra),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('notifyLifecycleEvent failed: '.$e->getMessage());
+        }
+    }
+
     /** An ACTIVE lead (still under follow-up) with the same phone, if any. */
     private function activeDuplicatePhone(string $phone, ?string $code, ?int $excludeId = null): ?CommissionCard
     {
@@ -494,6 +547,12 @@ class CallCenterController extends Controller
             ActivityLog::record('cc_card_accepted', $card);
         });
 
+        $this->notifyLifecycleEvent(
+            $card, $request->user(), 'cc_card_accepted',
+            "✅ الكرت #{$card->account_number} تم قبوله",
+            "قَبِل الفرع العميل (📱 {$this->phoneLabel($card)}) — جاري متابعة فتح الحساب."
+        );
+
         return response()->json([
             'success' => true,
             'message' => "تم قبول الكرت. أضف بيانات البروكر والإيداع لإتمامه.",
@@ -543,6 +602,13 @@ class CallCenterController extends Controller
 
             ActivityLog::record('cc_card_rejected', $card, ['reason' => $request->reason]);
         });
+
+        $this->notifyLifecycleEvent(
+            $card, $request->user(), 'cc_card_rejected',
+            "❌ الكرت #{$card->account_number} تم رفضه",
+            "رَفَضَ الفرع العميل (📱 {$this->phoneLabel($card)}) — السبب: {$request->reason}",
+            ['reason' => $request->reason]
+        );
 
         return response()->json([
             'success' => true,
@@ -685,11 +751,20 @@ class CallCenterController extends Controller
             ActivityLog::record('cc_card_completed', $card);
         });
 
+        $freshCard = $card->fresh();
+        $deposit   = number_format((float)($freshCard->initial_deposit ?? 0), 2);
+        $this->notifyLifecycleEvent(
+            $freshCard, $request->user(), 'cc_card_completed',
+            "🏁 الحساب #{$freshCard->account_number} تم فتحه",
+            "فتح الفرع الحساب #{$freshCard->account_number} للعميل (📱 {$this->phoneLabel($freshCard)}) — إيداع ابتدائي: {$deposit}.",
+            ['account_number' => $freshCard->account_number, 'initial_deposit' => (float)$freshCard->initial_deposit]
+        );
+
         CardCtrl::bumpCardsVersion();
         return response()->json([
             'success' => true,
             'message' => "🏁 تم إكمال الكرت #{$card->account_number} بنجاح.",
-            'data'    => $card->fresh(),
+            'data'    => $freshCard,
         ]);
     }
 
@@ -738,6 +813,13 @@ class CallCenterController extends Controller
 
             ActivityLog::record('cc_card_followup', $card, ['note' => $request->note]);
         });
+
+        $this->notifyLifecycleEvent(
+            $card, $request->user(), 'cc_card_followup',
+            "📞 متابعة جديدة للعميل (📱 {$this->phoneLabel($card)})",
+            "سجّل الفرع متابعة على الكرت #{$card->account_number}: {$request->note}",
+            ['note' => $request->note]
+        );
 
         return response()->json([
             'success' => true,
@@ -793,6 +875,13 @@ class CallCenterController extends Controller
 
             ActivityLog::record('cc_card_declined', $card, ['reason' => $request->reason]);
         });
+
+        $this->notifyLifecycleEvent(
+            $card, $request->user(), 'cc_card_declined',
+            "🚫 العميل (📱 {$this->phoneLabel($card)}) رفض فتح الحساب",
+            "أعلن الفرع أن العميل لا يرغب بفتح الحساب — السبب: {$request->reason}. تم إخراجه من قائمة المتابعة.",
+            ['reason' => $request->reason]
+        );
 
         return response()->json([
             'success' => true,
