@@ -31,32 +31,111 @@ body {
   position:relative;
 }
 
-/* ── Background blobs ── */
+/* ── Aurora background blobs (vibrant + drifting) ── */
 .bg-blob {
   position:fixed; border-radius:50%;
-  filter:blur(90px); pointer-events:none; z-index:0;
+  filter:blur(80px); pointer-events:none; z-index:0;
+  mix-blend-mode:screen; opacity:.55;
 }
 .blob-1 {
-  width:600px; height:600px;
-  background:radial-gradient(circle, rgba(26,173,186,.16) 0%, transparent 70%);
-  top:-150px; right:-100px;
-  animation:blobFloat1 9s ease-in-out infinite alternate;
+  width:620px; height:620px;
+  background:radial-gradient(circle, rgba(26,173,186,.65) 0%, transparent 70%);
+  top:-160px; right:-80px;
+  animation:blobDrift 22s ease-in-out infinite alternate;
 }
 .blob-2 {
-  width:500px; height:500px;
-  background:radial-gradient(circle, rgba(14,122,136,.12) 0%, transparent 70%);
-  bottom:-120px; left:-80px;
-  animation:blobFloat2 11s ease-in-out infinite alternate;
+  width:520px; height:520px;
+  background:radial-gradient(circle, rgba(123,104,238,.5) 0%, transparent 70%);
+  bottom:-140px; left:-90px;
+  animation:blobDrift 28s ease-in-out -5s infinite alternate;
 }
 .blob-3 {
-  width:300px; height:300px;
-  background:radial-gradient(circle, rgba(30,204,128,.06) 0%, transparent 70%);
-  top:40%; left:30%;
-  animation:blobFloat3 13s ease-in-out infinite alternate;
+  width:420px; height:420px;
+  background:radial-gradient(circle, rgba(45,212,191,.45) 0%, transparent 70%);
+  top:35%; left:40%;
+  animation:blobDrift 32s ease-in-out -10s infinite alternate;
 }
-@keyframes blobFloat1 { from{transform:translate(0,0) scale(1)} to{transform:translate(-30px,20px) scale(1.08)} }
-@keyframes blobFloat2 { from{transform:translate(0,0) scale(1)} to{transform:translate(20px,-25px) scale(1.05)} }
-@keyframes blobFloat3 { from{transform:translate(0,0)} to{transform:translate(15px,15px)} }
+.blob-4 {
+  width:340px; height:340px;
+  background:radial-gradient(circle, rgba(58,157,181,.42) 0%, transparent 70%);
+  position:fixed; border-radius:50%;
+  filter:blur(80px); pointer-events:none; z-index:0;
+  mix-blend-mode:screen; opacity:.5;
+  top:60%; right:30%;
+  animation:blobDrift 24s ease-in-out -15s infinite alternate;
+}
+@keyframes blobDrift {
+  0%   { transform:translate(0,0) scale(1); }
+  33%  { transform:translate(60px,-40px) scale(1.08); }
+  66%  { transform:translate(-30px,50px) scale(.95); }
+  100% { transform:translate(40px,20px) scale(1.05); }
+}
+
+/* ── Live price ticker (top) ── */
+.live-ticker {
+  position:fixed; top:0; left:0; right:0;
+  height:42px;
+  background:rgba(5,10,18,.85);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(26,173,186,.18);
+  overflow:hidden;
+  display:flex; align-items:center;
+  z-index:30;
+}
+.live-ticker-track {
+  display:flex; gap:40px;
+  animation:tickerScroll 70s linear infinite;
+  white-space:nowrap;
+  padding-inline-start:20px;
+}
+@keyframes tickerScroll {
+  from { transform:translateX(100%); }
+  to   { transform:translateX(-100%); }
+}
+.lt-sym {
+  display:inline-flex; align-items:center; gap:8px;
+  font-family:'JetBrains Mono', ui-monospace, monospace;
+  font-size:12px;
+}
+.lt-sym .n { color:var(--mu); font-weight:700; }
+.lt-sym .v { color:var(--tx); font-weight:800; }
+.lt-sym .up { color:var(--gr); font-weight:700; }
+.lt-sym .dn { color:var(--re); font-weight:700; }
+
+/* ── Candlestick chart background ── */
+.live-chart {
+  position:fixed; left:0; right:0; bottom:0;
+  height:48%;
+  opacity:.22;
+  z-index:0;
+  pointer-events:none;
+}
+.live-chart svg { width:100%; height:100%; display:block; }
+
+/* ── Live status chip (floating) ── */
+.live-chip {
+  position:fixed; top:56px; right:24px;
+  display:inline-flex; align-items:center; gap:7px;
+  padding:5px 11px;
+  border-radius:100px;
+  background:rgba(34,201,122,.12);
+  border:1px solid rgba(34,201,122,.3);
+  font-size:10.5px; font-weight:700;
+  color:var(--gr);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  z-index:25;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  font-family:'JetBrains Mono', ui-monospace, monospace;
+}
+[dir="ltr"] .live-chip { right:auto; left:24px; }
+.live-chip-dot {
+  width:6px; height:6px; border-radius:50%; background:var(--gr);
+  animation:livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.4;transform:scale(1.3);} }
 
 /* ── Geometric decorations ── */
 .geo { position:fixed; pointer-events:none; z-index:0; }
@@ -85,9 +164,10 @@ body {
   display:flex;
   flex-direction:column;
   justify-content:center;
-  padding:60px 56px 60px 72px;
+  padding:102px 56px 60px 72px;
   animation:brandFadeUp .95s cubic-bezier(.16,1,.3,1) .5s both;
 }
+.brand-pill { display:none; }  /* replaced by the floating .live-chip */
 [dir="ltr"] .brand {
   padding:60px 72px 60px 56px;
 }
@@ -103,11 +183,12 @@ body {
   min-width:380px;
   flex-shrink:0;
   min-height:100vh;
+  padding-top:42px;  /* make room for the fixed ticker */
   /* Glass panel */
   background: linear-gradient(160deg,
-    rgba(8,18,35,.95) 0%,
-    rgba(11,24,44,.92) 50%,
-    rgba(8,18,35,.97) 100%
+    rgba(8,18,35,.62) 0%,
+    rgba(11,24,44,.58) 50%,
+    rgba(8,18,35,.65) 100%
   );
   backdrop-filter:blur(40px);
   -webkit-backdrop-filter:blur(40px);
@@ -215,50 +296,50 @@ body {
 /* ─────────────────────────────────────────
    BRAND SECTION
    ───────────────────────────────────────── */
+/* Stack logo on top, name below */
 .brand-logo-row {
-  display:flex; align-items:center; gap:22px; margin-bottom:32px;
+  display:flex; flex-direction:column; align-items:flex-start;
+  gap:18px; margin-bottom:32px;
 }
 
-/* ── Logo wrapper ── */
+/* ── Logo wrapper (transparent — logo is now white on dark) ── */
 .brand-logo-wrap {
   position:relative; flex-shrink:0;
-  width:138px; height:138px;
+  width:150px; height:150px;
   display:flex; align-items:center; justify-content:center;
-}
-.brand-logo-wrap::before {
-  content:''; position:absolute; inset:0;
-  border-radius:28px;
-  border:3px solid rgba(26,173,186,.7);
-  animation:lgRing 30s linear infinite;
-  pointer-events:none;
-}
-.brand-logo-wrap::after {
-  content:''; position:absolute; inset:0;
-  border-radius:28px;
-  border:2px solid rgba(26,173,186,.4);
-  animation:lgRing 30s linear .55s infinite;
-  pointer-events:none;
+  filter:drop-shadow(0 10px 24px rgba(26,173,186,.35));
 }
 .brand-logo-img {
-  width:138px; height:138px;
-  background:white;
-  border:2.5px solid rgba(26,173,186,.32);
-  border-radius:28px;
+  width:150px; height:150px;
+  background:transparent;
+  border:none;
+  border-radius:0;
   display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; overflow:hidden; position:relative;
-  animation:lgPop 30s linear infinite;
+  flex-shrink:0; overflow:visible; position:relative;
+  animation:lgPopSoft 30s linear infinite;
 }
-.brand-logo-img img { width:124px; height:124px; object-fit:contain; }
-.brand-logo-text .name {
-  font-size:26px; font-weight:900; color:var(--tx); line-height:1.25;
-}
-.brand-logo-text .name span { color:var(--pri2); }
+.brand-logo-img img { width:150px; height:150px; object-fit:contain; }
+
+/* HIDE Arabic duplicate (name is already in the logo image) */
+.brand-logo-text .name { display:none; }
+
+/* English subline — single line below logo, white gradient */
 .brand-logo-text .en {
-  font-size:11px; color:var(--pri2);
-  letter-spacing:2px; text-transform:uppercase; margin-top:6px;
+  font-size:15px; font-weight:800;
+  letter-spacing:.22em; text-transform:uppercase;
+  background:linear-gradient(135deg, #ffffff 0%, #a898ff 60%, #2DD4BF 100%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+  margin:0;
 }
 
-/* 30-second logo pop */
+/* Softer breathing animation for the new transparent-logo setup */
+@keyframes lgPopSoft {
+  0%,100% { transform:scale(1); filter:drop-shadow(0 10px 24px rgba(26,173,186,.35)); }
+  50%     { transform:scale(1.03); filter:drop-shadow(0 14px 32px rgba(26,173,186,.55)); }
+}
+
+/* 30-second logo pop (unused on new design, kept for compat) */
 @keyframes lgPop {
   0%   { transform:scale(0) rotate(-18deg); opacity:0; filter:blur(16px);
          box-shadow:0 0 0 rgba(26,173,186,0); }
@@ -300,14 +381,18 @@ body {
 }
 @keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
 
-/* Big headline */
+/* Big headline — gradient white → violet → teal (matches brand-logo text) */
 .brand-headline {
-  font-size:3.4rem; font-weight:900; line-height:1.05;
-  letter-spacing:-1.5px; margin-bottom:18px; color:var(--tx);
+  font-size:3.6rem; font-weight:900; line-height:1.02;
+  letter-spacing:-2px; margin-bottom:18px;
+  background:linear-gradient(135deg, #ffffff 0%, #a898ff 50%, #2DD4BF 100%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+  text-wrap:balance;
 }
 .brand-headline em {
   font-style:normal; color:transparent;
-  background:linear-gradient(135deg, var(--pri2), var(--pri), #7AABCA);
+  background:linear-gradient(135deg, #2DD4BF, #1AADBA, #7B68EE);
   -webkit-background-clip:text; background-clip:text;
 }
 .brand-desc {
@@ -334,26 +419,13 @@ body {
    CARD CONTENT
    ───────────────────────────────────────── */
 
-/* Card logo — bigger */
+/* Card logo — HIDDEN (no duplication; logo is already on brand side) */
 .card-logo-wrap {
-  display:flex; align-items:center; gap:14px;
-  margin-bottom:26px; padding-bottom:22px;
-  border-bottom:1px solid rgba(26,173,186,.14);
+  display:flex; align-items:center; justify-content:flex-end; gap:14px;
+  margin-bottom:20px;
 }
-.card-logo-img {
-  width:100px; height:100px;
-  background:white;
-  border:2px solid rgba(26,173,186,.35);
-  border-radius:22px;
-  display:flex; align-items:center; justify-content:center;
-  overflow:hidden; flex-shrink:0;
-  box-shadow:
-    0 10px 36px rgba(26,173,186,.45),
-    0 4px 12px rgba(0,0,0,.28),
-    0 0 0 4px rgba(26,173,186,.08);
-  animation:cardLogoPop 1.2s cubic-bezier(.34,1.56,.64,1) .6s both;
-}
-.card-logo-img img { width:90px; height:90px; object-fit:contain; }
+.card-logo-img { display:none; }
+.card-logo-text { display:none; }
 @keyframes cardLogoPop {
   0%  { transform:scale(0) rotate(-18deg); opacity:0; filter:blur(12px);
         box-shadow:0 0 0 rgba(26,173,186,0); }
@@ -521,11 +593,11 @@ body {
   }
   .login-card::after { display:none; }
   [dir="ltr"] .login-card { border-left:none; border-right:none; }
+  .live-chip { top:50px; font-size:9.5px; padding:4px 9px; }
+  .live-chart { height:38%; opacity:.18; }
 }
 @media(max-width:480px) {
   .card-inner { padding:32px 20px; }
-  .card-logo-img { width:84px; height:84px; border-radius:18px; }
-  .card-logo-img img { width:74px; height:74px; }
 }
 </style>
 </head>
@@ -535,6 +607,34 @@ body {
 <div class="bg-blob blob-1"></div>
 <div class="bg-blob blob-2"></div>
 <div class="bg-blob blob-3"></div>
+<div class="blob-4"></div>
+
+{{-- Live price ticker (fixed, top) --}}
+<div class="live-ticker">
+  <div class="live-ticker-track">
+    <span class="lt-sym"><span class="n">EUR/USD</span><span class="v">1.0923</span><span class="up">▲ 0.42%</span></span>
+    <span class="lt-sym"><span class="n">GBP/USD</span><span class="v">1.2651</span><span class="dn">▼ 0.18%</span></span>
+    <span class="lt-sym"><span class="n">USD/JPY</span><span class="v">151.24</span><span class="up">▲ 0.31%</span></span>
+    <span class="lt-sym"><span class="n">XAU/USD</span><span class="v">2048.6</span><span class="up">▲ 1.12%</span></span>
+    <span class="lt-sym"><span class="n">BRENT</span><span class="v">85.34</span><span class="dn">▼ 0.65%</span></span>
+    <span class="lt-sym"><span class="n">BTC/USD</span><span class="v">67,842</span><span class="up">▲ 2.45%</span></span>
+    <span class="lt-sym"><span class="n">S&amp;P 500</span><span class="v">5,124.8</span><span class="up">▲ 0.52%</span></span>
+    <span class="lt-sym"><span class="n">NAS 100</span><span class="v">18,241</span><span class="up">▲ 0.78%</span></span>
+    <span class="lt-sym"><span class="n">USD/KWD</span><span class="v">0.3078</span><span class="dn">▼ 0.02%</span></span>
+    <span class="lt-sym"><span class="n">USD/SAR</span><span class="v">3.7502</span><span class="up">▲ 0.00%</span></span>
+    <span class="lt-sym"><span class="n">USD/AED</span><span class="v">3.6730</span><span class="dn">▼ 0.00%</span></span>
+    <span class="lt-sym"><span class="n">EUR/USD</span><span class="v">1.0923</span><span class="up">▲ 0.42%</span></span>
+  </div>
+</div>
+
+{{-- Live status chip (floating) --}}
+<div class="live-chip">
+  <span class="live-chip-dot"></span>
+  <span id="lp-live-status">النظام متصل · live</span>
+</div>
+
+{{-- Candlestick chart (fixed background) --}}
+<div class="live-chart"><svg id="lp-chart" viewBox="0 0 1000 300" preserveAspectRatio="none"></svg></div>
 
 {{-- Geometric rings --}}
 <div class="geo geo-ring geo-r1"></div>
@@ -958,6 +1058,7 @@ var LP_T = {
     cardSub:      'Wafra Gulf Financial Services',
     /* Brand */
     status:   'النظام نشط ومتصل',
+    liveStatus: 'النظام متصل · live',
     headline: 'إدارة<br><em>كروت العمولات</em>',
     desc:     'نظام إدارة عمولات وفرة الخليجية للخدمات المالية — يدار حصراً من الإدارة المالية عبر صلاحيات متدرجة وآمنة.',
     b1:'تقارير ديناميكية فورية', b2:'صلاحيات متدرجة وآمنة',
@@ -1013,6 +1114,7 @@ var LP_T = {
     cardSub:      'وفرة الخليجية للخدمات المالية',
     /* Brand */
     status:   'System Active & Connected',
+    liveStatus: 'System online · live',
     headline: 'Commission<br><em>Cards System</em>',
     desc:     'Wafra Gulf Financial Services — Commission cards management platform, exclusively operated by the Finance Department with role-based access.',
     b1:'Real-time Dynamic Reports', b2:'Role-based Secure Access',
@@ -1096,6 +1198,7 @@ function lpApplyLang(lang) {
 
   /* ── Brand ── */
   set('lp-status',  t.status);
+  set('lp-live-status', t.liveStatus);
   set('lp-headline',t.headline, true);
   set('lp-desc',    t.desc);
   set('lp-b1',t.b1); set('lp-b2',t.b2);
@@ -1165,6 +1268,46 @@ function lpToggleLang() {
 
 /* ── Apply immediately (script at end of body, DOM is ready) ── */
 lpApplyLang(lpLang);
+
+/* ══════════════════════════════════════════════════════════
+   LIVE CANDLESTICK CHART (background decoration)
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  var svg = document.getElementById('lp-chart');
+  if (!svg) return;
+  var W = 1000, H = 300, n = 60, cw = W / n;
+  var price = H * 0.55;
+  var items = [];
+  for (var i = 0; i < n; i++) {
+    var change = (Math.random() - 0.5) * 24;
+    var open = price;
+    var close = Math.max(20, Math.min(H - 20, price + change));
+    var hi = Math.min(open, close) - Math.random() * 10;
+    var lo = Math.max(open, close) + Math.random() * 10;
+    items.push({ open:open, close:close, hi:hi, lo:lo });
+    price = close;
+  }
+  var out = '';
+  for (var k = 0; k < items.length; k++) {
+    var it = items[k];
+    var up = it.close < it.open;  // SVG y flipped: smaller y = higher price
+    var color = up ? '#22C97A' : '#E05050';
+    var x = k * cw + cw / 2;
+    var top = Math.min(it.open, it.close);
+    var bot = Math.max(it.open, it.close);
+    out += '<line x1="' + x + '" y1="' + it.hi + '" x2="' + x + '" y2="' + it.lo + '" stroke="' + color + '" stroke-width="1" opacity="0.6"/>';
+    out += '<rect x="' + (k * cw + 2) + '" y="' + top + '" width="' + (cw - 4) + '" height="' + Math.max(1, bot - top) + '" fill="' + color + '" opacity="0.85"/>';
+  }
+  var path = 'M 0 ' + H + ' L';
+  items.forEach(function(it, idx){ path += ' ' + (idx * cw + cw / 2) + ' ' + it.close; });
+  path += ' L ' + W + ' ' + H + ' Z';
+  svg.innerHTML =
+    '<defs><linearGradient id="lpg" x1="0" x2="0" y1="0" y2="1">'
+    + '<stop offset="0" stop-color="#1AADBA" stop-opacity="0.5"/>'
+    + '<stop offset="1" stop-color="#1AADBA" stop-opacity="0"/></linearGradient></defs>'
+    + '<path d="' + path + '" fill="url(#lpg)" opacity="0.35"/>'
+    + out;
+})();
 
 /* ══════════════════════════════════════════════════════════
    SECURITY: Clear any saved session / token on login page load
