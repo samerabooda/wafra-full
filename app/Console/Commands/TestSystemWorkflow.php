@@ -59,25 +59,25 @@ class TestSystemWorkflow extends Command
             $actors = $this->setupActors();
 
             $this->section('3. Creating 40 regular branch cards');
-            $this->createRegularCards($actors);
+            $this->guard('createRegularCards', fn() => $this->createRegularCards($actors));
 
             $this->section('4. CC workflow — 60 cards across all states');
-            $this->runCcWorkflow($actors);
+            $this->guard('runCcWorkflow', fn() => $this->runCcWorkflow($actors));
 
             $this->section('5. Edge cases');
-            $this->testEdgeCases($actors);
+            $this->guard('testEdgeCases', fn() => $this->testEdgeCases($actors));
 
             $this->section('6. Verifying notifications fan-out');
-            $this->verifyNotifications();
+            $this->guard('verifyNotifications', fn() => $this->verifyNotifications());
 
             $this->section('7. Verifying CcFollowup entries');
-            $this->verifyFollowups();
+            $this->guard('verifyFollowups', fn() => $this->verifyFollowups());
 
             $this->section('8. Rebuilding + verifying CardSummary');
-            $this->verifySummary();
+            $this->guard('verifySummary', fn() => $this->verifySummary());
 
             $this->section('9. Running reports');
-            $this->runReports();
+            $this->guard('runReports', fn() => $this->runReports());
 
             $this->section('10. Writing report');
             $path = $this->writeReport();
@@ -154,12 +154,27 @@ class TestSystemWorkflow extends Command
             }
         }
 
-        // Make sure a CC manager exists on the CC branch
+        // Make sure a CC manager exists on the CC branch — create a TEMP one for lifecycle
+        // notification testing if none exists. Cleaned up at the end.
         $ccMgr = User::where('branch_id', $ccBranch->id)->where('role', 'branch_manager')->first();
+        $tempMgrCreated = false;
+        if (!$ccMgr) {
+            $ccMgr = User::create([
+                'name'      => '[WFTEST] CC Manager',
+                'email'     => 'wftest-cc-mgr@wafragulf.test',
+                'password'  => Hash::make('wftest-' . bin2hex(random_bytes(8))),
+                'role'      => 'branch_manager',
+                'branch_id' => $ccBranch->id,
+                'is_active' => true,
+            ]);
+            $tempMgrCreated = true;
+            $this->line("  Created temp CC manager (wftest-cc-mgr@wafragulf.test) — cleaned up at end");
+            $this->trace[] = ['step' => 'temp_cc_mgr_created', 'user_id' => $ccMgr->id];
+        }
 
         $this->line("  CC branch     : {$ccBranch->name_ar} (id={$ccBranch->id})");
         $this->line("  Regular brs   : " . $regularBranches->count());
-        $this->line("  CC manager    : " . ($ccMgr ? $ccMgr->email : '(none — FA covers)'));
+        $this->line("  CC manager    : {$ccMgr->email}" . ($tempMgrCreated ? ' (TEMP)' : ''));
 
         // Log in as FA so ActivityLog::record() captures a user id
         auth()->login($fa);
@@ -594,8 +609,6 @@ class TestSystemWorkflow extends Command
             ->groupBy('type')->selectRaw('type, COUNT(*) as c')
             ->pluck('c', 'type')->toArray();
 
-        foreach ($counts as $t => $c) $this->line("  {$t}: {$c}");
-
         $expected = [
             'cc_new_card'       => 50,  // 10 sent + 10 in_progress + 10 completed + 10 rejected + 10 declined
             'cc_card_followup'  => 20,  // 10 in_progress + 10 completed (both followed up first)
@@ -605,6 +618,8 @@ class TestSystemWorkflow extends Command
         ];
         foreach ($expected as $type => $expect) {
             $got = $counts[$type] ?? 0;
+            $icon = $got >= $expect ? '✓' : '✗';
+            $this->line("  {$icon} {$type}: {$got} (expected ≥{$expect})");
             if ($got < $expect) {
                 $this->errors[] = "notification '{$type}': expected >= {$expect}, got {$got}";
             }
@@ -656,18 +671,20 @@ class TestSystemWorkflow extends Command
             ->count();
         $this->line("  over-limit cards: {$over}");
 
-        // Cross-branch — our cross-branch account should show up
+        // Cross-branch — explicit SELECT so MySQL's ONLY_FULL_GROUP_BY doesn't reject it
         $cross = DB::table('commission_cards')
             ->whereIn('id', $wfIds)
+            ->select('account_number', DB::raw('COUNT(DISTINCT branch_id) as b_count'))
             ->groupBy('account_number')
             ->havingRaw('COUNT(DISTINCT branch_id) > 1')
             ->get();
         $this->line("  cross-branch accounts: " . $cross->count());
 
-        // Duplicate phones
+        // Duplicate phones — explicit SELECT (same ONLY_FULL_GROUP_BY reason)
         $dup = DB::table('commission_cards')
             ->whereIn('id', $wfIds)
             ->whereNotNull('client_phone')
+            ->select('client_phone', DB::raw('COUNT(*) as c'))
             ->groupBy('client_phone')
             ->havingRaw('COUNT(*) > 1')
             ->get();
@@ -717,23 +734,33 @@ class TestSystemWorkflow extends Command
     private function cleanup(): int
     {
         $wfIds = $this->wfCardIds();
-        if (empty($wfIds)) return 0;
-
         $n = 0;
-        // Children first
-        $n += DB::table('cc_followups')->whereIn('card_id', $wfIds)->delete();
-        $n += DB::table('manager_notifications')->whereIn('card_id', $wfIds)->delete();
-        $n += DB::table('cc_notifications')->whereIn('card_id', $wfIds)->delete();
-        $n += DB::table('card_modifications')->whereIn('card_id', $wfIds)->delete();
-        $n += DB::table('activity_logs')->whereIn('model_id', $wfIds)
-            ->where('model_type', CommissionCard::class)
-            ->where('action', 'like', 'wftest_%')
-            ->delete();
-        // Hard delete the cards (bypass soft-delete)
-        $n += DB::table('commission_cards')->whereIn('id', $wfIds)->delete();
 
-        // Rebuild summaries to reflect removal
-        Artisan::call('cards:rebuild-summaries');
+        if (!empty($wfIds)) {
+            // Children first
+            $n += DB::table('cc_followups')->whereIn('card_id', $wfIds)->delete();
+            $n += DB::table('manager_notifications')->whereIn('card_id', $wfIds)->delete();
+            $n += DB::table('cc_notifications')->whereIn('card_id', $wfIds)->delete();
+            $n += DB::table('card_modifications')->whereIn('card_id', $wfIds)->delete();
+            $n += DB::table('activity_logs')->whereIn('model_id', $wfIds)
+                ->where('model_type', CommissionCard::class)
+                ->where('action', 'like', 'wftest_%')
+                ->delete();
+            // Hard delete the cards (bypass soft-delete)
+            $n += DB::table('commission_cards')->whereIn('id', $wfIds)->delete();
+        }
+
+        // Delete temp CC manager user (and its notifications), if present
+        $tempUser = User::where('email', 'wftest-cc-mgr@wafragulf.test')->first();
+        if ($tempUser) {
+            $n += DB::table('manager_notifications')->where('to_user_id', $tempUser->id)->delete();
+            $n += DB::table('manager_notifications')->where('from_user_id', $tempUser->id)->delete();
+            $n += DB::table('activity_logs')->where('user_id', $tempUser->id)->delete();
+            $n += DB::table('users')->where('id', $tempUser->id)->delete();
+        }
+
+        // Rebuild summaries to reflect removal (safe — table now exists)
+        try { Artisan::call('cards:rebuild-summaries'); } catch (Throwable $e) {}
 
         return $n;
     }
@@ -766,6 +793,18 @@ class TestSystemWorkflow extends Command
     {
         $this->newLine();
         $this->line("<fg=cyan>── {$title}</>");
+    }
+
+    /** Run a step and capture any exception as a non-fatal error — keeps the suite running */
+    private function guard(string $label, callable $fn): void
+    {
+        try {
+            $fn();
+        } catch (Throwable $e) {
+            $this->errors[] = "{$label} crashed: " . $e->getMessage();
+            $this->error("  ! {$label} crashed: " . $e->getMessage());
+            $this->line("    at " . $e->getFile() . ':' . $e->getLine());
+        }
     }
 
     private function printSummary(): void
