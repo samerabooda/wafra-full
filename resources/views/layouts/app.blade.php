@@ -1559,6 +1559,28 @@ async function loadCcPendingCount() {
 document.addEventListener('DOMContentLoaded', loadCcPendingCount);
 setInterval(loadCcPendingCount, 60000);
 
+// ── Sidebar card counts (total / cc / modified) ────────────
+// Keeps the three nav badges populated and current on EVERY page, not just
+// the dashboard — hitting /cards/summary once on load and then every 60s.
+async function loadSidebarCardCounts() {
+  try {
+    const r = await api('GET', '/cards/summary');
+    const tot = r?.totals || {};
+    const setBadge = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const n = Number(val) || 0;
+      el.textContent = n.toLocaleString('en');
+      el.style.display = '';
+    };
+    setBadge('sb-cards-count', tot.count);
+    setBadge('sb-cc-count',    tot.cc);
+    setBadge('sb-mod-count',   tot.mod);
+  } catch(e) { /* silent */ }
+}
+document.addEventListener('DOMContentLoaded', loadSidebarCardCounts);
+setInterval(loadSidebarCardCounts, 60000);
+
 // ── Manager notification bell (per-user, accurate tracker) ──
 (function(){
   // Bell + mailbox are shown to every authenticated user (managers, finance admin,
