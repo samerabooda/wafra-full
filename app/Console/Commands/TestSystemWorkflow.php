@@ -52,6 +52,11 @@ class TestSystemWorkflow extends Command
         }
 
         try {
+            $this->section('0. Pre-cleanup — remove orphans from prior runs');
+            $pre = $this->cleanup();
+            if ($pre > 0) $this->line("  Removed {$pre} orphan records from a prior run.");
+            else          $this->line("  Nothing to clean up — fresh slate.");
+
             $this->section('1. Preflight checks');
             if (!$this->preflight()) return 1;
 
