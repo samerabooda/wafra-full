@@ -68,16 +68,3 @@ Route::middleware('auth')->group(function(){
     Route::get('/callcenter/pending',  [WebController::class,'callcenterPending'])->name('callcenter.pending');
     Route::get('/callcenter/followup', [WebController::class,'callcenterFollowup'])->name('callcenter.followup');
 });
-
-// --- Temporary workflow-test runner (REMOVE after use) ---
-Route::get('/_wf-run/{token}', function (string $token) {
-    if ($token !== 'wYsZsNPqrEc1Ufieq-kH1dKRyQfmEosIpS0MKISz0yQ') abort(404);
-    @set_time_limit(300); @ini_set('memory_limit', '512M');
-    $out = new \Symfony\Component\Console\Output\BufferedOutput();
-    $exit = \Artisan::call('test:system-workflow', [], $out);
-    $txt = $out->fetch();
-    $reports = glob(storage_path('logs/workflow-test-*.md'));
-    $latest  = $reports ? end($reports) : null;
-    $report  = $latest ? @file_get_contents($latest) : null;
-    return response()->json(['exit'=>$exit,'output'=>$txt,'report_path'=>$latest,'report'=>$report], 200, [], JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-})->name('wf.run.temp');
