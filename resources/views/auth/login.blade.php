@@ -85,7 +85,7 @@ body {
 }
 .live-ticker-track {
   display:flex; gap:40px;
-  animation:tickerScroll 70s linear infinite;
+  animation:tickerScroll 35s linear infinite;
   white-space:nowrap;
   padding-inline-start:20px;
 }
