@@ -1778,6 +1778,283 @@ setInterval(loadSidebarCardCounts, 60000);
 })();
 </script>
 
+{{-- ══ Shared KhFilter: Excel-style sort + checkbox filter dropdown ══
+     Any table can opt in with one call:
+       KhFilter.enable({
+         thead:    document.getElementById('my-thead-tr'),
+         onRender: function(){ renderRows(KhFilter.apply('my', _allData)); },
+         source:   function(){ return _allData; },
+         ns:       'my',
+         columns:  [
+           {key:'name',    label:'Name',    sortable:true, filterable:true},
+           {key:'amount',  label:'Amount',  sortable:true, filterable:false, value:r=>+r.amount||0, numeric:true},
+           {key:'actions', label:'',        sortable:false, filterable:false},
+         ],
+         sortKey: 'name', sortDir: 'asc',   // defaults
+         labels: {asc:'تصاعدي', desc:'تنازلي', apply:'تطبيق', clear:'مسح', search:'بحث…', all:'تحديد الكل', blank:'(فارغ)'}
+       });
+     Then call KhFilter.render(ns) whenever data changes.
+--}}
+<style>
+.kh-th{cursor:pointer;user-select:none;position:relative}
+.kh-th:hover{background:rgba(26,173,186,.08)!important}
+.kh-th.srt{color:var(--pri2)!important}
+.kh-th.flt{color:#a898ff!important}
+.kh-th .kh-ar{display:inline-block;font-size:11px;margin-inline-start:4px}
+.kh-th .kh-fn{display:inline-block;font-size:10px;opacity:.6;margin-inline-start:3px}
+.kh-th.flt .kh-fn{opacity:1;color:#a898ff}
+#kh-fmenu{position:fixed;z-index:2147483000;background:var(--bg3);border:1px solid var(--card-brd);border-radius:12px;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.6);display:none;width:260px;max-height:80vh;overflow-y:auto}
+#kh-fmenu .kh-srt{display:flex;gap:6px;margin-bottom:7px}
+#kh-fmenu .kh-srt button{flex:1;padding:5px 7px;border-radius:7px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx);font-size:11px;font-weight:700;cursor:pointer}
+#kh-fmenu .kh-srt button:hover{border-color:#7b68ee;color:#a898ff}
+#kh-fmenu .kh-srch{width:100%;margin-bottom:7px;padding:6px 9px;font-size:12px}
+#kh-fmenu .kh-it{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:11.5px;color:var(--tx)}
+#kh-fmenu .kh-it:hover{background:rgba(123,104,238,.08)}
+#kh-fmenu .kh-it input{margin:0;flex-shrink:0}
+#kh-fmenu .kh-it span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#kh-fmenu .kh-all{border-bottom:1px solid var(--brd1);padding-bottom:7px;margin-bottom:4px;font-weight:800}
+#kh-fmenu .kh-list{max-height:220px;overflow-y:auto;margin-bottom:7px;padding-inline-end:3px}
+#kh-fmenu .kh-list::-webkit-scrollbar{width:6px}
+#kh-fmenu .kh-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:3px}
+#kh-fmenu .kh-note{color:var(--mu);font-size:10px;padding:5px;text-align:center}
+#kh-fmenu .kh-act{display:flex;gap:6px;padding-top:7px;border-top:1px solid var(--brd1)}
+#kh-fmenu .kh-ok,#kh-fmenu .kh-cl{flex:1;padding:7px;border-radius:7px;border:0;font-weight:800;font-size:11.5px;cursor:pointer}
+#kh-fmenu .kh-ok{background:linear-gradient(135deg,#7b68ee,#5f4bc4);color:#fff}
+#kh-fmenu .kh-ok:hover{filter:brightness(1.08)}
+#kh-fmenu .kh-cl{background:var(--bg4);color:var(--mu);border:1px solid var(--brd1)}
+#kh-fmenu .kh-cl:hover{color:var(--tx)}
+</style>
+<script>
+(function(){
+  'use strict';
+  // One shared menu element for every table
+  var _menu = null;
+  function ensureMenu(){
+    if (_menu) return _menu;
+    _menu = document.createElement('div');
+    _menu.id = 'kh-fmenu';
+    document.body.appendChild(_menu);
+    document.addEventListener('click', function(e){
+      if (!_menu || _menu.style.display==='none') return;
+      if (_menu.contains(e.target)) return;
+      if (e.target.closest('.kh-th')) return;
+      _menu.style.display='none';
+    });
+    return _menu;
+  }
+  function pos(anchor){
+    var r = anchor.getBoundingClientRect();
+    _menu.style.top = (r.bottom + 4) + 'px';
+    var left = r.left, mw = 260;
+    if (left + mw > window.innerWidth - 10) left = window.innerWidth - mw - 10;
+    if (left < 10) left = 10;
+    _menu.style.left = left + 'px';
+  }
+
+  // Per-namespace state
+  var _ns = {};  // { nsName: { opts, sortKey, sortDir, fv:{col:[vals]} } }
+
+  function getState(ns){ return _ns[ns] || (_ns[ns] = { fv:{} }); }
+
+  function colValue(opts, row, col){
+    var def = opts.columns.find(function(c){ return c.key===col; });
+    if (def && typeof def.value === 'function') return def.value(row);
+    return row[col];
+  }
+  function colLabel(opts, row, col){
+    var def = opts.columns.find(function(c){ return c.key===col; });
+    if (def && typeof def.label_of === 'function') return def.label_of(row);
+    var v = colValue(opts, row, col);
+    if (v==null || v==='') return opts.labels && opts.labels.blank || '(blank)';
+    return String(v);
+  }
+
+  function escq(s){ return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+  function apply(ns, rows){
+    var st = getState(ns); var opts = st.opts; if (!opts) return rows;
+    // Per-column filters
+    for (var col in st.fv) {
+      var sel = st.fv[col]; if (!sel || !sel.length) continue;
+      if (sel.length===1 && sel[0]==='__none__') { rows = []; break; }
+      var set = new Set(sel.map(String));
+      rows = rows.filter(function(r){
+        var v = colValue(opts, r, col);
+        var k = (v==null||v==='') ? '__blank__' : String(v);
+        return set.has(k);
+      });
+    }
+    // Sort
+    if (st.sortKey) {
+      var def = opts.columns.find(function(c){ return c.key===st.sortKey; });
+      var isNum = def && def.numeric;
+      rows = rows.slice().sort(function(a,b){
+        var va = colValue(opts, a, st.sortKey), vb = colValue(opts, b, st.sortKey);
+        var d;
+        if (isNum || (typeof va==='number' && typeof vb==='number')) d = (+va||0) - (+vb||0);
+        else d = String(va==null?'':va).toLowerCase().localeCompare(String(vb==null?'':vb).toLowerCase(), undefined, {numeric:true});
+        return st.sortDir==='asc' ? d : -d;
+      });
+    }
+    return rows;
+  }
+
+  function hasActive(ns){
+    var st = getState(ns);
+    for (var k in st.fv) if (st.fv[k] && st.fv[k].length) return true;
+    return !(st.sortKey===st.opts.sortKey && st.sortDir===st.opts.sortDir);
+  }
+
+  function renderThead(ns){
+    var st = getState(ns); var opts = st.opts; if (!opts || !opts.thead) return;
+    var html = opts.columns.map(function(c){
+      if (!c.sortable && !c.filterable) {
+        return '<th>'+(c.label||'')+'</th>';
+      }
+      var sorted  = st.sortKey===c.key;
+      var filtered= !!(st.fv[c.key] && st.fv[c.key].length);
+      var arrow   = sorted ? (st.sortDir==='asc'?'▲':'▼') : '';
+      var funnel  = filtered ? '🔽' : (c.filterable ? '▾' : '');
+      return '<th class="kh-th'+(sorted?' srt':'')+(filtered?' flt':'')+'" '
+        + 'data-kh-ns="'+escq(ns)+'" data-kh-col="'+escq(c.key)+'" data-kh-flt="'+(c.filterable?1:0)+'" '
+        + 'title="فرز وتصفية — Sort &amp; filter">'
+        + '<span>'+(c.label||'')+'</span>'
+        + (arrow?' <span class="kh-ar">'+arrow+'</span>':'')
+        + (funnel?' <span class="kh-fn">'+funnel+'</span>':'')
+        + '</th>';
+    }).join('');
+    opts.thead.innerHTML = html;
+    // Attach click handlers via delegation on first install
+    if (!opts.thead._khWired) {
+      opts.thead._khWired = true;
+      opts.thead.addEventListener('click', function(ev){
+        var th = ev.target.closest('.kh-th'); if (!th) return;
+        openMenu(th);
+      });
+    }
+  }
+
+  function openMenu(th){
+    var ns = th.getAttribute('data-kh-ns');
+    var col = th.getAttribute('data-kh-col');
+    var filterable = th.getAttribute('data-kh-flt')==='1';
+    ensureMenu();
+    var st = getState(ns); var opts = st.opts; if (!opts) return;
+
+    // Build pool from source EXCEPT this column's own filter
+    var _save = st.fv[col]; delete st.fv[col];
+    var pool = apply(ns, (opts.source && opts.source()) || []);
+    if (_save) st.fv[col] = _save;
+
+    var seen = {}, items = [];
+    pool.forEach(function(r){
+      var v = colValue(opts, r, col);
+      var key = (v==null||v==='') ? '__blank__' : String(v);
+      if (seen[key]) return; seen[key]=1;
+      items.push({ v:key, label: colLabel(opts, r, col) });
+    });
+    items.sort(function(a,b){ return String(a.label).localeCompare(String(b.label), undefined, {numeric:true}); });
+
+    var sel = st.fv[col] ? new Set(st.fv[col].map(String)) : null;
+    var work = new Set();
+    items.forEach(function(it){ if (!sel || sel.has(String(it.v))) work.add(String(it.v)); });
+
+    var lab = opts.labels || {};
+    var h = '<div class="kh-srt">'
+          + '<button type="button" data-kh-act="sort-asc">▲ '+(lab.asc||'Asc')+'</button>'
+          + '<button type="button" data-kh-act="sort-desc">▼ '+(lab.desc||'Desc')+'</button></div>';
+    if (filterable) {
+      h += '<input class="kh-srch form-control" placeholder="'+(lab.search||'Search')+'">'
+        + '<label class="kh-it kh-all"><input type="checkbox" class="kh-allck"> <b>'+(lab.all||'Select all')+'</b> <span class="kh-cnt" style="color:var(--mu);font-weight:600"></span></label>'
+        + '<div class="kh-list"></div>'
+        + '<div class="kh-act">'
+        +   '<button class="kh-ok" type="button" data-kh-act="apply">'+(lab.apply||'Apply')+'</button>'
+        +   '<button class="kh-cl" type="button" data-kh-act="clear">'+(lab.clear||'Clear')+'</button>'
+        + '</div>';
+    }
+    _menu.innerHTML = h;
+    _menu._ctx = { ns:ns, col:col, items:items, work:work, search:'' };
+    renderList();
+    _menu.style.display = 'block';
+    pos(th);
+    wireMenu();
+  }
+
+  function renderList(){
+    var ctx = _menu._ctx; if (!ctx) return;
+    var lst = _menu.querySelector('.kh-list'); if (!lst) return;
+    var s = ctx.search.toLowerCase();
+    var list = ctx.items.filter(function(it){ return !s || String(it.label).toLowerCase().indexOf(s)>=0; });
+    var cap = 800, shown = list.slice(0, cap);
+    lst.innerHTML = shown.map(function(it){
+      var v = String(it.v);
+      return '<label class="kh-it"><input type="checkbox" '+(ctx.work.has(v)?'checked':'')
+        +' data-kh-v="'+escq(v)+'"> <span>'+escq(it.label)+'</span></label>';
+    }).join('') || ('<div style="padding:10px;color:var(--mu);text-align:center">—</div>');
+    if (list.length > cap) lst.innerHTML += '<div class="kh-note">+'+(list.length-cap)+' …</div>';
+    updateCnt();
+  }
+  function updateCnt(){
+    var ctx = _menu._ctx; if (!ctx) return;
+    var cnt = _menu.querySelector('.kh-cnt'); if (cnt) cnt.textContent = '('+ctx.work.size+'/'+ctx.items.length+')';
+    var a = _menu.querySelector('.kh-allck'); if (a) a.checked = (ctx.items.length>0 && ctx.work.size===ctx.items.length);
+  }
+  function wireMenu(){
+    var ctx = _menu._ctx; if (!ctx) return;
+    _menu.querySelectorAll('[data-kh-act]').forEach(function(b){
+      b.onclick = function(){
+        var act = b.getAttribute('data-kh-act');
+        var st = getState(ctx.ns);
+        if (act==='sort-asc' || act==='sort-desc') {
+          st.sortKey = ctx.col; st.sortDir = act==='sort-asc' ? 'asc' : 'desc';
+        } else if (act==='apply') {
+          if (ctx.work.size === ctx.items.length)      { delete st.fv[ctx.col]; }
+          else if (ctx.work.size === 0)                { st.fv[ctx.col] = ['__none__']; }
+          else                                         { st.fv[ctx.col] = Array.from(ctx.work); }
+        } else if (act==='clear') {
+          delete st.fv[ctx.col];
+        }
+        _menu.style.display = 'none';
+        renderThead(ctx.ns);
+        if (st.opts && typeof st.opts.onRender === 'function') st.opts.onRender();
+      };
+    });
+    var sr = _menu.querySelector('.kh-srch'); if (sr) sr.oninput = function(){ ctx.search = sr.value; renderList(); };
+    var a = _menu.querySelector('.kh-allck'); if (a) a.onchange = function(){
+      ctx.work = a.checked ? new Set(ctx.items.map(function(i){return String(i.v);})) : new Set(); renderList();
+    };
+    _menu.addEventListener('change', function(ev){
+      var cb = ev.target.closest('[data-kh-v]'); if (!cb) return;
+      var v = cb.getAttribute('data-kh-v');
+      if (cb.checked) ctx.work.add(v); else ctx.work['delete'](v);
+      updateCnt();
+    });
+  }
+
+  window.KhFilter = {
+    enable: function(opts){
+      var st = getState(opts.ns || 'default');
+      st.opts = opts;
+      st.sortKey = opts.sortKey || null;
+      st.sortDir = opts.sortDir || 'desc';
+      st.fv = st.fv || {};
+      renderThead(opts.ns || 'default');
+    },
+    render: renderThead,
+    apply: apply,
+    clearAll: function(ns){
+      var st = getState(ns); st.fv = {};
+      if (st.opts) {
+        st.sortKey = st.opts.sortKey || null; st.sortDir = st.opts.sortDir || 'desc';
+        renderThead(ns);
+        if (typeof st.opts.onRender === 'function') st.opts.onRender();
+      }
+    },
+    hasActive: hasActive,
+  };
+})();
+</script>
+
 {{-- ══ Forced first-login password change ══ --}}
 <div id="fpwd-overlay" style="display:none;position:fixed;inset:0;background:rgba(5,12,22,.82);backdrop-filter:blur(4px);z-index:99999;align-items:center;justify-content:center;padding:16px">
   <div style="background:var(--bg3);border:1px solid var(--brd1);border-radius:18px;max-width:440px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
