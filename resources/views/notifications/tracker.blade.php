@@ -16,7 +16,7 @@
 .nt-panel{background:var(--card-bg);border:1px solid var(--card-brd);border-radius:14px;padding:16px;margin-bottom:16px;overflow:hidden}
 .nt-pt{font-size:13px;font-weight:800;color:var(--m2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
 .nt-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
-.nt-tbl thead th{background:var(--bg3);padding:10px 11px;font-size:10px;text-transform:uppercase;color:var(--m2);font-weight:800;text-align:right;white-space:nowrap;border-bottom:2px solid var(--pri);position:sticky;top:0;z-index:2}
+.nt-tbl thead th{background:var(--bg3);padding:10px 11px;font-size:10px;text-transform:uppercase;color:var(--m2);font-weight:800;text-align:right;white-space:nowrap;border-bottom:2px solid var(--pri)}
 .nt-tbl tbody td{padding:9px 11px;border-bottom:1px solid var(--brd1);white-space:nowrap}
 .nt-tbl tbody tr:hover td{background:rgba(26,173,186,.06)}
 .nt-bar2{height:8px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden;min-width:70px}
@@ -110,44 +110,15 @@
         '<td>'+(b.avg_read_min==null?'<span class="nt-mu">—</span>':(b.avg_read_min+' '+t('min')))+'</td></tr>';
     }).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:24px">'+t('none')+'</td></tr>';
 
-    // Recent log — Excel-style filterable via KhFilter
-    _recent = r.recent || [];
-    enableRecentFilter();
-    renderRecent();
-  }
-
-  var _recent = [];
-  function recentTs(x){ return x ? new Date(String(x).replace(' ','T')).getTime() : 0; }
-  function enableRecentFilter(){
-    if (!window.KhFilter) return;
-    window.KhFilter.enable({
-      ns: 'nt-recent',
-      thead: document.getElementById('nt-rh'),
-      source: function(){ return _recent; },
-      onRender: renderRecent,
-      sortKey: 'created_at', sortDir: 'desc',
-      labels: {asc:(L()==='en'?'Ascending':'تصاعدي'), desc:(L()==='en'?'Descending':'تنازلي'), apply:(L()==='en'?'Apply':'تطبيق'), clear:(L()==='en'?'Clear':'مسح'), search:(L()==='en'?'Search…':'بحث…'), all:(L()==='en'?'Select all':'تحديد الكل'), blank:(L()==='en'?'(blank)':'(فارغ)')},
-      columns: [
-        {key:'account_number', label:t('ac'),      sortable:true, filterable:true},
-        {key:'branch',         label:t('branch'),  sortable:true, filterable:true, value:function(r){return r.branch||'';}, label_of:function(r){return r.branch||'—';}},
-        {key:'manager',        label:t('mgr'),     sortable:true, filterable:true, value:function(r){return r.manager||'';}, label_of:function(r){return r.manager||'—';}},
-        {key:'created_at',     label:t('created'), sortable:true, filterable:false, value:function(r){return recentTs(r.created_at);}, numeric:true},
-        {key:'delivered_at',   label:t('deliv'),   sortable:true, filterable:false, value:function(r){return recentTs(r.delivered_at);}, numeric:true},
-        {key:'read_at',        label:t('readc'),   sortable:true, filterable:false, value:function(r){return recentTs(r.read_at);}, numeric:true},
-        {key:'acted_at',       label:t('act'),     sortable:true, filterable:false, value:function(r){return recentTs(r.acted_at);}, numeric:true},
-        {key:'resp',           label:t('resp'),    sortable:true, filterable:false, value:function(r){var m=mins(r.created_at,r.read_at); return m==null?-1:m;}, numeric:true},
-      ],
-    });
-  }
-  function renderRecent(){
-    var rc = window.KhFilter ? window.KhFilter.apply('nt-recent', _recent) : _recent;
-    document.getElementById('nt-rb').innerHTML = rc.length ? rc.map(function(n){
-      var resp = mins(n.created_at, n.read_at);
+    document.getElementById('nt-rh').innerHTML='<th>'+t('ac')+'</th><th>'+t('branch')+'</th><th>'+t('mgr')+'</th><th>'+t('created')+'</th><th>'+t('deliv')+'</th><th>'+t('readc')+'</th><th>'+t('act')+'</th><th>'+t('resp')+'</th>';
+    var rc=r.recent||[];
+    document.getElementById('nt-rb').innerHTML=rc.length?rc.map(function(n){
+      var resp=mins(n.created_at,n.read_at);
       return '<tr><td class="mono" style="font-weight:800;color:var(--pri2)">'+E(n.account_number)+'</td><td>'+E(n.branch||'—')+'</td><td>'+E(n.manager||'—')+'</td>'+
         '<td class="nt-mu">'+dt(n.created_at)+'</td><td>'+dt(n.delivered_at)+'</td><td>'+(n.read_at?'<span class="nt-ok">'+dt(n.read_at)+'</span>':'<span class="nt-no">'+t('no')+'</span>')+'</td>'+
         '<td>'+(n.acted_at?'<span style="color:#7b68ee">'+dt(n.acted_at)+'</span>':'<span class="nt-mu">'+t('no')+'</span>')+'</td>'+
         '<td>'+(resp==null?'<span class="nt-mu">—</span>':('<b>'+resp+'</b> '+t('min')))+'</td></tr>';
-    }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:24px">'+t('none')+'</td></tr>';
+    }).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:24px">'+t('none')+'</td></tr>';
   }
 
   applyLang();ntLoad();

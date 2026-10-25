@@ -96,15 +96,10 @@ class TestSystemWorkflow extends Command
                 $this->info("🧹 Removed {$n} test records.");
             }
 
-            // ── Optional: trigger test:cc-batch via commit-message flags ──
-            //   +batch<N>     — create N persistent CC cards after the regression test
-            //   +clean-batch  — remove any existing [CC-BATCH]-tagged cards
+            // ── Optional: run test:cc-batch for persistent batch if commit message asks ──
+            // Commit message like "[CLAUDE-WFTEST] +batch80" triggers 80 persistent CC cards.
             try {
                 $msg = @shell_exec('cd ' . escapeshellarg(base_path()) . ' && git log -1 --pretty=%s 2>/dev/null') ?: '';
-                if (preg_match('/\+clean-?batch/', $msg)) {
-                    $this->section('BONUS: cleaning up [CC-BATCH] records (+clean-batch flag)');
-                    Artisan::call('test:cc-batch', ['--cleanup' => true], $this->output);
-                }
                 if (preg_match('/\+batch(\d+)?/', $msg, $m)) {
                     $count = (int) ($m[1] ?? 80);
                     if ($count < 6) $count = 80;
