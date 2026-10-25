@@ -96,6 +96,20 @@ class TestSystemWorkflow extends Command
                 $this->info("🧹 Removed {$n} test records.");
             }
 
+            // ── Optional: run test:cc-batch for persistent batch if commit message asks ──
+            // Commit message like "[CLAUDE-WFTEST] +batch80" triggers 80 persistent CC cards.
+            try {
+                $msg = @shell_exec('cd ' . escapeshellarg(base_path()) . ' && git log -1 --pretty=%s 2>/dev/null') ?: '';
+                if (preg_match('/\+batch(\d+)?/', $msg, $m)) {
+                    $count = (int) ($m[1] ?? 80);
+                    if ($count < 6) $count = 80;
+                    $this->section('BONUS: creating persistent CC batch (' . $count . ' cards) for visual inspection');
+                    Artisan::call('test:cc-batch', ['--count' => $count], $this->output);
+                }
+            } catch (Throwable $e) {
+                $this->warn('Bonus batch skipped: ' . $e->getMessage());
+            }
+
             $this->printSummary();
             return count($this->errors) ? 2 : 0;
 

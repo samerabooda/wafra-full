@@ -72,11 +72,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 .sb-logo{
   width:82px;height:82px;border-radius:18px;
-  background:white;padding:4px;object-fit:contain;
-  box-shadow:0 6px 24px rgba(26,173,186,.55),0 3px 10px rgba(0,0,0,.4);
-  transition:transform .2s,box-shadow .2s;display:block;
+  background:transparent;padding:0;object-fit:contain;
+  filter:drop-shadow(0 6px 20px rgba(26,173,186,.45)) drop-shadow(0 3px 10px rgba(0,0,0,.4));
+  transition:transform .2s,filter .2s;display:block;
 }
-.sb-logo:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(26,173,186,.7),0 4px 14px rgba(0,0,0,.45)}
+.sb-logo:hover{transform:scale(1.05);filter:drop-shadow(0 8px 28px rgba(26,173,186,.6)) drop-shadow(0 4px 14px rgba(0,0,0,.45))}
 .sb-brand{font-size:14px;font-weight:800;color:#ffffff;line-height:1.3;text-align:center;letter-spacing:.2px}
 .sb-brand small{display:block;font-size:10.5px;color:rgba(255,255,255,.72);font-weight:500;margin-top:2px}
 .sb-nav{flex:1;padding:8px 9px}
@@ -132,7 +132,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 /* ── Topbar ── */
 .tb-left{display:flex;align-items:center;gap:12px}
-.tb-logo{width:48px;height:48px;border-radius:12px;background:white;padding:3px;object-fit:contain;
+.tb-logo{width:48px;height:48px;border-radius:12px;background:transparent;padding:0;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(26,173,186,.4));
   box-shadow:0 3px 14px rgba(26,173,186,.35),0 1px 5px rgba(0,0,0,.25)}
 .tb-title{font-size:14px;font-weight:800;color:rgba(255,255,255,.95)}
 .tb-sub{font-size:11px;color:rgba(255,255,255,.5)}
@@ -309,7 +309,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .mob-logo-row{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.mob-logo{width:40px;height:40px;object-fit:contain;border-radius:10px;background:white;padding:2px;flex-shrink:0;
+.mob-logo{width:40px;height:40px;object-fit:contain;border-radius:10px;background:transparent;padding:0;flex-shrink:0;filter:drop-shadow(0 3px 10px rgba(26,173,186,.4));
   box-shadow:0 2px 12px rgba(26,173,186,.4),0 1px 4px rgba(0,0,0,.3)}
 .mob-title{font-size:13px;font-weight:800;color:white;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mob-title small{display:block;font-size:9px;color:rgba(255,255,255,.5);font-weight:400}
