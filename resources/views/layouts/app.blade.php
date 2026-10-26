@@ -151,6 +151,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .nb-tt{font-size:12.5px;font-weight:700;line-height:1.4}
 .nb-bd{font-size:11px;color:var(--mu);margin-top:2px;line-height:1.5}
 .nb-tm{font-size:10px;color:var(--m2);margin-top:3px}
+/* Phone-token wrapper — forces country code on the LEFT and digits on the RIGHT inside RTL text.
+   Used by window.fmtMsg() to isolate phone fragments ("📱 +965 12345678") from the surrounding
+   Arabic text so the bidi algorithm doesn't reorder them. */
+.ph-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap}
 .nb-empty{text-align:center;padding:30px 12px;color:var(--mu);font-size:12px}
 .tb-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);
   border:1px solid var(--brd1);border-radius:7px;padding:6px 10px;
@@ -1344,6 +1348,22 @@ const fmtK = n => {
 // Expose globally so per-page scripts (cards search/modified, etc.) can use them.
 try { window.fmt = fmt; window.fmtK = fmtK; window.esc = esc; } catch(e){}
 
+// ── Phone-aware message formatter ──────────────────────────
+// HTML-escapes then wraps phone-shaped tokens (📱 +965 12345678 / +965 12345678)
+// in a dir="ltr" isolate span. Keeps country code on the LEFT, number on the RIGHT
+// even inside Arabic (RTL) text where the browser's bidi algorithm would reorder them.
+function fmtMsg(txt){
+  if (txt == null) return '';
+  var s = esc(txt);
+  // Match optional 📱 + optional whitespace + "+<1-4 digits>" + optional space + "<4+ digits>"
+  // Preserves the surrounding text untouched.
+  return s.replace(/(📱\s*)?(\+\d{1,4}\s*\d{4,})/g, function(_m, emoji, phone){
+    emoji = emoji ? '📱 ' : '';
+    return emoji + '<span class="ph-ltr">' + phone.replace(/\s+/g, ' ').trim() + '</span>';
+  });
+}
+try { window.fmtMsg = fmtMsg; } catch(e){}
+
 // ── Modal helpers ──────────────────────────────────────────
 function openModal(id){ document.getElementById(id)?.classList.add('open'); }
 function closeModal(id){ document.getElementById(id)?.classList.remove('open'); }
@@ -1622,8 +1642,8 @@ setInterval(loadSidebarCardCounts, 60000);
         var unread=!n.read_at, ac=n.account_number||'';
         return '<div class="nb-item'+(unread?' unread':'')+'" onclick="nbOpen('+n.id+','+(n.card_id||'null')+',\''+(n.type||'')+'\')">'+
           '<div class="nb-ic">📞</div><div style="flex:1;min-width:0">'+
-          '<div class="nb-tt">'+(esc?esc(n.title||''):n.title)+'</div>'+
-          (n.body?'<div class="nb-bd">'+(esc?esc(n.body):n.body)+'</div>':'')+
+          '<div class="nb-tt">'+fmtMsg(n.title||'')+'</div>'+
+          (n.body?'<div class="nb-bd">'+fmtMsg(n.body)+'</div>':'')+
           '<div class="nb-tm">'+tlt(n.created_at)+(unread?' • <span style="color:#f5a623">'+(en?'new':'جديد')+'</span>':'')+'</div>'+
           '</div></div>';
       }).join(''); }
