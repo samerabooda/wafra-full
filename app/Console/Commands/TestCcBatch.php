@@ -356,12 +356,24 @@ class TestCcBatch extends Command
             $n += DB::table('commission_cards')->whereIn('id', $ids)->delete();
         }
 
-        // Also remove the temp CC manager if it exists
+        // Also remove the temp CC manager if it exists — all FK-referencing
+        // rows must go FIRST (cc_notifications.sent_by/responded_by are NOT NULL
+        // foreign keys on users, so deleting the user without clearing them crashes).
         $temp = User::where('email', 'wftest-cc-mgr@wafragulf.test')->first();
         if ($temp) {
+            // CcNotification references user via sent_by + responded_by
+            $n += DB::table('cc_notifications')->where('sent_by', $temp->id)->delete();
+            $n += DB::table('cc_notifications')->where('responded_by', $temp->id)->delete();
+            // CcFollowup references via user_id
+            $n += DB::table('cc_followups')->where('user_id', $temp->id)->delete();
+            // ManagerNotification — both directions
             $n += DB::table('manager_notifications')->where('to_user_id', $temp->id)->delete();
             $n += DB::table('manager_notifications')->where('from_user_id', $temp->id)->delete();
+            // CommissionCard created_by (any orphans we missed via marker)
+            $n += DB::table('commission_cards')->where('created_by', $temp->id)->delete();
+            // Activity log
             $n += DB::table('activity_logs')->where('user_id', $temp->id)->delete();
+            // Finally delete the user
             $n += DB::table('users')->where('id', $temp->id)->delete();
         }
 

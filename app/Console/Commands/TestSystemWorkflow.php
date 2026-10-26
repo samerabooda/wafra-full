@@ -769,11 +769,17 @@ class TestSystemWorkflow extends Command
             $n += DB::table('commission_cards')->whereIn('id', $wfIds)->delete();
         }
 
-        // Delete temp CC manager user (and its notifications), if present
+        // Delete temp CC manager user (and all its FK-referencing rows), if present.
+        // Order matters — cc_notifications.sent_by / responded_by are NOT NULL
+        // foreign keys to users, so the user delete must come LAST.
         $tempUser = User::where('email', 'wftest-cc-mgr@wafragulf.test')->first();
         if ($tempUser) {
+            $n += DB::table('cc_notifications')->where('sent_by', $tempUser->id)->delete();
+            $n += DB::table('cc_notifications')->where('responded_by', $tempUser->id)->delete();
+            $n += DB::table('cc_followups')->where('user_id', $tempUser->id)->delete();
             $n += DB::table('manager_notifications')->where('to_user_id', $tempUser->id)->delete();
             $n += DB::table('manager_notifications')->where('from_user_id', $tempUser->id)->delete();
+            $n += DB::table('commission_cards')->where('created_by', $tempUser->id)->delete();
             $n += DB::table('activity_logs')->where('user_id', $tempUser->id)->delete();
             $n += DB::table('users')->where('id', $tempUser->id)->delete();
         }
