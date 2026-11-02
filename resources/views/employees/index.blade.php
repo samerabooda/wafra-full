@@ -38,7 +38,7 @@
         <option value="" id="emp-opt-all">كل الأدوار</option>
         <option value="broker" id="emp-opt-broker">🏦 بروكر</option>
         <option value="marketing" id="emp-opt-mkt">📢 مسوّق</option>
-        <option value="broker_marketer">🔁 بروكر ومسوّق</option>
+        <option value="broker_marketer" id="emp-opt-bm">🔁 بروكر ومسوّق</option>
         <option value="external" id="emp-opt-ext">🌐 مسوّق خارجي</option>
         <option value="other" id="emp-opt-other">📋 أخرى</option>
       </select>
@@ -119,7 +119,7 @@ const EMP = {
     tbTitle:'الموظفون', topbarAdd:'➕ إضافة موظف',
     panelTitle:'👥 قائمة الموظفين',
     optAll:'كل الأدوار', optBroker:'🏦 بروكر', optMkt:'📢 مسوّق داخلي',
-    optExt:'🌐 مسوّق خارجي', optOther:'📋 أخرى',
+    optBm:'🔁 بروكر ومسوّق', optExt:'🌐 مسوّق خارجي', optOther:'📋 أخرى',
     thName:'الموظف', thBranch:'الفرع', thComm:'الدور', thStatus:'الحالة', thAct:'إجراءات',
     loading:'جاري التحميل...', empty:'لا يوجد موظفون',
     approved:'موظف معتمد', pending:'موظف بانتظار الاعتماد',
@@ -141,7 +141,7 @@ const EMP = {
     tbTitle:'Employees', topbarAdd:'➕ Add Employee',
     panelTitle:'👥 Employees List',
     optAll:'All Roles', optBroker:'🏦 Broker', optMkt:'📢 Internal Marketer',
-    optExt:'🌐 External Marketer', optOther:'📋 Other',
+    optBm:'🔁 Broker + Marketer', optExt:'🌐 External Marketer', optOther:'📋 Other',
     thName:'Employee', thBranch:'Branch', thComm:'Role', thStatus:'Status', thAct:'Actions',
     loading:'Loading...', empty:'No employees found',
     approved:'approved employee', pending:'awaiting approval',
@@ -169,7 +169,7 @@ function empApplyLang() {
     'emp-th-name':'thName', 'emp-th-branch':'thBranch',
     'emp-th-comm':'thComm', 'emp-th-status':'thStatus', 'emp-th-act':'thAct',
     'emp-opt-all':'optAll', 'emp-opt-broker':'optBroker', 'emp-opt-mkt':'optMkt',
-    'emp-opt-ext':'optExt', 'emp-opt-other':'optOther',
+    'emp-opt-bm':'optBm', 'emp-opt-ext':'optExt', 'emp-opt-other':'optOther',
     'ae-modal-title':'modalTitle', 'ae-lbl-name':'lblName', 'ae-lbl-role':'lblRole',
     'ae-lbl-bc':'lblBc', 'ae-lbl-mc':'lblMc',
     'ae-lbl-email':'lblEmail', 'ae-lbl-branch':'lblBranch',

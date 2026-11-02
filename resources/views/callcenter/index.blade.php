@@ -481,7 +481,15 @@ const CCT = {
     acc_newBtn:'➕ كرت جديد',
     acc_tbl_title:'قائمة كروت CC',
     sf_all:'الكل', sf_draft:'📝 مسودة', sf_sent:'📩 أُرسل للفرع',
-    sf_acc:'✅ مقبول', sf_comp:'🏁 مكتمل', sf_rej:'❌ مرفوض',
+    sf_acc:'✅ مقبول', sf_comp:'🏁 مكتمل', sf_rej:'❌ مرفوض', sf_inp:'🔄 قيد المتابعة', sf_dec:'🚫 رفض العميل',
+    nc_ph_ac:'اختياري — 6 أرقام', nc_ph_parent:'رقم الحساب الأساسي', nc_ph_source:'اكتب المصدر',
+    nc_lbl_phone:'📱 رقم هاتف العميل * <span style="font-size:10px;color:#dc3545">(الحقل الأساسي)</span>',
+    nc_err_phone:'رقم هاتف العميل إلزامي',
+    nc_err_ac_digits:'رقم الحساب يجب أن يتكوّن من 6 أرقام بالضبط',
+    nc_err_parent:'رقم الحساب الأساسي يجب أن يتكوّن من 6 أرقام بالضبط',
+    nc_err_cc_cap:'عمولة موظف مركز الاتصال + المديرة يجب ألا تتجاوز الحد المسموح',
+    err_card_missing:'الكرت غير موجود',
+    err_delete:'فشل الحذف',
     th_id:'رقم الكرت', th_acnum:'رقم الحساب', th_phone:'📱 هاتف العميل', th_month:'الشهر',
     th_mgr:'مديرة CC', th_mgr_c:'عمولة المديرة', th_agent:'موظف CC', th_agent_c:'عمولة الموظف',
     th_branch:'الفرع المستهدف', th_dep:'الإيداع المتوقع',
@@ -548,7 +556,15 @@ const CCT = {
     acc_newBtn:'➕ New Card',
     acc_tbl_title:'CC Cards List',
     sf_all:'All', sf_draft:'📝 Draft', sf_sent:'📩 Sent to Branch',
-    sf_acc:'✅ Accepted', sf_comp:'🏁 Completed', sf_rej:'❌ Rejected',
+    sf_acc:'✅ Accepted', sf_comp:'🏁 Completed', sf_rej:'❌ Rejected', sf_inp:'🔄 In Follow-up', sf_dec:'🚫 Client Declined',
+    nc_ph_ac:'Optional — 6 digits', nc_ph_parent:'Parent account number', nc_ph_source:'Type the source',
+    nc_lbl_phone:'📱 Client Phone Number * <span style="font-size:10px;color:#dc3545">(Primary field)</span>',
+    nc_err_phone:'Client phone number is required',
+    nc_err_ac_digits:'Account number must be exactly 6 digits',
+    nc_err_parent:'Parent account number must be exactly 6 digits',
+    nc_err_cc_cap:'CC agent + manager commissions must not exceed the cap',
+    err_card_missing:'Card not found',
+    err_delete:'Delete failed',
     th_id:'Card #', th_acnum:'Account #', th_phone:'📱 Client Phone', th_month:'Month',
     th_mgr:'CC Manager', th_mgr_c:'Mgr Comm.', th_agent:'CC Agent', th_agent_c:'Agent Comm.',
     th_branch:'Target Branch', th_dep:'Expected Deposit',
@@ -662,6 +678,10 @@ function ccApplyLang() {
   _t('nc-lbl-accstatus', cc('nc_accstatus')); _t('nc-lbl-trading', cc('nc_trading'));
   _t('nc-lbl-notes', cc('nc_notes'));
   const nn = document.getElementById('nc-notes'); if(nn) nn.placeholder = cc('nc_ph_notes');
+  const _ncPhone = document.getElementById('nc-lbl-phone'); if(_ncPhone) _ncPhone.innerHTML = cc('nc_lbl_phone');
+  const _nAc = document.getElementById('nc-ac'); if(_nAc) _nAc.placeholder = cc('nc_ph_ac');
+  const _nParent = document.getElementById('nc-parent'); if(_nParent) _nParent.placeholder = cc('nc_ph_parent');
+  const _nSrcOth = document.getElementById('nc-source-other'); if(_nSrcOth) _nSrcOth.placeholder = cc('nc_ph_source');
   _t('nc-cancel-btn', cc('nc_cancel')); _t('nc-save-btn', cc('nc_save'));
   _t('cc-topbar-new-btn', cc('topbar_btn'));
 
@@ -738,8 +758,8 @@ const CC_STATUS_COLORS = {
 function ccStatusChip(s) {
   const labels = {
     cc_pending:cc('sf_draft'), branch_pending:cc('sf_sent'),
-    accepted:cc('sf_acc'), in_progress:'🔄 قيد المتابعة', completed:cc('sf_comp'),
-    rejected:cc('sf_rej'), declined:'🚫 رفض العميل',
+    accepted:cc('sf_acc'), in_progress:cc('sf_inp'), completed:cc('sf_comp'),
+    rejected:cc('sf_rej'), declined:cc('sf_dec'),
   };
   return `<span class="cc-chip ${s}">${labels[s]||s}</span>`;
 }
@@ -751,13 +771,13 @@ function buildFilterChips() {
     {v:'',   lk:'sf_all'},
     {v:'cc_pending', lk:'sf_draft'},
     {v:'branch_pending', lk:'sf_sent'},
-    {v:'in_progress', t:'🔄 قيد المتابعة'},
+    {v:'in_progress', lk:'sf_inp'},
     {v:'completed', lk:'sf_comp'},
     {v:'rejected', lk:'sf_rej'},
-    {v:'declined', t:'🚫 رفض العميل'},
+    {v:'declined', lk:'sf_dec'},
   ];
   wrap.innerHTML = chips.map(ch =>
-    `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${ch.t || cc(ch.lk)}</button>`
+    `<button class="cc-sf${_ccFilter===ch.v?' on':''}" onclick="setFilter('${ch.v}')">${cc(ch.lk)}</button>`
   ).join('');
 }
 function setFilter(v) { _ccFilter = v; buildFilterChips(); ccRenderAccounts(); }
@@ -790,8 +810,8 @@ function ccRowLabel(c, col){
   if (col === 'cc_status') {
     const map = {
       cc_pending:cc('sf_draft'), branch_pending:cc('sf_sent'), accepted:cc('sf_acc'),
-      in_progress:'🔄 قيد المتابعة', completed:cc('sf_comp'), rejected:cc('sf_rej'),
-      declined:'🚫 رفض العميل',
+      in_progress:cc('sf_inp'), completed:cc('sf_comp'), rejected:cc('sf_rej'),
+      declined:cc('sf_dec'),
     };
     return map[v] || v || cc('kfm_blank');
   }
@@ -1344,7 +1364,7 @@ async function createCard() {
   errEl.classList.remove('show');
   // Phone is now the PRIMARY required field — the lead is identified by it. Account is optional.
   if (!phone) {
-    errEl.textContent = '⚠️ رقم هاتف العميل إلزامي — هو أساس بناء الكرت.';
+    errEl.textContent = '⚠️ ' + cc('nc_err_phone');
     errEl.classList.add('show'); return;
   }
   if (!monthV || !branch || !agent) {
@@ -1352,20 +1372,20 @@ async function createCard() {
     errEl.classList.add('show'); return;
   }
   if (ac && !/^\d{6}$/.test(ac)) {
-    errEl.textContent = '⚠️ رقم الحساب يجب أن يتكوّن من 6 أرقام بالضبط (أو اتركه فارغًا).';
+    errEl.textContent = '⚠️ ' + cc('nc_err_ac_digits');
     errEl.classList.add('show'); return;
   }
   const kind = document.getElementById('nc-kind').value;
   const parent = (document.getElementById('nc-parent').value||'').replace(/[^0-9]/g,'');
   if (kind === 'sub' && !/^\d{6}$/.test(parent)) {
-    errEl.textContent = 'رقم الحساب الأساسي يجب أن يتكوّن من 6 أرقام بالضبط.';
+    errEl.textContent = cc('nc_err_parent');
     errEl.classList.add('show'); return;
   }
   // CC team cap: agent + manager commission ≤ $2
   const ccAgentC = parseFloat(document.getElementById('nc-agent-comm').value)||0;
   const ccMgrC   = parseFloat(document.getElementById('nc-mgr-comm').value)||0;
   if (ccAgentC + ccMgrC > 2.0001) {
-    errEl.textContent = '⛔ عمولة موظف مركز الاتصال + المديرة ('+(ccAgentC+ccMgrC).toFixed(2)+'$) تتجاوز الحد المسموح (2$).';
+    errEl.textContent = '⛔ ' + cc('nc_err_cc_cap') + ' ('+(ccAgentC+ccMgrC).toFixed(2)+'$ > 2$).';
     errEl.classList.add('show'); return;
   }
   // Client source: when "Other" is chosen, use the free-text value the user typed.
@@ -1434,7 +1454,7 @@ function openCcNew(){
 }
 function openCcEdit(id){
   const c = (_ccAllCards||[]).find(x=>x.id===id);
-  if(!c){ ccShowAlert('err','الكرت غير موجود'); return; }
+  if(!c){ ccShowAlert('err', cc('err_card_missing')); return; }
   window._ccEditId = id;
   const setV=(eid,val)=>{const el=document.getElementById(eid); if(el) el.value=(val==null?'':val);};
   setV('nc-ac', c.account_number); setV('nc-kind', c.account_kind||'new');
@@ -1466,7 +1486,7 @@ async function ccConfirmDelete(){
   if(!pass){ err.textContent='⚠️ أدخل كلمة المرور / Enter password'; err.classList.add('show'); return; }
   const r=await api('POST', `/cc/cards/${window._ccDelId}/delete-secure`, {password:pass});
   if(r&&r.success){ closeModal('modal-cc-delete'); ccShowAlert('ok','✅ '+r.message); window._ccDelId=null; await ccLoadAll(); }
-  else { err.textContent='❌ '+((r&&r.message)||'فشل الحذف'); err.classList.add('show'); }
+  else { err.textContent='❌ '+((r&&r.message)||cc('err_delete')); err.classList.add('show'); }
 }
 // One "new card" icon only: hide the global top-bar card buttons + the body duplicate on this screen.
 /* ─── Full country dialing-code list (flags derived from the 2-letter code) ─── */

@@ -123,7 +123,7 @@
   <div class="k-top">
     <div style="flex:1"></div>
     <span class="k-badge" id="k-scope"></span>
-    <button class="btn btn-ghost btn-sm" onclick="kClear()" title="مسح كل الفلاتر" style="border-color:rgba(239,68,68,.3);color:#ef4444">✕ مسح الفلاتر</button>
+    <button class="btn btn-ghost btn-sm" onclick="kClear()" title="مسح كل الفلاتر / Clear all filters" style="border-color:rgba(239,68,68,.3);color:#ef4444">✕ <span id="k-clear-l">مسح الفلاتر</span></button>
     <button class="btn btn-ghost btn-sm" onclick="kExcel()" style="border-color:rgba(34,201,122,.3);color:#22c97a">📗 Excel</button>
     <a href="{{ route('cards.create') }}" class="k-new">➕ <span id="k-n-new">كرت جديد</span></a>
   </div>
@@ -171,7 +171,7 @@ window.addEventListener('error', function(ev){
       total:'إجمالي الكروت',knew:'جديد',ksub:'فرعي',kmod:'معدّلة',kcc:'من CC',kdep:'إجمالي الإيداع',
       flSrch:'بحث',flMonth:'الشهر',flBroker:'البروكر',flKind:'النوع',flStatus:'الحالة',flSource:'المصدر',
       oM:'كل الشهور',oB:'كل البروكرات',oK:'الكل',oKn:'🟢 جديد',oKs:'🔵 فرعي',oS:'الكل',oSa:'عادي',oSm:'معدّل',oSn:'مضاف',oSr:'الكل',oRg:'عادي',oCc:'📞 CC',
-      clear:'مسح',search:'رقم حساب / بروكر / مسوّق...',
+      clear:'مسح الفلاتر',search:'رقم حساب / بروكر / مسوّق...',
       thAc:'الحساب',thMonth:'شهر الفتح',thBranch:'الفرع',thBroker:'البروكر',thBC:'ع.بروكر',thMk:'المسوّق',thMC:'ع.مسوّق',thMk1:'المسوّق 1',thMC1:'ع.مسوّق1',thMk2:'المسوّق 2',thMC2:'ع.مسوّق2',thRef:'الإحالة',thRefC:'ع.إحالة',thTot:'إجمالي ع.',thDep:'إيداع أولي',thMon:'إيداع شهري',thKind:'النوع',thStatus:'الحالة',thSrc:'المصدر',
       cNew:'🟢 جديد',cSub:'🔵 فرعي',paLbl:'الحساب الأساسي:',paNone:'لا يوجد حساب أساسي مذكور',sMod:'✏️ معدّل',sNew:'🆕 مضاف',sAct:'✅ عادي',reg:'عادي',cc:'📞 CC',
       showing:'{n} من {t}',empty:'لا توجد كروت مطابقة',err:'تعذّر تحميل البيانات',retry:'إعادة',
@@ -180,7 +180,7 @@ window.addEventListener('error', function(ev){
       total:'Total Cards',knew:'New',ksub:'Sub',kmod:'Modified',kcc:'From CC',kdep:'Total Deposit',
       flSrch:'Search',flMonth:'Month',flBroker:'Broker',flKind:'Kind',flStatus:'Status',flSource:'Source',
       oM:'All Months',oB:'All Brokers',oK:'All',oKn:'🟢 New',oKs:'🔵 Sub',oS:'All',oSa:'Active',oSm:'Modified',oSn:'New Added',oSr:'All',oRg:'Regular',oCc:'📞 CC',
-      clear:'Clear',search:'Account # / broker / marketer...',
+      clear:'Clear Filters',search:'Account # / broker / marketer...',
       thAc:'Account',thMonth:'Opening',thBranch:'Branch',thBroker:'Broker',thBC:'B.Comm',thMk:'Marketer',thMC:'M.Comm',thMk1:'Marketer1',thMC1:'M1.Comm',thMk2:'Marketer2',thMC2:'M2.Comm',thRef:'Referral',thRefC:'Ref.Comm',thTot:'Total C.',thDep:'Initial',thMon:'Monthly',thKind:'Kind',thStatus:'Status',thSrc:'Source',
       cNew:'🟢 New',cSub:'🔵 Sub',paLbl:'Main account:',paNone:'No main account listed',sMod:'✏️ Modified',sNew:'🆕 New',sAct:'✅ Active',reg:'Regular',cc:'📞 CC',
       showing:'{n} of {t}',empty:'No matching cards',err:'Failed to load data',retry:'Retry',

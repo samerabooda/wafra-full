@@ -300,6 +300,8 @@ const CRT = {
     lblKind:      'حساب جديد أم فرعي',
     lblParent:    '🔗 رقم حساب العميل الأساسي (Parent AC) *',
     phParent:     'أدخل رقم الحساب الأساسي...',
+    phRefAcc:     'رقم الحساب',
+    phRefName:    'اسم المُحيل',
     hintParent:   '⚠️ هذا الحقل إلزامي عند إنشاء حساب فرعي (Sub)',
     lblBroker:    '🧑‍💼 البروكر *',
     lblBrComm:    'عمولة البروكر',
@@ -343,6 +345,8 @@ const CRT = {
     lblKind:      'New or Sub',
     lblParent:    '🔗 Parent Account Number (Parent AC) *',
     phParent:     'Enter parent account number...',
+    phRefAcc:     'Account number',
+    phRefName:    'Referrer name',
     hintParent:   '⚠️ This field is required for Sub accounts',
     lblBroker:    '🧑‍💼 Broker *',
     lblBrComm:    'Broker Commission',
@@ -413,9 +417,11 @@ function crtApplyLang() {
 
   // Placeholders
   const phMap = {
-    'f-month':    'phMonth',
-    'f-parent-ac':'phParent',
-    'f-notes':    'phNotes',
+    'f-month':         'phMonth',
+    'f-parent-ac':     'phParent',
+    'f-notes':         'phNotes',
+    'f-referral-acc':  'phRefAcc',
+    'f-referral-name': 'phRefName',
   };
   Object.entries(phMap).forEach(([id, key]) => {
     const el = document.getElementById(id);

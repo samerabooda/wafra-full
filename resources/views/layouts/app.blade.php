@@ -155,6 +155,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
    Used by window.fmtMsg() to isolate phone fragments ("📱 +965 12345678") from the surrounding
    Arabic text so the bidi algorithm doesn't reorder them. */
 .ph-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap}
+/* Twin-span bilingual labels — write both languages in the markup; one is hidden by current lang.
+   Used by server-rendered pages (@forelse rows, Blade output) that can't be swapped by JS easily. */
+html[lang="en"] .lang-ar{display:none !important}
+html[lang="ar"] .lang-en{display:none !important}
+html:not([lang]) .lang-en{display:none !important}
 .nb-empty{text-align:center;padding:30px 12px;color:var(--mu);font-size:12px}
 .tb-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);
   border:1px solid var(--brd1);border-radius:7px;padding:6px 10px;
@@ -650,7 +655,7 @@ html{font-size:16px}
 
     <div class="sb-header">
       <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" class="sb-logo" alt="وفرة الخليجية للخدمات المالية"
-           onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
+           onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄 / Refresh">
       {{-- Company name removed: it is already part of the logo (saves vertical space) --}}
     </div>
 
@@ -741,7 +746,7 @@ html{font-size:16px}
         </button>
         @endunless
         <img src="{{ asset('logo.png').'?v='.@filemtime(public_path('logo.png')) }}" class="tb-logo" alt="وفرة الخليجية للخدمات المالية"
-             onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄">
+             onclick="logoRefresh()" style="cursor:pointer" title="تحديث الصفحة 🔄 / Refresh">
         <div>
           <div class="tb-title">@yield('page-title', 'لوحة المتابعة')</div>
           <div class="tb-sub"><span data-i18n="company.short">وفرة الخليجية</span> / <span id="tb-branch" data-i18n="tb.dept">الإدارة المالية</span></div>
@@ -847,6 +852,7 @@ const I18N = {
     'nav.cc.reports':  'تقارير CC',
     'nav.cc.modified': 'الحسابات المعدّلة',
     'nav.cc.monthly':  'إحصائيات شهرية',
+    'nav.cc.followup': 'العملاء قيد المتابعة',
     'nav.sec.reports': '📈 التقارير',
     'nav.reports.main':'التقارير',
     'nav.employees':   'الموظفون',
@@ -944,6 +950,7 @@ const I18N = {
     'nav.cc.reports':  'CC Reports',
     'nav.cc.modified': 'Modified Accounts',
     'nav.cc.monthly':  'Monthly Stats',
+    'nav.cc.followup': 'Clients in Follow-up',
     'nav.sec.reports': '📈 Reports',
     'nav.reports.main':'Reports',
     'nav.employees':   'Employees',
@@ -1214,7 +1221,7 @@ function goBack() {
 // opts.colColors: optional { columnIndex: 'RRGGBB' } to tint specific body columns.
 function wgExportExcel(aoa, filename, sheetName, opts) {
   opts = opts || {};
-  if (!aoa || !aoa.length) { if (window.toast) toast('لا توجد بيانات للتصدير','error'); return; }
+  if (!aoa || !aoa.length) { if (window.toast) toast((typeof curLang!=='undefined'&&curLang==='en')?'No data to export':'لا توجد بيانات للتصدير','error'); return; }
   var ws = XLSX.utils.aoa_to_sheet(aoa);
   var range = XLSX.utils.decode_range(ws['!ref']);
   var headFill = opts.headerColor || '0E7A88';

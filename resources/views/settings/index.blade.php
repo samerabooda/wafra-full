@@ -1248,6 +1248,10 @@ const _stOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
   if (_stOrigApplyLang) _stOrigApplyLang(lang);
   stApplyLang();
+  // Lookup rows have per-key placeholders — swap "عربي" / "English" based on current language
+  var isEn = (stLang()==='en');
+  document.querySelectorAll('input[id^="new-ar-"]').forEach(function(e){ e.placeholder = isEn ? 'Arabic' : 'عربي'; });
+  document.querySelectorAll('input[id^="new-en-"]').forEach(function(e){ e.placeholder = isEn ? 'English' : 'إنجليزي'; });
 };
 
 /* ─── State & cache ──────────────────────────────────────── */

@@ -71,7 +71,7 @@
     <button class="ib-f on" id="ib-f-all"  onclick="ibFilter('')">الكل</button>
     <button class="ib-f"    id="ib-f-in"   onclick="ibFilter('in')">📥 وارد</button>
     <button class="ib-f"    id="ib-f-out"  onclick="ibFilter('out')">📤 صادر</button>
-    <button class="ib-clear" id="ib-clear-filters" onclick="ibkClearAll()" title="مسح كل الفلاتر">↺ <span id="ib-clear-l">مسح الفلاتر</span></button>
+    <button class="ib-clear" id="ib-clear-filters" onclick="ibkClearAll()" title="مسح كل الفلاتر / Clear all filters">↺ <span id="ib-clear-l">مسح الفلاتر</span></button>
     <button class="btn btn-ghost btn-sm" onclick="ibLoad()">🔄 <span id="ib-refresh">تحديث</span></button>
   </div>
 

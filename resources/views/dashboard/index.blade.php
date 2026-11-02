@@ -116,8 +116,8 @@
       <button class="ig-cal-chip" onclick="igCalToggle()" id="ig-cal-chip">📅 <span id="ig-cal-chip-l">اختر الفترة (شهر/سنة)</span></button>
       <div class="ig-cal" id="ig-cal">
         <div class="ig-cal-tabs">
-          <button class="ig-cal-tab on" id="ig-cal-tab-from" onclick="igCalTab('from')">من: <b id="ig-cal-from-v">—</b></button>
-          <button class="ig-cal-tab" id="ig-cal-tab-to" onclick="igCalTab('to')">إلى: <b id="ig-cal-to-v">—</b></button>
+          <button class="ig-cal-tab on" id="ig-cal-tab-from" onclick="igCalTab('from')"><span id="ig-cal-from-lbl">من:</span> <b id="ig-cal-from-v">—</b></button>
+          <button class="ig-cal-tab" id="ig-cal-tab-to" onclick="igCalTab('to')"><span id="ig-cal-to-lbl">إلى:</span> <b id="ig-cal-to-v">—</b></button>
         </div>
         <div class="ig-cal-nav">
           <button type="button" onclick="igCalYear(-1)">‹</button>
@@ -126,8 +126,8 @@
         </div>
         <div class="ig-cal-grid" id="ig-cal-grid"></div>
         <div class="ig-cal-foot">
-          <button class="ig-cal-fbtn" onclick="igCalClear()">مسح</button>
-          <button class="ig-cal-fbtn on" onclick="igCalApply()">تطبيق</button>
+          <button class="ig-cal-fbtn" id="ig-cal-btn-clr" onclick="igCalClear()">مسح</button>
+          <button class="ig-cal-fbtn on" id="ig-cal-btn-ok" onclick="igCalApply()">تطبيق</button>
         </div>
       </div>
     </div>
@@ -137,7 +137,7 @@
   <div id="ig-ol-modal" style="display:none;position:fixed;inset:0;z-index:2147483000;background:rgba(10,12,24,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto">
     <div style="background:var(--bg3,#fff);border:1px solid rgba(224,80,80,.5);border-radius:16px;max-width:880px;width:100%;box-shadow:0 24px 70px rgba(0,0,0,.4)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--brd1)">
-        <div style="font-weight:900;font-size:15px;color:#e05050">⚠️ حسابات تجاوزت سقف العمولة ($7)</div>
+        <div id="ig-ol-title" style="font-weight:900;font-size:15px;color:#e05050">⚠️ حسابات تجاوزت سقف العمولة ($7)</div>
         <button onclick="window.igOlClose()" style="border:none;background:rgba(224,80,80,.14);color:#e05050;width:30px;height:30px;border-radius:9px;font-weight:900;cursor:pointer;font-size:14px">✕</button>
       </div>
       <div id="ig-ol-body" style="padding:14px 18px;max-height:70vh;overflow:auto"></div>
@@ -146,8 +146,8 @@
 
   <div class="ig-nums">
     <div class="ig-num" style="--ac:#1AADBA"><div class="ig-num-ic">👥</div><div class="ig-num-b"><div class="ig-num-v" id="ig-acc">—</div><div class="ig-num-l" id="ig-l-acc">إجمالي الحسابات</div></div></div>
-    <div class="ig-num" style="--ac:#7b68ee"><div class="ig-num-ic">📣</div><div class="ig-num-b"><div class="ig-num-v" id="ig-mkt">—</div><div class="ig-num-l">المسوّقون</div></div></div>
-    <div class="ig-num" style="--ac:#2563EB"><div class="ig-num-ic">🧑‍💼</div><div class="ig-num-b"><div class="ig-num-v" id="ig-brk">—</div><div class="ig-num-l">البروكرز</div></div></div>
+    <div class="ig-num" style="--ac:#7b68ee"><div class="ig-num-ic">📣</div><div class="ig-num-b"><div class="ig-num-v" id="ig-mkt">—</div><div class="ig-num-l" id="ig-l-mkt">المسوّقون</div></div></div>
+    <div class="ig-num" style="--ac:#2563EB"><div class="ig-num-ic">🧑‍💼</div><div class="ig-num-b"><div class="ig-num-v" id="ig-brk">—</div><div class="ig-num-l" id="ig-l-brk">البروكرز</div></div></div>
     <div class="ig-num" style="--ac:#f5a623"><div class="ig-num-ic">📞</div><div class="ig-num-b"><div class="ig-num-v" id="ig-cccomm">—</div><div class="ig-num-l" id="ig-l-cccomm">عمولات مركز الاتصال</div></div></div>
     <div class="ig-num" style="--ac:#22c97a"><div class="ig-num-ic">🎯</div><div class="ig-num-b"><div class="ig-num-v" id="ig-avg">—</div><div class="ig-num-l" id="ig-l-avg">متوسط العمولة / حساب</div></div></div>
     <div class="ig-num" style="--ac:#f5a623"><div class="ig-num-ic">💰</div><div class="ig-num-b"><div class="ig-num-v" id="ig-comm">—</div><div class="ig-num-l" id="ig-l-comm">إجمالي العمولات</div></div></div>
@@ -216,7 +216,7 @@
     </div>
     <div class="ig-panel">
       <div class="ig-pt" id="ig-t-ceil">🎯 سقف العمولة — $7 لكل حساب</div>
-      <div class="ig-gauge"><canvas id="ig-ceil-c"></canvas><div class="ig-gauge-c"><div class="ig-gauge-v" id="ig-ceil-v" style="color:#22c97a">—</div><div class="ig-gauge-l">متوسط العمولة / حساب</div></div></div>
+      <div class="ig-gauge"><canvas id="ig-ceil-c"></canvas><div class="ig-gauge-c"><div class="ig-gauge-v" id="ig-ceil-v" style="color:#22c97a">—</div><div class="ig-gauge-l" id="ig-ceil-l">متوسط العمولة / حساب</div></div></div>
       <div id="ig-ceil-alert" style="margin-top:8px"></div>
     </div>
   </div>
@@ -224,8 +224,8 @@
   {{-- 🔁 Cross-branch duplicate accounts — monitoring list (Finance Admin) --}}
   <div class="ig-grid" id="ig-xbr-wrap" style="margin-bottom:16px;display:none">
     <div class="ig-panel" style="border:1px solid rgba(123,104,238,.45)">
-      <div class="ig-pt">🔁 حسابات مكرّرة بين الفروع — للمراقبة <span id="ig-xbr-count" style="font-size:11px;color:var(--mu)"></span></div>
-      <div style="font-size:12px;color:var(--mu);margin-bottom:10px">نفس رقم الحساب موجود في أكثر من فرع — اضغط على الفرع لرؤية تفاصيل حسابه فيه. يُترك كل حساب في فرعه والقرار للإدارة.</div>
+      <div class="ig-pt"><span id="ig-t-xbr-txt">🔁 حسابات مكرّرة بين الفروع — للمراقبة</span> <span id="ig-xbr-count" style="font-size:11px;color:var(--mu)"></span></div>
+      <div id="ig-xbr-note" style="font-size:12px;color:var(--mu);margin-bottom:10px">نفس رقم الحساب موجود في أكثر من فرع — اضغط على الفرع لرؤية تفاصيل حسابه فيه. يُترك كل حساب في فرعه والقرار للإدارة.</div>
       <div id="ig-xbr" style="max-height:560px;overflow:auto"><div style="text-align:center;padding:30px"><span class="ig-spin"></span></div></div>
     </div>
   </div>
@@ -243,6 +243,12 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
       tGauge:'🎯 نسبة الحسابات الجديدة',gaugeL:'جديد من الإجمالي',tComm:'💰 توزيع العمولات',tCc:'📞 حصة مركز الاتصال',ccL:'من الكروت',tBranch:'🏢 الحسابات حسب الفرع',tMonthly:'📅 الحسابات المفتوحة بالفروع شهرياً',
       broker:'بروكر',marketer:'مسوّق',ext:'خارجي',accounts:'حسابات',deposit:'إيداع (ألف)',noData:'لا توجد بيانات',tb:'لوحة المتابعة',
       hTitle:'لوحة تحليلات كروت العمولة',hSub:'نظرة شاملة على جميع الحسابات',lFrom:'من شهر',lTo:'إلى شهر',oFrom:'الأقدم',oTo:'الأحدث',clr:'الكل',
+      lMkt:'المسوّقون',lBrk:'البروكرز',lCcComm:'عمولات مركز الاتصال',lAvg:'متوسط العمولة / حساب',
+      calPick:'اختر الفترة (شهر/سنة)',calFromLbl:'من:',calToLbl:'إلى:',calClear:'مسح',calApply:'تطبيق',
+      ovTitle:'⚠️ حسابات تجاوزت سقف العمولة ($7)',
+      tNewsub:'🟢🔵 الحسابات الجديدة مقابل الفرعية — لكل فرع',
+      tCeil:'🎯 سقف العمولة — $7 لكل حساب',ceilL:'متوسط العمولة / حساب',
+      tXbr:'🔁 حسابات مكرّرة بين الفروع — للمراقبة',xbrNote:'نفس رقم الحساب موجود في أكثر من فرع — اضغط على الفرع لرؤية تفاصيل حسابه فيه. يُترك كل حساب في فرعه والقرار للإدارة.',
       tModbr:'✏️ أكثر الفروع تعديلاً للكروت',tEmpty:'⚠️ حسابات فُتحت ولم تودع',mods:'تعديل',perAcc:'لكل حساب',newAcc:'حساب جديد',empty0:'لا توجد تعديلات بعد',noDepLbl:'بدون إيداع',
       bestBroker:'🥇 أفضل بروكر',bestMktr:'🥇 أفضل مسوّق/ة',bestBranch:'🏆 أفضل فرع (حسابات جديدة)',newAccLbl:'حساب جديد',
       bestReferral:'🔗 أفضل المُحيلين',refAccLbl:'حساب جاء به',refPick:'اختر مُحيلاً لعرض الحسابات التي جاء بها 👈',refBrought:'حسابات جاء بها الحساب',refTotalComm:'إجمالي عمولة الإحالة',refAcc:'رقم الحساب المُحيل'},
@@ -250,6 +256,12 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
       tGauge:'🎯 New Accounts Ratio',gaugeL:'new of total',tComm:'💰 Commission Split',tCc:'📞 Call Center Share',ccL:'of cards',tBranch:'🏢 Accounts by Branch',tMonthly:'📅 Accounts Opened by Branch (Monthly)',
       broker:'Broker',marketer:'Marketer',ext:'External',accounts:'Accounts',deposit:'Deposit (K)',noData:'No data',tb:'Dashboard',
       hTitle:'Commission Cards Analytics',hSub:'Overview of all accounts',lFrom:'From',lTo:'To',oFrom:'Earliest',oTo:'Latest',clr:'All',
+      lMkt:'Marketers',lBrk:'Brokers',lCcComm:'Call-Center Commissions',lAvg:'Avg commission / account',
+      calPick:'Pick period (month/year)',calFromLbl:'From:',calToLbl:'To:',calClear:'Clear',calApply:'Apply',
+      ovTitle:'⚠️ Accounts over the commission cap ($7)',
+      tNewsub:'🟢🔵 New vs. Sub Accounts — per Branch',
+      tCeil:'🎯 Commission Cap — $7 per Account',ceilL:'Avg commission / account',
+      tXbr:'🔁 Cross-branch duplicate accounts — monitoring',xbrNote:'The same account number appears in more than one branch — click a branch to see its details. Each account stays in its branch; the decision is management\'s.',
       tModbr:'✏️ Most-Modifying Branches',tEmpty:'⚠️ Opened Without Deposit',mods:'edits',perAcc:'per account',newAcc:'new accounts',empty0:'No modifications yet',noDepLbl:'no deposit',
       bestBroker:'🥇 Best Broker',bestMktr:'🥇 Best Marketer',bestBranch:'🏆 Best Branch (New Accounts)',newAccLbl:'new accounts',
       bestReferral:'🔗 Top Referrals',refAccLbl:'accounts brought',refPick:'Pick a referrer to see the accounts they brought 👈',refBrought:'Accounts brought by',refTotalComm:'Total referral commission',refAcc:'Referrer account'}};
@@ -311,6 +323,10 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
     set('ig-l-acc',t('lAcc'));set('ig-l-dep',t('lDep'));set('ig-l-mon',t('lMon'));set('ig-l-comm',t('lComm'));set('ig-l-cc',t('lCc'));set('ig-l-mod',t('lMod'));
     set('ig-t-gauge',t('tGauge'));set('ig-gauge-l',t('gaugeL'));set('ig-t-comm',t('tComm'));set('ig-t-cc',t('tCc'));set('ig-cc-l',t('ccL'));set('ig-t-branch',t('tBranch'));set('ig-t-monthly',t('tMonthly'));
     set('ig-h-title',t('hTitle'));set('ig-h-sub',t('hSub'));set('ig-l-from',t('lFrom'));set('ig-l-to',t('lTo'));set('ig-o-from',t('oFrom'));set('ig-o-to',t('oTo'));set('ig-clr-l',t('clr'));set('ig-t-modbr',t('tModbr'));set('ig-t-empty',t('tEmpty'));
+    set('ig-l-mkt',t('lMkt'));set('ig-l-brk',t('lBrk'));set('ig-l-cccomm',t('lCcComm'));set('ig-l-avg',t('lAvg'));
+    set('ig-cal-chip-l',t('calPick'));set('ig-cal-from-lbl',t('calFromLbl'));set('ig-cal-to-lbl',t('calToLbl'));set('ig-cal-btn-clr',t('calClear'));set('ig-cal-btn-ok',t('calApply'));
+    set('ig-ol-title',t('ovTitle'));set('ig-t-newsub',t('tNewsub'));set('ig-t-ceil',t('tCeil'));set('ig-ceil-l',t('ceilL'));
+    set('ig-t-xbr-txt',t('tXbr'));set('ig-xbr-note',t('xbrNote'));
     var tb=document.querySelector('.tb-title');if(tb)tb.textContent=t('tb');
     if(DATA)render(DATA);
   }
@@ -370,7 +386,7 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
   function _m2api(v){ if(!v) return ''; var p=String(v).split('-'); if(p.length<2) return v;
     var d=new Date(parseInt(p[0]),parseInt(p[1])-1,1); return d.toLocaleString('en-US',{month:'short'})+' '+p[0]; }
   window.igReload=function(){load();};
-  window.igClear=function(){_igFrom=null;_igTo=null;_igTab='from';var l=document.getElementById('ig-cal-chip-l');if(l)l.textContent=(L()==='en'?'Pick period (month/year)':'اختر الفترة (شهر/سنة)');load();};
+  window.igClear=function(){_igFrom=null;_igTo=null;_igTab='from';var l=document.getElementById('ig-cal-chip-l');if(l)l.textContent=t('calPick');load();};
 
   // Cross-branch duplicate accounts — monitoring list (loaded once, independent of the period filter)
   function igCrossBranch(){

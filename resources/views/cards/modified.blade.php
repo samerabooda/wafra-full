@@ -12,7 +12,7 @@
 
 <div class="panel">
   <div class="panel-header">
-    <div class="panel-title" id="mod-panel-title">✏️ الحسابات المعدّلة <span id="mod-count" style="font-size:11px;color:var(--mu)">{{ count($mods ?? []) }} سجل</span></div>
+    <div class="panel-title"><span id="mod-panel-title">✏️ الحسابات المعدّلة</span> <span id="mod-count" style="font-size:11px;color:var(--mu)">{{ count($mods ?? []) }} <span id="mod-count-sfx">سجل</span></span></div>
     <div style="display:flex;gap:6px">
       <button class="btn btn-sm" style="background:rgba(34,201,122,.1);border:1px solid rgba(34,201,122,.25);color:var(--gr)" onclick="exportModExcel()">📗 Excel</button>
     </div>
@@ -20,25 +20,25 @@
   {{-- Filters (all client-side over the rendered rows) --}}
   @php $mfSel = 'font-size:12.5px;font-weight:700;padding:7px 11px;border-radius:9px;border:1px solid var(--brd2);background:var(--inp-bg);color:var(--tx);cursor:pointer'; @endphp
   <div style="padding:10px 16px;border-bottom:1px solid var(--brd1);display:flex;gap:8px;align-items:center;background:var(--bg4);flex-wrap:wrap">
-    <select id="mf-branch" onchange="applyModFilters()" style="{{ $mfSel }}"><option value="">🏢 كل الفروع</option></select>
-    <select id="mf-month"  onchange="applyModFilters()" style="{{ $mfSel }}"><option value="">📅 كل أشهر التعديل</option></select>
-    <select id="mf-reason" onchange="applyModFilters()" style="{{ $mfSel }}"><option value="">📝 كل الأسباب</option></select>
+    <select id="mf-branch" onchange="applyModFilters()" style="{{ $mfSel }}"><option value="" id="mf-opt-br">🏢 كل الفروع</option></select>
+    <select id="mf-month"  onchange="applyModFilters()" style="{{ $mfSel }}"><option value="" id="mf-opt-mo">📅 كل أشهر التعديل</option></select>
+    <select id="mf-reason" onchange="applyModFilters()" style="{{ $mfSel }}"><option value="" id="mf-opt-re">📝 كل الأسباب</option></select>
     <span style="font-size:15px;opacity:.5">🔍</span>
     <input type="search" id="mod-search" autocomplete="off" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly')" class="form-control" style="flex:1;min-width:140px;font-size:14px;background:none;border:none;outline:none;padding:6px 4px" placeholder="بحث برقم الحساب..." oninput="applyModFilters()">
-    <button onclick="clearModFilters()" style="font-size:11.5px;font-weight:700;padding:7px 11px;border-radius:9px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:#ef4444;cursor:pointer">✕ مسح</button>
+    <button id="mod-clear-btn" onclick="clearModFilters()" style="font-size:11.5px;font-weight:700;padding:7px 11px;border-radius:9px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:#ef4444;cursor:pointer">✕ مسح</button>
     <span id="mod-result-count" style="font-size:12px;color:var(--mu);white-space:nowrap"></span>
   </div>
   <div class="table-scroll">
     <table class="data-table">
       <thead>
         <tr>
-          <th>الفرع</th>
-          <th>شهر التعديل</th>
-          <th>رقم الحساب</th>
-          <th>شهر فتح الحساب</th>
-          <th>بيانات ما قبل التعديل</th>
-          <th>سبب التعديل</th>
-          <th>بيانات ما بعد التعديل</th>
+          <th id="mod-th-br">الفرع</th>
+          <th id="mod-th-mo">شهر التعديل</th>
+          <th id="mod-th-ac">رقم الحساب</th>
+          <th id="mod-th-om">شهر فتح الحساب</th>
+          <th id="mod-th-bf">بيانات ما قبل التعديل</th>
+          <th id="mod-th-rs">سبب التعديل</th>
+          <th id="mod-th-af">بيانات ما بعد التعديل</th>
         </tr>
       </thead>
       <tbody id="mod-tbody">
@@ -68,7 +68,7 @@
             <td style="min-width:200px">{!! $sideHtml($m->after) !!}</td>
           </tr>
         @empty
-          <tr id="mod-empty-row"><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)">لا توجد حسابات معدّلة</td></tr>
+          <tr id="mod-empty-row"><td colspan="7" style="text-align:center;padding:40px;color:var(--mu)" id="mod-empty-txt">لا توجد حسابات معدّلة</td></tr>
         @endforelse
       </tbody>
     </table>
@@ -83,6 +83,62 @@
 // Rows are rendered SERVER-SIDE (PHP) — JS here only filters & exports them. No fetch, no
 // dependency on the API, so the table can never get stuck on "loading".
 function modL(){ return (typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))||'ar'; }
+
+/* ───── AR / EN dictionary ───── */
+var MOD_T = {
+  ar:{
+    info:'جميع الحسابات التي تم تعديلها — تظهر بتمييز <strong>أصفر</strong> في التقارير.',
+    title:'✏️ الحسابات المعدّلة', recordSfx:'سجل',
+    optBr:'🏢 كل الفروع', optMo:'📅 كل أشهر التعديل', optRe:'📝 كل الأسباب',
+    phSearch:'بحث برقم الحساب...', clrBtn:'✕ مسح',
+    thBr:'الفرع', thMo:'شهر التعديل', thAc:'رقم الحساب', thOm:'شهر فتح الحساب',
+    thBf:'بيانات ما قبل التعديل', thRs:'سبب التعديل', thAf:'بيانات ما بعد التعديل',
+    empty:'لا توجد حسابات معدّلة',
+    toastNoExport:'لا توجد بيانات للتصدير',
+    xlHdrBr:'الفرع', xlHdrMo:'شهر التعديل', xlHdrAc:'رقم الحساب', xlHdrOm:'شهر فتح الحساب',
+    xlHdrBf:'قبل التعديل', xlHdrRs:'سبب التعديل', xlHdrAf:'بعد التعديل',
+    xlSheet:'الحسابات المعدّلة',
+    tb:'الحسابات المعدّلة',
+  },
+  en:{
+    info:'All accounts that were edited — highlighted in <strong>yellow</strong> in reports.',
+    title:'✏️ Modified Accounts', recordSfx:'records',
+    optBr:'🏢 All Branches', optMo:'📅 All Edit Months', optRe:'📝 All Reasons',
+    phSearch:'Search by account number...', clrBtn:'✕ Clear',
+    thBr:'Branch', thMo:'Edit Month', thAc:'Account No.', thOm:'Opening Month',
+    thBf:'Before Edit', thRs:'Edit Reason', thAf:'After Edit',
+    empty:'No modified accounts',
+    toastNoExport:'No data to export',
+    xlHdrBr:'Branch', xlHdrMo:'Edit Month', xlHdrAc:'Account No.', xlHdrOm:'Opening Month',
+    xlHdrBf:'Before', xlHdrRs:'Edit Reason', xlHdrAf:'After',
+    xlSheet:'Modified Accounts',
+    tb:'Modified Accounts',
+  }
+};
+function _mt(k){ var l=modL(); return (MOD_T[l]&&MOD_T[l][k])||MOD_T.ar[k]||k; }
+function _modSet(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+function _modHtml(id,v){ var e=document.getElementById(id); if(e) e.innerHTML=v; }
+function modApplyLang(){
+  _modHtml('mod-info-text', _mt('info'));
+  _modSet('mod-panel-title', _mt('title'));
+  _modSet('mod-count-sfx', _mt('recordSfx'));
+  _modSet('mf-opt-br', _mt('optBr'));
+  _modSet('mf-opt-mo', _mt('optMo'));
+  _modSet('mf-opt-re', _mt('optRe'));
+  var s=document.getElementById('mod-search'); if(s) s.placeholder=_mt('phSearch');
+  _modSet('mod-clear-btn', _mt('clrBtn'));
+  _modSet('mod-th-br', _mt('thBr'));
+  _modSet('mod-th-mo', _mt('thMo'));
+  _modSet('mod-th-ac', _mt('thAc'));
+  _modSet('mod-th-om', _mt('thOm'));
+  _modSet('mod-th-bf', _mt('thBf'));
+  _modSet('mod-th-rs', _mt('thRs'));
+  _modSet('mod-th-af', _mt('thAf'));
+  _modSet('mod-empty-txt', _mt('empty'));
+  var tb=document.querySelector('.tb-title'); if(tb) tb.textContent=_mt('tb');
+}
+var _modOrig=window.applyLang; window.applyLang=function(l){ if(_modOrig)_modOrig(l); try{ modApplyLang(); }catch(e){ console.warn(e); } };
+modApplyLang();
 
 // ── Client-side filters over the server-rendered rows ──
 function _mfVal(id){ var e=document.getElementById(id); return e?e.value:''; }
@@ -125,14 +181,14 @@ function clearModFilters(){
 function exportModExcel(){
   var trs=Array.prototype.slice.call(document.querySelectorAll('#mod-tbody .mod-row'))
             .filter(function(tr){ return tr.style.display!=='none'; });
-  if(!trs.length){ if(window.toast) toast(modL()==='en'?'No data to export':'لا توجد بيانات للتصدير','error'); return; }
-  var hdr=['الفرع','شهر التعديل','رقم الحساب','شهر فتح الحساب','قبل التعديل','سبب التعديل','بعد التعديل'];
+  if(!trs.length){ if(window.toast) toast(_mt('toastNoExport'),'error'); return; }
+  var hdr=[_mt('xlHdrBr'),_mt('xlHdrMo'),_mt('xlHdrAc'),_mt('xlHdrOm'),_mt('xlHdrBf'),_mt('xlHdrRs'),_mt('xlHdrAf')];
   var aoa=[hdr];
   trs.forEach(function(tr){
     var c=tr.querySelectorAll('td');
     aoa.push([0,1,2,3,4,5,6].map(function(i){ return (c[i]?c[i].innerText:'').replace(/\s+/g,' ').trim(); }));
   });
-  wgExportExcel(aoa, 'WafraGulf_Modified_'+new Date().toISOString().slice(0,10)+'.xlsx', 'الحسابات المعدّلة',
+  wgExportExcel(aoa, 'WafraGulf_Modified_'+new Date().toISOString().slice(0,10)+'.xlsx', _mt('xlSheet'),
     { headerColor:'B25A0E', colColors:{2:'EAF3DE', 5:'FAEEDA'} });
 }
 </script>

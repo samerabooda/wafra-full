@@ -218,7 +218,7 @@
 /* ============ Reports v3 ============ */
 const RX = {
   ar:{
-    nDash:'لوحة التقارير',nTable:'جدول البيانات',nDyn:'تقرير ديناميكي',nBranch:'تقرير الفروع',nRefresh:'تحديث',
+    nDash:'لوحة التقارير',nTable:'جدول البيانات',nDyn:'تقرير ديناميكي',nBranch:'تقرير الفروع',nRef:'تقرير المحيلين',nRefresh:'تحديث',
     period:'الفترة:',pAll:'كل الفترات',p3:'آخر 3 شهور',p6:'آخر 6 شهور',p12:'آخر سنة',
     pCustom:'📅 فترة مخصّصة',calFrom:'من',calTo:'إلى',calClear:'مسح',calApply:'تطبيق',
     advBtn:'⚙️ فلاتر متقدمة',flBranch:'الفرع',flBroker:'البروكر',flStatus:'الحالة',
@@ -234,7 +234,7 @@ const RX = {
     tbTitle:'التقارير',
   },
   en:{
-    nDash:'Dashboard',nTable:'Data Table',nDyn:'Dynamic Report',nBranch:'Branch Report',nRefresh:'Refresh',
+    nDash:'Dashboard',nTable:'Data Table',nDyn:'Dynamic Report',nBranch:'Branch Report',nRef:'Referrals Report',nRefresh:'Refresh',
     period:'Period:',pAll:'All Time',p3:'Last 3 Months',p6:'Last 6 Months',p12:'Last Year',
     pCustom:'📅 Custom Range',calFrom:'From',calTo:'To',calClear:'Clear',calApply:'Apply',
     advBtn:'⚙️ Advanced Filters',flBranch:'Branch',flBroker:'Broker',flStatus:'Status',
@@ -255,7 +255,7 @@ function rx(k){return RX[rdL()]?.[k]??RX.ar[k]??k;}
 function _t(id,v){const e=document.getElementById(id);if(e&&v!==undefined)e.textContent=v;}
 
 function rxApplyLang(){
-  _t('rx-n-dash',rx('nDash'));_t('rx-n-table',rx('nTable'));_t('rx-n-dyn',rx('nDyn'));_t('rx-n-branch',rx('nBranch'));_t('rx-n-refresh',rx('nRefresh'));
+  _t('rx-n-dash',rx('nDash'));_t('rx-n-table',rx('nTable'));_t('rx-n-dyn',rx('nDyn'));_t('rx-n-branch',rx('nBranch'));_t('rx-n-ref',rx('nRef'));_t('rx-n-refresh',rx('nRefresh'));_t('rx-ins-load',rx('insLoad'));
   _t('rx-period-lbl',rx('period'));_t('rx-p-all',rx('pAll'));_t('rx-p-3',rx('p3'));_t('rx-p-6',rx('p6'));_t('rx-p-12',rx('p12'));
   if(!_customFrom)_t('rx-p-custom-l',rx('pCustom').replace('📅 ',''));
   _t('rx-cal-l-from',rx('calFrom'));_t('rx-cal-l-to',rx('calTo'));_t('rx-cal-clear',rx('calClear'));_t('rx-cal-apply',rx('calApply'));

@@ -1,6 +1,6 @@
 @extends('layouts.app')
-@section('title','تقرير المحيلين')
-@section('page-title','تقرير المحيلين')
+@section('title','Referrals Report')
+@section('page-title','Referrals Report')
 @section('content')
 @verbatim
 <style>
@@ -96,16 +96,16 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
 
 <div class="rxr">
   <div class="rxr-nav">
-    <a href="{{ route('reports.index') }}">📊 لوحة التقارير</a>
-    <a href="{{ route('reports.table') }}">📋 جدول البيانات</a>
-    <a href="{{ route('reports.dynamic') }}">🔧 تقرير ديناميكي</a>
-    <a href="{{ route('reports.branch-monthly') }}">🏢 تقرير الفروع</a>
-    <a href="{{ route('reports.referrals') }}" class="on">🔗 تقرير المحيلين</a>
+    <a href="{{ route('reports.index') }}">📊 <span class="lang-ar">لوحة التقارير</span><span class="lang-en">Reports Dashboard</span></a>
+    <a href="{{ route('reports.table') }}">📋 <span class="lang-ar">جدول البيانات</span><span class="lang-en">Data Table</span></a>
+    <a href="{{ route('reports.dynamic') }}">🔧 <span class="lang-ar">تقرير ديناميكي</span><span class="lang-en">Dynamic Report</span></a>
+    <a href="{{ route('reports.branch-monthly') }}">🏢 <span class="lang-ar">تقرير الفروع</span><span class="lang-en">Branch Report</span></a>
+    <a href="{{ route('reports.referrals') }}" class="on">🔗 <span class="lang-ar">تقرير المحيلين</span><span class="lang-en">Referrals Report</span></a>
     <div style="flex:1"></div>
     @if($rfIsFa)
     <form method="GET" action="{{ route('reports.referrals') }}" style="margin:0">
       <select name="branch_id" onchange="this.form.submit()" style="font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:10px;border:1px solid var(--brd2);background:var(--inp-bg);color:var(--tx);cursor:pointer">
-        <option value="">🏢 كل الفروع</option>
+        <option value=""><span class="lang-ar">🏢 كل الفروع</span><span class="lang-en">🏢 All Branches</span></option>
         @foreach($rfBranches as $b)
           <option value="{{ $b->id }}" @selected((string)($rfBranchId ?? '') === (string)$b->id)>{{ $b->name_ar ?: $b->name_en }}</option>
         @endforeach
@@ -116,15 +116,15 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
 
   {{-- KPIs --}}
   <div class="rxr-kpis" style="grid-template-columns:repeat(3,1fr)">
-    <div class="rxr-kpi" style="background:linear-gradient(135deg,#1AADBA,#0E7A88)"><div class="l">إجمالي الإحالات</div><div class="v">{{ number_format($totRef) }}</div></div>
-    <div class="rxr-kpi" style="background:linear-gradient(135deg,#7b68ee,#5b46d6)"><div class="l">عدد المحيلين</div><div class="v">{{ number_format($nRef) }}</div></div>
-    <div class="rxr-kpi" style="background:linear-gradient(135deg,#c2761a,#9a5a12)"><div class="l">متوسط حسابات لكل محيل</div><div class="v">{{ $avg }}</div></div>
+    <div class="rxr-kpi" style="background:linear-gradient(135deg,#1AADBA,#0E7A88)"><div class="l"><span class="lang-ar">إجمالي الإحالات</span><span class="lang-en">Total Referrals</span></div><div class="v">{{ number_format($totRef) }}</div></div>
+    <div class="rxr-kpi" style="background:linear-gradient(135deg,#7b68ee,#5b46d6)"><div class="l"><span class="lang-ar">عدد المحيلين</span><span class="lang-en">Number of Referrers</span></div><div class="v">{{ number_format($nRef) }}</div></div>
+    <div class="rxr-kpi" style="background:linear-gradient(135deg,#c2761a,#9a5a12)"><div class="l"><span class="lang-ar">متوسط حسابات لكل محيل</span><span class="lang-en">Avg Accounts per Referrer</span></div><div class="v">{{ $avg }}</div></div>
   </div>
 
   {{-- Top 5 referrers + Best branch --}}
   <div class="rxr-2" style="align-items:start">
     <div class="rxr-card" style="border:2px solid rgba(26,173,186,.45)">
-      <div class="rxr-pt">🥇 أفضل 5 محيلين</div>
+      <div class="rxr-pt"><span class="lang-ar">🥇 أفضل 5 محيلين</span><span class="lang-en">🥇 Top 5 Referrers</span></div>
       @php $top5 = $rfList->take(5); $maxTop = max(1, (int)($top5->max('accounts') ?? 1)); @endphp
       @forelse($top5 as $i => $r)
         @php
@@ -135,68 +135,68 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
         <div class="rxr-gbar">
           <i class="rxr-gbar-fill" style="width:{{ $w }}%;background:{{ $c }}26;border-color:{{ $c }}"></i>
           <span class="rxr-gbar-name">{{ $medal }} {{ $r->name ?: '#'.$r->ref }}</span>
-          <span class="rxr-gbar-num" style="color:{{ $c }}">{{ number_format($r->accounts) }} حساب</span>
+          <span class="rxr-gbar-num" style="color:{{ $c }}">{{ number_format($r->accounts) }} <span class="lang-ar">حساب</span><span class="lang-en">accounts</span></span>
         </div>
-      @empty <div style="color:var(--mu);text-align:center;padding:20px">لا توجد بيانات إحالات</div> @endforelse
+      @empty <div style="color:var(--mu);text-align:center;padding:20px"><span class="lang-ar">لا توجد بيانات إحالات</span><span class="lang-en">No referral data</span></div> @endforelse
     </div>
     <div class="rxr-card" style="border:2px solid rgba(123,104,238,.45)">
-      <div class="rxr-pt" style="color:#7b68ee">🏆 أفضل فرع للإحالات</div>
+      <div class="rxr-pt" style="color:#7b68ee"><span class="lang-ar">🏆 أفضل فرع للإحالات</span><span class="lang-en">🏆 Best Branch for Referrals</span></div>
       @if($bestBr)
         <div style="display:flex;align-items:center;gap:14px">
           <div style="width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#7b68ee,#5b46d6);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex-shrink:0">🏢</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:17px;font-weight:900;color:var(--tx)">{{ $bestBr->nar }}</div>
-            <div style="font-size:12px;color:var(--mu);margin-top:3px"><b style="color:#7b68ee">{{ number_format($bestBr->referrals) }}</b> إحالة عبر <b>{{ number_format($bestBr->referrers) }}</b> محيل</div>
+            <div style="font-size:12px;color:var(--mu);margin-top:3px"><b style="color:#7b68ee">{{ number_format($bestBr->referrals) }}</b> <span class="lang-ar">إحالة عبر</span><span class="lang-en">referrals via</span> <b>{{ number_format($bestBr->referrers) }}</b> <span class="lang-ar">محيل</span><span class="lang-en">referrers</span></div>
           </div>
-          <div style="text-align:left"><div style="font-size:1.4rem;font-weight:900;color:#7b68ee;font-family:monospace">{{ number_format($bestBr->referrers) }}</div><div style="font-size:10px;color:var(--mu)">محيل</div></div>
+          <div style="text-align:left"><div style="font-size:1.4rem;font-weight:900;color:#7b68ee;font-family:monospace">{{ number_format($bestBr->referrers) }}</div><div style="font-size:10px;color:var(--mu)"><span class="lang-ar">محيل</span><span class="lang-en">referrers</span></div></div>
         </div>
-      @else <div style="color:var(--mu);text-align:center;padding:20px">لا توجد بيانات</div> @endif
+      @else <div style="color:var(--mu);text-align:center;padding:20px"><span class="lang-ar">لا توجد بيانات</span><span class="lang-en">No data</span></div> @endif
     </div>
   </div>
 
   {{-- Monthly trend — glassy bars (same style as the rest of the page) --}}
   <div class="rxr-card" style="margin-bottom:16px">
-    <div class="rxr-pt">📅 الإحالات شهريًا</div>
+    <div class="rxr-pt"><span class="lang-ar">📅 الإحالات شهريًا</span><span class="lang-en">📅 Referrals by Month</span></div>
     <div style="max-height:340px;overflow:auto">
     @forelse($rfByMonth as $m)
       @php $w = max(8, round($m->referrals / $maxMo * 100)); $peak = ((int)$m->referrals === (int)$maxMo); $mc = $peak ? '#22a06b' : '#1AADBA'; @endphp
       <div class="rxr-gbar">
         <i class="rxr-gbar-fill" style="width:{{ $w }}%;background:{{ $mc }}26;border-color:{{ $mc }}"></i>
         <span class="rxr-gbar-name">📅 {{ $m->month }}</span>
-        <span class="rxr-gbar-num" style="color:{{ $mc }}">{{ number_format($m->referrals) }} إحالة</span>
+        <span class="rxr-gbar-num" style="color:{{ $mc }}">{{ number_format($m->referrals) }} <span class="lang-ar">إحالة</span><span class="lang-en">referrals</span></span>
       </div>
-    @empty <div style="color:var(--mu);text-align:center;padding:18px">لا توجد بيانات</div> @endforelse
+    @empty <div style="color:var(--mu);text-align:center;padding:18px"><span class="lang-ar">لا توجد بيانات</span><span class="lang-en">No data</span></div> @endforelse
     </div>
   </div>
 
   {{-- By branch (glassy, full width) --}}
   <div class="rxr-card" style="margin-bottom:16px">
-    <div class="rxr-pt">🏢 الإحالات حسب الفرع</div>
+    <div class="rxr-pt"><span class="lang-ar">🏢 الإحالات حسب الفرع</span><span class="lang-en">🏢 Referrals by Branch</span></div>
     @forelse($rfByBranch as $i => $b)
       @php $c = $PAL[$i % count($PAL)]; $w = max(10, round($b->referrals / $maxBr * 100)); @endphp
       <div class="rxr-gbar">
         <i class="rxr-gbar-fill" style="width:{{ $w }}%;background:{{ $c }}26;border-color:{{ $c }}"></i>
         <span class="rxr-gbar-name">🏢 {{ $b->nar }}</span>
-        <span class="rxr-gbar-num" style="color:{{ $c }}">{{ number_format($b->referrals) }} إحالة</span>
+        <span class="rxr-gbar-num" style="color:{{ $c }}">{{ number_format($b->referrals) }} <span class="lang-ar">إحالة</span><span class="lang-en">referrals</span></span>
       </div>
-    @empty <div style="color:var(--mu);text-align:center;padding:18px">لا توجد بيانات</div> @endforelse
+    @empty <div style="color:var(--mu);text-align:center;padding:18px"><span class="lang-ar">لا توجد بيانات</span><span class="lang-en">No data</span></div> @endforelse
   </div>
 
   {{-- Referrers leaderboard --}}
   <div class="rxr-card" style="padding:0;overflow:hidden">
     <div style="padding:14px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd1);flex-wrap:wrap">
-      <div class="rxr-pt" style="margin:0">📋 جدول المحيلين <span id="rf-total-lbl" style="font-size:11px;color:var(--mu);font-weight:600">({{ number_format($rfList->count()) }})</span></div>
+      <div class="rxr-pt" style="margin:0"><span class="lang-ar">📋 جدول المحيلين</span><span class="lang-en">📋 Referrers Table</span> <span id="rf-total-lbl" style="font-size:11px;color:var(--mu);font-weight:600">({{ number_format($rfList->count()) }})</span></div>
       <div class="rf-seg">
-        <button type="button" class="rf-seg-b on" onclick="rfTypeFilter('',this)">الكل</button>
-        <button type="button" class="rf-seg-b" onclick="rfTypeFilter('client',this)">👥 عملاء <b id="rf-cli-n">{{ number_format($rfCliCount) }}</b></button>
-        <button type="button" class="rf-seg-b" onclick="rfTypeFilter('employee',this)">👤 موظفون <b id="rf-emp-n">{{ number_format($rfEmpCount) }}</b></button>
+        <button type="button" class="rf-seg-b on" onclick="rfTypeFilter('',this)"><span class="lang-ar">الكل</span><span class="lang-en">All</span></button>
+        <button type="button" class="rf-seg-b" onclick="rfTypeFilter('client',this)">👥 <span class="lang-ar">عملاء</span><span class="lang-en">Clients</span> <b id="rf-cli-n">{{ number_format($rfCliCount) }}</b></button>
+        <button type="button" class="rf-seg-b" onclick="rfTypeFilter('employee',this)">👤 <span class="lang-ar">موظفون</span><span class="lang-en">Employees</span> <b id="rf-emp-n">{{ number_format($rfEmpCount) }}</b></button>
       </div>
       <div class="rf-tools">
         <button type="button" class="rf-btn" id="rf-unnamed-btn" onclick="rfToggleUnnamed(this)">
-          ✎ بلا اسم <span class="rf-badge" id="rf-unnamed-count">{{ number_format($rfUnnamed) }}</span>
+          ✎ <span class="lang-ar">بلا اسم</span><span class="lang-en">Unnamed</span> <span class="rf-badge" id="rf-unnamed-count">{{ number_format($rfUnnamed) }}</span>
         </button>
-        <button type="button" class="rf-btn rf-btn-acc" onclick="rfBulkOpen()">📥 إدخال أسماء دفعة</button>
-        <button type="button" class="rf-btn" onclick="rfExportExcel()" style="background:linear-gradient(135deg,#1f8a4c,#146636);color:#fff;border-color:transparent">⬇️ تنزيل Excel</button>
+        <button type="button" class="rf-btn rf-btn-acc" onclick="rfBulkOpen()">📥 <span class="lang-ar">إدخال أسماء دفعة</span><span class="lang-en">Bulk Enter Names</span></button>
+        <button type="button" class="rf-btn" onclick="rfExportExcel()" style="background:linear-gradient(135deg,#1f8a4c,#146636);color:#fff;border-color:transparent">⬇️ <span class="lang-ar">تنزيل Excel</span><span class="lang-en">Download Excel</span></button>
       </div>
       <div style="flex:1"></div>
       <input id="rf-search" type="search" name="rf_nofill" placeholder="بحث بالاسم أو رقم المحيل..."
@@ -208,12 +208,12 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
       <table class="rxr-tbl">
         <thead><tr>
           <th>#</th>
-          <th class="rf-sort" onclick="rfSort('acc',this)">رقم المحيل ⇅</th>
-          <th class="rf-sort" onclick="rfSort('name',this)">اسم المحيل ⇅</th>
-          <th class="rf-sort" onclick="rfSort('type',this)">النوع ⇅</th>
-          <th class="rf-sort" onclick="rfSort('accounts',this)">عدد الحسابات ⇅</th>
-          <th class="rf-sort" onclick="rfSort('maxc',this)">أعلى / أقل عمولة ⇅</th>
-          <th class="rf-sort" onclick="rfSort('branches',this)">عدد الفروع ⇅</th>
+          <th class="rf-sort" onclick="rfSort('acc',this)"><span class="lang-ar">رقم المحيل</span><span class="lang-en">Referrer No.</span> ⇅</th>
+          <th class="rf-sort" onclick="rfSort('name',this)"><span class="lang-ar">اسم المحيل</span><span class="lang-en">Referrer Name</span> ⇅</th>
+          <th class="rf-sort" onclick="rfSort('type',this)"><span class="lang-ar">النوع</span><span class="lang-en">Type</span> ⇅</th>
+          <th class="rf-sort" onclick="rfSort('accounts',this)"><span class="lang-ar">عدد الحسابات</span><span class="lang-en">Accounts</span> ⇅</th>
+          <th class="rf-sort" onclick="rfSort('maxc',this)"><span class="lang-ar">أعلى / أقل عمولة</span><span class="lang-en">Max / Min Comm.</span> ⇅</th>
+          <th class="rf-sort" onclick="rfSort('branches',this)"><span class="lang-ar">عدد الفروع</span><span class="lang-en">Branches</span> ⇅</th>
           <th></th>
         </tr></thead>
         <tbody id="rf-body">
@@ -226,19 +226,19 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
                 @if($r->name)
                   <span class="rf-name" onclick="rfEditName(this,'{{ $r->ref }}')">{{ $r->name }}</span>
                 @else
-                  <span class="rf-name rf-unnamed" onclick="rfEditName(this,'{{ $r->ref }}')">＋ بدون اسم</span>
+                  <span class="rf-name rf-unnamed" onclick="rfEditName(this,'{{ $r->ref }}')">＋ <span class="lang-ar">بدون اسم</span><span class="lang-en">no name</span></span>
                 @endif
               </td>
               <td class="rf-type-cell">
-                <span class="rf-type-badge {{ $isEmp ? 'emp' : 'cli' }}" onclick="rfClassify(this,'{{ $r->ref }}')" title="اضغط لتغيير النوع">{{ $isEmp ? '👤 موظف' : '👥 عميل' }}</span>
+                <span class="rf-type-badge {{ $isEmp ? 'emp' : 'cli' }}" onclick="rfClassify(this,'{{ $r->ref }}')" title="Click to change type">{{ $isEmp ? '👤' : '👥' }} <span class="lang-ar">{{ $isEmp ? 'موظف' : 'عميل' }}</span><span class="lang-en">{{ $isEmp ? 'Employee' : 'Client' }}</span></span>
               </td>
-              <td><span class="rf-cnt-link" onclick="rfExpand('{{ $r->ref }}', this)" title="اضغط لعرض الحسابات المُحالة">{{ number_format($r->accounts) }}</span></td>
+              <td><span class="rf-cnt-link" onclick="rfExpand('{{ $r->ref }}', this)" title="Show referred accounts">{{ number_format($r->accounts) }}</span></td>
               <td class="mono" style="white-space:nowrap"><span style="color:#22a06b;font-weight:900">{{ $maxTxt }}</span> <span style="color:var(--mu)">/</span> <span style="color:#c2761a;font-weight:900">{{ $minTxt }}</span></td>
               <td><span style="color:var(--mu)">{{ number_format($r->branches) }}</span></td>
-              <td><button class="rxr-exp" onclick="rfExpand('{{ $r->ref }}', this)">عرض الحسابات ▾</button></td>
+              <td><button class="rxr-exp" onclick="rfExpand('{{ $r->ref }}', this)"><span class="lang-ar">عرض الحسابات ▾</span><span class="lang-en">Show accounts ▾</span></button></td>
             </tr>
           @empty
-            <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">لا توجد إحالات مُسجَّلة بعد</td></tr>
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)"><span class="lang-ar">لا توجد إحالات مُسجَّلة بعد</span><span class="lang-en">No referrals recorded yet</span></td></tr>
           @endforelse
         </tbody>
       </table>
@@ -256,16 +256,16 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
     $rfEmpPct = round($rfEmpCount / $rfTypeTotal * 100);
   @endphp
   <div class="rxr-card" style="margin-top:16px">
-    <div class="rxr-pt">👥👤 توزيع المحيلين حسب النوع</div>
+    <div class="rxr-pt"><span class="lang-ar">👥👤 توزيع المحيلين حسب النوع</span><span class="lang-en">👥👤 Referrer Distribution by Type</span></div>
     <div class="rxr-gbar">
       <i class="rxr-gbar-fill" id="rf-tp-cli-fill" style="width:{{ $rfCliW }}%;background:#1AADBA26;border-color:#1AADBA"></i>
-      <span class="rxr-gbar-name">👥 عملاء <span id="rf-tp-cli-acc" style="color:var(--mu);font-weight:700">· {{ number_format($rfCliAcc) }} حساب مُحال</span></span>
-      <span class="rxr-gbar-num" id="rf-tp-cli-num" style="color:#0E7A88">{{ number_format($rfCliCount) }} محيل ({{ $rfCliPct }}%)</span>
+      <span class="rxr-gbar-name">👥 <span class="lang-ar">عملاء</span><span class="lang-en">Clients</span> <span id="rf-tp-cli-acc" style="color:var(--mu);font-weight:700" data-ar="· {{ number_format($rfCliAcc) }} حساب مُحال" data-en="· {{ number_format($rfCliAcc) }} accounts referred">· {{ number_format($rfCliAcc) }} حساب مُحال</span></span>
+      <span class="rxr-gbar-num" id="rf-tp-cli-num" style="color:#0E7A88" data-ar="{{ number_format($rfCliCount) }} محيل ({{ $rfCliPct }}%)" data-en="{{ number_format($rfCliCount) }} referrers ({{ $rfCliPct }}%)">{{ number_format($rfCliCount) }} محيل ({{ $rfCliPct }}%)</span>
     </div>
     <div class="rxr-gbar">
       <i class="rxr-gbar-fill" id="rf-tp-emp-fill" style="width:{{ $rfEmpW }}%;background:#7b68ee26;border-color:#7b68ee"></i>
-      <span class="rxr-gbar-name">👤 موظفون <span id="rf-tp-emp-acc" style="color:var(--mu);font-weight:700">· {{ number_format($rfEmpAcc) }} حساب مُحال</span></span>
-      <span class="rxr-gbar-num" id="rf-tp-emp-num" style="color:#5b46d6">{{ number_format($rfEmpCount) }} محيل ({{ $rfEmpPct }}%)</span>
+      <span class="rxr-gbar-name">👤 <span class="lang-ar">موظفون</span><span class="lang-en">Employees</span> <span id="rf-tp-emp-acc" style="color:var(--mu);font-weight:700" data-ar="· {{ number_format($rfEmpAcc) }} حساب مُحال" data-en="· {{ number_format($rfEmpAcc) }} accounts referred">· {{ number_format($rfEmpAcc) }} حساب مُحال</span></span>
+      <span class="rxr-gbar-num" id="rf-tp-emp-num" style="color:#5b46d6" data-ar="{{ number_format($rfEmpCount) }} محيل ({{ $rfEmpPct }}%)" data-en="{{ number_format($rfEmpCount) }} referrers ({{ $rfEmpPct }}%)">{{ number_format($rfEmpCount) }} محيل ({{ $rfEmpPct }}%)</span>
     </div>
   </div>
 
@@ -281,14 +281,15 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
 {{-- Bulk entry modal --}}
 <div class="rf-ovl" id="rf-bulk-ovl" onclick="if(event.target===this)rfBulkClose()">
   <div class="rf-modal">
-    <h3>📥 إدخال أسماء المحيلين دفعة واحدة</h3>
-    <p>الصق كل محيل في سطر بالصيغة: <b>رقم الحساب،الاسم</b> (يمكن الفصل بفاصلة أو Tab).<br>
-       أي رقم موجود مسبقًا سيُحدَّث بالاسم الجديد — رقم واحد = اسم واحد.</p>
+    <h3><span class="lang-ar">📥 إدخال أسماء المحيلين دفعة واحدة</span><span class="lang-en">📥 Bulk Enter Referrer Names</span></h3>
+    <p><span class="lang-ar">الصق كل محيل في سطر بالصيغة: <b>رقم الحساب،الاسم</b> (يمكن الفصل بفاصلة أو Tab).<br>
+       أي رقم موجود مسبقًا سيُحدَّث بالاسم الجديد — رقم واحد = اسم واحد.</span><span class="lang-en">Paste one referrer per line as <b>account,name</b> (separator can be comma or Tab).<br>
+       Existing numbers will be updated with the new name — one number = one name.</span></p>
     <textarea id="rf-bulk-ta" class="rf-ta" placeholder="700259، أحمد علي&#10;700312، محمد سالم&#10;..."></textarea>
     <div id="rf-bulk-msg" style="font-size:12px;margin:10px 2px;min-height:16px"></div>
     <div style="display:flex;gap:10px;justify-content:flex-start;margin-top:6px">
-      <button type="button" class="rf-btn rf-btn-acc" onclick="rfBulkSave()">💾 حفظ الكل</button>
-      <button type="button" class="rf-btn" onclick="rfBulkClose()">إلغاء</button>
+      <button type="button" class="rf-btn rf-btn-acc" onclick="rfBulkSave()">💾 <span class="lang-ar">حفظ الكل</span><span class="lang-en">Save All</span></button>
+      <button type="button" class="rf-btn" onclick="rfBulkClose()"><span class="lang-ar">إلغاء</span><span class="lang-en">Cancel</span></button>
     </div>
   </div>
 </div>
@@ -297,6 +298,21 @@ table.rxr-tbl td{padding:10px 12px;border-top:1px solid var(--brd1)}
 @push('scripts')
 <script>
 var _rfOnlyUnnamed=false, _rfType='';
+function rfL(){ return (typeof curLang!=='undefined'?curLang:localStorage.getItem('wg_lang'))||'ar'; }
+function rfT(ar,en){ return rfL()==='en'?en:ar; }
+// Update the search placeholder and dynamic texts on language change.
+function rfApplyLang(){
+  var s=document.getElementById('rf-search'); if(s) s.placeholder = rfT('بحث بالاسم أو رقم المحيل...','Search by name or referrer number...');
+  // swap data-ar/data-en spans in the type-distribution panel so counts stay in the active language
+  ['rf-tp-cli-acc','rf-tp-cli-num','rf-tp-emp-acc','rf-tp-emp-num'].forEach(function(id){
+    var e=document.getElementById(id); if(!e) return;
+    var v = rfL()==='en' ? (e.getAttribute('data-en')||'') : (e.getAttribute('data-ar')||'');
+    if(v) e.textContent = v;
+  });
+  var tb=document.querySelector('.tb-title'); if(tb) tb.textContent = rfT('تقرير المحيلين','Referrals Report');
+}
+var _rfOrig=window.applyLang; window.applyLang=function(l){ if(_rfOrig)_rfOrig(l); try{ rfApplyLang(); }catch(e){ console.warn(e); } };
+setTimeout(rfApplyLang, 0);
 function rfFilter(q){
   q=(q||'').toLowerCase().trim();
   var shown=0;
@@ -336,10 +352,11 @@ function rfUpdateTypePanel(){
   var tot=Math.max(1,cliC+empC);
   var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
   var w=function(id,p){var e=document.getElementById(id);if(e)e.style.width=Math.max(6,Math.round(p))+'%';};
-  set('rf-tp-cli-num', cliC.toLocaleString('en')+' محيل ('+Math.round(cliC/tot*100)+'%)');
-  set('rf-tp-emp-num', empC.toLocaleString('en')+' محيل ('+Math.round(empC/tot*100)+'%)');
-  set('rf-tp-cli-acc', '· '+cliA.toLocaleString('en')+' حساب مُحال');
-  set('rf-tp-emp-acc', '· '+empA.toLocaleString('en')+' حساب مُحال');
+  var refLbl=rfT('محيل','referrers'), accLbl=rfT('حساب مُحال','accounts referred');
+  set('rf-tp-cli-num', cliC.toLocaleString('en')+' '+refLbl+' ('+Math.round(cliC/tot*100)+'%)');
+  set('rf-tp-emp-num', empC.toLocaleString('en')+' '+refLbl+' ('+Math.round(empC/tot*100)+'%)');
+  set('rf-tp-cli-acc', '· '+cliA.toLocaleString('en')+' '+accLbl);
+  set('rf-tp-emp-acc', '· '+empA.toLocaleString('en')+' '+accLbl);
   w('rf-tp-cli-fill', cliC/tot*100); w('rf-tp-emp-fill', empC/tot*100);
 }
 // Sort the table by any column (client-side, toggles asc/desc).
@@ -397,7 +414,7 @@ function rfRenderName(node, acc, name){
   var tr=node.closest('tr');
   var span=document.createElement('span');
   span.className='rf-name'+(name?'':' rf-unnamed');
-  span.textContent=name||'＋ بدون اسم';
+  span.textContent=name||('＋ '+rfT('بدون اسم','no name'));
   span.setAttribute('onclick',"rfEditName(this,'"+acc+"')");
   node.replaceWith(span);
   tr.setAttribute('data-name',name||'');
@@ -413,9 +430,9 @@ async function rfSaveName(acc, name, inp){
       var dl=document.getElementById('rf-names-dl');
       if(dl && !Array.from(dl.options).some(o=>o.value===name)){var o=document.createElement('option');o.value=name;dl.appendChild(o);}
       rfRenderName(inp, acc, name);
-      if(typeof toast==='function') toast('تم حفظ اسم المحيل','success');
-    } else { inp.disabled=false; if(typeof toast==='function') toast('تعذّر الحفظ','error'); }
-  }catch(e){ inp.disabled=false; if(typeof toast==='function') toast('خطأ بالحفظ','error'); }
+      if(typeof toast==='function') toast(rfT('تم حفظ اسم المحيل','Referrer name saved'),'success');
+    } else { inp.disabled=false; if(typeof toast==='function') toast(rfT('تعذّر الحفظ','Could not save'),'error'); }
+  }catch(e){ inp.disabled=false; if(typeof toast==='function') toast(rfT('خطأ بالحفظ','Save error'),'error'); }
 }
 // Bulk modal
 function rfBulkOpen(){ document.getElementById('rf-bulk-ovl').classList.add('show'); document.getElementById('rf-bulk-ta').focus(); }
@@ -423,7 +440,7 @@ function rfBulkClose(){ document.getElementById('rf-bulk-ovl').classList.remove(
 async function rfBulkSave(){
   var raw=(document.getElementById('rf-bulk-ta').value||'').trim();
   var msg=document.getElementById('rf-bulk-msg');
-  if(!raw){ msg.style.color='#c2761a'; msg.textContent='الصق البيانات أولًا'; return; }
+  if(!raw){ msg.style.color='#c2761a'; msg.textContent=rfT('الصق البيانات أولًا','Paste the data first'); return; }
   var items=[];
   raw.split(/\r?\n/).forEach(function(line){
     line=line.trim(); if(!line) return;
@@ -432,69 +449,79 @@ async function rfBulkSave(){
     var nm=parts.join(' ').trim();
     if(acc && nm) items.push({account:acc,name:nm});
   });
-  if(!items.length){ msg.style.color='#c2761a'; msg.textContent='لم يتم التعرّف على أي سطر صالح (رقم،اسم)'; return; }
-  msg.style.color='var(--mu)'; msg.textContent='جارٍ الحفظ ('+items.length+') ...';
+  if(!items.length){ msg.style.color='#c2761a'; msg.textContent=rfT('لم يتم التعرّف على أي سطر صالح (رقم،اسم)','No valid line detected (number,name)'); return; }
+  msg.style.color='var(--mu)'; msg.textContent=rfT('جارٍ الحفظ','Saving')+' ('+items.length+') ...';
   try{
     var r=await api('POST','/cards/referrer-names-bulk',{items:items});
     if(r&&r.success){
-      msg.style.color='#22a06b'; msg.textContent='✓ تم حفظ '+r.saved+' محيل. سيتم تحديث الجدول...';
+      msg.style.color='#22a06b'; msg.textContent='✓ '+rfT('تم حفظ','Saved')+' '+r.saved+' '+rfT('محيل. سيتم تحديث الجدول...','referrers. Table will refresh…');
       setTimeout(function(){ location.reload(); }, 900);
-    } else { msg.style.color='#e05050'; msg.textContent='تعذّر الحفظ'; }
-  }catch(e){ msg.style.color='#e05050'; msg.textContent='خطأ: '+(e&&e.message||e); }
+    } else { msg.style.color='#e05050'; msg.textContent=rfT('تعذّر الحفظ','Could not save'); }
+  }catch(e){ msg.style.color='#e05050'; msg.textContent=rfT('خطأ: ','Error: ')+(e&&e.message||e); }
 }
 async function rfExpand(acc, el){
   var row=el.closest('tr');
   var btn=row.querySelector('.rxr-exp');   // always toggle the dedicated button's label
   var nxt=row.nextElementSibling;
+  var showLbl = rfT('عرض الحسابات ▾','Show accounts ▾'), hideLbl = rfT('إخفاء ▴','Hide ▴');
   if(nxt && nxt.classList.contains('rxr-sub')){ // toggle
     var vis=nxt.style.display!=='none';
-    nxt.style.display=vis?'none':''; if(btn) btn.textContent=vis?'عرض الحسابات ▾':'إخفاء ▴'; return;
+    nxt.style.display=vis?'none':''; if(btn) btn.textContent=vis?showLbl:hideLbl; return;
   }
-  if(btn) btn.textContent='... جارٍ التحميل';
+  if(btn) btn.textContent=rfT('... جارٍ التحميل','… loading');
   var sub=document.createElement('tr'); sub.className='rxr-sub';
   var td=document.createElement('td'); td.colSpan=8; td.style.padding='0 14px 12px'; sub.appendChild(td);
   row.parentNode.insertBefore(sub, row.nextSibling);
   try{
     var r=await api('GET','/cards/referrals?account='+encodeURIComponent(acc));
-    if(!r||!r.success){ td.innerHTML='<div style="color:#e05050;padding:10px">تعذّر التحميل</div>'; if(btn) btn.textContent='عرض الحسابات ▾'; return; }
+    if(!r||!r.success){ td.innerHTML='<div style="color:#e05050;padding:10px">'+rfT('تعذّر التحميل','Could not load')+'</div>'; if(btn) btn.textContent=showLbl; return; }
     var rows=(r.data||[]);
-    if(!rows.length){ td.innerHTML='<div style="color:var(--mu);padding:10px">لا توجد حسابات</div>'; if(btn) btn.textContent='إخفاء ▴'; return; }
+    if(!rows.length){ td.innerHTML='<div style="color:var(--mu);padding:10px">'+rfT('لا توجد حسابات','No accounts')+'</div>'; if(btn) btn.textContent=hideLbl; return; }
     var html='<table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px"><thead><tr style="color:var(--mu)">'
-      +'<th style="padding:6px 10px;text-align:right">رقم الحساب</th><th style="padding:6px 10px;text-align:right">الشهر</th>'
-      +'<th style="padding:6px 10px;text-align:right">الفرع</th><th style="padding:6px 10px;text-align:right">النوع</th></tr></thead><tbody>';
+      +'<th style="padding:6px 10px;text-align:right">'+rfT('رقم الحساب','Account No.')+'</th><th style="padding:6px 10px;text-align:right">'+rfT('الشهر','Month')+'</th>'
+      +'<th style="padding:6px 10px;text-align:right">'+rfT('الفرع','Branch')+'</th><th style="padding:6px 10px;text-align:right">'+rfT('النوع','Type')+'</th></tr></thead><tbody>';
     rows.forEach(function(d){
+      var kind = d.account_kind==='new' ? rfT('جديد','New') : (d.account_kind==='sub' ? rfT('فرعي','Sub') : (d.account_kind||'—'));
       html+='<tr style="border-top:1px solid var(--brd1)">'
         +'<td style="padding:6px 10px"><span class="rxr-acc" style="font-size:13px">'+(d.account_number||'—')+'</span></td>'
         +'<td style="padding:6px 10px;color:var(--mu)">'+(d.month||'—')+'</td>'
         +'<td style="padding:6px 10px">🏢 '+(d.branch||'—')+'</td>'
-        +'<td style="padding:6px 10px">'+(d.account_kind==='new'?'جديد':(d.account_kind==='sub'?'فرعي':(d.account_kind||'—')))+'</td></tr>';
+        +'<td style="padding:6px 10px">'+kind+'</td></tr>';
     });
     html+='</tbody></table>';
-    td.innerHTML=html; if(btn) btn.textContent='إخفاء ▴';
-  }catch(e){ td.innerHTML='<div style="color:#e05050;padding:10px">خطأ: '+(e&&e.message||e)+'</div>'; if(btn) btn.textContent='عرض الحسابات ▾'; }
+    td.innerHTML=html; if(btn) btn.textContent=hideLbl;
+  }catch(e){ td.innerHTML='<div style="color:#e05050;padding:10px">'+rfT('خطأ: ','Error: ')+(e&&e.message||e)+'</div>'; if(btn) btn.textContent=rfT('عرض الحسابات ▾','Show accounts ▾'); }
 }
 // Excel export — styled like the rest of the system (wgExportExcel helper)
 function rfExportExcel(){
   var rows=Array.from(document.querySelectorAll('#rf-body .rf-row'));
-  var aoa=[['#','رقم حساب المحيل','اسم المحيل','النوع','عدد الحسابات المُحالة','أعلى / أقل عمولة','عدد الفروع']];
+  var hdr = rfL()==='en'
+    ? ['#','Referrer Account','Referrer Name','Type','Referred Accounts','Max / Min Comm.','Branches']
+    : ['#','رقم حساب المحيل','اسم المحيل','النوع','عدد الحسابات المُحالة','أعلى / أقل عمولة','عدد الفروع'];
+  var aoa=[hdr];
   var n=0;
+  var noName = rfT('— بدون اسم —','— no name —');
+  var empLbl = rfT('موظف','Employee');
+  var cliLbl = rfT('عميل','Client');
   rows.forEach(function(tr){
     if(tr.style.display==='none') return;   // respect current filter (clients / employees)
     n++;
     aoa.push([
       n,
       tr.getAttribute('data-acc')||'',
-      (tr.getAttribute('data-name')||'').trim() || '— بدون اسم —',
-      (tr.getAttribute('data-type')==='employee') ? 'موظف' : 'عميل',
+      (tr.getAttribute('data-name')||'').trim() || noName,
+      (tr.getAttribute('data-type')==='employee') ? empLbl : cliLbl,
       Number(tr.getAttribute('data-accounts')||0),
       tr.getAttribute('data-comm')||'',
       Number(tr.getAttribute('data-branches')||0),
     ]);
   });
-  if(n===0){ if(typeof toast==='function') toast('لا توجد بيانات للتصدير','error'); return; }
-  var suffix = _rfType==='employee' ? '_الموظفين' : (_rfType==='client' ? '_العملاء' : '');
-  var fname='تقرير_المحيلين'+suffix+'_'+new Date().toISOString().slice(0,10)+'.xlsx';
-  wgExportExcel(aoa, fname, 'المحيلون', { headerColor:'0E7A88' });
+  if(n===0){ if(typeof toast==='function') toast(rfT('لا توجد بيانات للتصدير','No data to export'),'error'); return; }
+  var isEn = rfL()==='en';
+  var suffix = _rfType==='employee' ? (isEn?'_employees':'_الموظفين') : (_rfType==='client' ? (isEn?'_clients':'_العملاء') : '');
+  var baseName = isEn ? 'Referrers_Report' : 'تقرير_المحيلين';
+  var fname = baseName + suffix + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
+  wgExportExcel(aoa, fname, isEn?'Referrers':'المحيلون', { headerColor:'0E7A88' });
 }
 
 /* ── Classify a referrer: client ↔ employee ─────────────────── */
@@ -513,21 +540,21 @@ async function rfClassify(badge, acc){
   var curType=tr.getAttribute('data-type')||'client';
   var curEmp=tr.getAttribute('data-emp')||'';
   var pop=document.createElement('div'); pop.id='rf-pop'; pop.className='rf-pop';
-  pop.innerHTML='<h4>تصنيف المحيل #'+acc+'</h4>'
+  pop.innerHTML='<h4>'+rfT('تصنيف المحيل','Classify referrer')+' #'+acc+'</h4>'
     +'<div class="rf-pop-opts">'
-    +'<div class="rf-pop-opt'+(curType==='client'?' on':'')+'" id="rf-opt-cli">👥 عميل</div>'
-    +'<div class="rf-pop-opt'+(curType==='employee'?' on':'')+'" id="rf-opt-emp">👤 موظف</div>'
+    +'<div class="rf-pop-opt'+(curType==='client'?' on':'')+'" id="rf-opt-cli">👥 '+rfT('عميل','Client')+'</div>'
+    +'<div class="rf-pop-opt'+(curType==='employee'?' on':'')+'" id="rf-opt-emp">👤 '+rfT('موظف','Employee')+'</div>'
     +'</div>'
     +'<div id="rf-emp-wrap" style="display:'+(curType==='employee'?'block':'none')+'">'
-    +'<select id="rf-emp-sel"><option value="">— اختر الموظف المحيل —</option></select>'
-    +'<button type="button" class="rf-btn rf-btn-acc" style="margin-top:8px;width:100%" onclick="rfAddEmp()">➕ إضافة موظف غير موجود</button>'
+    +'<select id="rf-emp-sel"><option value="">'+rfT('— اختر الموظف المحيل —','— Pick the referrer employee —')+'</option></select>'
+    +'<button type="button" class="rf-btn rf-btn-acc" style="margin-top:8px;width:100%" onclick="rfAddEmp()">➕ '+rfT('إضافة موظف غير موجود','Add a missing employee')+'</button>'
     +'<div id="rf-addemp" style="display:none;margin-top:8px">'
-    +'<input id="rf-addemp-name" placeholder="اسم الموظف">'
-    +'<select id="rf-addemp-branch"><option value="">— الفرع —</option></select>'
-    +'<button type="button" class="rf-btn rf-btn-acc" style="margin-top:8px;width:100%" onclick="rfAddEmpSave()">حفظ الموظف</button>'
+    +'<input id="rf-addemp-name" placeholder="'+rfT('اسم الموظف','Employee name')+'">'
+    +'<select id="rf-addemp-branch"><option value="">'+rfT('— الفرع —','— Branch —')+'</option></select>'
+    +'<button type="button" class="rf-btn rf-btn-acc" style="margin-top:8px;width:100%" onclick="rfAddEmpSave()">'+rfT('حفظ الموظف','Save employee')+'</button>'
     +'</div></div>'
     +'<div id="rf-pop-msg" style="font-size:11.5px;min-height:14px;margin-top:7px"></div>'
-    +'<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="rf-btn rf-btn-acc" style="flex:1" onclick="rfClassifySave(\''+acc+'\')">حفظ</button><button type="button" class="rf-btn" onclick="rfPopClose()">إلغاء</button></div>';
+    +'<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="rf-btn rf-btn-acc" style="flex:1" onclick="rfClassifySave(\''+acc+'\')">'+rfT('حفظ','Save')+'</button><button type="button" class="rf-btn" onclick="rfPopClose()">'+rfT('إلغاء','Cancel')+'</button></div>';
   document.body.appendChild(pop);
   var r=badge.getBoundingClientRect();
   var top=r.bottom+6; if(top+260>window.innerHeight) top=Math.max(8,r.top-266);
@@ -542,7 +569,7 @@ async function rfClassify(badge, acc){
 async function rfFillEmps(selId){
   var emps=await rfLoadEmps();
   var sel=document.getElementById('rf-emp-sel'); if(!sel) return;
-  sel.innerHTML='<option value="">— اختر الموظف المحيل —</option>'+emps.map(function(e){
+  sel.innerHTML='<option value="">'+rfT('— اختر الموظف المحيل —','— Pick the referrer employee —')+'</option>'+emps.map(function(e){
     var br=e.branch?(' — '+(e.branch.name_ar||e.branch.name_en||'')):'';
     return '<option value="'+e.id+'"'+(String(e.id)===String(selId)?' selected':'')+'>'+esc(e.name)+br+'</option>';
   }).join('');
@@ -550,19 +577,22 @@ async function rfFillEmps(selId){
 function rfAddEmp(){ var w=document.getElementById('rf-addemp'); if(w){ w.style.display=w.style.display==='none'?'block':'none'; if(w.style.display==='block') rfFillBranches(); } }
 async function rfFillBranches(){
   var sel=document.getElementById('rf-addemp-branch'); if(!sel||sel.options.length>1) return;
-  try{ var b=await api('GET','/branches'); if(b&&b.success) sel.innerHTML='<option value="">— الفرع —</option>'+b.data.map(function(x){return '<option value="'+x.id+'">'+esc(x.name_ar||x.name_en)+'</option>';}).join(''); }catch(e){}
+  try{ var b=await api('GET','/branches'); if(b&&b.success) sel.innerHTML='<option value="">'+rfT('— الفرع —','— Branch —')+'</option>'+b.data.map(function(x){
+    var nm = rfL()==='en' ? (x.name_en||x.name_ar) : (x.name_ar||x.name_en);
+    return '<option value="'+x.id+'">'+esc(nm)+'</option>';
+  }).join(''); }catch(e){}
 }
 async function rfAddEmpSave(){
   var name=(document.getElementById('rf-addemp-name').value||'').trim();
   var branch=document.getElementById('rf-addemp-branch').value||null;
   var msg=document.getElementById('rf-pop-msg');
-  if(!name){ msg.style.color='#c2761a'; msg.textContent='اكتب اسم الموظف'; return; }
-  msg.style.color='var(--mu)'; msg.textContent='جارٍ إضافة الموظف...';
+  if(!name){ msg.style.color='#c2761a'; msg.textContent=rfT('اكتب اسم الموظف','Enter the employee name'); return; }
+  msg.style.color='var(--mu)'; msg.textContent=rfT('جارٍ إضافة الموظف...','Adding employee…');
   try{
     var r=await api('POST','/employees',{name:name,role:'other',branch_id:branch?parseInt(branch):null});
-    if(r&&r.success&&r.data){ _rfEmps=null; await rfFillEmps(r.data.id); document.getElementById('rf-addemp').style.display='none'; msg.style.color='#22a06b'; msg.textContent='✓ أُضيف الموظف'; }
-    else { msg.style.color='#e05050'; msg.textContent=(r.errors?Object.values(r.errors).flat().join(' | '):(r.message||'تعذّر')); }
-  }catch(e){ msg.style.color='#e05050'; msg.textContent='خطأ'; }
+    if(r&&r.success&&r.data){ _rfEmps=null; await rfFillEmps(r.data.id); document.getElementById('rf-addemp').style.display='none'; msg.style.color='#22a06b'; msg.textContent='✓ '+rfT('أُضيف الموظف','Employee added'); }
+    else { msg.style.color='#e05050'; msg.textContent=(r.errors?Object.values(r.errors).flat().join(' | '):(r.message||rfT('تعذّر','Failed'))); }
+  }catch(e){ msg.style.color='#e05050'; msg.textContent=rfT('خطأ','Error'); }
 }
 async function rfClassifySave(acc){
   var isEmp=document.getElementById('rf-opt-emp').classList.contains('on');
@@ -570,10 +600,10 @@ async function rfClassifySave(acc){
   var payload={account:acc, type:isEmp?'employee':'client'};
   if(isEmp){
     var eid=document.getElementById('rf-emp-sel').value;
-    if(!eid){ msg.style.color='#c2761a'; msg.textContent='اختر الموظف المحيل (أو أضِفه)'; return; }
+    if(!eid){ msg.style.color='#c2761a'; msg.textContent=rfT('اختر الموظف المحيل (أو أضِفه)','Pick the referrer employee (or add one)'); return; }
     payload.employee_id=parseInt(eid);
   }
-  msg.style.color='var(--mu)'; msg.textContent='جارٍ الحفظ...';
+  msg.style.color='var(--mu)'; msg.textContent=rfT('جارٍ الحفظ...','Saving…');
   try{
     var r=await api('POST','/cards/referrer-name',payload);
     if(r&&r.success){
@@ -584,7 +614,7 @@ async function rfClassifySave(acc){
         if(r.name){ tr.setAttribute('data-name',r.name); tr.setAttribute('data-named','1');
           var nc=tr.querySelector('.rf-name'); if(nc){ nc.textContent=r.name; nc.classList.remove('rf-unnamed'); } }
         var badge=tr.querySelector('.rf-type-badge');
-        if(badge){ var emp=(r.type==='employee'); badge.className='rf-type-badge '+(emp?'emp':'cli'); badge.textContent=emp?'👤 موظف':'👥 عميل'; }
+        if(badge){ var emp=(r.type==='employee'); badge.className='rf-type-badge '+(emp?'emp':'cli'); badge.textContent = emp ? ('👤 '+rfT('موظف','Employee')) : ('👥 '+rfT('عميل','Client')); }
       }
       rfRecount();
       // update the segment counters
@@ -593,9 +623,9 @@ async function rfClassifySave(acc){
       var ee=document.getElementById('rf-emp-n'); if(ee) ee.textContent=emp.toLocaleString('en-US');
       rfUpdateTypePanel();
       rfPopClose();
-      if(typeof toast==='function') toast('تم تصنيف المحيل','success');
-    } else { msg.style.color='#e05050'; msg.textContent=r.message||'تعذّر الحفظ'; }
-  }catch(e){ msg.style.color='#e05050'; msg.textContent='خطأ بالحفظ'; }
+      if(typeof toast==='function') toast(rfT('تم تصنيف المحيل','Referrer classified'),'success');
+    } else { msg.style.color='#e05050'; msg.textContent=r.message||rfT('تعذّر الحفظ','Could not save'); }
+  }catch(e){ msg.style.color='#e05050'; msg.textContent=rfT('خطأ بالحفظ','Save error'); }
 }
 </script>
 @endpush

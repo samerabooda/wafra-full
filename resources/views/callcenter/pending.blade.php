@@ -47,7 +47,7 @@
 <div class="panel" style="max-width:1060px;margin-top:18px;display:none" id="cc-completed-panel">
   <div class="panel-header">
     <div class="panel-title">
-      ✅ كروت مركز الاتصال المكتملة لفرعكم
+      <span id="pnd-cmp-title">✅ كروت مركز الاتصال المكتملة لفرعكم</span>
       <span id="completed-count" style="background:var(--gr);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;margin-right:8px">0</span>
     </div>
   </div>
@@ -95,7 +95,13 @@ const PND = {
     rjBtnCancel:'إلغاء', rjBtnConfirm:'❌ تأكيد الرفض',
     errReason:'⚠️ يجب كتابة سبب الرفض (5 أحرف على الأقل)',
     empty:'لا توجد كروت CC واردة حالياً',
-    statusPending:'📩 بانتظار القرار', statusAccepted:'✅ مقبول — أكمل البيانات',
+    statusPending:'📩 بانتظار القرار', statusAccepted:'✅ مقبول — أكمل البيانات', statusInprog:'🔄 قيد المتابعة',
+    cfLblAcc:'رقم الحساب * <span style="font-size:10px;color:#dc3545">(6 أرقام بالضبط)</span>',
+    cfPhAcc:'مثال: 123456',
+    cfErrAcc:'⚠️ رقم الحساب يجب أن يتكوّن من 6 أرقام بالضبط.',
+    cfErrLimit:(b,m,t)=>`⛔ عمولة البروكر (${b}$) + عمولة المسوّق (${m}$) = ${t}$ تتجاوز الحد المسموح (5$)`,
+    cmpTitle:'✅ كروت مركز الاتصال المكتملة لفرعكم',
+    cmpThAc:'رقم الحساب', cmpThMo:'الشهر', cmpThAg:'🎧 موظف الكول سنتر', cmpThDep:'💰 الإيداع', cmpThSt:'الحالة', cmpDone:'مكتمل',
     kindSub:'🔀 Sub', kindNew:'🆕 New',
     from:'من:', agent:'موظف:',  ccComm:'عمولة CC:',
     btnAccept:'✅ قبول الكرت', btnReject:'❌ رفض',
@@ -125,7 +131,13 @@ const PND = {
     rjBtnCancel:'Cancel', rjBtnConfirm:'❌ Confirm Rejection',
     errReason:'⚠️ Please enter a rejection reason (min 5 characters)',
     empty:'No incoming CC cards at the moment',
-    statusPending:'📩 Awaiting Decision', statusAccepted:'✅ Accepted — Complete Data',
+    statusPending:'📩 Awaiting Decision', statusAccepted:'✅ Accepted — Complete Data', statusInprog:'🔄 In Follow-up',
+    cfLblAcc:'Account Number * <span style="font-size:10px;color:#dc3545">(exactly 6 digits)</span>',
+    cfPhAcc:'e.g. 123456',
+    cfErrAcc:'⚠️ Account number must be exactly 6 digits.',
+    cfErrLimit:(b,m,t)=>`⛔ Broker commission ($${b}) + Marketer commission ($${m}) = $${t} — exceeds the $5 cap`,
+    cmpTitle:'✅ Completed Call-Center Cards for Your Branch',
+    cmpThAc:'Account No.', cmpThMo:'Month', cmpThAg:'🎧 Call-Center Agent', cmpThDep:'💰 Deposit', cmpThSt:'Status', cmpDone:'Completed',
     kindSub:'🔀 Sub', kindNew:'🆕 New',
     from:'From:', agent:'Agent:', ccComm:'CC Comm.:',
     btnAccept:'✅ Accept Card', btnReject:'❌ Reject',
@@ -165,10 +177,13 @@ function pndApplyLang() {
   h('rj-lbl-reason', 'rjLblReason');
   const rjPh = el('rj-reason'); if (rjPh) rjPh.placeholder = pnd('rjPhReason');
   t('rj-btn-cancel', 'rjBtnCancel'); t('rj-btn-confirm', 'rjBtnConfirm');
+  // completed-panel title
+  t('pnd-cmp-title', 'cmpTitle');
   // topbar
   const tb = document.querySelector('.tb-title'); if (tb) tb.textContent = pnd('tbTitle');
   // Re-render if loaded
   if (_pendingData.length) renderPendingList(_pendingData);
+  if (typeof _completedCache !== 'undefined' && _completedCache && _completedCache.length) renderCompletedList(_completedCache);
 }
 const _pndOrigApplyLang = window.applyLang;
 window.applyLang = function(lang) {
@@ -225,7 +240,7 @@ function renderPendingList(data) {
 // ── Card HTML builder ──────────────────────────────────────────
 function cardHtml(c) {
   const statusLabel = c.cc_status === 'branch_pending' ? pnd('statusPending')
-                    : c.cc_status === 'in_progress'    ? '🔄 قيد المتابعة'
+                    : c.cc_status === 'in_progress'    ? pnd('statusInprog')
                     : pnd('statusAccepted');
   const kindLabel   = c.account_kind === 'sub' ? pnd('kindSub') : pnd('kindNew');
 
@@ -281,8 +296,8 @@ function completeFormHtml(c) {
     <!-- Row 0: Account number (6 digits) — proof the lead opened an account -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">رقم الحساب * <span style="font-size:10px;color:#dc3545">(6 أرقام بالضبط)</span></label>
-        <input type="text" id="cf-acc-${c.id}" class="form-control" inputmode="numeric" maxlength="6" placeholder="مثال: 123456" value="${c.account_number||''}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+        <label class="form-label">${pnd('cfLblAcc')}</label>
+        <input type="text" id="cf-acc-${c.id}" class="form-control" inputmode="numeric" maxlength="6" placeholder="${pnd('cfPhAcc')}" value="${c.account_number||''}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
       </div>
       <div class="form-group"></div>
     </div>
@@ -463,7 +478,7 @@ async function completeCard(id) {
   // Account number is required (6 digits) — the account just opened.
   const accNo = (document.getElementById(`cf-acc-${id}`)?.value || '').trim();
   if (!/^\d{6}$/.test(accNo)) {
-    errEl.textContent = '⚠️ رقم الحساب يجب أن يتكوّن من 6 أرقام بالضبط.';
+    errEl.textContent = pnd('cfErrAcc');
     errEl.classList.add('show');
     return;
   }
@@ -481,7 +496,7 @@ async function completeCard(id) {
 
   // Client-side commission limit check
   if (bComm + mComm > 5) {
-    errEl.textContent = `⛔ عمولة البروكر (${bComm}$) + عمولة المسوّق (${mComm}$) = ${(bComm+mComm).toFixed(1)}$ تتجاوز الحد المسموح (5$)`;
+    errEl.textContent = pnd('cfErrLimit')(bComm, mComm, (bComm+mComm).toFixed(1));
     errEl.classList.add('show');
     return;
   }
@@ -531,7 +546,8 @@ async function loadPending() {
   const r = await api('GET', '/cc/pending');
   _pendingData = r.success ? (r.data || []) : [];
   renderPendingList(_pendingData);
-  renderCompletedList(r.success ? (r.completed || []) : []);
+  window._completedCache = r.success ? (r.completed || []) : [];
+  renderCompletedList(window._completedCache);
 }
 
 function renderCompletedList(data){
@@ -545,7 +561,7 @@ function renderCompletedList(data){
   const money = v => (v!=null && Number(v)>0) ? '$'+Number(v).toLocaleString('en') : '—';
   if (!data.length) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="table-scroll"><table class="data-table"><thead><tr>'
-    + '<th>#</th><th>رقم الحساب</th><th>الشهر</th><th>🎧 موظف الكول سنتر</th><th>💰 الإيداع</th><th>الحالة</th>'
+    + '<th>#</th><th>'+pnd('cmpThAc')+'</th><th>'+pnd('cmpThMo')+'</th><th>'+pnd('cmpThAg')+'</th><th>'+pnd('cmpThDep')+'</th><th>'+pnd('cmpThSt')+'</th>'
     + '</tr></thead><tbody>'
     + data.map((c,i)=>'<tr>'
         + '<td style="color:var(--mu);font-size:11px">'+(i+1)+'</td>'
@@ -553,7 +569,7 @@ function renderCompletedList(data){
         + '<td>'+_e(c.month)+'</td>'
         + '<td>'+_e((c.cc_agent&&c.cc_agent.name) || (c.ccAgent&&c.ccAgent.name) || '—')+'</td>'
         + '<td class="mono">'+money(c.initial_deposit)+'</td>'
-        + '<td><span class="badge badge-green">مكتمل</span></td>'
+        + '<td><span class="badge badge-green">'+pnd('cmpDone')+'</span></td>'
       + '</tr>').join('')
     + '</tbody></table></div>';
 }
