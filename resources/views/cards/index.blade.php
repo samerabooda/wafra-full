@@ -131,6 +131,14 @@
           <option value="cc" id="cc-o-cc">📞 CC</option>
         </select>
       </div>
+      <div class="cc-fg" style="min-width:110px">
+        <span class="cc-fl" id="cc-fl-acq" style="font-size:11px;font-weight:700;color:var(--m2);margin-bottom:5px;display:block">نوع الاستقطاب</span>
+        <select id="cc-acq" class="form-control" style="font-size:13px" onchange="ccApply()">
+          <option value="" id="cc-o-allacq">الكل</option>
+          <option value="prospected" id="cc-o-acqp">🎯 مُستقطَب</option>
+          <option value="walk_in" id="cc-o-acqw">🚶 زائر</option>
+        </select>
+      </div>
       <span id="cc-count" style="font-size:12px;color:var(--mu);align-self:center;white-space:nowrap;margin-right:auto;padding:6px 0"></span>
     </div>
   </div>
@@ -155,6 +163,7 @@ const CC={
     kTotal:'إجمالي الكروت',kNew:'جديد',kSub:'فرعي',kMod:'معدّلة',kCc:'من CC',kDep:'إجمالي الإيداع',
     flSearch:'بحث',flMonth:'الشهر',flBroker:'البروكر',flKind:'النوع',flStatus:'الحالة',flSource:'المصدر',
     allM:'كل الشهور',allB:'كل البروكرات',allK:'الكل',kn:'🟢 جديد',ks:'🔵 فرعي',allS:'الكل',sa:'عادي',sm:'معدّل',sn:'مضاف',allSr:'الكل',reg:'عادي',cc:'📞 CC',
+    flAcq:'نوع الاستقطاب', allAcq:'الكل', acqProspected:'🎯 مُستقطَب', acqWalkin:'🚶 زائر',
     clear:'مسح',search:'رقم حساب / بروكر / مسوّق...',
     thAc:'الحساب',thMonth:'الشهر',thBranch:'الفرع',thBroker:'البروكر',thBC:'ع.بروكر',thMk:'المسوّق',thMC:'ع.مسوّق',thTot:'إجمالي ع.',thDep:'إيداع أولي',thMon:'إيداع شهري',thKind:'النوع',thStatus:'الحالة',thSrc:'المصدر',thAct:'',
     cNew:'🟢 جديد',cSub:'🔵 فرعي',sMod:'✏️ معدّل',sNew:'🆕 مضاف',sAct:'✅ عادي',regular:'عادي',ccL:'📞 CC',
@@ -167,6 +176,7 @@ const CC={
     kTotal:'Total Cards',kNew:'New',kSub:'Sub',kMod:'Modified',kCc:'From CC',kDep:'Total Deposit',
     flSearch:'Search',flMonth:'Month',flBroker:'Broker',flKind:'Kind',flStatus:'Status',flSource:'Source',
     allM:'All Months',allB:'All Brokers',allK:'All',kn:'🟢 New',ks:'🔵 Sub',allS:'All',sa:'Active',sm:'Modified',sn:'New Added',allSr:'All',reg:'Regular',cc:'📞 CC',
+    flAcq:'Acquisition', allAcq:'All', acqProspected:'🎯 Prospected', acqWalkin:'🚶 Visitor',
     clear:'Clear',search:'Account # / broker / marketer...',
     thAc:'Account',thMonth:'Month',thBranch:'Branch',thBroker:'Broker',thBC:'B.Comm',thMk:'Marketer',thMC:'M.Comm',thTot:'Total C.',thDep:'Initial',thMon:'Monthly',thKind:'Kind',thStatus:'Status',thSrc:'Source',thAct:'',
     cNew:'🟢 New',cSub:'🔵 Sub',sMod:'✏️ Modified',sNew:'🆕 New',sAct:'✅ Active',regular:'Regular',ccL:'📞 CC',
@@ -190,6 +200,7 @@ function ccApplyLang(){
   _t('cc-k-total-l',tr('kTotal'));_t('cc-k-new-l',tr('kNew'));_t('cc-k-sub-l',tr('kSub'));_t('cc-k-mod-l',tr('kMod'));_t('cc-k-cc-l',tr('kCc'));_t('cc-k-dep-l',tr('kDep'));
   _t('cc-fl-search',tr('flSearch'));_t('cc-fl-month',tr('flMonth'));_t('cc-fl-broker',tr('flBroker'));_t('cc-fl-kind',tr('flKind'));_t('cc-fl-status',tr('flStatus'));_t('cc-fl-source',tr('flSource'));
   _t('cc-o-allm',tr('allM'));_t('cc-o-allb',tr('allB'));_t('cc-o-allk',tr('allK'));_t('cc-o-kn',tr('kn'));_t('cc-o-ks',tr('ks'));_t('cc-o-alls',tr('allS'));_t('cc-o-sa',tr('sa'));_t('cc-o-sm',tr('sm'));_t('cc-o-sn',tr('sn'));_t('cc-o-allsr',tr('allSr'));_t('cc-o-reg',tr('reg'));_t('cc-o-cc',tr('cc'));
+  _t('cc-fl-acq',tr('flAcq'));_t('cc-o-allacq',tr('allAcq'));_t('cc-o-acqp',tr('acqProspected'));_t('cc-o-acqw',tr('acqWalkin'));
   _t('cc-clear-l',tr('clear'));
   const se=document.getElementById('cc-search');if(se)se.placeholder=tr('search');
   const t=document.querySelector('.tb-title');if(t)t.textContent=tr('tb');
@@ -208,7 +219,7 @@ function ccHead(){
 function ccSort(k){if(_sk===k)_sd=_sd==='asc'?'desc':'asc';else{_sk=k;_sd='asc';}ccHead();ccRender();}
 function ccDeb(){clearTimeout(_timer);_timer=setTimeout(ccRender,200);}
 function ccApply(){ccRender();}
-function ccClear(){['cc-month','cc-broker','cc-kind','cc-status','cc-source'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});const s=document.getElementById('cc-search');if(s)s.value='';ccRender();}
+function ccClear(){['cc-month','cc-broker','cc-kind','cc-status','cc-source','cc-acq'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});const s=document.getElementById('cc-search');if(s)s.value='';ccRender();}
 
 function tComm(c){return (parseFloat(c.broker_commission||0)+parseFloat(c.marketer_commission||0)+parseFloat(c.ext_commission1||0)+parseFloat(c.ext_commission2||0));}
 function ccol(v){v=parseFloat(v)||0;return v>5?'ch':v>2?'cm':'cl';}
@@ -246,13 +257,14 @@ async function ccLoad(){
 function ccRender(){
   const isEn=ccL()==='en';
   const q=(document.getElementById('cc-search')?.value||'').toLowerCase().trim();
-  const fM=document.getElementById('cc-month')?.value||'',fB=document.getElementById('cc-broker')?.value||'',fK=document.getElementById('cc-kind')?.value||'',fS=document.getElementById('cc-status')?.value||'',fSrc=document.getElementById('cc-source')?.value||'';
+  const fM=document.getElementById('cc-month')?.value||'',fB=document.getElementById('cc-broker')?.value||'',fK=document.getElementById('cc-kind')?.value||'',fS=document.getElementById('cc-status')?.value||'',fSrc=document.getElementById('cc-source')?.value||'',fAcq=document.getElementById('cc-acq')?.value||'';
   let d=_all;
   if(fM)d=d.filter(c=>c.month===fM);
   if(fB)d=d.filter(c=>(c.broker?.name||'')===fB);
   if(fK)d=d.filter(c=>c.account_kind===fK);
   if(fS)d=d.filter(c=>c.status===fS);
   if(fSrc==='cc')d=d.filter(c=>!!c.cc_branch_id);else if(fSrc==='regular')d=d.filter(c=>!c.cc_branch_id);
+  if(fAcq)d=d.filter(c=>(c.acquisition_type||'prospected')===fAcq);
   if(q)d=d.filter(c=>String(c.account_number).includes(q)||(c.broker?.name||'').toLowerCase().includes(q)||(c.marketer?.name||'').toLowerCase().includes(q)||(c.month||'').toLowerCase().includes(q)||(c.branch?.name_ar||'').toLowerCase().includes(q)||(c.branch?.name_en||'').toLowerCase().includes(q));
   d=d.slice();
 
@@ -287,7 +299,8 @@ function ccRender(){
     const bc=parseFloat(c.broker_commission||0),mc=parseFloat(c.marketer_commission||0),t=tComm(c);
     const rc=isCC?'cc-r-cc':c.status==='modified'?'cc-r-mod':c.status==='new_added'?'cc-r-new':'';
     const bn=isEn?(c.branch?.name_en||c.branch?.name_ar||'—'):(c.branch?.name_ar||'—');
-    parts[i]=`<tr class="${rc}"><td style="color:var(--mu);font-size:10px">${i+1}</td><td><span class="acn">${esc(String(c.account_number))}</span></td><td style="color:var(--mu);font-size:11px;white-space:nowrap">${esc(c.month||'—')}</td><td style="font-size:11px">${esc(bn)}</td><td style="font-weight:700;color:var(--pri2)">${esc(c.broker?.name||'—')}</td><td><span class="mono ${ccol(bc)}">$${bc.toFixed(1)}</span></td><td style="font-size:11px;color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?esc(c.marketer.name):'<span style="color:var(--mu)">—</span>'}</td><td><span class="mono ${ccol(mc)}">$${mc.toFixed(1)}</span></td><td><span class="mono ${ccol(t)}" style="font-weight:700">$${t.toFixed(1)}</span></td><td class="mono" style="color:var(--pri2);font-size:11px">${fmtK(c.initial_deposit)}</td><td class="mono" style="color:#22c97a;font-size:11px">${fmtK(c.monthly_deposit)}</td><td><span class="chip ${c.account_kind==='new'?'chip-new':'chip-sub'}">${c.account_kind==='new'?tr('cNew'):tr('cSub')}</span></td><td>${sc(c.status)}</td><td>${isCC?`<span class="chip chip-cc">${tr('ccL')}</span>`:`<span style="font-size:10px;color:var(--mu)">${tr('regular')}</span>`}</td><td><a href="/cards/${c.id}/edit" class="cc-eb" title="${tr('sm')}">✏️</a></td></tr>`;
+    const walkin = (window.walkinChip ? walkinChip(c, 'sm') : '');
+    parts[i]=`<tr class="${rc}"><td style="color:var(--mu);font-size:10px">${i+1}</td><td><span class="acn">${esc(String(c.account_number))}</span>${walkin?' '+walkin:''}</td><td style="color:var(--mu);font-size:11px;white-space:nowrap">${esc(c.month||'—')}</td><td style="font-size:11px">${esc(bn)}</td><td style="font-weight:700;color:var(--pri2)">${esc(c.broker?.name||'—')}</td><td><span class="mono ${ccol(bc)}">$${bc.toFixed(1)}</span></td><td style="font-size:11px;color:var(--m2)">${c.marketer?.name&&c.marketer.name!==c.broker?.name?esc(c.marketer.name):'<span style="color:var(--mu)">—</span>'}</td><td><span class="mono ${ccol(mc)}">$${mc.toFixed(1)}</span></td><td><span class="mono ${ccol(t)}" style="font-weight:700">$${t.toFixed(1)}</span></td><td class="mono" style="color:var(--pri2);font-size:11px">${fmtK(c.initial_deposit)}</td><td class="mono" style="color:#22c97a;font-size:11px">${fmtK(c.monthly_deposit)}</td><td><span class="chip ${c.account_kind==='new'?'chip-new':'chip-sub'}">${c.account_kind==='new'?tr('cNew'):tr('cSub')}</span></td><td>${sc(c.status)}</td><td>${isCC?`<span class="chip chip-cc">${tr('ccL')}</span>`:`<span style="font-size:10px;color:var(--mu)">${tr('regular')}</span>`}</td><td><a href="/cards/${c.id}/edit" class="cc-eb" title="${tr('sm')}">✏️</a></td></tr>`;
   }
   document.getElementById('cc-body').innerHTML=parts.join('');
 

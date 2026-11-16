@@ -15,6 +15,8 @@ class CommissionCard extends Model
         'modified_month', 'modified_month_date',
         'branch_id', 'account_type_id', 'account_status_id',
         'trading_type_id', 'account_kind', 'parent_account',
+        'acquisition_type',   // prospected (default) | walk_in — classification tag only
+
         'broker_id',         'broker_commission',
         'marketer_id',       'marketer_commission',
         'ext_marketer1_id',  'ext_commission1',

@@ -108,6 +108,30 @@
         <div id="ec-parent-msg" style="font-size:11px;margin-top:5px;min-height:14px"></div>
       </div>
     </div>
+    {{-- 👤 Acquisition type — switch a card between "prospected" and "walk_in" (visitor) --}}
+    <div class="form-row" style="background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.22);border-radius:9px;padding:12px;margin-bottom:12px">
+      <div class="form-group" style="flex:1;margin-bottom:0">
+        <label class="form-label" id="edt-lbl-acq">👤 نوع استقطاب العميل / Acquisition Type</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="ec-acq-opt" style="flex:1;min-width:220px;cursor:pointer;display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:10px;border:2px solid var(--brd2);background:var(--bg3)">
+            <input type="radio" name="ec_acq" value="prospected" id="ec-acq-p" checked onchange="onEcAcqChange()" style="margin:0">
+            <span style="font-size:19px">🎯</span>
+            <span style="flex:1">
+              <div style="font-size:12.5px;font-weight:800;color:var(--tx)" id="edt-lbl-acq-p">مُستقطَب</div>
+              <div style="font-size:10.5px;color:var(--mu)" id="edt-lbl-acq-p-sub">جلبه المسوّق بجهده</div>
+            </span>
+          </label>
+          <label class="ec-acq-opt" style="flex:1;min-width:220px;cursor:pointer;display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:10px;border:2px solid var(--brd2);background:var(--bg3)">
+            <input type="radio" name="ec_acq" value="walk_in" id="ec-acq-w" onchange="onEcAcqChange()" style="margin:0">
+            <span style="font-size:19px" class="walkin-emoji" style="display:inline-block">🚶</span>
+            <span style="flex:1">
+              <div style="font-size:12.5px;font-weight:800;color:#c2761a" id="edt-lbl-acq-w">زائر</div>
+              <div style="font-size:10.5px;color:var(--mu)" id="edt-lbl-acq-w-sub">جاء من نفسه — المسوّق استقبله فقط</div>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" id="edt-lbl-dep">إيداع فتح الحساب</label>
@@ -163,6 +187,9 @@ const EDT={
     lblExt1:'🌐 مسوّق خارجي', lblExt1C:'عمولة المسوّق الخارجي',
     lblRef:'🔗 إحالة (Referral) — رقم حساب المُحيل', lblRefC:'عمولة الإحالة',
     lblKind:'نوع الحساب', kNew:'حساب أساسي (جديد)', kSub:'حساب فرعي — له حساب أساسي', lblParent:'رقم الحساب الأساسي',
+    lblAcq:'👤 نوع استقطاب العميل',
+    acqProspected:'مُستقطَب', acqProspectedSub:'جلبه المسوّق بجهده',
+    acqWalkin:'زائر',         acqWalkinSub:'جاء من نفسه — المسوّق استقبله فقط',
     lblDep:'إيداع فتح الحساب', lblMon:'الإيداع الشهري المتوقع',
     lblReason:'⚠️ سبب التعديل (مطلوب)', optReason:'— اختر السبب —',
     r1:'تصحيح بيانات', r2:'تعديل عمولة', r3:'تغيير بروكر', r4:'تغيير مسوّق',
@@ -183,6 +210,9 @@ const EDT={
     lblExt1:'🌐 External Marketer', lblExt1C:'External Marketer Commission',
     lblRef:'🔗 Referral — Referrer Account Number', lblRefC:'Referral Commission',
     lblKind:'Account Type', kNew:'Primary (new) account', kSub:'Sub account — has a main account', lblParent:'Main Account Number',
+    lblAcq:'👤 Acquisition Type',
+    acqProspected:'Prospected', acqProspectedSub:'The marketer actively brought them in',
+    acqWalkin:'Visitor',         acqWalkinSub:'Came on their own — the marketer only received them',
     lblDep:'Opening Deposit', lblMon:'Expected Monthly Deposit',
     lblReason:'⚠️ Reason for Edit (required)', optReason:'— Select reason —',
     r1:'Data correction', r2:'Commission adjustment', r3:'Broker change', r4:'Marketer change',
@@ -207,6 +237,9 @@ function edtApplyLang(){
     'edt-lbl-ext2':'lblExt2','edt-lbl-ext2c':'lblExt2C',
     'edt-lbl-ref':'lblRef','edt-lbl-refc':'lblRefC',
     'edt-lbl-kind':'lblKind','edt-lbl-parent':'lblParent',
+    'edt-lbl-acq':'lblAcq',
+    'edt-lbl-acq-p':'acqProspected','edt-lbl-acq-p-sub':'acqProspectedSub',
+    'edt-lbl-acq-w':'acqWalkin',   'edt-lbl-acq-w-sub':'acqWalkinSub',
     'edt-lbl-dep':'lblDep','edt-lbl-mon':'lblMon',
     'edt-lbl-reason':'lblReason','edt-lbl-notes':'lblNotes',
     'edt-hist-label':'histLabel','edt-btn-save':'btnSave','edt-btn-cancel':'btnCancel',
@@ -298,6 +331,11 @@ async function ecLoad(id,pre){
   document.getElementById('ec-kind').value=(c.account_kind==='sub'?'sub':'new');
   document.getElementById('ec-parent').value=c.parent_account||'';
   onKindChange();
+  // Acquisition type — walk_in only if explicitly set; otherwise prospected
+  var acqW=document.getElementById('ec-acq-w'), acqP=document.getElementById('ec-acq-p');
+  if(c.acquisition_type==='walk_in'){ if(acqW) acqW.checked=true; }
+  else{ if(acqP) acqP.checked=true; }
+  onEcAcqChange();
   document.getElementById('ec-dep').value=c.initial_deposit||0;
   document.getElementById('ec-mon').value=c.monthly_deposit||0;
   document.getElementById('ec-reason').value='';
@@ -314,6 +352,18 @@ function onKindChange(){
   const w=document.getElementById('ec-parent-wrap');
   if(w)w.style.display=isSub?'':'none';
   if(!isSub){const p=document.getElementById('ec-parent');if(p)p.value='';const m=document.getElementById('ec-parent-msg');if(m)m.textContent='';}
+}
+function onEcAcqChange(){
+  document.querySelectorAll('.ec-acq-opt').forEach(function(lbl){
+    var r=lbl.querySelector('input[type="radio"]'); if(!r) return;
+    if(r.checked){
+      lbl.style.borderColor = r.value==='walk_in' ? '#c2761a' : 'var(--pri)';
+      lbl.style.background  = r.value==='walk_in' ? 'rgba(245,166,35,.09)' : 'rgba(26,173,186,.08)';
+      lbl.style.boxShadow   = '0 0 0 3px ' + (r.value==='walk_in' ? 'rgba(245,166,35,.18)' : 'rgba(26,173,186,.18)');
+    } else {
+      lbl.style.borderColor='var(--brd2)'; lbl.style.background='var(--bg3)'; lbl.style.boxShadow='';
+    }
+  });
 }
 let _ecRefT=null;
 window._ecRefMap = window._ecRefMap || {};
@@ -363,6 +413,7 @@ async function saveEdit(){
     referral_name:(document.getElementById('ec-refname').value||'').trim()||null,
     referral_commission:(document.getElementById('ec-ref').value||'').trim()?(parseFloat(document.getElementById('ec-refc').value)||0):0,
     account_kind:document.getElementById('ec-kind').value==='sub'?'sub':'new',
+    acquisition_type: (document.querySelector('input[name="ec_acq"]:checked')?.value) || 'prospected',
     parent_account:document.getElementById('ec-kind').value==='sub'?((document.getElementById('ec-parent').value||'').replace(/[^0-9]/g,'')||null):null,
     initial_deposit:parseFloat(document.getElementById('ec-dep').value)||0,
     monthly_deposit:parseFloat(document.getElementById('ec-mon').value)||0,

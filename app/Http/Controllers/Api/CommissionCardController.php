@@ -192,6 +192,7 @@ class CommissionCardController extends Controller
             ->forPage($page, $per)
             ->get([
                 'c.id','c.account_number','c.month','c.month_date','c.modified_month','c.account_kind','c.status',
+                'c.acquisition_type',
                 'c.broker_commission','c.marketer_commission','c.ext_commission1','c.ext_commission2',
                 'c.initial_deposit','c.monthly_deposit','c.cc_branch_id','c.referral_account','c.referral_commission','c.parent_account',
                 'br.name_ar as branch_ar','br.name_en as branch_en',
@@ -642,7 +643,8 @@ class CommissionCardController extends Controller
         DB::transaction(function() use ($request, $card) {
             $oldData = $card->only(['broker_id','broker_commission','marketer_id','marketer_commission',
                 'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
-                'initial_deposit','monthly_deposit','account_status_id','account_kind','parent_account','notes']);
+                'initial_deposit','monthly_deposit','account_status_id','account_kind','parent_account',
+                'acquisition_type','notes']);
 
             $fields = $this->extractFields($request);
             // Branch managers cannot relocate a card to another branch
@@ -1142,6 +1144,7 @@ class CommissionCardController extends Controller
             'branch_id'=>'nullable|exists:branches,id','account_type_id'=>'nullable|exists:account_types,id',
             'account_status_id'=>'nullable|exists:account_statuses,id','trading_type_id'=>'nullable|exists:trading_types,id',
             'account_kind'=>'nullable|in:new,sub','parent_account'=>'nullable|regex:/^\\d{6}$/',
+            'acquisition_type'=>'nullable|in:prospected,walk_in',
             'broker_id'=>'nullable|exists:employees,id','broker_commission'=>'nullable|numeric|min:0',
             'marketer_id'=>'nullable|exists:employees,id','marketer_commission'=>'nullable|numeric|min:0',
             'ext_marketer1_id'=>'nullable|exists:employees,id','ext_commission1'=>'nullable|numeric|min:0',
@@ -1168,11 +1171,20 @@ class CommissionCardController extends Controller
         $fields = $request->only([
             'account_number','month','month_date','branch_id',
             'account_type_id','account_status_id','trading_type_id','account_kind','parent_account',
+            'acquisition_type',  // prospected (default) | walk_in
             'broker_id','broker_commission','marketer_id','marketer_commission',
             'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
             'referral_account','referral_commission',
             'forex_commission','futures_commission','initial_deposit','monthly_deposit','notes',
         ]);
+
+        // Classification tag — if the client sent the field, normalize it; otherwise LEAVE IT OUT
+        // so an update keeps the current value and a fresh create takes the DB default (prospected).
+        if (array_key_exists('acquisition_type', $fields)) {
+            if (!in_array($fields['acquisition_type'] ?? null, ['prospected','walk_in'], true)) {
+                $fields['acquisition_type'] = 'prospected';
+            }
+        }
 
         // A primary (new) account has no parent; a sub account keeps its parent number (digits only).
         if (array_key_exists('account_kind', $fields)) {

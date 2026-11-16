@@ -160,6 +160,53 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 html[lang="en"] .lang-ar{display:none !important}
 html[lang="ar"] .lang-en{display:none !important}
 html:not([lang]) .lang-en{display:none !important}
+
+/* ──────────────────────────────────────────────────────────────
+   "Visitor Client" chip — marks a walk-in (acquisition_type = walk_in).
+   A walking-figure emoji that bobs like it's stepping, plus a slight
+   glow on the chip. The chip itself does NOT translate horizontally
+   (we're inside tables where that would break layout) — only the
+   emoji moves, which reads as footsteps without disturbing the row.
+   Used anywhere a card is listed: cards/index, reports/*, dashboards.
+   ────────────────────────────────────────────────────────────── */
+.chip-walkin{
+  display:inline-flex;align-items:center;gap:5px;
+  background:linear-gradient(135deg,rgba(245,166,35,.16),rgba(245,166,35,.04));
+  color:#c2761a;
+  border:1px dashed rgba(194,118,26,.55);
+  border-radius:12px;
+  padding:2px 9px 2px 7px;
+  font-size:10.5px;
+  font-weight:800;
+  font-family:inherit;
+  white-space:nowrap;
+  box-shadow:0 0 0 0 rgba(194,118,26,.4);
+  animation:walkinGlow 2.6s ease-in-out infinite;
+}
+.chip-walkin .walkin-emoji{
+  display:inline-block;
+  transform-origin:50% 100%;
+  animation:walkinStep 0.7s ease-in-out infinite;
+}
+.chip-walkin:hover{filter:brightness(1.05)}
+@keyframes walkinStep{
+   0%,100%{transform:translateY(0)   rotate(-4deg) scale(1)}
+   25%    {transform:translateY(-2px) rotate(3deg)  scale(1.02)}
+   50%    {transform:translateY(0)    rotate(5deg)  scale(1)}
+   75%    {transform:translateY(-1px) rotate(-3deg) scale(1.02)}
+}
+@keyframes walkinGlow{
+   0%,100%{box-shadow:0 0 0 0 rgba(194,118,26,.35)}
+   50%    {box-shadow:0 0 0 3px rgba(194,118,26,0)}
+}
+/* reduced-motion preference — stop the animation */
+@media (prefers-reduced-motion:reduce){
+  .chip-walkin,.chip-walkin .walkin-emoji{animation:none !important}
+}
+/* Small inline variant for dense table cells */
+.chip-walkin.chip-walkin-sm{font-size:9.5px;padding:1px 7px 1px 5px;gap:3px}
+/* Bigger highlight variant (card-view tiles / dashboard list) */
+.chip-walkin.chip-walkin-lg{font-size:12.5px;padding:4px 12px 4px 10px;gap:7px}
 .nb-empty{text-align:center;padding:30px 12px;color:var(--mu);font-size:12px}
 .tb-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);
   border:1px solid var(--brd1);border-radius:7px;padding:6px 10px;
@@ -1354,6 +1401,22 @@ const fmtK = n => {
 };
 // Expose globally so per-page scripts (cards search/modified, etc.) can use them.
 try { window.fmt = fmt; window.fmtK = fmtK; window.esc = esc; } catch(e){}
+
+// ── Visitor-client chip ────────────────────────────────────
+// Returns the animated "🚶 Visitor" chip HTML when a card's acquisition_type
+// is 'walk_in', or an empty string otherwise. Every table / card tile
+// uses this so the visual marker is identical everywhere.
+//   size: 'sm' | '' | 'lg'  (default '' = standard)
+function walkinChip(card, size) {
+  if (!card || card.acquisition_type !== 'walk_in') return '';
+  var en = (typeof curLang !== 'undefined' ? curLang : localStorage.getItem('wg_lang')) === 'en';
+  var cls = 'chip-walkin' + (size === 'sm' ? ' chip-walkin-sm' : size === 'lg' ? ' chip-walkin-lg' : '');
+  var lbl = en ? 'Visitor' : 'زائر';
+  return '<span class="'+cls+'" title="'+(en?'Visitor client — came on their own':'عميل زائر — جاء من نفسه')+'">'
+       + '<span class="walkin-emoji">🚶</span>'+lbl
+       + '</span>';
+}
+try { window.walkinChip = walkinChip; } catch(e){}
 
 // ── Phone-aware message formatter ──────────────────────────
 // HTML-escapes then wraps phone-shaped tokens (📱 +965 12345678 / +965 12345678)

@@ -213,6 +213,9 @@ class CallCenterController extends Controller
                 'parent_account'      => ($request->account_kind === 'sub')
                                             ? preg_replace('/[^0-9]/', '', (string) $request->parent_account) ?: null
                                             : null,
+                // CC-originated cards are always prospected by definition — the Call Center team
+                // actively contacted and qualified this client. A walk-in has nothing to do with CC.
+                'acquisition_type'    => 'prospected',
                 'notes'               => $request->notes,
                 'client_phone'        => $request->client_phone,
                 'client_country_code' => $request->client_country_code ?: '+965',

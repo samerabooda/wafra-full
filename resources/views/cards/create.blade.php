@@ -119,6 +119,32 @@
             </select>
           </div>
         </div>
+        {{-- 👤 Acquisition type — did the marketer actively bring this client, or did they walk in?
+             The default is prospected (regular). Walk-ins are flagged for separate reporting.
+             Commission caps are NOT changed by this tag — it classifies only. --}}
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label" id="crt-lbl-acq">👤 نوع استقطاب العميل / Acquisition Type</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <label class="acq-opt" style="flex:1;min-width:220px;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;border:2px solid var(--brd2);background:var(--bg3)">
+                <input type="radio" name="acquisition_type" value="prospected" id="f-acq-prospected" checked onchange="onAcqChange()" style="margin:0">
+                <span style="font-size:20px">🎯</span>
+                <span style="flex:1">
+                  <div style="font-size:13px;font-weight:800;color:var(--tx)" id="crt-lbl-acq-p">مُستقطَب</div>
+                  <div style="font-size:10.5px;color:var(--mu)" id="crt-lbl-acq-p-sub">جلبه المسوّق بجهده</div>
+                </span>
+              </label>
+              <label class="acq-opt" style="flex:1;min-width:220px;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;border:2px solid var(--brd2);background:var(--bg3)">
+                <input type="radio" name="acquisition_type" value="walk_in" id="f-acq-walkin" onchange="onAcqChange()" style="margin:0">
+                <span style="font-size:20px" class="walkin-emoji" style="display:inline-block">🚶</span>
+                <span style="flex:1">
+                  <div style="font-size:13px;font-weight:800;color:#c2761a" id="crt-lbl-acq-w">زائر</div>
+                  <div style="font-size:10.5px;color:var(--mu)" id="crt-lbl-acq-w-sub">جاء من نفسه — المسوّق استقبله فقط</div>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
         @php $isScopedUser = auth()->user()?->isScopedToBranch(); @endphp
         @if(!$isScopedUser)
         <div class="form-row">
@@ -298,6 +324,9 @@ const CRT = {
     lblBranch:    'الفرع',
     lblTrading:   'نوع التداول',
     lblKind:      'حساب جديد أم فرعي',
+    lblAcq:       '👤 نوع استقطاب العميل',
+    acqProspected:'مُستقطَب', acqProspectedSub:'جلبه المسوّق بجهده',
+    acqWalkin:    'زائر',    acqWalkinSub:    'جاء من نفسه — المسوّق استقبله فقط',
     lblParent:    '🔗 رقم حساب العميل الأساسي (Parent AC) *',
     phParent:     'أدخل رقم الحساب الأساسي...',
     phRefAcc:     'رقم الحساب',
@@ -343,6 +372,9 @@ const CRT = {
     lblBranch:    'Branch',
     lblTrading:   'Trading Type',
     lblKind:      'New or Sub',
+    lblAcq:       '👤 Acquisition Type',
+    acqProspected:'Prospected', acqProspectedSub:'The marketer actively brought them in',
+    acqWalkin:    'Visitor',     acqWalkinSub:    'Came on their own — the marketer only received them',
     lblParent:    '🔗 Parent Account Number (Parent AC) *',
     phParent:     'Enter parent account number...',
     phRefAcc:     'Account number',
@@ -394,6 +426,9 @@ function crtApplyLang() {
     'crt-lbl-branch': 'lblBranch',
     'crt-lbl-trading':'lblTrading',
     'crt-lbl-kind':   'lblKind',
+    'crt-lbl-acq':    'lblAcq',
+    'crt-lbl-acq-p':  'acqProspected', 'crt-lbl-acq-p-sub':'acqProspectedSub',
+    'crt-lbl-acq-w':  'acqWalkin',     'crt-lbl-acq-w-sub':'acqWalkinSub',
     'crt-lbl-parent': 'lblParent',
     'crt-parent-hint':'hintParent',
     'crt-lbl-broker': 'lblBroker',
@@ -527,6 +562,25 @@ document.addEventListener('click', function(e) {
   }
 });
 // ══ end picker ════════════════════════════════════════════════
+
+// ── Acquisition radio: highlight the chosen card visually ─────
+function onAcqChange() {
+  document.querySelectorAll('.acq-opt').forEach(function(lbl){
+    var r = lbl.querySelector('input[type="radio"]');
+    if (!r) return;
+    if (r.checked) {
+      lbl.style.borderColor = r.value === 'walk_in' ? '#c2761a' : 'var(--pri)';
+      lbl.style.background  = r.value === 'walk_in' ? 'rgba(245,166,35,.09)' : 'rgba(26,173,186,.08)';
+      lbl.style.boxShadow   = '0 0 0 3px ' + (r.value === 'walk_in' ? 'rgba(245,166,35,.18)' : 'rgba(26,173,186,.18)');
+    } else {
+      lbl.style.borderColor = 'var(--brd2)';
+      lbl.style.background  = 'var(--bg3)';
+      lbl.style.boxShadow   = '';
+    }
+  });
+}
+// Apply the initial highlight on page load.
+setTimeout(onAcqChange, 0);
 
 // ── Kind change: show/hide parent account field ───────────────
 function onKindChange() {
@@ -731,6 +785,7 @@ async function submitCard() {
     account_status_id:   null,
     trading_type_id:     parseInt(document.getElementById('f-trading').value)|| null,
     account_kind:        kind,
+    acquisition_type:    (document.querySelector('input[name="acquisition_type"]:checked')?.value) || 'prospected',
     parent_account_number: kind === 'sub' ? parentAc : null,
     broker_id:           (broker && broker !== 'self') ? (parseInt(broker) || null) : null,
     broker_commission:   parseFloat(document.getElementById('f-broker-comm').value) || 0,
