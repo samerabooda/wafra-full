@@ -5,10 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
+use Illuminate\Support\Facades\Schema;
 
 class CommissionCard extends Model
 {
     use SoftDeletes;
+
+    /**
+     * Runtime check: does the DB actually have the acquisition_type column?
+     * Lets every call site stay safe before/after the schema migration runs.
+     * The result is cached in-process for the lifetime of the request.
+     */
+    public static function hasAcquisitionCol(): bool
+    {
+        static $has = null;
+        if ($has !== null) return $has;
+        try   { $has = Schema::hasColumn('commission_cards', 'acquisition_type'); }
+        catch (\Throwable $e) { $has = false; }
+        return $has;
+    }
 
     protected $fillable = [
         'account_number', 'month', 'month_date',

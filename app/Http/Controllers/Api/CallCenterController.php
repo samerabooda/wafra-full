@@ -194,7 +194,7 @@ class CallCenterController extends Controller
         }
 
         $card = DB::transaction(function () use ($request, $agent, $user, $ccBranchId, $accNo) {
-            $card = CommissionCard::create([
+            $attrs = [
                 'account_number'      => $accNo !== '' ? $accNo : null,
                 'month'               => $request->month,
                 'month_date'          => $request->month_date,
@@ -213,9 +213,6 @@ class CallCenterController extends Controller
                 'parent_account'      => ($request->account_kind === 'sub')
                                             ? preg_replace('/[^0-9]/', '', (string) $request->parent_account) ?: null
                                             : null,
-                // CC-originated cards are always prospected by definition — the Call Center team
-                // actively contacted and qualified this client. A walk-in has nothing to do with CC.
-                'acquisition_type'    => 'prospected',
                 'notes'               => $request->notes,
                 'client_phone'        => $request->client_phone,
                 'client_country_code' => $request->client_country_code ?: '+965',
@@ -223,7 +220,13 @@ class CallCenterController extends Controller
                 'cc_status'           => 'cc_pending',
                 'status'              => 'new_added',
                 'created_by'          => $user->id,
-            ]);
+            ];
+            // CC-originated cards are always prospected by definition — the Call Center team
+            // actively contacted and qualified this client. Only set it if the DB column exists.
+            if (CommissionCard::hasAcquisitionCol()) {
+                $attrs['acquisition_type'] = 'prospected';
+            }
+            $card = CommissionCard::create($attrs);
             ActivityLog::record('cc_card_created', $card, [
                 'agent'         => $agent->name,
                 'target_branch' => $request->target_branch_id,

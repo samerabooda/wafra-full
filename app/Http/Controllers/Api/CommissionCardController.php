@@ -190,14 +190,13 @@ class CommissionCardController extends Controller
             ->leftJoin('employees as m2','c.ext_marketer2_id','=','m2.id')
             ->orderByRaw("{$sort} {$dir}")->orderBy('c.account_number')
             ->forPage($page, $per)
-            ->get([
+            ->get(array_merge([
                 'c.id','c.account_number','c.month','c.month_date','c.modified_month','c.account_kind','c.status',
-                'c.acquisition_type',
                 'c.broker_commission','c.marketer_commission','c.ext_commission1','c.ext_commission2',
                 'c.initial_deposit','c.monthly_deposit','c.cc_branch_id','c.referral_account','c.referral_commission','c.parent_account',
                 'br.name_ar as branch_ar','br.name_en as branch_en',
                 'bk.name as broker_name','mk.name as marketer_name','m2.name as marketer2_name',
-            ]);
+            ], CommissionCard::hasAcquisitionCol() ? ['c.acquisition_type'] : []));
 
         return response()->json([
             'success' => true,
@@ -641,10 +640,11 @@ class CommissionCardController extends Controller
         if ($v->fails()) return response()->json(['success'=>false,'errors'=>$v->errors()],422);
 
         DB::transaction(function() use ($request, $card) {
-            $oldData = $card->only(['broker_id','broker_commission','marketer_id','marketer_commission',
+            $oldKeys = ['broker_id','broker_commission','marketer_id','marketer_commission',
                 'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
-                'initial_deposit','monthly_deposit','account_status_id','account_kind','parent_account',
-                'acquisition_type','notes']);
+                'initial_deposit','monthly_deposit','account_status_id','account_kind','parent_account','notes'];
+            if (CommissionCard::hasAcquisitionCol()) $oldKeys[] = 'acquisition_type';
+            $oldData = $card->only($oldKeys);
 
             $fields = $this->extractFields($request);
             // Branch managers cannot relocate a card to another branch
@@ -1184,6 +1184,8 @@ class CommissionCardController extends Controller
             if (!in_array($fields['acquisition_type'] ?? null, ['prospected','walk_in'], true)) {
                 $fields['acquisition_type'] = 'prospected';
             }
+            // Drop the field entirely if the DB column hasn't been created yet.
+            if (!CommissionCard::hasAcquisitionCol()) unset($fields['acquisition_type']);
         }
 
         // A primary (new) account has no parent; a sub account keeps its parent number (digits only).
