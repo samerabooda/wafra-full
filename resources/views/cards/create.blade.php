@@ -136,7 +136,7 @@
               </label>
               <label class="acq-opt" style="flex:1;min-width:220px;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:11px;border:2px solid var(--brd2);background:var(--bg3)">
                 <input type="radio" name="acquisition_type" value="walk_in" id="f-acq-walkin" onchange="onAcqChange()" style="margin:0">
-                <span style="font-size:20px" class="walkin-emoji" style="display:inline-block">🚶</span>
+                <span class="walkin-emoji" style="font-size:20px;display:inline-block">🚶</span>
                 <span style="flex:1">
                   <div style="font-size:13px;font-weight:800;color:#c2761a" id="crt-lbl-acq-w">زائر</div>
                   <div style="font-size:10.5px;color:var(--mu)" id="crt-lbl-acq-w-sub">جاء من نفسه — المسوّق استقبله فقط</div>
