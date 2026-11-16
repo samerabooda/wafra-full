@@ -156,7 +156,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
    Arabic text so the bidi algorithm doesn't reorder them. */
 .ph-ltr{direction:ltr;unicode-bidi:isolate;display:inline-block;font-family:'JetBrains Mono',monospace;font-weight:700;white-space:nowrap}
 /* Twin-span bilingual labels — write both languages in the markup; one is hidden by current lang.
-   Used by server-rendered pages (@forelse rows, Blade output) that can't be swapped by JS easily. */
+   Used by server-rendered pages (forelse rows, Blade output) that can't be swapped by JS easily. */
 html[lang="en"] .lang-ar{display:none !important}
 html[lang="ar"] .lang-en{display:none !important}
 html:not([lang]) .lang-en{display:none !important}
