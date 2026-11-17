@@ -160,20 +160,17 @@
           </div>
         </div>
         @else
+        {{-- Branch manager: the branch is their own — no point showing a read-only label for it.
+             Hidden input still carries branch_id for the payload. --}}
+        <input type="hidden" id="f-branch" value="{{ auth()->user()->branch_id }}">
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" id="crt-lbl-branch">الفرع</label>
-            <div class="form-control" style="background:rgba(46,134,171,.08);color:var(--pri2);font-weight:700">
-              {{ auth()->user()->branch?->name_ar ?? 'فرعك المحدد' }}
-            </div>
-            <input type="hidden" id="f-branch" value="{{ auth()->user()->branch_id }}">
-          </div>
           <div class="form-group">
             <label class="form-label" id="crt-lbl-trading">نوع التداول</label>
             <select id="f-trading" class="form-control">
               <option value="" id="crt-opt-select3">— اختر —</option>
             </select>
           </div>
+          <div class="form-group"></div>
         </div>
         @endif
         {{-- Parent account: shown only when kind = sub --}}
@@ -215,7 +212,7 @@
             <input type="number" id="f-marketer-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
           </div>
         </div>
-        <div class="form-row crt-cat crt-cat-mk2">
+        <div class="form-row crt-cat crt-cat-mk2" id="crt-row-mk2">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext2">📢 مسوّق داخلي 2</label>
             <select id="f-ext2" class="form-control" onchange="onExt2Change()">
@@ -225,6 +222,18 @@
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext2-comm">عمولة المسوّق الداخلي 2</label>
             <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+          </div>
+        </div>
+        {{-- CC Manager commission — ONLY shown when the CC branch manager creates a
+             card directly for their own CC branch (reached via /cards/create?cc=1
+             from the Call-Center screen). Hidden otherwise. --}}
+        <div class="form-row" id="crt-row-ccmgr" style="display:none;background:rgba(123,104,238,.08);border:1px solid rgba(123,104,238,.35);border-radius:9px;padding:12px;margin-bottom:9px">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label" id="crt-lbl-ccmgr">📞 عمولة مدير مركز الاتصال</label>
+            <input type="number" id="f-cc-mgr-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal">
+          </div>
+          <div class="form-group" style="margin-bottom:0;display:flex;align-items:center;color:var(--mu);font-size:12px;padding:8px 0">
+            <span id="crt-ccmgr-hint">تضاف ضمن سقف عمولات CC ($2/lot)</span>
           </div>
         </div>
         <div class="form-row" style="background:rgba(123,104,238,.11);border:1px solid #7b68ee;border-radius:9px;padding:12px;margin-bottom:9px">
@@ -327,6 +336,9 @@ const CRT = {
     lblAcq:       '👤 نوع استقطاب العميل',
     acqProspected:'مُستقطَب', acqProspectedSub:'جلبه المسوّق بجهده',
     acqWalkin:    'زائر',    acqWalkinSub:    'جاء من نفسه — المسوّق استقبله فقط',
+    lblCcMgr:     '📞 عمولة مدير مركز الاتصال',
+    ccMgrHint:    'تضاف ضمن سقف عمولات CC ($2/lot)',
+    pageTitleCc:  '➕ كرت جديد لفرع مركز الاتصال',
     lblParent:    '🔗 رقم حساب العميل الأساسي (Parent AC) *',
     phParent:     'أدخل رقم الحساب الأساسي...',
     phRefAcc:     'رقم الحساب',
@@ -375,6 +387,9 @@ const CRT = {
     lblAcq:       '👤 Acquisition Type',
     acqProspected:'Prospected', acqProspectedSub:'The marketer actively brought them in',
     acqWalkin:    'Visitor',     acqWalkinSub:    'Came on their own — the marketer only received them',
+    lblCcMgr:     '📞 CC Manager Commission',
+    ccMgrHint:    'Counts under the CC cap ($2/lot)',
+    pageTitleCc:  '➕ New Card for the Call-Center Branch',
     lblParent:    '🔗 Parent Account Number (Parent AC) *',
     phParent:     'Enter parent account number...',
     phRefAcc:     'Account number',
@@ -429,6 +444,7 @@ function crtApplyLang() {
     'crt-lbl-acq':    'lblAcq',
     'crt-lbl-acq-p':  'acqProspected', 'crt-lbl-acq-p-sub':'acqProspectedSub',
     'crt-lbl-acq-w':  'acqWalkin',     'crt-lbl-acq-w-sub':'acqWalkinSub',
+    'crt-lbl-ccmgr':  'lblCcMgr', 'crt-ccmgr-hint':'ccMgrHint',
     'crt-lbl-parent': 'lblParent',
     'crt-parent-hint':'hintParent',
     'crt-lbl-broker': 'lblBroker',
@@ -701,27 +717,59 @@ async function loadFormOptions() {
     fill('f-trading', settings.data.trading_types);
   }
 
-  // Employees
+  // Employees — grouped so the current user's branch appears FIRST (fast picking),
+  // then the rest of the employees underneath. Branch managers always see their own
+  // branch at the top; Finance Admin sees all branches but their own (if any) first.
   if (employees.success) {
+    const MY_BR = (window.CURRENT_USER && window.CURRENT_USER.branch_id)
+                   ? Number(window.CURRENT_USER.branch_id) : null;
+    const roleIcon = r => r === 'external' ? ' 🌐' : r === 'marketing' ? ' 📢' : ' 🏦';
+    const makeOpt = e => {
+      const o = document.createElement('option');
+      o.value = e.id;
+      const br = e.branch && (e.branch.name_ar || e.branch.name_en);
+      o.textContent = e.name + (br ? ' — ' + br : '') + roleIcon(e.role);
+      return o;
+    };
+
+    // Split employees into "my branch" + "others"
+    const mine  = [];
+    const other = [];
+    employees.data.forEach(e => {
+      if (MY_BR && e.branch && Number(e.branch.id) === MY_BR) mine.push(e);
+      else other.push(e);
+    });
+    mine.sort((a,b)  => (a.name || '').localeCompare(b.name || '', 'ar'));
+    other.sort((a,b) => (a.name || '').localeCompare(b.name || '', 'ar'));
+
     ['f-broker','f-marketer','f-ext1','f-ext2'].forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
-      // Keep first option
+      // Keep first option (the "select"/"none" placeholder)
       const firstOpt = sel.options[0];
       sel.innerHTML = '';
       if (firstOpt) sel.appendChild(firstOpt);
+
       // "Self" — the account has no broker/marketer (direct / self-sourced).
       const so = document.createElement('option');
       so.value = 'self';
       so.textContent = '👤 Self';
       sel.appendChild(so);
-      employees.data.forEach(e => {
-        const o = document.createElement('option');
-        o.value = e.id;
-        const br = e.branch && (e.branch.name_ar || e.branch.name_en);
-        o.textContent = e.name + (br ? ' — ' + br : '') + (e.role === 'external' ? ' 🌐' : e.role === 'marketing' ? ' 📢' : ' 🏦');
-        sel.appendChild(o);
-      });
+
+      // ── My branch group (shown first) ──
+      if (mine.length) {
+        const g1 = document.createElement('optgroup');
+        g1.label = '⭐ ' + ((CURRENT_USER && CURRENT_USER.branch && (CURRENT_USER.branch.name_ar || CURRENT_USER.branch.name_en)) || 'فرعي');
+        mine.forEach(e => g1.appendChild(makeOpt(e)));
+        sel.appendChild(g1);
+      }
+      // ── Other branches ──
+      if (other.length) {
+        const g2 = document.createElement('optgroup');
+        g2.label = mine.length ? '— باقي الفروع —' : '— كل الموظفين —';
+        other.forEach(e => g2.appendChild(makeOpt(e)));
+        sel.appendChild(g2);
+      }
     });
   }
 
@@ -805,6 +853,17 @@ async function submitCard() {
     notes:               document.getElementById('f-notes').value.trim() || null,
   };
 
+  // CC-branch own-card mode: tag the card as CC (cc_branch_id = the same branch)
+  // and include the CC manager commission. No cc_agent and no cc_status — this is
+  // a direct account opened at the CC branch, not a phone lead.
+  if (isCcOwnMode()) {
+    payload.cc_branch_id          = payload.branch_id;
+    payload.cc_manager_commission = parseFloat(document.getElementById('f-cc-mgr-comm').value) || 0;
+    // Marketer-2 slot hidden in this mode — make sure nothing leaks into the payload.
+    payload.ext_marketer2_id = null;
+    payload.ext_commission2  = 0;
+  }
+
   const r = await api('POST', '/cards', payload);
   if (r.success) {
     showAlert('ok', '✅ ' + r.message);
@@ -828,8 +887,35 @@ function showAlert(type, msg) {
   window.scrollTo(0, 0);
 }
 
+// ── CC-branch own-card mode ─────────────────────────────────
+// Reached via /cards/create?cc=1 from the Call-Center screen's "➕ Card for
+// CC branch" button. This is the CC branch manager opening a REGULAR commission
+// card for their own branch — no CC lead workflow, no target branch, but:
+//   • The marketer-2 row is hidden (not applicable to CC-branch cards).
+//   • A "CC Manager Commission" row is shown.
+//   • The payload adds cc_branch_id (= the branch itself) + cc_manager_commission
+//     so the card correctly groups as CC in reports and counts toward the CC cap.
+function isCcOwnMode(){
+  try { return new URLSearchParams(location.search).get('cc') === '1'; }
+  catch(e){ return false; }
+}
+function applyCcOwnMode(){
+  if (!isCcOwnMode()) return;
+  // hide marketer-2 fields
+  var mk2 = document.getElementById('crt-row-mk2'); if (mk2) mk2.style.display = 'none';
+  var mk2v = document.getElementById('f-ext2'); if (mk2v) mk2v.value = '';
+  var mk2c = document.getElementById('f-ext2-comm'); if (mk2c) mk2c.value = 0;
+  // show CC manager commission row
+  var cmgr = document.getElementById('crt-row-ccmgr'); if (cmgr) cmgr.style.display = '';
+  // repaint page title to the CC-own variant
+  var pt = document.getElementById('crt-page-title');
+  if (pt) pt.textContent = crt('pageTitleCc');
+  var tb = document.querySelector('.tb-title'); if (tb) tb.textContent = crt('pageTitleCc');
+}
+
 // ── Init ──────────────────────────────────────────────────────
 crtApplyLang();
+applyCcOwnMode();
 loadFormOptions();
 </script>
 @endpush

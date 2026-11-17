@@ -1155,6 +1155,10 @@ class CommissionCardController extends Controller
             'marketer_id'=>'nullable|exists:employees,id','marketer_commission'=>'nullable|numeric|min:0',
             'ext_marketer1_id'=>'nullable|exists:employees,id','ext_commission1'=>'nullable|numeric|min:0',
             'ext_marketer2_id'=>'nullable|exists:employees,id','ext_commission2'=>'nullable|numeric|min:0',
+            // Optional CC fields — populated when the CC branch manager opens a card directly
+            // for the CC branch itself (/cards/create?cc=1). cc_branch_id typically equals
+            // branch_id in that case.
+            'cc_branch_id'=>'nullable|exists:branches,id','cc_manager_commission'=>'nullable|numeric|min:0',
             'referral_account'=>'nullable|regex:/^\\d{6}$/','referral_commission'=>'nullable|numeric|min:0',
             'forex_commission'=>'nullable|numeric|min:0','futures_commission'=>'nullable|numeric|min:0',
             'initial_deposit'=>'nullable|numeric|min:0','monthly_deposit'=>'nullable|numeric|min:0',
@@ -1182,6 +1186,8 @@ class CommissionCardController extends Controller
             'ext_marketer1_id','ext_commission1','ext_marketer2_id','ext_commission2',
             'referral_account','referral_commission',
             'forex_commission','futures_commission','initial_deposit','monthly_deposit','notes',
+            // CC-branch own-card mode: the CC manager opens a card directly for their branch.
+            'cc_branch_id','cc_manager_commission',
         ]);
 
         // Classification tag — if the client sent the field, normalize it; otherwise LEAVE IT OUT

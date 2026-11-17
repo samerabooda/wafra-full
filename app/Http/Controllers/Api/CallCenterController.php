@@ -464,13 +464,28 @@ class CallCenterController extends Controller
         }
     }
 
-    /** An ACTIVE lead (still under follow-up) with the same phone, if any. */
+    /** An ACTIVE lead with the same phone, if any.
+     *
+     *  "Active" means a lead the business shouldn't duplicate:
+     *    - cc_pending   — CC agent just created it, not yet sent to a branch
+     *    - branch_pending — sent to the branch, awaiting acceptance
+     *    - accepted / in_progress — branch is working on it
+     *
+     *  Excluded (re-entry allowed):
+     *    - completed  — the client already opened an account; a new inquiry
+     *                   may legitimately be a different request.
+     *    - rejected   — the branch declined the LEAD; CC may retry.
+     *    - declined   — the CLIENT declined. Blocking re-entry here would
+     *                   be too strict (the client can change their mind);
+     *                   if the user asks, we can make this strictly blocked
+     *                   as well.
+     */
     private function activeDuplicatePhone(string $phone, ?string $code, ?int $excludeId = null): ?CommissionCard
     {
         $phone = trim($phone);
         if ($phone === '') return null;
         return CommissionCard::whereNotNull('cc_branch_id')
-            ->whereIn('cc_status', ['branch_pending', 'accepted', 'in_progress'])
+            ->whereIn('cc_status', ['cc_pending', 'branch_pending', 'accepted', 'in_progress'])
             ->where('client_phone', $phone)
             ->where('client_country_code', $code ?: '+965')
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))

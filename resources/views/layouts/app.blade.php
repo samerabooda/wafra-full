@@ -855,7 +855,16 @@ function doLogout() {
   } catch(e) {}
   document.getElementById('logout-form').submit();
 }
-@php $__cu = auth()->user() ? auth()->user()->only('id','name','email','role','branch_id','photo') : []; @endphp
+@php
+  $__cu = [];
+  if (auth()->user()) {
+    $__cu = auth()->user()->only('id','name','email','role','branch_id','photo');
+    // Include the user's branch name (both languages) so JS dropdowns can show
+    // "⭐ My Branch Name" as the top optgroup label, instead of a generic fallback.
+    $__br = auth()->user()->branch;
+    $__cu['branch'] = $__br ? ['id' => $__br->id, 'name_ar' => $__br->name_ar, 'name_en' => $__br->name_en] : null;
+  }
+@endphp
 const CURRENT_USER = @json($__cu);
 
 // ── Theme ──────────────────────────────────────────────────

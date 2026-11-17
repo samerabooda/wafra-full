@@ -3,7 +3,24 @@
 @section('page-title','Call Center')
 
 @section('topbar-actions')
-<button class="tb-btn primary" id="cc-topbar-new-btn" onclick="openCcNew()">➕ كرت جديد</button>
+{{-- Two distinct creation entry points, visually separated by color:
+     • Teal/CC gradient — CC LEAD (phone-based, routed to a target branch).
+     • Amber/Direct gradient — a regular commission card OPENED AT the CC
+       branch itself (no target branch). Opens the standard /cards/create
+       form with ?cc=1 so that form hides marketer-2 and shows the CC
+       manager commission field. --}}
+<a href="{{ route('cards.create') }}?cc=1"
+   class="tb-btn"
+   id="cc-topbar-new-own-btn"
+   style="background:linear-gradient(135deg,#f5a623,#c2761a);color:#fff;border-color:transparent;text-decoration:none;box-shadow:0 2px 8px rgba(194,118,26,.28)">
+  ➕ <span id="cc-topbar-new-own-l">كرت لفرع CC</span>
+</a>
+<button class="tb-btn"
+        id="cc-topbar-new-btn"
+        onclick="openCcNew()"
+        style="background:linear-gradient(135deg,#7b68ee,#5b46d6);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(123,104,238,.28)">
+  📞 <span id="cc-topbar-new-lead-l">كرت CC موجَّه لفرع</span>
+</button>
 @endsection
 
 @push('styles')
@@ -541,7 +558,7 @@ const CCT = {
     nc_cancel:'إلغاء', nc_save:'💾 حفظ كمسودة',
     nc_err_required:'يرجى ملء الحقول المطلوبة (الشهر، الفرع، الموظف)',
     nc_err_ac_or_phone:'أدخل رقم الحساب أو رقم هاتف العميل (أحدهما على الأقل)',
-    topbar_btn:'➕ كرت جديد',
+    topbar_btn:'📞 كرت CC موجَّه لفرع', topbar_own_btn:'➕ كرت لفرع CC',
     opt_optional:'— اختياري —', opt_branch:'— اختر الفرع —', opt_agent:'— اختر الموظف —',
   },
   en: {
@@ -612,7 +629,7 @@ const CCT = {
     nc_cancel:'Cancel', nc_save:'💾 Save as Draft',
     nc_err_required:'Please fill in the required fields (month, branch, agent)',
     nc_err_ac_or_phone:'Enter an account number or a client phone (at least one)',
-    topbar_btn:'➕ New Card',
+    topbar_btn:'📞 New CC Lead (to a branch)', topbar_own_btn:'➕ Card for CC branch',
     opt_optional:'— Optional —', opt_branch:'— Select Branch —', opt_agent:'— Select Agent —',
   }
 };
@@ -683,7 +700,8 @@ function ccApplyLang() {
   const _nParent = document.getElementById('nc-parent'); if(_nParent) _nParent.placeholder = cc('nc_ph_parent');
   const _nSrcOth = document.getElementById('nc-source-other'); if(_nSrcOth) _nSrcOth.placeholder = cc('nc_ph_source');
   _t('nc-cancel-btn', cc('nc_cancel')); _t('nc-save-btn', cc('nc_save'));
-  _t('cc-topbar-new-btn', cc('topbar_btn'));
+  _t('cc-topbar-new-lead-l', cc('topbar_btn').replace(/^📞\s*/,''));
+  _t('cc-topbar-new-own-l',  cc('topbar_own_btn').replace(/^➕\s*/,''));
 
   // Status filter chips
   buildFilterChips();
