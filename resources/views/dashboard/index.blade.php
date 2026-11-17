@@ -153,6 +153,7 @@
     <div class="ig-num" style="--ac:#f5a623"><div class="ig-num-ic">💰</div><div class="ig-num-b"><div class="ig-num-v" id="ig-comm">—</div><div class="ig-num-l" id="ig-l-comm">إجمالي العمولات</div></div></div>
     <div class="ig-num" style="--ac:#7b68ee"><div class="ig-num-ic">📞</div><div class="ig-num-b"><div class="ig-num-v" id="ig-cc">—</div><div class="ig-num-l" id="ig-l-cc">كروت CC</div></div></div>
     <div class="ig-num" style="--ac:#e0708a"><div class="ig-num-ic">✏️</div><div class="ig-num-b"><div class="ig-num-v" id="ig-mod">—</div><div class="ig-num-l" id="ig-l-mod">معدّلة</div></div></div>
+    <div class="ig-num" style="--ac:#c2761a"><div class="ig-num-ic"><span class="walkin-emoji" style="display:inline-block;font-size:20px">🚶</span></div><div class="ig-num-b"><div class="ig-num-v" id="ig-walkin">—</div><div class="ig-num-l" id="ig-l-walkin">عملاء زائرون</div></div></div>
   </div>
 
   <div class="ig-ins" id="ig-insights"></div>
@@ -184,6 +185,42 @@
     <div class="ig-panel">
       <div class="ig-pt" id="ig-t-cc">📞 حصة مركز الاتصال</div>
       <div class="ig-canvas"><canvas id="ig-cc-c"></canvas><div class="ig-center"><div class="ig-center-v" id="ig-cc-v" style="color:#7b68ee">—</div><div class="ig-center-l" id="ig-cc-l">من الكروت</div></div></div>
+    </div>
+  </div>
+
+  {{-- 🎯 vs 🚶 Acquisition type donut — prospected (marketer-brought) vs walk-in (visitor) --}}
+  <div class="ig-grid ig-3" style="margin-bottom:16px">
+    <div class="ig-panel" style="grid-column:span 3">
+      <div class="ig-pt" id="ig-t-acq">👤 نوع استقطاب العميل — مُستقطَب vs زائر <a href="/reports/acq-comparison" style="margin-inline-start:auto;font-size:11px;color:var(--pri2);text-decoration:none" id="ig-t-acq-link">📊 تقرير مقارن →</a></div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:18px;align-items:center">
+        <div class="ig-canvas" style="position:relative;min-height:220px;max-width:280px;margin:0 auto">
+          <canvas id="ig-acq-c"></canvas>
+          <div class="ig-center">
+            <div class="ig-center-v" id="ig-acq-v" style="color:#c2761a">—</div>
+            <div class="ig-center-l" id="ig-acq-l">زائر من الإجمالي</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;gap:13px;padding:14px 18px;border-radius:12px;background:rgba(26,173,186,.08);border:1px solid rgba(26,173,186,.22)">
+            <span style="font-size:28px">🎯</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:var(--mu);font-weight:800;text-transform:uppercase;letter-spacing:.5px" id="ig-acq-p-l">مُستقطَب</div>
+              <div style="font-size:1.4rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--pri2)" id="ig-acq-p-v">—</div>
+              <div style="font-size:11px;color:var(--mu)" id="ig-acq-p-sub">جلبهم المسوّقون بجهدهم</div>
+            </div>
+            <div style="font-size:1.1rem;font-weight:900;color:var(--pri2)" id="ig-acq-p-pct">—</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:13px;padding:14px 18px;border-radius:12px;background:rgba(245,166,35,.08);border:1px dashed rgba(194,118,26,.4)">
+            <span class="walkin-emoji" style="display:inline-block;font-size:28px">🚶</span>
+            <div style="flex:1">
+              <div style="font-size:11px;color:#c2761a;font-weight:800;text-transform:uppercase;letter-spacing:.5px" id="ig-acq-w-l">زائر</div>
+              <div style="font-size:1.4rem;font-weight:900;font-family:'JetBrains Mono',monospace;color:#c2761a" id="ig-acq-w-v">—</div>
+              <div style="font-size:11px;color:var(--mu)" id="ig-acq-w-sub">جاءوا من أنفسهم — عمولة مختلفة</div>
+            </div>
+            <div style="font-size:1.1rem;font-weight:900;color:#c2761a" id="ig-acq-w-pct">—</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -244,6 +281,11 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
       broker:'بروكر',marketer:'مسوّق',ext:'خارجي',accounts:'حسابات',deposit:'إيداع (ألف)',noData:'لا توجد بيانات',tb:'لوحة المتابعة',
       hTitle:'لوحة تحليلات كروت العمولة',hSub:'نظرة شاملة على جميع الحسابات',lFrom:'من شهر',lTo:'إلى شهر',oFrom:'الأقدم',oTo:'الأحدث',clr:'الكل',
       lMkt:'المسوّقون',lBrk:'البروكرز',lCcComm:'عمولات مركز الاتصال',lAvg:'متوسط العمولة / حساب',
+      lWalkin:'عملاء زائرون',
+      tAcq:'👤 نوع استقطاب العميل — مُستقطَب vs زائر', tAcqLink:'📊 تقرير مقارن →',
+      acqCenterL:'زائر من الإجمالي',
+      acqProspectedL:'مُستقطَب', acqProspectedSub:'جلبهم المسوّقون بجهدهم',
+      acqWalkinL:'زائر',         acqWalkinSub:'جاءوا من أنفسهم — عمولة مختلفة',
       calPick:'اختر الفترة (شهر/سنة)',calFromLbl:'من:',calToLbl:'إلى:',calClear:'مسح',calApply:'تطبيق',
       ovTitle:'⚠️ حسابات تجاوزت سقف العمولة ($7)',
       tNewsub:'🟢🔵 الحسابات الجديدة مقابل الفرعية — لكل فرع',
@@ -257,6 +299,11 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
       broker:'Broker',marketer:'Marketer',ext:'External',accounts:'Accounts',deposit:'Deposit (K)',noData:'No data',tb:'Dashboard',
       hTitle:'Commission Cards Analytics',hSub:'Overview of all accounts',lFrom:'From',lTo:'To',oFrom:'Earliest',oTo:'Latest',clr:'All',
       lMkt:'Marketers',lBrk:'Brokers',lCcComm:'Call-Center Commissions',lAvg:'Avg commission / account',
+      lWalkin:'Visitor Clients',
+      tAcq:'👤 Client Acquisition — Prospected vs Visitor', tAcqLink:'📊 Comparison report →',
+      acqCenterL:'visitor of total',
+      acqProspectedL:'Prospected', acqProspectedSub:'brought in by the marketers',
+      acqWalkinL:'Visitor',        acqWalkinSub:'came on their own — different commission',
       calPick:'Pick period (month/year)',calFromLbl:'From:',calToLbl:'To:',calClear:'Clear',calApply:'Apply',
       ovTitle:'⚠️ Accounts over the commission cap ($7)',
       tNewsub:'🟢🔵 New vs. Sub Accounts — per Branch',
@@ -324,6 +371,13 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
     set('ig-t-gauge',t('tGauge'));set('ig-gauge-l',t('gaugeL'));set('ig-t-comm',t('tComm'));set('ig-t-cc',t('tCc'));set('ig-cc-l',t('ccL'));set('ig-t-branch',t('tBranch'));set('ig-t-monthly',t('tMonthly'));
     set('ig-h-title',t('hTitle'));set('ig-h-sub',t('hSub'));set('ig-l-from',t('lFrom'));set('ig-l-to',t('lTo'));set('ig-o-from',t('oFrom'));set('ig-o-to',t('oTo'));set('ig-clr-l',t('clr'));set('ig-t-modbr',t('tModbr'));set('ig-t-empty',t('tEmpty'));
     set('ig-l-mkt',t('lMkt'));set('ig-l-brk',t('lBrk'));set('ig-l-cccomm',t('lCcComm'));set('ig-l-avg',t('lAvg'));
+    set('ig-l-walkin',t('lWalkin'));
+    var _al=document.getElementById('ig-t-acq-link'); if(_al) _al.textContent=t('tAcqLink');
+    // Keep the acq panel title but preserve the link node inside it
+    (function(){ var el=document.getElementById('ig-t-acq'); if(!el) return; var link=document.getElementById('ig-t-acq-link'); el.childNodes.forEach(function(n){ if(n.nodeType===3) n.remove(); }); el.insertBefore(document.createTextNode(t('tAcq')+' '), link); })();
+    set('ig-acq-l',t('acqCenterL'));
+    set('ig-acq-p-l',t('acqProspectedL')); set('ig-acq-p-sub',t('acqProspectedSub'));
+    set('ig-acq-w-l',t('acqWalkinL'));     set('ig-acq-w-sub',t('acqWalkinSub'));
     set('ig-cal-chip-l',t('calPick'));set('ig-cal-from-lbl',t('calFromLbl'));set('ig-cal-to-lbl',t('calToLbl'));set('ig-cal-btn-clr',t('calClear'));set('ig-cal-btn-ok',t('calApply'));
     set('ig-ol-title',t('ovTitle'));set('ig-t-newsub',t('tNewsub'));set('ig-t-ceil',t('tCeil'));set('ig-ceil-l',t('ceilL'));
     set('ig-t-xbr-txt',t('tXbr'));set('ig-xbr-note',t('xbrNote'));
@@ -511,7 +565,19 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
     var TH=chartTheme();
     var total=num(tot.count),totComm=num(tot.bc)+num(tot.mc)+num(tot.ec);
     var _CM=r.commission||{};
-    set('ig-acc',(tot.count||0).toLocaleString('en'));set('ig-mkt',num(_CM.marketers).toLocaleString('en'));set('ig-brk',num(_CM.brokers).toLocaleString('en'));set('ig-cccomm',kk(_CM.cc||0));set('ig-avg','$'+num(_CM.avg).toFixed(1));set('ig-comm',kk(_CM.total||totComm));set('ig-cc',(tot.cc||0).toLocaleString('en'));set('ig-mod',(tot.mod||0).toLocaleString('en'));
+    set('ig-acc',(tot.count||0).toLocaleString('en'));set('ig-mkt',num(_CM.marketers).toLocaleString('en'));set('ig-brk',num(_CM.brokers).toLocaleString('en'));set('ig-cccomm',kk(_CM.cc||0));set('ig-avg','$'+num(_CM.avg).toFixed(1));set('ig-comm',kk(_CM.total||totComm));set('ig-cc',(tot.cc||0).toLocaleString('en'));set('ig-mod',(tot.mod||0).toLocaleString('en'));set('ig-walkin',num(tot.walkin).toLocaleString('en'));
+
+    // Acquisition type donut — prospected (marketer-brought) vs walk-in (visitor)
+    var _wk=num(tot.walkin), _pr=num(tot.prospected); if(!_pr && !_wk && total) _pr=total; // backfill for pre-migration
+    var _acqTot=_wk+_pr, _pctW=_acqTot?Math.round(_wk/_acqTot*100):0, _pctP=_acqTot?100-_pctW:0;
+    set('ig-acq-v', _pctW+'%');
+    set('ig-acq-p-v', _pr.toLocaleString('en'));
+    set('ig-acq-w-v', _wk.toLocaleString('en'));
+    set('ig-acq-p-pct', _pctP+'%');
+    set('ig-acq-w-pct', _pctW+'%');
+    mk('ig-acq-c',{type:'doughnut',data:{labels:[isEn?'Prospected':'مُستقطَب', isEn?'Visitor':'زائر'],datasets:[{data:[_pr,_wk],backgroundColor:['#1AADBAcc','#c2761acc'],borderWidth:3,borderColor:TH.bg,hoverOffset:6}]},
+      options:{cutout:'64%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.parsed.toLocaleString('en')+' ('+(_acqTot?Math.round(ctx.parsed/_acqTot*100):0)+'%)';}}}},animation:{animateRotate:true}}});
+
     var sbc=document.getElementById('sb-cards-count');if(sbc)sbc.textContent=(tot.count||0).toLocaleString('en');
     var sbcc=document.getElementById('sb-cc-count');if(sbcc)sbcc.textContent=(tot.cc||0).toLocaleString('en');
     var sbm=document.getElementById('sb-mod-count');if(sbm)sbm.textContent=(tot.mod||0);

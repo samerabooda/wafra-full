@@ -269,6 +269,24 @@ class ImportController extends Controller
                         'branch_id'           => $rowBranch,
                     ];
 
+                    // ── Acquisition type — TOLERANT:
+                    //   - Column absent / cell blank → the DB default kicks in (prospected).
+                    //   - Unknown text → treated as prospected (we don't fail the row).
+                    //   - Only an explicit "walk_in" survives; nothing else enters the DB
+                    //     so legacy sheets missing the column stay fully importable.
+                    if (\App\Models\CommissionCard::hasAcquisitionCol()) {
+                        $acqRaw = trim((string) ($row['acquisition_type'] ?? ''));
+                        if ($acqRaw !== '') {
+                            $acqNorm = mb_strtolower($acqRaw);
+                            if ($acqNorm === 'walk_in') {
+                                $data['acquisition_type'] = 'walk_in';
+                            } elseif ($acqNorm === 'prospected') {
+                                $data['acquisition_type'] = 'prospected';
+                            }
+                            // anything else → omit the key; DB default stands
+                        }
+                    }
+
                     // ── CC import ──
                     if ($mode === 'cc') {
                         $ccFields = [

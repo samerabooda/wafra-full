@@ -380,6 +380,11 @@ const IMP_ALIASES = {
   initial_deposit:['initial deposit','opening deposit','first deposit','deposit','الايداع الاولي','ايداع فتح الحساب','اول ايداع','الايداع','ايداع'],
   monthly_deposit:['monthly deposit','expected monthly deposit','الايداع الشهري','ايداع شهري','الايداع الشهري المتوقع'],
   new_or_sub:['new or sub','new/sub','new sub','نوع الحساب','جديد ام فرعي','جديد او فرعي'],
+  // Acquisition type — "walk_in" / "prospected". OPTIONAL column; missing → defaults to 'prospected'.
+  acquisition_type:['acquisition type','acquisition','acq type','acq','client type','lead type',
+    'walkin','walk in','walk-in','walk_in',
+    'نوع الاستقطاب','نوع العميل','طبيعة العميل','المصدر',
+    'عميل زائر','زائر','مُستقطَب','مستقطب','مستقطب ام زائر'],
   // "Type" / "ECN" / platform column → mapped here and IGNORED (never read as month or new/sub)
   trading:['trading type','account type','platform','trading','type','ecn','stp','نوع التداول','نوع العقد','نوع'],
   // ── Referral (a referrer account number that earns the marketing commission) ──
@@ -396,7 +401,8 @@ function buildColMap(header){
     ext_marketer1:-1,ext_commission1:-1,ext_marketer2:-1,ext_commission2:-1,
     month:-1,initial_deposit:-1,monthly_deposit:-1,new_or_sub:-1,trading:-1,
     referral_account:-1,referral_commission:-1,
-    cc_agent:-1,cc_agent_commission:-1,cc_manager_commission:-1,target_branch:-1};
+    cc_agent:-1,cc_agent_commission:-1,cc_manager_commission:-1,target_branch:-1,
+    acquisition_type:-1};
   (header||[]).forEach((cell,i)=>{
     const h=_impNorm(cell); if(!h) return;
     let best=null,bestLen=0;
@@ -444,6 +450,8 @@ function downloadTemplate() {
     headers = ['AC No.','Month','CC Agent','CC Agent Commission','CC Manager Commission','Target Branch',
       'Broker','Broker Commission','Marketing','Marketing Commission','External Marketer','External Commission',
       'Internal Marketer 2','Internal Marketer 2 Commission','Initial Deposit $','New Or Sub','Type'];
+    // NOTE: CC-imported cards are always prospected by definition (CC actively contacted),
+    //       so no Acquisition Type column on this template.
     samples = [
       ['730100','Jan 2025','Sara Ali','1','2','الجهراء','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','5000','NEW','ECN'],
       ['730105','Jan 2025','Sara Ali','1','2','','','0','','0','','0','','0','2000','NEW','ECN'],
@@ -452,12 +460,12 @@ function downloadTemplate() {
   } else {
     headers = ['AC No.','Broker','Broker Commission','Marketing','Marketing Commission',
       'External Marketer','External Commission','Internal Marketer 2','Internal Marketer 2 Commission',
-      'Month','Initial Deposit $','Monthly Deposit $','New Or Sub','Type'];
+      'Month','Initial Deposit $','Monthly Deposit $','New Or Sub','Type','Acquisition Type (optional)'];
     samples = [
-      ['719750','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','Jan 2025','5000','12000','NEW','ECN'],
-      ['720100','Samer Obeid','4','Fahad Al-Bloshi','3','Ali Hassan','1.5','','0','Jan 2025','3000','8000','NEW','STP'],
-      ['718500','Ahmed Al-Sayed','4','','0','','0','','0','Feb 2025','10000','0','SUB','ECN'],
-      ['721000','Khalid Nasser','3.5','Mariam Al-Azmi','2','','0','','0','Mar 2025','7500','15000','NEW','ECN'],
+      ['719750','Ahmed Al-Sayed','4','Mohammed Al-Rashid','3','','0','','0','Jan 2025','5000','12000','NEW','ECN','prospected'],
+      ['720100','Samer Obeid','4','Fahad Al-Bloshi','3','Ali Hassan','1.5','','0','Jan 2025','3000','8000','NEW','STP','walk_in'],
+      ['718500','Ahmed Al-Sayed','4','','0','','0','','0','Feb 2025','10000','0','SUB','ECN',''],
+      ['721000','Khalid Nasser','3.5','Mariam Al-Azmi','2','','0','','0','Mar 2025','7500','15000','NEW','ECN','walk_in'],
     ];
   }
   const ws = XLSX.utils.aoa_to_sheet([headers, ...samples]);
@@ -630,6 +638,15 @@ async function confirmImport() {
       cc_agent_commission:  N(r,'cc_agent_commission'),
       cc_manager_commission:N(r,'cc_manager_commission'),
       target_branch:        S(r,'target_branch'),
+      // Acquisition type — tolerant: column absent or cell empty → '' (server will default to 'prospected')
+      // Values recognised: walk_in / walkin / walk in / زائر / عميل زائر → walk_in. Anything else → prospected.
+      acquisition_type:     (function(v){
+                              var s=String(v||'').trim().toLowerCase();
+                              if(!s) return '';
+                              if(/walk[\s_-]*in|walkin|زائر|عابر/.test(s)) return 'walk_in';
+                              if(/prospect|مستقطب|مُستقطَب|استقطاب/.test(s)) return 'prospected';
+                              return '';
+                            })(S(r,'acquisition_type')),
     };
   }).filter(r => r.ac_no);   // require only an account number; month may be blank (still imported)
 

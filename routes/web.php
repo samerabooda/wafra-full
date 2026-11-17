@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function(){
     Route::get('/reports/dynamic',        [WebController::class,'reportsDynamic'])->name('reports.dynamic');
     Route::get('/reports/branch-monthly', [WebController::class,'reportsBranchMonthly'])->name('reports.branch-monthly');
     Route::get('/reports/referrals',      [WebController::class,'reportsReferrals'])->name('reports.referrals');
+    Route::get('/reports/acq-comparison', [WebController::class,'reportsAcqComparison'])->name('reports.acq-comparison');
     Route::get('/employees',       [WebController::class,'employees'])->name('employees.index');
     Route::get('/settings',        [WebController::class,'settings'])->name('settings.index');
     Route::get('/import',          [WebController::class,'import'])->name('import.index');

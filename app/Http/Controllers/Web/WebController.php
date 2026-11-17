@@ -335,6 +335,105 @@ class WebController extends Controller
         ]);
     }
 
+    // ── Acquisition type comparison report (مُستقطَب vs زائر) ──
+    // Compares marketer effort: how many accounts each marketer actively prospected
+    // vs how many simply walked in and the marketer only received them. The chip,
+    // dashboard donut and this table all read the same acquisition_type column.
+    public function reportsAcqComparison(Request $request)
+    {
+        $user   = Auth::user();
+        $isFa   = method_exists($user, 'isFinanceAdmin') && $user->isFinanceAdmin();
+        $scoped = method_exists($user, 'isScopedToBranch') && $user->isScopedToBranch();
+        $branchId = $request->branch_id;
+
+        $hasCol = \App\Models\CommissionCard::hasAcquisitionCol();
+
+        // Safe fallback: before the migration lands, treat everything as prospected.
+        if (!$hasCol) {
+            return view('reports.acq-comparison', [
+                'acqIsFa'       => $isFa,
+                'acqBranchId'   => $branchId,
+                'acqBranches'   => $isFa ? DB::table('branches')->whereNull('deleted_at')->orderBy('name_ar')->get(['id','name_ar','name_en']) : collect(),
+                'acqTotals'     => ['total'=>0,'prospected'=>0,'walkin'=>0,'pct_walkin'=>0],
+                'acqByBranch'   => collect(),
+                'acqByMarketer' => collect(),
+                'acqByMonth'    => collect(),
+                'acqColMissing' => true,
+            ]);
+        }
+
+        $base = function () use ($scoped, $isFa, $user, $branchId) {
+            $q = DB::table('commission_cards as c')->whereNull('c.deleted_at')
+                // Only real opened accounts count — exclude in-flight CC leads.
+                ->where(fn($w) => $w->whereNull('c.cc_status')->orWhereNotIn('c.cc_status', ['cc_pending','branch_pending','accepted','in_progress','rejected','declined']));
+            if ($scoped)                 $q->where('c.branch_id', $user->branchScopeId());
+            elseif ($isFa && $branchId)  $q->where('c.branch_id', (int) $branchId);
+            return $q;
+        };
+
+        // KPIs — overall split
+        $tot = $base()->selectRaw('
+            COUNT(*) total,
+            SUM(CASE WHEN c.acquisition_type="walk_in"   THEN 1 ELSE 0 END) walkin,
+            SUM(CASE WHEN c.acquisition_type="prospected" OR c.acquisition_type IS NULL THEN 1 ELSE 0 END) prospected
+        ')->first();
+        $total = (int) $tot->total;
+        $wk    = (int) $tot->walkin;
+        $pr    = (int) $tot->prospected;
+        $pctW  = $total ? round($wk / $total * 100) : 0;
+
+        // Per-branch split
+        $byBranch = $base()->leftJoin('branches as b', 'c.branch_id', '=', 'b.id')
+            ->selectRaw('
+                COALESCE(b.name_ar,"غير محدد") nar,
+                COALESCE(b.name_en,"Unassigned") nen,
+                COUNT(*) total,
+                SUM(CASE WHEN c.acquisition_type="walk_in" THEN 1 ELSE 0 END) walkin,
+                SUM(CASE WHEN c.acquisition_type="prospected" OR c.acquisition_type IS NULL THEN 1 ELSE 0 END) prospected
+            ')
+            ->groupBy('b.name_ar','b.name_en')
+            ->orderByDesc('total')->get();
+
+        // Per-marketer split — the key insight: effort-vs-walkin per marketer
+        // Uses marketer_id first; falls back to broker_id when no marketer slot is set.
+        $byMarketer = $base()
+            ->leftJoin('employees as e', 'c.marketer_id', '=', 'e.id')
+            ->whereNotNull('c.marketer_id')
+            ->selectRaw('
+                e.name nm,
+                COUNT(*) total,
+                SUM(CASE WHEN c.acquisition_type="walk_in" THEN 1 ELSE 0 END) walkin,
+                SUM(CASE WHEN c.acquisition_type="prospected" OR c.acquisition_type IS NULL THEN 1 ELSE 0 END) prospected,
+                COALESCE(SUM(c.marketer_commission),0) total_comm
+            ')
+            ->groupBy('e.name')
+            ->orderByDesc('prospected')->orderByDesc('total')
+            ->limit(80)->get();
+
+        // Monthly split for a trend line
+        $byMonth = $base()->whereNotNull('c.month')
+            ->selectRaw('
+                c.month, MAX(c.month_date) md,
+                COUNT(*) total,
+                SUM(CASE WHEN c.acquisition_type="walk_in" THEN 1 ELSE 0 END) walkin,
+                SUM(CASE WHEN c.acquisition_type="prospected" OR c.acquisition_type IS NULL THEN 1 ELSE 0 END) prospected
+            ')
+            ->groupBy('c.month')->orderByRaw('MAX(c.month_date)')->get();
+
+        $branches = $isFa ? DB::table('branches')->whereNull('deleted_at')->orderBy('name_ar')->get(['id','name_ar','name_en']) : collect();
+
+        return view('reports.acq-comparison', [
+            'acqIsFa'       => $isFa,
+            'acqBranchId'   => $branchId,
+            'acqBranches'   => $branches,
+            'acqTotals'     => ['total'=>$total,'prospected'=>$pr,'walkin'=>$wk,'pct_walkin'=>$pctW],
+            'acqByBranch'   => $byBranch,
+            'acqByMarketer' => $byMarketer,
+            'acqByMonth'    => $byMonth,
+            'acqColMissing' => false,
+        ]);
+    }
+
     // ── Employees ──────────────────────────────────────────────
     public function employees() { return view('employees.index'); }
 

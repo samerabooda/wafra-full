@@ -359,7 +359,10 @@ class CommissionCardController extends Controller
             return $q;
         };
 
-        // overall totals
+        // overall totals — acquisition_type column may not exist on very old DBs, so guard it
+        $acqExpr = CommissionCard::hasAcquisitionCol()
+            ? 'SUM(CASE WHEN s.acquisition_type="walk_in" THEN 1 ELSE 0 END) walkin'
+            : '0 walkin';
         $tot = $base()->selectRaw('
             COUNT(*) cnt, COUNT(DISTINCT s.account_number) uniq,
             SUM(CASE WHEN s.account_kind="new" THEN 1 ELSE 0 END) newc,
@@ -369,7 +372,8 @@ class CommissionCardController extends Controller
             SUM(CASE WHEN s.initial_deposit=0 OR s.initial_deposit IS NULL THEN 1 ELSE 0 END) ndc,
             COALESCE(SUM(s.initial_deposit),0) dep, COALESCE(SUM(s.monthly_deposit),0) mon,
             COALESCE(SUM(s.broker_commission),0) bc, COALESCE(SUM(s.marketer_commission),0) mc,
-            COALESCE(SUM(s.ext_commission1),0)+COALESCE(SUM(s.ext_commission2),0) ec
+            COALESCE(SUM(s.ext_commission1),0)+COALESCE(SUM(s.ext_commission2),0) ec,
+            '.$acqExpr.'
         ')->first();
 
         // per-month rollup (for trend chart) — skip cards with no opening month
@@ -453,6 +457,8 @@ class CommissionCardController extends Controller
                 'no_dep'=>(int)$tot->ndc,
                 'dep'=>round((float)$tot->dep,2),'mon'=>round((float)$tot->mon,2),
                 'bc'=>round((float)$tot->bc,2),'mc'=>round((float)$tot->mc,2),'ec'=>round((float)$tot->ec,2),
+                'walkin'=>(int)($tot->walkin ?? 0),
+                'prospected'=>max(0,(int)$tot->cnt - (int)($tot->walkin ?? 0)),
             ],
             'commission' => [
                 'broker'   => round((float)($commAgg->bc ?? 0), 2),
