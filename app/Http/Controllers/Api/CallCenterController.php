@@ -1158,4 +1158,144 @@ class CallCenterController extends Controller
 
         return response()->json(['success' => true, 'marked' => $count]);
     }
+
+    // ── GET /api/cc/dashboard — CC Manager dashboard metrics ──
+    //
+    // Returns KPIs the CC manager needs at a glance:
+    //   • totals by lifecycle stage (sent → waiting on branch → in progress
+    //     → completed → rejected/declined → untreated)
+    //   • per-branch breakdown: how many leads sent to each branch, how many
+    //     completed there, how long on average the branch took to respond
+    //     and to complete, with a computed response score
+    //   • top-3 branches ranked by response score
+    //
+    // Scoped by cc_branch_id for CC managers, globally for Finance Admin.
+    // Read-only, lightweight, safe to poll every ~30s.
+    public function ccDashboard(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user->isCallCenterStaff() && !$user->isFinanceAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        // Base: cards that have been through the CC (originated by a CC branch).
+        $base = DB::table('commission_cards as c')
+            ->whereNotNull('c.cc_branch_id')
+            ->whereNull('c.deleted_at');
+
+        // CC branch managers only see their own CC branch's leads.
+        if ($user->isCallCenterStaff() && !$user->isFinanceAdmin() && $user->branch_id) {
+            $base->where('c.cc_branch_id', $user->branch_id);
+        }
+
+        // ── 1. KPIs by lifecycle stage ─────────────────────────
+        // Anything NOT in the known lifecycle states counts as "untreated"
+        // (legacy rows pre-dating the CC workflow, or stuck in a bad state).
+        $rows = (clone $base)
+            ->select('c.cc_status', DB::raw('COUNT(*) as n'))
+            ->groupBy('c.cc_status')
+            ->get();
+
+        $byStatus = [
+            'cc_pending'     => 0,
+            'branch_pending' => 0,
+            'accepted'       => 0,
+            'in_progress'    => 0,
+            'completed'      => 0,
+            'rejected'       => 0,
+            'declined'       => 0,
+        ];
+        $untreated = 0; $total = 0;
+        foreach ($rows as $r) {
+            $total += (int) $r->n;
+            if (array_key_exists($r->cc_status, $byStatus)) {
+                $byStatus[$r->cc_status] = (int) $r->n;
+            } else {
+                $untreated += (int) $r->n;
+            }
+        }
+        // "Still open" = anything not yet a terminal state (completed/rejected/declined).
+        $open = $byStatus['cc_pending'] + $byStatus['branch_pending']
+              + $byStatus['accepted']   + $byStatus['in_progress'];
+
+        // ── 2. Per-branch breakdown ────────────────────────────
+        // Only includes leads that were actually SENT to a target branch
+        // (cc_status != 'cc_pending' AND branch_id is set).
+        $perBranch = (clone $base)
+            ->leftJoin('branches as b', 'c.branch_id', '=', 'b.id')
+            ->whereNotNull('c.branch_id')
+            ->where(function ($q) {
+                $q->whereIn('c.cc_status', ['branch_pending','accepted','in_progress','completed','rejected','declined'])
+                  ->orWhereNull('c.cc_status');
+            })
+            ->select(
+                'c.branch_id',
+                'b.name_ar as branch_ar',
+                'b.name_en as branch_en',
+                DB::raw('COUNT(*) as sent'),
+                DB::raw('SUM(CASE WHEN c.cc_status = "completed"   THEN 1 ELSE 0 END) as completed'),
+                DB::raw('SUM(CASE WHEN c.cc_status = "in_progress" THEN 1 ELSE 0 END) as in_progress'),
+                DB::raw('SUM(CASE WHEN c.cc_status = "branch_pending" THEN 1 ELSE 0 END) as waiting'),
+                DB::raw('SUM(CASE WHEN c.cc_status = "declined"   THEN 1 ELSE 0 END) as declined'),
+                DB::raw('SUM(CASE WHEN c.cc_status = "rejected"   THEN 1 ELSE 0 END) as rejected'),
+                // Average hours from CC dispatch (created_at) to first branch action (updated_at)
+                // for leads that have moved out of branch_pending. MySQL-safe HOUR math.
+                DB::raw('AVG(CASE WHEN c.cc_status IN ("accepted","in_progress","completed","declined","rejected")
+                                  THEN TIMESTAMPDIFF(HOUR, c.created_at, c.updated_at) ELSE NULL END) as avg_response_h'),
+                DB::raw('AVG(CASE WHEN c.cc_status = "completed"
+                                  THEN TIMESTAMPDIFF(HOUR, c.created_at, c.updated_at) ELSE NULL END) as avg_complete_h')
+            )
+            ->groupBy('c.branch_id', 'b.name_ar', 'b.name_en')
+            ->orderByDesc('sent')
+            ->get();
+
+        // Compute completion rate and a response score per branch. The score weights
+        // completion rate highly and penalises long response times. Keeps the top
+        // card stable even when a slow branch has a lot of volume.
+        $perBranch = $perBranch->map(function ($b) {
+            $sent = max(1, (int) $b->sent);
+            $compRate  = round(($b->completed / $sent) * 100, 1);
+            $actRate   = round((($b->completed + $b->in_progress) / $sent) * 100, 1);
+            $respH     = $b->avg_response_h ? round((float) $b->avg_response_h, 1) : null;
+            $complH    = $b->avg_complete_h ? round((float) $b->avg_complete_h, 1) : null;
+            // Score 0–100: 70% weight on completion rate, 30% on speed (24h baseline).
+            $speedComp = $respH !== null ? max(0, 100 - min(100, ($respH / 24) * 100)) : 50;
+            $score = round($compRate * 0.7 + $speedComp * 0.3, 1);
+            return (object) [
+                'branch_id'      => (int) $b->branch_id,
+                'branch_ar'      => $b->branch_ar ?: '—',
+                'branch_en'      => $b->branch_en ?: '—',
+                'sent'           => (int) $b->sent,
+                'completed'      => (int) $b->completed,
+                'in_progress'    => (int) $b->in_progress,
+                'waiting'        => (int) $b->waiting,
+                'declined'       => (int) $b->declined,
+                'rejected'       => (int) $b->rejected,
+                'completion_pct' => $compRate,
+                'active_pct'     => $actRate,
+                'avg_response_h' => $respH,
+                'avg_complete_h' => $complH,
+                'score'          => $score,
+            ];
+        });
+
+        // Top-3 branches by score, but only if they have a meaningful sample (≥3 sent).
+        $topBranches = $perBranch->filter(fn($b) => $b->sent >= 3)
+                                 ->sortByDesc('score')
+                                 ->take(3)
+                                 ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total'       => $total,
+                'open'        => $open,
+                'untreated'   => $untreated,
+                'by_status'   => $byStatus,
+                'per_branch'  => $perBranch->values(),
+                'top_branches'=> $topBranches,
+                'scope'       => $user->isFinanceAdmin() ? 'all' : 'my_cc_branch',
+            ],
+        ]);
+    }
 }

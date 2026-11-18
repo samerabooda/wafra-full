@@ -199,6 +199,9 @@ Route::middleware(['auth:sanctum', 'active.user', 'force.pwd'])->group(function 
         Route::get('cards/{id}/followups',[CallCenterController::class, 'followups']); // a lead's call log
         Route::get('sent',                [CallCenterController::class, 'sent']);      // cc: sent cards
 
+        // CC manager dashboard aggregates (KPIs + per-branch leaderboard)
+        Route::get('dashboard',           [CallCenterController::class, 'ccDashboard']);
+
         // Notifications
         Route::get('notifications',            [CallCenterController::class, 'notifications']);
         Route::put('notifications/read-all',   [CallCenterController::class, 'markAllRead']);

@@ -224,6 +224,49 @@
     </div>
   </div>
 
+  {{-- 📞 CC Manager dashboard — KPIs by lifecycle stage + per-branch leaderboard.
+       Hidden by default; shown only for CC branch staff (or Finance Admin). --}}
+  <div id="cc-dash-wrap" style="display:none;margin-bottom:16px">
+    <div class="ig-panel" style="padding:18px;border:1px solid rgba(123,104,238,.4);background:linear-gradient(135deg,rgba(123,104,238,.04),rgba(26,173,186,.04))">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <div class="ig-pt" style="margin:0;font-size:15px;color:var(--pri2)">
+          📞 <span id="cc-dash-title">لوحة مديرة مركز الاتصال — الحسابات مع الفروع</span>
+        </div>
+        <div style="font-size:11px;color:var(--mu);font-weight:700" id="cc-dash-scope">—</div>
+      </div>
+
+      {{-- Row 1 — KPI tiles by lifecycle stage --}}
+      <div class="ig-nums" style="margin-bottom:16px">
+        <div class="ig-num" style="--ac:#22c97a"><div class="ig-num-ic">✅</div><div class="ig-num-b"><div class="ig-num-v" id="cck-completed">—</div><div class="ig-num-l" id="cck-l-completed">حسابات مكتملة</div></div></div>
+        <div class="ig-num" style="--ac:#f59e0b"><div class="ig-num-ic">⏳</div><div class="ig-num-b"><div class="ig-num-v" id="cck-inprog">—</div><div class="ig-num-l" id="cck-l-inprog">قيد المتابعة</div></div></div>
+        <div class="ig-num" style="--ac:#2563EB"><div class="ig-num-ic">📤</div><div class="ig-num-b"><div class="ig-num-v" id="cck-waiting">—</div><div class="ig-num-l" id="cck-l-waiting">بانتظار استجابة الفرع</div></div></div>
+        <div class="ig-num" style="--ac:#7b68ee"><div class="ig-num-ic">📥</div><div class="ig-num-b"><div class="ig-num-v" id="cck-ccpending">—</div><div class="ig-num-l" id="cck-l-ccpending">عندي — لم تُرسل بعد</div></div></div>
+        <div class="ig-num" style="--ac:#e05050"><div class="ig-num-ic">❌</div><div class="ig-num-b"><div class="ig-num-v" id="cck-declined">—</div><div class="ig-num-l" id="cck-l-declined">رفض العميل</div></div></div>
+        <div class="ig-num" style="--ac:#d6336c"><div class="ig-num-ic">↩️</div><div class="ig-num-b"><div class="ig-num-v" id="cck-rejected">—</div><div class="ig-num-l" id="cck-l-rejected">أعاده الفرع</div></div></div>
+        <div class="ig-num" style="--ac:#999"><div class="ig-num-ic">❓</div><div class="ig-num-b"><div class="ig-num-v" id="cck-untreated">—</div><div class="ig-num-l" id="cck-l-untreated">لم يُتعامَل معها</div></div></div>
+        <div class="ig-num" style="--ac:#1AADBA"><div class="ig-num-ic">📊</div><div class="ig-num-b"><div class="ig-num-v" id="cck-total">—</div><div class="ig-num-l" id="cck-l-total">الإجمالي</div></div></div>
+      </div>
+
+      {{-- Row 2 — Top-3 branches leaderboard --}}
+      <div id="cc-top-wrap" style="margin-bottom:16px;display:none">
+        <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:10px">
+          🏆 <span id="cck-top-l">أسرع الفروع استجابةً وإنجازاً</span>
+        </div>
+        <div id="cc-top" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px"></div>
+      </div>
+
+      {{-- Row 3 — Per-branch table --}}
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--pri2);margin-bottom:10px">
+          🏢 <span id="cck-pb-l">تفصيل الحسابات حسب الفرع</span>
+        </div>
+        <div id="cc-pb" style="max-height:420px;overflow:auto">
+          <div style="text-align:center;padding:30px;color:var(--mu)"><span class="ig-spin"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="ig-grid ig-21" id="ig-grid-branch-monthly">
     <div class="ig-panel" id="ig-panel-branch">
       <div class="ig-pt" id="ig-t-branch">🏢 الحسابات حسب الفرع</div>
@@ -860,6 +903,193 @@ window.addEventListener('error',function(ev){try{var b=document.getElementById('
     });
   }
   igOpts();applyLang();load();try{igCrossBranch();}catch(e){}
+})();
+</script>
+
+{{-- ═══════════ CC MANAGER DASHBOARD PANEL ═══════════ --}}
+<script>
+(function(){
+  'use strict';
+
+  // Show only for CC-branch staff (CC branch manager / FA viewing CC).
+  // Finance Admin always sees the panel (it aggregates all CC branches).
+  function _shouldShow(){
+    if (!window.CURRENT_USER) return false;
+    if (CURRENT_USER.role === 'finance_admin') return true;
+    var br = CURRENT_USER.branch;
+    return !!(br && br.is_call_center);
+  }
+
+  var CCD_T = {
+    ar: {
+      title: 'لوحة مديرة مركز الاتصال — الحسابات مع الفروع',
+      scopeMy: 'النطاق: فرع مركز الاتصال الخاص بك فقط',
+      scopeAll: 'النطاق: جميع فروع مركز الاتصال',
+      kCompleted:'حسابات مكتملة', kInprog:'قيد المتابعة', kWaiting:'بانتظار استجابة الفرع',
+      kCcPending:'عندي — لم تُرسل بعد', kDeclined:'رفض العميل', kRejected:'أعاده الفرع',
+      kUntreated:'لم يُتعامَل معها', kTotal:'الإجمالي',
+      topL:'🏆 أسرع الفروع استجابةً وإنجازاً',
+      pbL:'🏢 تفصيل الحسابات حسب الفرع',
+      hBr:'الفرع', hSent:'مُرسَل', hDone:'مكتمل', hInProg:'قيد المتابعة',
+      hDec:'رفض عميل', hRej:'أعاده الفرع', hRate:'نسبة الإنجاز', hResp:'متوسط الاستجابة',
+      hCplH:'متوسط الإنجاز', hScore:'التقييم',
+      hours:'س', empty:'لا توجد بيانات بعد', noBranch:'لم يُحوَّل لأي فرع',
+      rank:'#', scoreSuffix:'/100',
+    },
+    en: {
+      title: 'CC Manager dashboard — accounts across branches',
+      scopeMy: 'Scope: your CC branch only',
+      scopeAll: 'Scope: all CC branches',
+      kCompleted:'Completed accounts', kInprog:'In progress', kWaiting:'Waiting on branch',
+      kCcPending:'With me — not sent', kDeclined:'Client declined', kRejected:'Branch returned',
+      kUntreated:'Untreated', kTotal:'Total',
+      topL:'🏆 Fastest branches by response & completion',
+      pbL:'🏢 Breakdown by target branch',
+      hBr:'Branch', hSent:'Sent', hDone:'Completed', hInProg:'In progress',
+      hDec:'Declined', hRej:'Returned', hRate:'Completion', hResp:'Avg response',
+      hCplH:'Avg completion', hScore:'Score',
+      hours:'h', empty:'No data yet', noBranch:'Not routed to any branch',
+      rank:'#', scoreSuffix:'/100',
+    }
+  };
+  function _L(){ return (typeof curLang!=='undefined' && curLang==='en') ? CCD_T.en : CCD_T.ar; }
+  function _n(v){ return (Number(v)||0).toLocaleString(_L()===CCD_T.en?'en':'en'); }
+  function _h(v){ return v==null ? '—' : (Math.round(v*10)/10) + ' ' + _L().hours; }
+  function _pct(v){ return (Number(v)||0).toFixed(1) + '%'; }
+
+  function _esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  function _applyLabels(){
+    var L = _L();
+    var set = function(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+    set('cc-dash-title', L.title);
+    set('cck-l-completed', L.kCompleted);
+    set('cck-l-inprog', L.kInprog);
+    set('cck-l-waiting', L.kWaiting);
+    set('cck-l-ccpending', L.kCcPending);
+    set('cck-l-declined', L.kDeclined);
+    set('cck-l-rejected', L.kRejected);
+    set('cck-l-untreated', L.kUntreated);
+    set('cck-l-total', L.kTotal);
+    set('cck-top-l', L.topL);
+    set('cck-pb-l', L.pbL);
+  }
+
+  function _renderKpis(d){
+    var set=function(id,v){ var el=document.getElementById(id); if(el) el.textContent = _n(v); };
+    set('cck-completed', d.by_status.completed);
+    set('cck-inprog',    d.by_status.in_progress + d.by_status.accepted);
+    set('cck-waiting',   d.by_status.branch_pending);
+    set('cck-ccpending', d.by_status.cc_pending);
+    set('cck-declined',  d.by_status.declined);
+    set('cck-rejected',  d.by_status.rejected);
+    set('cck-untreated', d.untreated);
+    set('cck-total',     d.total);
+  }
+
+  function _renderTop(d){
+    var L = _L(), wrap = document.getElementById('cc-top-wrap'), host = document.getElementById('cc-top');
+    if (!wrap || !host) return;
+    var rows = d.top_branches || [];
+    if (!rows.length){ wrap.style.display='none'; return; }
+    wrap.style.display='';
+    var isEn = (typeof curLang!=='undefined' && curLang==='en');
+    var medals = ['🥇','🥈','🥉'];
+    host.innerHTML = rows.map(function(b,i){
+      var nm = isEn ? (b.branch_en||b.branch_ar||'—') : (b.branch_ar||b.branch_en||'—');
+      var scoreColor = b.score>=75?'#22c97a':(b.score>=50?'#f59e0b':'#e05050');
+      return '<div style="padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--brd2);display:flex;flex-direction:column;gap:7px">'
+        +'<div style="display:flex;align-items:center;gap:8px"><span style="font-size:24px">'+medals[i]+'</span>'
+          +'<div style="flex:1;font-weight:900;font-size:14px;color:var(--pri2)">'+_esc(nm)+'</div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;border-radius:4px;background:rgba(0,0,0,.08);overflow:hidden"><div style="height:100%;width:'+Math.min(100,b.score)+'%;background:'+scoreColor+'"></div></div>'
+          +'<div style="font-weight:900;color:'+scoreColor+';font-family:JetBrains Mono,monospace;font-size:14px">'+b.score+'</div></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--mu);font-weight:700">'
+          +'<span>✅ '+_n(b.completed)+' / '+_n(b.sent)+' ('+_pct(b.completion_pct)+')</span>'
+          +'<span>⏱️ '+(b.avg_response_h?_h(b.avg_response_h):'—')+'</span>'
+        +'</div></div>';
+    }).join('');
+  }
+
+  function _renderTable(d){
+    var L = _L(), host = document.getElementById('cc-pb');
+    if (!host) return;
+    var rows = d.per_branch || [];
+    if (!rows.length){
+      host.innerHTML = '<div style="text-align:center;padding:40px;color:var(--mu)">'+_esc(L.empty)+'</div>';
+      return;
+    }
+    var isEn = (typeof curLang!=='undefined' && curLang==='en');
+    var html = '<table style="width:100%;border-collapse:collapse;font-size:12.5px">';
+    html += '<thead><tr style="background:rgba(26,173,186,.08);text-align:'+(isEn?'left':'right')+'">';
+    html += '<th style="padding:9px 10px;font-weight:800;color:var(--pri2)">'+_esc(L.hBr)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:var(--pri2);text-align:center">'+_esc(L.hSent)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:#22c97a;text-align:center">'+_esc(L.hDone)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:#f59e0b;text-align:center">'+_esc(L.hInProg)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:#e05050;text-align:center">'+_esc(L.hDec)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:#d6336c;text-align:center">'+_esc(L.hRej)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:var(--pri2);text-align:center">'+_esc(L.hRate)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:var(--pri2);text-align:center">'+_esc(L.hResp)+'</th>';
+    html += '<th style="padding:9px 10px;font-weight:800;color:var(--pri2);text-align:center">'+_esc(L.hScore)+'</th>';
+    html += '</tr></thead><tbody>';
+    rows.forEach(function(b){
+      var nm = isEn ? (b.branch_en||b.branch_ar||'—') : (b.branch_ar||b.branch_en||'—');
+      var scoreColor = b.score>=75?'#22c97a':(b.score>=50?'#f59e0b':'#e05050');
+      html += '<tr style="border-bottom:1px solid var(--brd2)">';
+      html += '<td style="padding:8px 10px;font-weight:700">'+_esc(nm)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;font-family:JetBrains Mono,monospace">'+_n(b.sent)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;color:#22c97a;font-weight:800;font-family:JetBrains Mono,monospace">'+_n(b.completed)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;color:#f59e0b;font-family:JetBrains Mono,monospace">'+_n(b.in_progress)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;color:#e05050;font-family:JetBrains Mono,monospace">'+_n(b.declined)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;color:#d6336c;font-family:JetBrains Mono,monospace">'+_n(b.rejected)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;font-weight:800">'+_pct(b.completion_pct)+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center;color:var(--mu)">'+(b.avg_response_h?_h(b.avg_response_h):'—')+'</td>';
+      html += '<td style="padding:8px 10px;text-align:center"><span style="padding:3px 10px;border-radius:12px;background:'+scoreColor+'22;color:'+scoreColor+';font-weight:900;font-family:JetBrains Mono,monospace">'+b.score+'</span></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    host.innerHTML = html;
+  }
+
+  function _renderScope(d){
+    var L = _L(), el = document.getElementById('cc-dash-scope');
+    if (!el) return;
+    el.textContent = d.scope === 'all' ? L.scopeAll : L.scopeMy;
+  }
+
+  function _fetchAndRender(){
+    if (!_shouldShow()) return;
+    var wrap = document.getElementById('cc-dash-wrap'); if (wrap) wrap.style.display = '';
+    _applyLabels();
+    if (typeof api !== 'function') return;
+    api('GET','/cc/dashboard').then(function(r){
+      if (!r || !r.success || !r.data) return;
+      var d = r.data;
+      _renderKpis(d);
+      _renderTop(d);
+      _renderTable(d);
+      _renderScope(d);
+    }).catch(function(e){
+      var host = document.getElementById('cc-pb');
+      if (host) host.innerHTML = '<div style="color:#e05050;padding:14px;font-size:12px">'+_esc(String(e&&e.message||e))+'</div>';
+    });
+  }
+
+  // Wait a tick for CURRENT_USER to be populated by the layout.
+  function _boot(){
+    if (typeof window.CURRENT_USER === 'undefined') {
+      setTimeout(_boot, 80);
+      return;
+    }
+    _fetchAndRender();
+  }
+  _boot();
+
+  // Re-translate on language toggle.
+  var _prev = window.applyLang;
+  window.applyLang = function(l){
+    if (_prev) _prev(l);
+    try { if (_shouldShow()) { _applyLabels(); _fetchAndRender(); } } catch(e){}
+  };
 })();
 </script>
 @endpush

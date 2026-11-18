@@ -862,7 +862,7 @@ function doLogout() {
     // Include the user's branch name (both languages) so JS dropdowns can show
     // "⭐ My Branch Name" as the top optgroup label, instead of a generic fallback.
     $__br = auth()->user()->branch;
-    $__cu['branch'] = $__br ? ['id' => $__br->id, 'name_ar' => $__br->name_ar, 'name_en' => $__br->name_en] : null;
+    $__cu['branch'] = $__br ? ['id' => $__br->id, 'name_ar' => $__br->name_ar, 'name_en' => $__br->name_en, 'is_call_center' => (bool) ($__br->is_call_center ?? false)] : null;
   }
 @endphp
 const CURRENT_USER = @json($__cu);
