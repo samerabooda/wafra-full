@@ -20,10 +20,12 @@ jobs:
 
     steps:
       - name: 📋 Info
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
           echo "════════════════════════════════════════"
           echo "  Commit : ${{ github.sha }}"
-          echo "  Message: ${{ github.event.head_commit.message }}"
+          echo "  Message: ${COMMIT_MSG}"
           echo "  Target : ${SITE_URL}"
           echo "  Time   : $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "════════════════════════════════════════"
