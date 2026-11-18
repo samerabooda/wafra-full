@@ -64,17 +64,52 @@
 
     <form id="card-form">
       <style>
-        /* Compact spacing — only margins/labels, NEVER force input height (text must stay visible) */
-        #card-form .form-group{margin-bottom:9px}
-        #card-form .form-section{margin-bottom:13px}
-        #card-form .form-section-title{margin-bottom:8px;font-size:14px}
-        #card-form .form-label{font-size:12px;margin-bottom:3px}
-        #card-form .form-row{gap:12px}
+        /* Base spacing — comfortable, not cramped. Overridable by cc-mode below. */
+        #card-form .form-group{margin-bottom:12px}
+        #card-form .form-section{margin-bottom:18px}
+        #card-form .form-section-title{margin-bottom:11px;font-size:14px;font-weight:800;color:var(--pri2)}
+        #card-form .form-label{font-size:12px;margin-bottom:5px;font-weight:700}
+        #card-form .form-row{gap:16px;margin-bottom:12px}
         /* Person category tints — each a clearly DIFFERENT hue */
-        .crt-cat{border-radius:9px;padding:10px 12px;margin-bottom:9px;border-width:1px;border-style:solid}
+        .crt-cat{border-radius:10px;padding:12px 14px;margin-bottom:12px;border-width:1px;border-style:solid}
         .crt-cat-broker{background:rgba(14,122,136,.10);border-color:#0E7A88}          /* teal */
         .crt-cat-mk1{background:rgba(31,138,76,.10);border-color:#1f8a4c}              /* green */
         .crt-cat-mk2{background:rgba(214,51,108,.09);border-color:#d6336c}             /* pink */
+
+        /* ── CC-own-mode tidy-up ────────────────────────────────────────
+           Branch is hidden in ?cc=1 mode, which left Trading Type sitting
+           in a lonely half-column. Also the CC-manager row's hint used to
+           claim an equal half-column — too wide for one line of text.
+           A single 'cc-mode' class on #card-form (toggled by
+           applyCcOwnMode()) tightens both rows and makes the CC-manager
+           commission field visually prominent. */
+        /* When the Branch group is hidden, let Trading Type span the whole row.
+           Works for both the FA path (branch-grp + trading-grp) and the
+           scoped-user path (trading-grp + empty filler). */
+        #card-form.cc-mode #crt-branch-grp{display:none!important}
+        #card-form.cc-mode #crt-branch-grp + .form-group,
+        #card-form.cc-mode #crt-trading-row > .form-group:first-child{grid-column:1 / -1}
+        /* CC-manager row: input takes most of the width; the hint sits to its side
+           on a comfortable baseline. Panel padding and margin are forced because
+           the inline style on the element would otherwise win. */
+        #card-form.cc-mode #crt-row-ccmgr{
+          grid-template-columns:1.6fr 1fr!important;
+          padding:14px 16px!important;
+          gap:18px!important;
+          margin-bottom:14px!important;
+          align-items:center!important;
+        }
+        #card-form.cc-mode #crt-row-ccmgr .form-label{font-size:13px;font-weight:800;color:#5b46d6}
+        #card-form.cc-mode #crt-row-ccmgr .form-control{font-size:14px;font-weight:700}
+        #card-form.cc-mode #crt-row-ccmgr .form-group:last-child{
+          padding:8px 0 0 0!important;
+          color:var(--mu);font-size:12px;
+          align-items:flex-end!important;
+        }
+        /* Uniform vertical rhythm for every coloured block in CC mode */
+        #card-form.cc-mode .crt-cat{margin-bottom:14px}
+        /* Deposit/commission section: tidier top margin in CC mode */
+        #card-form.cc-mode .form-section{margin-bottom:22px}
       </style>
       <!-- Section 1: Account Info -->
       <div class="form-section">
@@ -166,14 +201,14 @@
         {{-- Branch manager: the branch is their own — no point showing a read-only label for it.
              Hidden input still carries branch_id for the payload. --}}
         <input type="hidden" id="f-branch" value="{{ auth()->user()->branch_id }}">
-        <div class="form-row">
+        <div class="form-row" id="crt-trading-row">
           <div class="form-group">
             <label class="form-label" id="crt-lbl-trading">نوع التداول</label>
             <select id="f-trading" class="form-control">
               <option value="" id="crt-opt-select3">— اختر —</option>
             </select>
           </div>
-          <div class="form-group"></div>
+          <div class="form-group" id="crt-trading-filler"></div>
         </div>
         @endif
         {{-- Parent account: shown only when kind = sub --}}
@@ -230,13 +265,14 @@
         {{-- CC Manager commission — ONLY shown when the CC branch manager creates a
              card directly for their own CC branch (reached via /cards/create?cc=1
              from the Call-Center screen). Hidden otherwise. --}}
-        <div class="form-row" id="crt-row-ccmgr" style="display:none;background:rgba(123,104,238,.08);border:1px solid rgba(123,104,238,.35);border-radius:9px;padding:12px;margin-bottom:9px">
+        <div class="form-row" id="crt-row-ccmgr" style="display:none;background:rgba(123,104,238,.08);border:1px solid rgba(123,104,238,.35);border-radius:10px;padding:14px 16px;margin-bottom:14px">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ccmgr">📞 عمولة مدير مركز الاتصال</label>
             <input type="number" id="f-cc-mgr-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal">
           </div>
-          <div class="form-group" style="margin-bottom:0;display:flex;align-items:center;color:var(--mu);font-size:12px;padding:8px 0">
-            <span id="crt-ccmgr-hint">تضاف ضمن سقف عمولات CC ($2/lot)</span>
+          <div class="form-group" style="margin-bottom:0;color:var(--mu);font-size:12px;padding-top:4px">
+            <label class="form-label" style="opacity:0;visibility:hidden">spacer</label>
+            <span id="crt-ccmgr-hint" style="display:inline-block;padding-top:6px">تضاف ضمن سقف عمولات CC ($2/lot)</span>
           </div>
         </div>
         <div class="form-row" style="background:rgba(123,104,238,.11);border:1px solid #7b68ee;border-radius:9px;padding:12px;margin-bottom:9px">
@@ -908,6 +944,10 @@ function isCcOwnMode(){
 }
 function applyCcOwnMode(){
   if (!isCcOwnMode()) return;
+  // Mark the whole form so our cc-mode CSS kicks in (tightens spacing,
+  // lets Trading Type span the row where Branch is hidden, formats the
+  // CC-manager commission panel).
+  var cf = document.getElementById('card-form'); if (cf) cf.classList.add('cc-mode');
   // hide marketer-2 fields (don't apply to direct CC-branch cards)
   var mk2 = document.getElementById('crt-row-mk2'); if (mk2) mk2.style.display = 'none';
   var mk2v = document.getElementById('f-ext2'); if (mk2v) mk2v.value = '';
@@ -921,6 +961,10 @@ function applyCcOwnMode(){
   //    The hidden input (#f-branch) is the single source of truth for the payload;
   //    autoPickCcBranch() fills it once the /branches list arrives.
   var bgrp = document.getElementById('crt-branch-grp'); if (bgrp) bgrp.style.display = 'none';
+  // Collapse the empty filler cell in the scoped-user trading row so Trading Type
+  // doesn't sit next to a blank half-column. (FA path uses the branch-grp sibling
+  // rule in CSS; this is the scoped-user path.)
+  var tfill = document.getElementById('crt-trading-filler'); if (tfill) tfill.style.display = 'none';
   // repaint page title to the CC-own variant
   var pt = document.getElementById('crt-page-title');
   if (pt) pt.textContent = crt('pageTitleCc');
