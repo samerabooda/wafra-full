@@ -147,8 +147,11 @@
         </div>
         @php $isScopedUser = auth()->user()?->isScopedToBranch(); @endphp
         @if(!$isScopedUser)
+        {{-- FA path. The Branch group gets its own id so CC-own mode (?cc=1) can
+             hide ONLY the branch picker and keep the Trading Type visible — the
+             branch there is implicitly the CC branch, there's nothing to pick. --}}
         <div class="form-row">
-          <div class="form-group">
+          <div class="form-group" id="crt-branch-grp">
             <label class="form-label" id="crt-lbl-branch">الفرع</label>
             <select id="f-branch" class="form-control"></select>
           </div>
@@ -785,6 +788,10 @@ async function loadFormOptions() {
         bSel.appendChild(o);
       });
     }
+    // CC-own mode: force-select the CC branch into the (hidden) f-branch select
+    // so the payload still carries a valid branch_id even though the user never
+    // saw the picker.
+    autoPickCcBranch(branches.data);
   }
 
   // After data loaded, apply current language
@@ -901,16 +908,40 @@ function isCcOwnMode(){
 }
 function applyCcOwnMode(){
   if (!isCcOwnMode()) return;
-  // hide marketer-2 fields
+  // hide marketer-2 fields (don't apply to direct CC-branch cards)
   var mk2 = document.getElementById('crt-row-mk2'); if (mk2) mk2.style.display = 'none';
   var mk2v = document.getElementById('f-ext2'); if (mk2v) mk2v.value = '';
   var mk2c = document.getElementById('f-ext2-comm'); if (mk2c) mk2c.value = 0;
   // show CC manager commission row
   var cmgr = document.getElementById('crt-row-ccmgr'); if (cmgr) cmgr.style.display = '';
+  // ── Hide the Branch picker — the branch is implicitly the CC branch, so making
+  //    the user pick it is both noise and a risk (they might target a non-CC branch).
+  //    For Finance Admin the branch selector lives in #crt-branch-grp; hide it there.
+  //    For branch managers it's already hidden (only a hidden input exists).
+  //    The hidden input (#f-branch) is the single source of truth for the payload;
+  //    autoPickCcBranch() fills it once the /branches list arrives.
+  var bgrp = document.getElementById('crt-branch-grp'); if (bgrp) bgrp.style.display = 'none';
   // repaint page title to the CC-own variant
   var pt = document.getElementById('crt-page-title');
   if (pt) pt.textContent = crt('pageTitleCc');
   var tb = document.querySelector('.tb-title'); if (tb) tb.textContent = crt('pageTitleCc');
+}
+
+// Called from loadFormOptions() after the /branches response arrives. In CC-own
+// mode it force-selects the first is_call_center branch into #f-branch so the
+// hidden-from-view selector still carries a valid value on save.
+function autoPickCcBranch(branches){
+  if (!isCcOwnMode() || !branches || !branches.length) return;
+  var bSel = document.getElementById('f-branch'); if (!bSel) return;
+  // Branch managers: input is a <input type=hidden> with their own branch_id already set — leave it.
+  if (bSel.tagName !== 'SELECT') return;
+  // FA: pick the first CC-flagged branch, or (fallback) the current user's branch, or the first one.
+  var cc = branches.find(function(b){ return b.is_call_center; });
+  if (!cc && window.CURRENT_USER && CURRENT_USER.branch_id) {
+    cc = branches.find(function(b){ return Number(b.id) === Number(CURRENT_USER.branch_id); });
+  }
+  if (!cc) cc = branches[0];
+  bSel.value = String(cc.id);
 }
 
 // ── Init ──────────────────────────────────────────────────────
