@@ -4,26 +4,47 @@
 
 @section('topbar-actions')
 {{-- Two distinct creation entry points, visually separated by color:
-     • Teal/CC gradient — CC LEAD (phone-based, routed to a target branch).
-     • Amber/Direct gradient — a regular commission card OPENED AT the CC
-       branch itself (no target branch). Opens the standard /cards/create
-       form with ?cc=1 so that form hides marketer-2 and shows the CC
-       manager commission field. --}}
+     • Amber — a regular commission card OPENED AT the CC branch itself
+       (no target branch). Opens /cards/create?cc=1, which hides
+       marketer-2 and shows the CC-manager commission field.
+     • Purple — a CC LEAD (phone-based, routed to a target branch).
+     Both use dedicated CSS classes (cc-tb-own / cc-tb-lead) defined
+     below with !important so nothing on the layout can override them,
+     and no inline background so old browsers / theme toggles don't
+     fight the gradient. --}}
 <a href="{{ route('cards.create') }}?cc=1"
-   class="tb-btn"
-   id="cc-topbar-new-own-btn"
-   style="background:linear-gradient(135deg,#f5a623,#c2761a);color:#fff;border-color:transparent;text-decoration:none;box-shadow:0 2px 8px rgba(194,118,26,.28)">
+   class="tb-btn cc-tb-own"
+   id="cc-topbar-new-own-btn">
   ➕ <span id="cc-topbar-new-own-l">كرت لفرع CC</span>
 </a>
-<button class="tb-btn"
+<button type="button"
+        class="tb-btn cc-tb-lead"
         id="cc-topbar-new-btn"
-        onclick="openCcNew()"
-        style="background:linear-gradient(135deg,#7b68ee,#5b46d6);color:#fff;border-color:transparent;box-shadow:0 2px 8px rgba(123,104,238,.28)">
+        onclick="openCcNew()">
   📞 <span id="cc-topbar-new-lead-l">كرت CC موجَّه لفرع</span>
 </button>
 @endsection
 
 @push('styles')
+<style>
+/* CC top-bar buttons — explicit classes with !important so the shared
+   .tb-btn{background:var(--bg3)} rule can't win by load-order luck. */
+.tb-btn.cc-tb-own{
+  background:linear-gradient(135deg,#f5a623,#c2761a) !important;
+  color:#fff !important;
+  border:1px solid rgba(194,118,26,.65) !important;
+  text-decoration:none !important;
+  box-shadow:0 2px 8px rgba(194,118,26,.32) !important;
+}
+.tb-btn.cc-tb-own:hover{filter:brightness(1.07)}
+.tb-btn.cc-tb-lead{
+  background:linear-gradient(135deg,#7b68ee,#5b46d6) !important;
+  color:#fff !important;
+  border:1px solid rgba(123,104,238,.65) !important;
+  box-shadow:0 2px 8px rgba(123,104,238,.32) !important;
+}
+.tb-btn.cc-tb-lead:hover{filter:brightness(1.07)}
+</style>
 <style>
 .cc-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
 .cc-chip.cc_pending    {background:#fff3cd;color:#856404}
