@@ -3,15 +3,11 @@
 @section('page-title','Call Center')
 
 @section('topbar-actions')
-{{-- Two distinct creation entry points, visually separated by color:
-     • Amber — a regular commission card OPENED AT the CC branch itself
-       (no target branch). Opens /cards/create?cc=1, which hides
-       marketer-2 and shows the CC-manager commission field.
-     • Purple — a CC LEAD (phone-based, routed to a target branch).
-     Both use dedicated CSS classes (cc-tb-own / cc-tb-lead) defined
-     below with !important so nothing on the layout can override them,
-     and no inline background so old browsers / theme toggles don't
-     fight the gradient. --}}
+<!-- ═══ CC-TOPBAR v5 — BOTH BUTTONS RENDERED HERE ═══ -->
+{{-- If you don't see this comment in "View Source", the compiled view on
+     the server is STALE (view:clear hasn't re-run for this request yet).
+     If you DO see this but only one button, CSS/JS on the page is hiding
+     the amber one and we have a different problem. --}}
 <a href="{{ route('cards.create') }}?cc=1"
    class="tb-btn cc-tb-own"
    id="cc-topbar-new-own-btn">
@@ -23,27 +19,40 @@
         onclick="openCcNew()">
   📞 <span id="cc-topbar-new-lead-l">كرت CC موجَّه لفرع</span>
 </button>
+<!-- ═══ END CC-TOPBAR v5 ═══ -->
 @endsection
 
 @push('styles')
 <style>
-/* CC top-bar buttons — explicit classes with !important so the shared
-   .tb-btn{background:var(--bg3)} rule can't win by load-order luck. */
+/* CC top-bar buttons — explicit classes with !important on EVERY property,
+   including visibility/display/opacity, so any late-JS that tries to hide
+   them has no effect without !important of its own. Also raises z-index
+   so they sit above the theme-toggle focus ring and any splash fade. */
+.tb-btn.cc-tb-own,
+.tb-btn.cc-tb-lead{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  position:relative !important;
+  z-index:10 !important;
+  color:#fff !important;
+  text-decoration:none !important;
+  cursor:pointer !important;
+  align-items:center !important;
+  gap:5px !important;
+}
 .tb-btn.cc-tb-own{
   background:linear-gradient(135deg,#f5a623,#c2761a) !important;
-  color:#fff !important;
   border:1px solid rgba(194,118,26,.65) !important;
-  text-decoration:none !important;
   box-shadow:0 2px 8px rgba(194,118,26,.32) !important;
 }
-.tb-btn.cc-tb-own:hover{filter:brightness(1.07)}
 .tb-btn.cc-tb-lead{
   background:linear-gradient(135deg,#7b68ee,#5b46d6) !important;
-  color:#fff !important;
   border:1px solid rgba(123,104,238,.65) !important;
   box-shadow:0 2px 8px rgba(123,104,238,.32) !important;
 }
-.tb-btn.cc-tb-lead:hover{filter:brightness(1.07)}
+.tb-btn.cc-tb-own:hover,
+.tb-btn.cc-tb-lead:hover{filter:brightness(1.08)}
 </style>
 <style>
 .cc-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
