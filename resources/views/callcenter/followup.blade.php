@@ -481,7 +481,7 @@ function openFormHtml(id){
       </div>
       <div class="form-group">
         <label class="form-label">${fuT('lblBComm')}</label>
-        <input type="number" id="of-bc-${id}" class="form-control" value="0" min="0" max="5" step="any" oninput="ofLimit(${id})">
+        <input type="number" id="of-bc-${id}" class="form-control" value="0" min="0" max="5" step="0.5" oninput="ofLimit(${id})">
       </div>
     </div>
     <div class="form-row">
@@ -491,7 +491,7 @@ function openFormHtml(id){
       </div>
       <div class="form-group">
         <label class="form-label">${fuT('lblMComm')}</label>
-        <input type="number" id="of-mc-${id}" class="form-control" value="0" min="0" max="5" step="any" oninput="ofLimit(${id})" disabled>
+        <input type="number" id="of-mc-${id}" class="form-control" value="0" min="0" max="5" step="0.5" oninput="ofLimit(${id})" disabled>
       </div>
     </div>
     <div style="margin-bottom:12px">
@@ -501,22 +501,22 @@ function openFormHtml(id){
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">${fuT('lblExt1')}</label><select id="of-ext1-${id}" class="form-control"><option value="">${fuT('optNone')}</option></select></div>
-      <div class="form-group"><label class="form-label">${fuT('lblEc1')}</label><input type="number" id="of-ec1-${id}" class="form-control" value="0" min="0" step="any"></div>
+      <div class="form-group"><label class="form-label">${fuT('lblEc1')}</label><input type="number" id="of-ec1-${id}" class="form-control" value="0" min="0" step="0.5"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">${fuT('lblExt2')}</label><select id="of-ext2-${id}" class="form-control"><option value="">${fuT('optNone')}</option></select></div>
-      <div class="form-group"><label class="form-label">${fuT('lblEc2')}</label><input type="number" id="of-ec2-${id}" class="form-control" value="0" min="0" step="any"></div>
+      <div class="form-group"><label class="form-label">${fuT('lblEc2')}</label><input type="number" id="of-ec2-${id}" class="form-control" value="0" min="0" step="0.5"></div>
     </div>
     <div class="form-row" style="background:rgba(245,168,40,.07);border:1px solid rgba(245,168,40,.25);border-radius:9px;padding:12px">
       <div class="form-group"><label class="form-label">${fuT('lblRef')}</label><input type="text" id="of-ref-${id}" class="form-control" inputmode="numeric" maxlength="6" placeholder="000000" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)"></div>
-      <div class="form-group"><label class="form-label">${fuT('lblRefC')}</label><input type="number" id="of-refc-${id}" class="form-control" value="0" min="0" step="any"></div>
+      <div class="form-group"><label class="form-label">${fuT('lblRefC')}</label><input type="number" id="of-refc-${id}" class="form-control" value="0" min="0" step="0.5"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">${fuT('lblMon')}</label><input type="number" id="of-mon-${id}" class="form-control" value="0" min="0" step="any"></div>
-      <div class="form-group"><label class="form-label">${fuT('lblForex')}</label><input type="number" id="of-forex-${id}" class="form-control" value="0" min="0" step="any"></div>
+      <div class="form-group"><label class="form-label">${fuT('lblForex')}</label><input type="number" id="of-forex-${id}" class="form-control" value="0" min="0" step="0.5"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">${fuT('lblFut')}</label><input type="number" id="of-fut-${id}" class="form-control" value="0" min="0" step="any"></div>
+      <div class="form-group"><label class="form-label">${fuT('lblFut')}</label><input type="number" id="of-fut-${id}" class="form-control" value="0" min="0" step="0.5"></div>
       <div class="form-group"></div>
     </div>
     <div id="of-err-${id}" class="alert alert-error"></div>

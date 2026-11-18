@@ -312,7 +312,7 @@ function completeFormHtml(c) {
       </div>
       <div class="form-group">
         <label class="form-label">${pnd('lblBComm')}</label>
-        <input type="number" id="cf-bcomm-${c.id}" class="form-control" value="2.5" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
+        <input type="number" id="cf-bcomm-${c.id}" class="form-control" value="0" min="0" max="5" step="0.5" oninput="checkLimit(${c.id})">
       </div>
     </div>
 
@@ -397,11 +397,11 @@ function completeFormHtml(c) {
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Forex Commission ($)</label>
-        <input type="number" id="cf-forex-${c.id}" class="form-control" value="8" min="0">
+        <input type="number" id="cf-forex-${c.id}" class="form-control" value="8" min="0" step="0.5">
       </div>
       <div class="form-group">
         <label class="form-label">Futures Commission ($)</label>
-        <input type="number" id="cf-fut-${c.id}" class="form-control" value="8" min="0">
+        <input type="number" id="cf-fut-${c.id}" class="form-control" value="8" min="0" step="0.5">
       </div>
     </div>
 

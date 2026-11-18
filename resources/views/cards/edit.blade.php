@@ -45,7 +45,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" id="edt-lbl-bcomm">عمولة البروكر</label>
-        <input type="number" id="ec-bc" class="form-control" step="any" min="0" inputmode="decimal">
+        <input type="number" id="ec-bc" class="form-control" step="0.5" min="0" inputmode="decimal">
       </div>
     </div>
     <div class="form-row">
@@ -55,7 +55,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" id="edt-lbl-mcomm">عمولة المسوّق الداخلي 1</label>
-        <input type="number" id="ec-mc" class="form-control" step="any" min="0" inputmode="decimal">
+        <input type="number" id="ec-mc" class="form-control" step="0.5" min="0" inputmode="decimal">
       </div>
     </div>
     <div class="form-row">
@@ -65,7 +65,7 @@
       </div>
       <div class="form-group">
         <label class="form-label" id="edt-lbl-ext2c">عمولة المسوّق الداخلي 2</label>
-        <input type="number" id="ec-ec2" class="form-control" step="any" min="0" inputmode="decimal">
+        <input type="number" id="ec-ec2" class="form-control" step="0.5" min="0" inputmode="decimal">
       </div>
     </div>
     <div class="form-row" style="background:rgba(123,104,238,.05);border:1px solid rgba(123,104,238,.15);border-radius:9px;padding:12px;margin-bottom:12px">
@@ -75,7 +75,7 @@
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-ext1c">عمولة المسوّق الخارجي</label>
-        <input type="number" id="ec-ec1" class="form-control" step="any" min="0" inputmode="decimal">
+        <input type="number" id="ec-ec1" class="form-control" step="0.5" min="0" inputmode="decimal">
       </div>
     </div>
     <div class="form-row" style="background:rgba(245,168,40,.07);border:1px solid rgba(245,168,40,.25);border-radius:9px;padding:12px;margin-bottom:12px">
@@ -91,7 +91,7 @@
       </div>
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label" id="edt-lbl-refc">عمولة الإحالة</label>
-        <input type="number" id="ec-refc" class="form-control" step="any" min="0" inputmode="decimal">
+        <input type="number" id="ec-refc" class="form-control" step="0.5" min="0" inputmode="decimal">
       </div>
     </div>
     <div class="form-row" style="background:rgba(58,157,181,.06);border:1px solid rgba(58,157,181,.22);border-radius:9px;padding:12px;margin-bottom:12px">

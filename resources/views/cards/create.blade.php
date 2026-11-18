@@ -235,7 +235,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-broker-comm">عمولة البروكر</label>
-            <input type="number" id="f-broker-comm" class="form-control" value="4" min="0" step="any" inputmode="decimal">
+            <input type="number" id="f-broker-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal">
           </div>
         </div>
         <div class="form-row crt-cat crt-cat-mk1">
@@ -247,7 +247,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-mktr-comm">عمولة المسوّق الداخلي</label>
-            <input type="number" id="f-marketer-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+            <input type="number" id="f-marketer-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal" disabled>
           </div>
         </div>
         <div class="form-row crt-cat crt-cat-mk2" id="crt-row-mk2">
@@ -259,7 +259,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext2-comm">عمولة المسوّق الداخلي 2</label>
-            <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+            <input type="number" id="f-ext2-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal" disabled>
           </div>
         </div>
         {{-- CC Manager commission — ONLY shown when the CC branch manager creates a
@@ -268,7 +268,7 @@
         <div class="form-row" id="crt-row-ccmgr" style="display:none;background:rgba(123,104,238,.08);border:1px solid rgba(123,104,238,.35);border-radius:10px;padding:14px 16px;margin-bottom:14px">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ccmgr">📞 عمولة مدير مركز الاتصال</label>
-            <input type="number" id="f-cc-mgr-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal">
+            <input type="number" id="f-cc-mgr-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal">
           </div>
           <div class="form-group" style="margin-bottom:0;color:var(--mu);font-size:12px;padding-top:4px">
             <label class="form-label" style="opacity:0;visibility:hidden">spacer</label>
@@ -284,7 +284,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" id="crt-lbl-ext1-comm">عمولة المسوّق الخارجي</label>
-            <input type="number" id="f-ext1-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+            <input type="number" id="f-ext1-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal" disabled>
           </div>
         </div>
         <div class="form-row" style="background:rgba(245,150,30,.12);border:1px solid #f5961e;border-radius:9px;padding:12px;margin-top:8px;grid-template-columns:1.3fr 1.3fr 0.9fr;align-items:flex-start">
@@ -300,7 +300,7 @@
           </div>
           <div class="form-group" style="margin-bottom:0;min-width:0">
             <label class="form-label" id="crt-lbl-ref-comm">عمولة المُحيل</label>
-            <input type="number" id="f-referral-comm" class="form-control" value="0" min="0" step="any" inputmode="decimal" disabled>
+            <input type="number" id="f-referral-comm" class="form-control" value="0" min="0" step="0.5" inputmode="decimal" disabled>
           </div>
         </div>
       </div>
@@ -325,11 +325,11 @@
           </div>
           <div class="form-group">
             <label class="form-label">Forex</label>
-            <input type="number" id="f-forex" class="form-control" value="8" min="0" step="any" inputmode="decimal">
+            <input type="number" id="f-forex" class="form-control" value="8" min="0" step="0.5" inputmode="decimal">
           </div>
           <div class="form-group">
             <label class="form-label">Futures</label>
-            <input type="number" id="f-futures" class="form-control" value="8" min="0" step="any" inputmode="decimal">
+            <input type="number" id="f-futures" class="form-control" value="8" min="0" step="0.5" inputmode="decimal">
           </div>
         </div>
         <div class="form-group">
@@ -659,7 +659,8 @@ function onBrokerChange() {
   const inp = document.getElementById('f-broker-comm');
   inp.disabled = !real;
   if (!real) inp.value = '0';
-  else if (!parseFloat(inp.value)) inp.value = '4';   // restore the usual default when leaving Self
+  // No auto-restore — the user must type the commission themselves to prevent
+  // accidental saves with an unverified default. Field starts at 0 by design.
 }
 function onMktrChange() {
   const real = _realPerson(document.getElementById('f-marketer').value);
